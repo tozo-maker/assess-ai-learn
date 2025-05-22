@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
   Menu, 
@@ -8,7 +8,10 @@ import {
   Home, 
   Settings, 
   LogOut,
-  ChevronDown
+  ChevronDown,
+  BookOpen,
+  LineChart,
+  FileText
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -17,17 +20,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface HeaderProps {
   isAuthenticated?: boolean;
   showNavigation?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
-  isAuthenticated = false, 
-  showNavigation = false 
-}) => {
+const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
+  
+  const isAuthenticated = !!user;
 
   const publicNavItems = [
     { name: 'Features', href: '/#features' },
@@ -37,12 +42,17 @@ const Header: React.FC<HeaderProps> = ({
   ];
 
   const appNavItems = [
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Students', href: '/students' },
-    { name: 'Assessments', href: '/assessments' },
-    { name: 'Insights', href: '/insights/class' },
-    { name: 'Reports', href: '/reports/progress' },
+    { name: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
+    { name: 'Students', href: '/students', icon: <User className="h-4 w-4 mr-2" /> },
+    { name: 'Assessments', href: '/assessments', icon: <BookOpen className="h-4 w-4 mr-2" /> },
+    { name: 'Insights', href: '/insights/class', icon: <LineChart className="h-4 w-4 mr-2" /> },
+    { name: 'Reports', href: '/reports/progress', icon: <FileText className="h-4 w-4 mr-2" /> },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -63,13 +73,14 @@ const Header: React.FC<HeaderProps> = ({
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`text-sm font-medium transition-colors hover:text-blue-600 ${
+                  className={`text-sm font-medium transition-colors hover:text-blue-600 flex items-center ${
                     location.pathname === item.href || 
                     (item.href !== '/' && location.pathname.startsWith(item.href))
                       ? 'text-blue-600' 
                       : 'text-gray-700'
                   }`}
                 >
+                  {isAuthenticated && item.icon}
                   {item.name}
                 </Link>
               ))}
@@ -80,14 +91,18 @@ const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <Button variant="ghost" size="sm">
-                  <Settings className="h-4 w-4" />
-                </Button>
+                <Link to="/settings/profile">
+                  <Button variant="ghost" size="sm">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </Link>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="flex items-center space-x-2">
                       <User className="h-4 w-4" />
-                      <span className="hidden sm:inline">Ms. Johnson</span>
+                      <span className="hidden sm:inline">
+                        {profile?.full_name?.split(' ')[0] || 'Teacher'}
+                      </span>
                       <ChevronDown className="h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -105,7 +120,10 @@ const Header: React.FC<HeaderProps> = ({
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="flex items-center text-red-600">
+                    <DropdownMenuItem 
+                      onClick={handleSignOut}
+                      className="flex items-center text-red-600 cursor-pointer"
+                    >
                       <LogOut className="h-4 w-4 mr-2" />
                       Sign Out
                     </DropdownMenuItem>
@@ -128,9 +146,46 @@ const Header: React.FC<HeaderProps> = ({
             )}
 
             {/* Mobile menu button */}
-            <Button variant="ghost" size="sm" className="md:hidden">
-              <Menu className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="md:hidden">
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {(isAuthenticated ? appNavItems : publicNavItems).map((item) => (
+                  <DropdownMenuItem key={item.name} asChild>
+                    <Link to={item.href} className="flex items-center">
+                      {isAuthenticated && item.icon}
+                      {item.name}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                {isAuthenticated ? (
+                  <DropdownMenuItem 
+                    onClick={handleSignOut}
+                    className="flex items-center text-red-600 cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                ) : (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link to="/auth/login" className="flex items-center">
+                        Sign In
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/auth/signup" className="flex items-center">
+                        Get Started
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

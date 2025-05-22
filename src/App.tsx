@@ -3,7 +3,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Public Pages
 import Index from "./pages/Index";
@@ -16,6 +18,8 @@ import Contact from "./pages/Contact";
 import Signup from "./pages/auth/Signup";
 import Login from "./pages/auth/Login";
 import Onboarding from "./pages/auth/Onboarding";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 // Main Application Pages
 import Dashboard from "./pages/app/Dashboard";
@@ -54,64 +58,250 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Public Pages */}
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/demo" element={<Demo />} />
-          <Route path="/contact" element={<Contact />} />
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* Public Pages */}
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/demo" element={<Demo />} />
+            <Route path="/contact" element={<Contact />} />
 
-          {/* Auth Pages */}
-          <Route path="/auth/signup" element={<Signup />} />
-          <Route path="/auth/login" element={<Login />} />
-          <Route path="/auth/onboarding" element={<Onboarding />} />
+            {/* Auth Pages */}
+            <Route path="/auth/signup" element={<Signup />} />
+            <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+            <Route path="/auth/reset-password" element={<ResetPassword />} />
+            <Route 
+              path="/auth/onboarding" 
+              element={
+                <ProtectedRoute>
+                  <Onboarding />
+                </ProtectedRoute>
+              } 
+            />
 
-          {/* Main Application */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          
-          {/* Students */}
-          <Route path="/students" element={<Students />} />
-          <Route path="/students/add" element={<AddStudent />} />
-          <Route path="/students/import" element={<ImportStudents />} />
-          <Route path="/students/:id" element={<StudentProfile />} />
-          <Route path="/students/:id/assessments" element={<StudentAssessments />} />
-          <Route path="/students/:id/insights" element={<StudentInsights />} />
-          <Route path="/students/:id/goals" element={<StudentGoals />} />
+            {/* Main Application - Protected Routes */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Students - Protected Routes */}
+            <Route 
+              path="/students" 
+              element={
+                <ProtectedRoute>
+                  <Students />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/students/add" 
+              element={
+                <ProtectedRoute>
+                  <AddStudent />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/students/import" 
+              element={
+                <ProtectedRoute>
+                  <ImportStudents />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/students/:id" 
+              element={
+                <ProtectedRoute>
+                  <StudentProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/students/:id/assessments" 
+              element={
+                <ProtectedRoute>
+                  <StudentAssessments />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/students/:id/insights" 
+              element={
+                <ProtectedRoute>
+                  <StudentInsights />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/students/:id/goals" 
+              element={
+                <ProtectedRoute>
+                  <StudentGoals />
+                </ProtectedRoute>
+              } 
+            />
 
-          {/* Assessments */}
-          <Route path="/assessments" element={<Assessments />} />
-          <Route path="/assessments/add" element={<AddAssessment />} />
-          <Route path="/assessments/batch" element={<BatchAssessment />} />
-          <Route path="/assessments/:id" element={<AssessmentDetails />} />
-          <Route path="/assessments/:id/analysis" element={<AssessmentAnalysis />} />
+            {/* Assessments - Protected Routes */}
+            <Route 
+              path="/assessments" 
+              element={
+                <ProtectedRoute>
+                  <Assessments />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/assessments/add" 
+              element={
+                <ProtectedRoute>
+                  <AddAssessment />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/assessments/batch" 
+              element={
+                <ProtectedRoute>
+                  <BatchAssessment />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/assessments/:id" 
+              element={
+                <ProtectedRoute>
+                  <AssessmentDetails />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/assessments/:id/analysis" 
+              element={
+                <ProtectedRoute>
+                  <AssessmentAnalysis />
+                </ProtectedRoute>
+              } 
+            />
 
-          {/* Insights */}
-          <Route path="/insights/class" element={<ClassInsights />} />
-          <Route path="/insights/individual" element={<IndividualInsights />} />
-          <Route path="/insights/skills" element={<SkillsInsights />} />
-          <Route path="/insights/recommendations" element={<Recommendations />} />
+            {/* Insights - Protected Routes */}
+            <Route 
+              path="/insights/class" 
+              element={
+                <ProtectedRoute>
+                  <ClassInsights />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/insights/individual" 
+              element={
+                <ProtectedRoute>
+                  <IndividualInsights />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/insights/skills" 
+              element={
+                <ProtectedRoute>
+                  <SkillsInsights />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/insights/recommendations" 
+              element={
+                <ProtectedRoute>
+                  <Recommendations />
+                </ProtectedRoute>
+              } 
+            />
 
-          {/* Reports */}
-          <Route path="/reports/progress" element={<ProgressReports />} />
-          <Route path="/reports/parent" element={<ParentReports />} />
-          <Route path="/reports/admin" element={<AdminReports />} />
-          <Route path="/reports/export" element={<ExportReports />} />
+            {/* Reports - Protected Routes */}
+            <Route 
+              path="/reports/progress" 
+              element={
+                <ProtectedRoute>
+                  <ProgressReports />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/parent" 
+              element={
+                <ProtectedRoute>
+                  <ParentReports />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminReports />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reports/export" 
+              element={
+                <ProtectedRoute>
+                  <ExportReports />
+                </ProtectedRoute>
+              } 
+            />
 
-          {/* Settings */}
-          <Route path="/settings/profile" element={<ProfileSettings />} />
-          <Route path="/settings/subjects" element={<SubjectsSettings />} />
-          <Route path="/settings/notifications" element={<NotificationsSettings />} />
-          <Route path="/settings/integrations" element={<IntegrationsSettings />} />
+            {/* Settings - Protected Routes */}
+            <Route 
+              path="/settings/profile" 
+              element={
+                <ProtectedRoute>
+                  <ProfileSettings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings/subjects" 
+              element={
+                <ProtectedRoute>
+                  <SubjectsSettings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings/notifications" 
+              element={
+                <ProtectedRoute>
+                  <NotificationsSettings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings/integrations" 
+              element={
+                <ProtectedRoute>
+                  <IntegrationsSettings />
+                </ProtectedRoute>
+              } 
+            />
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
