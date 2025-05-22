@@ -9,6 +9,158 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      assessment_analysis: {
+        Row: {
+          analysis_json: Json | null
+          assessment_id: string
+          created_at: string
+          growth_areas: string[]
+          id: string
+          overall_summary: string | null
+          patterns_observed: string[]
+          recommendations: string[]
+          strengths: string[]
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          analysis_json?: Json | null
+          assessment_id: string
+          created_at?: string
+          growth_areas?: string[]
+          id?: string
+          overall_summary?: string | null
+          patterns_observed?: string[]
+          recommendations?: string[]
+          strengths?: string[]
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          analysis_json?: Json | null
+          assessment_id?: string
+          created_at?: string
+          growth_areas?: string[]
+          id?: string
+          overall_summary?: string | null
+          patterns_observed?: string[]
+          recommendations?: string[]
+          strengths?: string[]
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_analysis_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_analysis_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessment_items: {
+        Row: {
+          assessment_id: string
+          created_at: string
+          difficulty_level: string
+          id: string
+          item_number: number
+          knowledge_type: string
+          max_score: number
+          question_text: string
+          standard_reference: string | null
+          updated_at: string
+        }
+        Insert: {
+          assessment_id: string
+          created_at?: string
+          difficulty_level: string
+          id?: string
+          item_number: number
+          knowledge_type: string
+          max_score: number
+          question_text: string
+          standard_reference?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assessment_id?: string
+          created_at?: string
+          difficulty_level?: string
+          id?: string
+          item_number?: number
+          knowledge_type?: string
+          max_score?: number
+          question_text?: string
+          standard_reference?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_items_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessments: {
+        Row: {
+          assessment_date: string | null
+          assessment_type: string
+          created_at: string
+          description: string | null
+          grade_level: string
+          id: string
+          is_draft: boolean | null
+          max_score: number
+          standards_covered: string[] | null
+          subject: string
+          teacher_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assessment_date?: string | null
+          assessment_type: string
+          created_at?: string
+          description?: string | null
+          grade_level: string
+          id?: string
+          is_draft?: boolean | null
+          max_score: number
+          standards_covered?: string[] | null
+          subject: string
+          teacher_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assessment_date?: string | null
+          assessment_type?: string
+          created_at?: string
+          description?: string | null
+          grade_level?: string
+          id?: string
+          is_draft?: boolean | null
+          max_score?: number
+          standards_covered?: string[] | null
+          subject?: string
+          teacher_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       student_performance: {
         Row: {
           assessment_count: number
@@ -46,6 +198,64 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "student_performance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_responses: {
+        Row: {
+          assessment_id: string
+          assessment_item_id: string
+          created_at: string
+          error_type: string | null
+          id: string
+          score: number
+          student_id: string
+          teacher_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          assessment_id: string
+          assessment_item_id: string
+          created_at?: string
+          error_type?: string | null
+          id?: string
+          score: number
+          student_id: string
+          teacher_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assessment_id?: string
+          assessment_item_id?: string
+          created_at?: string
+          error_type?: string | null
+          id?: string
+          score?: number
+          student_id?: string
+          teacher_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_responses_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_responses_assessment_item_id_fkey"
+            columns: ["assessment_item_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_responses_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"

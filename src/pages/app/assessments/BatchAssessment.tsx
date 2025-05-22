@@ -1,14 +1,21 @@
 
 import React from 'react';
-import PageShell from '@/components/ui/page-shell';
-import { Upload } from 'lucide-react';
+import { PageShell } from '@/components/ui/page-shell';
 
-const BatchAssessment = () => (
-  <PageShell 
-    title="Batch Assessment" 
-    description="Add assessment data for multiple students at once"
-    icon={<Upload className="h-6 w-6 text-blue-600" />}
-  />
-);
+const BatchAssessment: React.FC = () => {
+  return (
+    <PageShell
+      title="Batch Assessment Entry"
+      description="Enter assessment data for multiple students at once"
+      link="/app/assessments"
+      linkText="Back to Assessments"
+    >
+      <div className="text-center p-8">
+        <h2 className="text-xl font-semibold">Coming Soon</h2>
+        <p className="mt-2">Batch assessment entry functionality is under development.</p>
+      </div>
+    </PageShell>
+  );
+};
 
 export default BatchAssessment;
