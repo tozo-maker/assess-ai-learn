@@ -171,7 +171,7 @@ const Students = () => {
               <SelectValue placeholder="Grade Level" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Grades</SelectItem>
+              <SelectItem value="all">All Grades</SelectItem>
               {gradeLevelOptions.map((grade) => (
                 <SelectItem key={grade} value={grade}>{grade}</SelectItem>
               ))}
@@ -183,7 +183,7 @@ const Students = () => {
                 <SelectValue placeholder="Performance" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Performance</SelectItem>
+                <SelectItem value="all">All Performance</SelectItem>
                 {performanceLevelOptions.map((level) => (
                   <SelectItem key={level} value={level}>{level}</SelectItem>
                 ))}
