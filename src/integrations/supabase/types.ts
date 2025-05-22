@@ -9,7 +9,92 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      student_performance: {
+        Row: {
+          assessment_count: number
+          average_score: number | null
+          created_at: string
+          id: string
+          last_assessment_date: string | null
+          needs_attention: boolean
+          performance_level: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          assessment_count?: number
+          average_score?: number | null
+          created_at?: string
+          id?: string
+          last_assessment_date?: string | null
+          needs_attention?: boolean
+          performance_level?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          assessment_count?: number
+          average_score?: number | null
+          created_at?: string
+          id?: string
+          last_assessment_date?: string | null
+          needs_attention?: boolean
+          performance_level?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_performance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          first_name: string
+          grade_level: string
+          id: string
+          last_name: string
+          learning_goals: string | null
+          special_considerations: string | null
+          student_id: string | null
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          first_name: string
+          grade_level: string
+          id?: string
+          last_name: string
+          learning_goals?: string | null
+          special_considerations?: string | null
+          student_id?: string | null
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          first_name?: string
+          grade_level?: string
+          id?: string
+          last_name?: string
+          learning_goals?: string | null
+          special_considerations?: string | null
+          student_id?: string | null
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
