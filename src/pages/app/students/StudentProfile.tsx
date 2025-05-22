@@ -72,7 +72,7 @@ import {
 } from 'lucide-react';
 import { studentService } from '@/services/student-service';
 import { studentFormSchema, StudentFormValues } from '@/lib/validations/student';
-import { gradeLevelOptions } from '@/types/student';
+import { gradeLevelOptions, PerformanceLevel } from '@/types/student';
 
 const StudentProfile = () => {
   const { id } = useParams<{ id: string }>();
@@ -174,7 +174,7 @@ const StudentProfile = () => {
     property: string, 
     defaultValue: T
   ): T => {
-    if (!student.performance) {
+    if (!student?.performance) {
       return defaultValue;
     }
     
@@ -489,9 +489,9 @@ const StudentProfile = () => {
                 <div className="bg-gray-50 px-4 py-2 rounded-lg">
                   <div className="text-sm text-gray-500">Performance</div>
                   <div className={`text-lg font-medium flex items-center gap-1 ${
-                    getPerformanceProperty('performance_level', '') === 'Above Average' ? 'text-green-600' :
-                    getPerformanceProperty('performance_level', '') === 'Below Average' ? 'text-red-600' :
-                    getPerformanceProperty('performance_level', '') === 'Average' ? 'text-yellow-600' :
+                    getPerformanceProperty<string | null>('performance_level', null) === 'Above Average' ? 'text-green-600' :
+                    getPerformanceProperty<string | null>('performance_level', null) === 'Below Average' ? 'text-red-600' :
+                    getPerformanceProperty<string | null>('performance_level', null) === 'Average' ? 'text-yellow-600' :
                     'text-gray-600'
                   }`}>
                     {getPerformanceProperty('performance_level', 'Not assessed')}

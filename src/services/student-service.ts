@@ -176,19 +176,21 @@ export const studentService = {
     let filteredStudents = normalizedStudents;
     
     if (filters.needs_attention !== undefined) {
-      filteredStudents = filteredStudents.filter(student => 
-        student.performance && 
-        ((typeof student.performance === 'object' && !Array.isArray(student.performance)) ? 
-          student.performance.needs_attention === filters.needs_attention : false)
-      );
+      filteredStudents = filteredStudents.filter(student => {
+        if (!student.performance || Array.isArray(student.performance)) {
+          return false;
+        }
+        return student.performance.needs_attention === filters.needs_attention;
+      });
     }
     
     if (filters.performance_level) {
-      filteredStudents = filteredStudents.filter(student => 
-        student.performance && 
-        ((typeof student.performance === 'object' && !Array.isArray(student.performance)) ? 
-          student.performance.performance_level === filters.performance_level : false)
-      );
+      filteredStudents = filteredStudents.filter(student => {
+        if (!student.performance || Array.isArray(student.performance)) {
+          return false;
+        }
+        return student.performance.performance_level === filters.performance_level;
+      });
     }
     
     return filteredStudents;
@@ -214,34 +216,36 @@ export const studentService = {
     
     const totalStudents = normalizedStudents.length || 0;
     
-    const studentsNeedingAttention = normalizedStudents.filter(
-      student => student.performance && 
-        ((typeof student.performance === 'object' && !Array.isArray(student.performance)) ? 
-          student.performance.needs_attention : false)
-    ).length || 0;
+    const studentsNeedingAttention = normalizedStudents.filter(student => {
+      if (!student.performance || Array.isArray(student.performance)) {
+        return false;
+      }
+      return student.performance.needs_attention;
+    }).length || 0;
     
-    const aboveAverageCount = normalizedStudents.filter(
-      student => student.performance && 
-        ((typeof student.performance === 'object' && !Array.isArray(student.performance)) ? 
-          student.performance.performance_level === 'Above Average' : false)
-    ).length || 0;
+    const aboveAverageCount = normalizedStudents.filter(student => {
+      if (!student.performance || Array.isArray(student.performance)) {
+        return false;
+      }
+      return student.performance.performance_level === 'Above Average';
+    }).length || 0;
     
     let averagePerformance = 0;
-    const studentsWithScores = normalizedStudents.filter(student => 
-      student.performance && 
-      ((typeof student.performance === 'object' && !Array.isArray(student.performance)) ? 
-        student.performance.average_score !== null && 
-        student.performance.average_score !== undefined : false)
-    );
+    const studentsWithScores = normalizedStudents.filter(student => {
+      if (!student.performance || Array.isArray(student.performance)) {
+        return false;
+      }
+      return student.performance.average_score !== null && 
+             student.performance.average_score !== undefined;
+    });
     
     if (studentsWithScores && studentsWithScores.length > 0) {
       const sum = studentsWithScores.reduce(
         (acc, student) => {
-          // Ensure performance is a single object before accessing average_score
-          if (student.performance && typeof student.performance === 'object' && !Array.isArray(student.performance)) {
-            return acc + (student.performance.average_score || 0);
+          if (!student.performance || Array.isArray(student.performance)) {
+            return acc;
           }
-          return acc;
+          return acc + (student.performance.average_score || 0);
         }, 
         0
       );

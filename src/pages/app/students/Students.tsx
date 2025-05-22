@@ -311,9 +311,9 @@ const Students = () => {
                           <p className="text-sm text-gray-600">Performance</p>
                           <div className="flex items-center space-x-2">
                             <span className={`text-sm font-medium ${
-                              getPerformanceProperty(student, 'performance_level', '') === 'Above Average' ? 'text-green-600' :
-                              getPerformanceProperty(student, 'performance_level', '') === 'Below Average' ? 'text-red-600' :
-                              getPerformanceProperty(student, 'performance_level', '') === 'Average' ? 'text-yellow-600' :
+                              getPerformanceProperty<string | null>(student, 'performance_level', null) === 'Above Average' ? 'text-green-600' :
+                              getPerformanceProperty<string | null>(student, 'performance_level', null) === 'Below Average' ? 'text-red-600' :
+                              getPerformanceProperty<string | null>(student, 'performance_level', null) === 'Average' ? 'text-yellow-600' :
                               'text-gray-500'
                             }`}>
                               {getPerformanceProperty(student, 'performance_level', "Not assessed")}
