@@ -1,8 +1,10 @@
 
 import React from 'react';
 import AppLayout from '@/components/layout/AppLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ChevronLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface PageShellProps {
   title: string;
@@ -10,6 +12,7 @@ interface PageShellProps {
   icon?: React.ReactNode;
   children?: React.ReactNode;
   actions?: React.ReactNode;
+  backLink?: string;
 }
 
 const PageShell: React.FC<PageShellProps> = ({ 
@@ -17,7 +20,8 @@ const PageShell: React.FC<PageShellProps> = ({
   description, 
   icon, 
   children, 
-  actions 
+  actions,
+  backLink
 }) => {
   return (
     <AppLayout isAuthenticated={true}>
@@ -26,6 +30,12 @@ const PageShell: React.FC<PageShellProps> = ({
           <div className="flex items-center space-x-3">
             {icon && <div className="p-2 bg-blue-100 rounded-lg">{icon}</div>}
             <div>
+              {backLink && (
+                <Link to={backLink} className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 mb-2">
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  <span>Back</span>
+                </Link>
+              )}
               <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
               <p className="text-gray-600 mt-1">{description}</p>
             </div>

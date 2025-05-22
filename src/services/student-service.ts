@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Student, StudentPerformance, StudentWithPerformance } from "@/types/student";
+import { Student, StudentPerformance, StudentWithPerformance, normalizeStudentPerformance } from "@/types/student";
 
 export const studentService = {
   async getStudents(): Promise<StudentWithPerformance[]> {
@@ -17,7 +17,8 @@ export const studentService = {
       throw error;
     }
     
-    return students || [];
+    // Normalize the performance data for each student
+    return (students || []).map(student => normalizeStudentPerformance(student as StudentWithPerformance));
   },
   
   async getStudentById(id: string): Promise<StudentWithPerformance | null> {
@@ -35,7 +36,8 @@ export const studentService = {
       throw error;
     }
     
-    return data;
+    // Normalize the performance data
+    return data ? normalizeStudentPerformance(data as StudentWithPerformance) : null;
   },
   
   async createStudent(student: Omit<Student, 'id' | 'created_at' | 'updated_at'>): Promise<Student> {
@@ -137,7 +139,8 @@ export const studentService = {
       throw error;
     }
     
-    return data || [];
+    // Normalize the performance data for each student
+    return (data || []).map(student => normalizeStudentPerformance(student as StudentWithPerformance));
   },
   
   async getStudentsByFilter(filters: {
@@ -164,18 +167,23 @@ export const studentService = {
       throw error;
     }
     
+    // Normalize the performance data for each student
+    const normalizedStudents = (students || []).map(student => 
+      normalizeStudentPerformance(student as StudentWithPerformance)
+    );
+    
     // Then filter by performance attributes in JS
-    let filteredStudents = students || [];
+    let filteredStudents = normalizedStudents;
     
     if (filters.needs_attention !== undefined) {
       filteredStudents = filteredStudents.filter(student => 
-        student.performance?.needs_attention === filters.needs_attention
+        student.performance && student.performance.needs_attention === filters.needs_attention
       );
     }
     
     if (filters.performance_level) {
       filteredStudents = filteredStudents.filter(student => 
-        student.performance?.performance_level === filters.performance_level
+        student.performance && student.performance.performance_level === filters.performance_level
       );
     }
     
@@ -195,18 +203,23 @@ export const studentService = {
       throw error;
     }
     
-    const totalStudents = students?.length || 0;
+    // Normalize the performance data for each student
+    const normalizedStudents = (students || []).map(student => 
+      normalizeStudentPerformance(student as StudentWithPerformance)
+    );
     
-    const studentsNeedingAttention = students?.filter(
+    const totalStudents = normalizedStudents.length || 0;
+    
+    const studentsNeedingAttention = normalizedStudents.filter(
       student => student.performance?.needs_attention
     ).length || 0;
     
-    const aboveAverageCount = students?.filter(
+    const aboveAverageCount = normalizedStudents.filter(
       student => student.performance?.performance_level === 'Above Average'
     ).length || 0;
     
     let averagePerformance = 0;
-    const studentsWithScores = students?.filter(student => 
+    const studentsWithScores = normalizedStudents.filter(student => 
       student.performance?.average_score !== null && 
       student.performance?.average_score !== undefined
     );

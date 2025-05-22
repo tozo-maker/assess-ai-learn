@@ -1,4 +1,3 @@
-
 export interface Student {
   id: string;
   first_name: string;
@@ -25,8 +24,31 @@ export interface StudentPerformance {
   updated_at: string;
 }
 
+// Update this interface to handle the array that Supabase returns
 export interface StudentWithPerformance extends Student {
-  performance?: StudentPerformance;
+  performance?: StudentPerformance[] | StudentPerformance; // Can be array from Supabase or single object
+}
+
+// Helper function to normalize performance data from Supabase
+export function normalizeStudentPerformance(student: StudentWithPerformance): StudentWithPerformance {
+  // If performance is an array with one item, extract that item
+  if (Array.isArray(student.performance) && student.performance.length === 1) {
+    return {
+      ...student,
+      performance: student.performance[0]
+    };
+  }
+  
+  // If performance is an empty array, set to undefined
+  if (Array.isArray(student.performance) && student.performance.length === 0) {
+    return {
+      ...student,
+      performance: undefined
+    };
+  }
+  
+  // Otherwise, return as is
+  return student;
 }
 
 export type GradeLevel = 

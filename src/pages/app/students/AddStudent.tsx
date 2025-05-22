@@ -58,10 +58,16 @@ const AddStudent = () => {
         throw new Error('You must be logged in to add a student');
       }
       
-      return studentService.createStudent({
+      // Ensure the required fields are present (even though form validation should catch this)
+      const studentData = {
         ...values,
+        first_name: values.first_name,  // Explicitly include required fields
+        last_name: values.last_name,    // Explicitly include required fields
+        grade_level: values.grade_level, // Explicitly include required fields
         teacher_id: user.id,
-      });
+      };
+      
+      return studentService.createStudent(studentData);
     },
     onSuccess: () => {
       toast({
