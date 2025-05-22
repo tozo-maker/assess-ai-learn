@@ -91,7 +91,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <AppLayout isAuthenticated={true}>
+    <AppLayout>
       <div className="space-y-8">
         {/* Welcome Header */}
         <div>

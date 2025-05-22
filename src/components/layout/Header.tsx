@@ -80,7 +80,7 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
                       : 'text-gray-700'
                   }`}
                 >
-                  {isAuthenticated && item.icon}
+                  {isAuthenticated && item.icon ? item.icon : null}
                   {item.name}
                 </Link>
               ))}
@@ -156,7 +156,7 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
                 {(isAuthenticated ? appNavItems : publicNavItems).map((item) => (
                   <DropdownMenuItem key={item.name} asChild>
                     <Link to={item.href} className="flex items-center">
-                      {isAuthenticated && item.icon}
+                      {isAuthenticated && item.icon ? item.icon : null}
                       {item.name}
                     </Link>
                   </DropdownMenuItem>

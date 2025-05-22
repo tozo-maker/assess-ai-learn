@@ -24,7 +24,7 @@ const PageShell: React.FC<PageShellProps> = ({
   backLink
 }) => {
   return (
-    <AppLayout isAuthenticated={true}>
+    <AppLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-start">
           <div className="flex items-center space-x-3">
