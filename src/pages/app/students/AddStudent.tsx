@@ -28,7 +28,7 @@ import {
 import { UserPlus } from 'lucide-react';
 import { studentFormSchema, StudentFormValues } from '@/lib/validations/student';
 import { studentService } from '@/services/student-service';
-import { gradeLevelOptions } from '@/types/student';
+import { gradeLevelOptions, Student } from '@/types/student';
 import { supabase } from '@/integrations/supabase/client';
 
 const AddStudent = () => {
@@ -58,13 +58,15 @@ const AddStudent = () => {
         throw new Error('You must be logged in to add a student');
       }
       
-      // Ensure the required fields are present (even though form validation should catch this)
-      const studentData = {
-        ...values,
-        first_name: values.first_name,  // Explicitly include required fields
-        last_name: values.last_name,    // Explicitly include required fields
-        grade_level: values.grade_level, // Explicitly include required fields
+      // Create a properly typed student object
+      const studentData: Omit<Student, 'id' | 'created_at' | 'updated_at'> = {
+        first_name: values.first_name,
+        last_name: values.last_name,
+        grade_level: values.grade_level,
         teacher_id: user.id,
+        student_id: values.student_id || undefined,
+        learning_goals: values.learning_goals || undefined,
+        special_considerations: values.special_considerations || undefined,
       };
       
       return studentService.createStudent(studentData);

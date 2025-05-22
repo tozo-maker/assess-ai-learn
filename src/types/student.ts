@@ -1,3 +1,4 @@
+
 export interface Student {
   id: string;
   first_name: string;
@@ -26,7 +27,7 @@ export interface StudentPerformance {
 
 // Update this interface to handle the array that Supabase returns
 export interface StudentWithPerformance extends Student {
-  performance?: StudentPerformance[] | StudentPerformance; // Can be array from Supabase or single object
+  performance?: StudentPerformance | StudentPerformance[]; // Can be array from Supabase or single object
 }
 
 // Helper function to normalize performance data from Supabase

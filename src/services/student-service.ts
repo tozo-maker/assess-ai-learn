@@ -177,13 +177,17 @@ export const studentService = {
     
     if (filters.needs_attention !== undefined) {
       filteredStudents = filteredStudents.filter(student => 
-        student.performance && student.performance.needs_attention === filters.needs_attention
+        student.performance && 
+        ((typeof student.performance === 'object' && !Array.isArray(student.performance)) ? 
+          student.performance.needs_attention === filters.needs_attention : false)
       );
     }
     
     if (filters.performance_level) {
       filteredStudents = filteredStudents.filter(student => 
-        student.performance && student.performance.performance_level === filters.performance_level
+        student.performance && 
+        ((typeof student.performance === 'object' && !Array.isArray(student.performance)) ? 
+          student.performance.performance_level === filters.performance_level : false)
       );
     }
     
@@ -211,22 +215,34 @@ export const studentService = {
     const totalStudents = normalizedStudents.length || 0;
     
     const studentsNeedingAttention = normalizedStudents.filter(
-      student => student.performance?.needs_attention
+      student => student.performance && 
+        ((typeof student.performance === 'object' && !Array.isArray(student.performance)) ? 
+          student.performance.needs_attention : false)
     ).length || 0;
     
     const aboveAverageCount = normalizedStudents.filter(
-      student => student.performance?.performance_level === 'Above Average'
+      student => student.performance && 
+        ((typeof student.performance === 'object' && !Array.isArray(student.performance)) ? 
+          student.performance.performance_level === 'Above Average' : false)
     ).length || 0;
     
     let averagePerformance = 0;
     const studentsWithScores = normalizedStudents.filter(student => 
-      student.performance?.average_score !== null && 
-      student.performance?.average_score !== undefined
+      student.performance && 
+      ((typeof student.performance === 'object' && !Array.isArray(student.performance)) ? 
+        student.performance.average_score !== null && 
+        student.performance.average_score !== undefined : false)
     );
     
     if (studentsWithScores && studentsWithScores.length > 0) {
       const sum = studentsWithScores.reduce(
-        (acc, student) => acc + (student.performance?.average_score || 0), 
+        (acc, student) => {
+          // Ensure performance is a single object before accessing average_score
+          if (student.performance && typeof student.performance === 'object' && !Array.isArray(student.performance)) {
+            return acc + (student.performance.average_score || 0);
+          }
+          return acc;
+        }, 
         0
       );
       averagePerformance = Math.round((sum / studentsWithScores.length) * 100) / 100;

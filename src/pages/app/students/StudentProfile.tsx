@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -168,6 +167,24 @@ const StudentProfile = () => {
 
   const onSubmit = (values: StudentFormValues) => {
     updateStudentMutation.mutate(values);
+  };
+
+  // Helper function to safely access performance properties
+  const getPerformanceProperty = <T extends any>(
+    property: string, 
+    defaultValue: T
+  ): T => {
+    if (!student.performance) {
+      return defaultValue;
+    }
+    
+    // If performance is an array, we don't have proper data yet
+    if (Array.isArray(student.performance)) {
+      return defaultValue;
+    }
+    
+    // Now TypeScript knows student.performance is an object
+    return (student.performance as any)[property] ?? defaultValue;
   };
 
   // Handle loading and error states
@@ -456,15 +473,15 @@ const StudentProfile = () => {
                 <div className="bg-gray-50 px-4 py-2 rounded-lg">
                   <div className="text-sm text-gray-500">Assessments</div>
                   <div className="text-lg font-medium">
-                    {student.performance?.assessment_count || 0}
+                    {getPerformanceProperty('assessment_count', 0)}
                   </div>
                 </div>
 
                 <div className="bg-gray-50 px-4 py-2 rounded-lg">
                   <div className="text-sm text-gray-500">Average Score</div>
                   <div className="text-lg font-medium">
-                    {student.performance?.average_score
-                      ? `${student.performance.average_score}%`
+                    {getPerformanceProperty('average_score', null)
+                      ? `${getPerformanceProperty('average_score', 0)}%`
                       : 'N/A'}
                   </div>
                 </div>
@@ -472,13 +489,13 @@ const StudentProfile = () => {
                 <div className="bg-gray-50 px-4 py-2 rounded-lg">
                   <div className="text-sm text-gray-500">Performance</div>
                   <div className={`text-lg font-medium flex items-center gap-1 ${
-                    student.performance?.performance_level === 'Above Average' ? 'text-green-600' :
-                    student.performance?.performance_level === 'Below Average' ? 'text-red-600' :
-                    student.performance?.performance_level === 'Average' ? 'text-yellow-600' :
+                    getPerformanceProperty('performance_level', '') === 'Above Average' ? 'text-green-600' :
+                    getPerformanceProperty('performance_level', '') === 'Below Average' ? 'text-red-600' :
+                    getPerformanceProperty('performance_level', '') === 'Average' ? 'text-yellow-600' :
                     'text-gray-600'
                   }`}>
-                    {student.performance?.performance_level || 'Not assessed'}
-                    {student.performance?.needs_attention && (
+                    {getPerformanceProperty('performance_level', 'Not assessed')}
+                    {getPerformanceProperty('needs_attention', false) && (
                       <AlertCircle className="h-4 w-4 text-red-500" />
                     )}
                   </div>

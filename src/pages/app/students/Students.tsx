@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import PageShell from '@/components/ui/page-shell';
@@ -127,6 +126,25 @@ const Students = () => {
       </Link>
     </>
   );
+
+  // Helper function to safely access performance properties
+  const getPerformanceProperty = <T extends any>(
+    student: StudentWithPerformance,
+    property: string, 
+    defaultValue: T
+  ): T => {
+    if (!student.performance) {
+      return defaultValue;
+    }
+    
+    // If performance is an array, we don't have proper data yet
+    if (Array.isArray(student.performance)) {
+      return defaultValue;
+    }
+    
+    // Now TypeScript knows student.performance is an object
+    return (student.performance as any)[property] ?? defaultValue;
+  };
 
   return (
     <PageShell 
@@ -284,8 +302,8 @@ const Students = () => {
                         <div className="text-right">
                           <p className="text-sm text-gray-600">Last Assessment</p>
                           <p className="text-sm font-medium">
-                            {student.performance?.last_assessment_date 
-                              ? new Date(student.performance.last_assessment_date).toLocaleDateString()
+                            {getPerformanceProperty(student, 'last_assessment_date', null) 
+                              ? new Date(getPerformanceProperty(student, 'last_assessment_date', '')).toLocaleDateString()
                               : "No assessments yet"}
                           </p>
                         </div>
@@ -293,14 +311,14 @@ const Students = () => {
                           <p className="text-sm text-gray-600">Performance</p>
                           <div className="flex items-center space-x-2">
                             <span className={`text-sm font-medium ${
-                              student.performance?.performance_level === 'Above Average' ? 'text-green-600' :
-                              student.performance?.performance_level === 'Below Average' ? 'text-red-600' :
-                              student.performance?.performance_level === 'Average' ? 'text-yellow-600' :
+                              getPerformanceProperty(student, 'performance_level', '') === 'Above Average' ? 'text-green-600' :
+                              getPerformanceProperty(student, 'performance_level', '') === 'Below Average' ? 'text-red-600' :
+                              getPerformanceProperty(student, 'performance_level', '') === 'Average' ? 'text-yellow-600' :
                               'text-gray-500'
                             }`}>
-                              {student.performance?.performance_level || "Not assessed"}
+                              {getPerformanceProperty(student, 'performance_level', "Not assessed")}
                             </span>
-                            {student.performance?.needs_attention && (
+                            {getPerformanceProperty(student, 'needs_attention', false) && (
                               <AlertCircle className="h-4 w-4 text-red-500" />
                             )}
                           </div>
