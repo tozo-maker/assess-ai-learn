@@ -63,15 +63,21 @@ export const authService = {
     
     if (!user.user) return null;
     
-    // Use a type assertion to tell TypeScript this is OK
-    const { data, error } = await supabase
-      .from('teacher_profiles' as any)
-      .select('*')
-      .eq('id', user.user.id)
-      .single();
-    
-    if (error) throw error;
-    return data as TeacherProfile;
+    try {
+      // Use a type assertion with unknown first to avoid direct conversion errors
+      const { data, error } = await supabase
+        .from('teacher_profiles' as any)
+        .select('*')
+        .eq('id', user.user.id)
+        .single();
+      
+      if (error) throw error;
+      // Safely convert to TeacherProfile
+      return data as unknown as TeacherProfile;
+    } catch (error) {
+      console.error('Error fetching teacher profile:', error);
+      return null;
+    }
   },
 
   async updateProfile(profile: Partial<TeacherProfile>): Promise<TeacherProfile> {
@@ -79,15 +85,21 @@ export const authService = {
     
     if (!user.user) throw new Error('No authenticated user');
     
-    // Use a type assertion to tell TypeScript this is OK
-    const { data, error } = await supabase
-      .from('teacher_profiles' as any)
-      .update(profile)
-      .eq('id', user.user.id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data as TeacherProfile;
+    try {
+      // Use a type assertion with unknown first to avoid direct conversion errors
+      const { data, error } = await supabase
+        .from('teacher_profiles' as any)
+        .update(profile)
+        .eq('id', user.user.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      // Safely convert to TeacherProfile
+      return data as unknown as TeacherProfile;
+    } catch (error) {
+      console.error('Error updating teacher profile:', error);
+      throw error;
+    }
   }
 };

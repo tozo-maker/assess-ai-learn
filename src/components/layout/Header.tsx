@@ -27,6 +27,13 @@ interface HeaderProps {
   showNavigation?: boolean;
 }
 
+// Add proper type for navigation items
+interface NavItem {
+  name: string;
+  href: string;
+  icon?: React.ReactNode;
+}
+
 const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -34,14 +41,14 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
   
   const isAuthenticated = !!user;
 
-  const publicNavItems = [
+  const publicNavItems: NavItem[] = [
     { name: 'Features', href: '/#features' },
     { name: 'About', href: '/about' },
     { name: 'Pricing', href: '/pricing' },
     { name: 'Demo', href: '/demo' },
   ];
 
-  const appNavItems = [
+  const appNavItems: NavItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
     { name: 'Students', href: '/students', icon: <User className="h-4 w-4 mr-2" /> },
     { name: 'Assessments', href: '/assessments', icon: <BookOpen className="h-4 w-4 mr-2" /> },
@@ -80,7 +87,7 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
                       : 'text-gray-700'
                   }`}
                 >
-                  {isAuthenticated && item.icon ? item.icon : null}
+                  {isAuthenticated && item.icon}
                   {item.name}
                 </Link>
               ))}
@@ -156,7 +163,7 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
                 {(isAuthenticated ? appNavItems : publicNavItems).map((item) => (
                   <DropdownMenuItem key={item.name} asChild>
                     <Link to={item.href} className="flex items-center">
-                      {isAuthenticated && item.icon ? item.icon : null}
+                      {isAuthenticated && item.icon}
                       {item.name}
                     </Link>
                   </DropdownMenuItem>
