@@ -24,7 +24,7 @@ const AssessmentList: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined);
 
   const { data: assessments, isLoading, error, refetch } = useQuery({
     queryKey: ['assessments'],
@@ -54,7 +54,7 @@ const AssessmentList: React.FC = () => {
       assessment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       assessment.subject.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesType = typeFilter === '' || assessment.assessment_type === typeFilter;
+    const matchesType = !typeFilter || assessment.assessment_type === typeFilter;
     
     return matchesSearch && matchesType;
   });
@@ -110,8 +110,8 @@ const AssessmentList: React.FC = () => {
         </div>
         
         <Select
-          value={typeFilter}
-          onValueChange={(value) => setTypeFilter(value)}
+          value={typeFilter || undefined}
+          onValueChange={(value) => setTypeFilter(value === 'all' ? undefined : value)}
         >
           <SelectTrigger>
             <div className="flex items-center">
@@ -120,8 +120,8 @@ const AssessmentList: React.FC = () => {
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Types</SelectItem>
-            {assessmentTypeOptions.map((type) => (
+            <SelectItem value="all">All Types</SelectItem>
+            {assessmentTypeOptions.filter(type => type && type.trim() !== '').map((type) => (
               <SelectItem key={type} value={type}>
                 {type.charAt(0).toUpperCase() + type.slice(1)}
               </SelectItem>
