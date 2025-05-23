@@ -31,7 +31,7 @@ const AssessmentAnalysis: React.FC = () => {
   });
 
   const handleStudentChange = (studentId: string) => {
-    if (studentId === 'placeholder') return; // Ignore placeholder selection
+    if (studentId === 'no-students') return; // Ignore placeholder selection
     
     setSelectedStudentId(studentId);
     setSearchParams({ student: studentId });
@@ -79,63 +79,50 @@ const AssessmentAnalysis: React.FC = () => {
     return <AssessmentAnalysisDisplay assessmentId={id as string} studentId={selectedStudentId} />;
   };
 
-  // Enhanced filtering with comprehensive validation
+  // Enhanced filtering with final validation before rendering
   const validStudents = React.useMemo(() => {
     if (!students || !Array.isArray(students)) {
       console.log('No students data or invalid array:', students);
       return [];
     }
     
-    console.log('Raw students data:', students);
-    
     const filtered = students.filter(student => {
       // Basic existence check
       if (!student || typeof student !== 'object') {
-        console.log('Invalid student object:', student);
         return false;
       }
       
       // Check for id property and validate it thoroughly
       if (!('id' in student)) {
-        console.log('Student missing id property:', student);
         return false;
       }
       
       const studentId = student.id;
       
-      // Comprehensive ID validation
+      // Comprehensive ID validation - MUST be a non-empty string
       if (studentId === null || studentId === undefined) {
-        console.log('Student has null/undefined id:', student);
         return false;
       }
       
       if (typeof studentId !== 'string') {
-        console.log('Student id is not a string:', student);
         return false;
       }
       
       if (studentId === '' || studentId.trim() === '') {
-        console.log('Student has empty string id:', student);
         return false;
       }
       
       // Check for required name fields
       if (!student.first_name || typeof student.first_name !== 'string' || student.first_name.trim() === '') {
-        console.log('Student missing or invalid first_name:', student);
         return false;
       }
       
       if (!student.last_name || typeof student.last_name !== 'string' || student.last_name.trim() === '') {
-        console.log('Student missing or invalid last_name:', student);
         return false;
       }
       
-      console.log('Valid student found:', { id: studentId, name: `${student.first_name} ${student.last_name}` });
       return true;
     });
-    
-    console.log('Filtered valid students count:', filtered.length);
-    console.log('Valid students:', filtered.map(s => ({ id: s.id, name: `${s.first_name} ${s.last_name}` })));
     
     return filtered;
   }, [students]);
@@ -159,27 +146,35 @@ const AssessmentAnalysis: React.FC = () => {
           </div>
           
           <div className="w-full sm:w-64">
-            <Select value={selectedStudentId || undefined} onValueChange={handleStudentChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a student" />
-              </SelectTrigger>
-              <SelectContent>
-                {validStudents.length > 0 ? (
-                  validStudents.map(student => {
-                    console.log('Rendering SelectItem for student:', { id: student.id, name: `${student.first_name} ${student.last_name}` });
-                    return (
-                      <SelectItem key={student.id} value={student.id}>
-                        {student.first_name} {student.last_name}
-                      </SelectItem>
-                    );
-                  })
-                ) : (
-                  <SelectItem value="no-students" disabled>
-                    No students available
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+            {validStudents.length > 0 ? (
+              <Select 
+                value={selectedStudentId || undefined} 
+                onValueChange={handleStudentChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a student" />
+                </SelectTrigger>
+                <SelectContent>
+                  {validStudents.map(student => (
+                    <SelectItem 
+                      key={student.id} 
+                      value={student.id || "invalid-id"} // Fallback to prevent empty string
+                    >
+                      {student.first_name} {student.last_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Select disabled value="no-students">
+                <SelectTrigger>
+                  <SelectValue placeholder="No students available" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="no-students">No students available</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </div>
       </div>
