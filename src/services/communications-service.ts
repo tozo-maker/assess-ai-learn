@@ -31,28 +31,43 @@ export const communicationsService = {
   },
 
   async generateProgressReport(studentId: string): Promise<ProgressReportData> {
-    const { data, error } = await supabase.functions.invoke('generate-progress-report', {
-      body: { student_id: studentId }
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-progress-report', {
+        body: { student_id: studentId }
+      });
 
-    if (error) throw error;
-    return data as ProgressReportData;
+      if (error) throw error;
+      return data as ProgressReportData;
+    } catch (error) {
+      console.error('Error generating progress report:', error);
+      throw error;
+    }
   },
 
   async generateProgressReportPDF(studentId: string): Promise<string> {
-    const { data, error } = await supabase.functions.invoke('generate-progress-pdf', {
-      body: { student_id: studentId }
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-progress-pdf', {
+        body: { student_id: studentId }
+      });
 
-    if (error) throw error;
-    return data.pdf_url;
+      if (error) throw error;
+      return data.pdf_url;
+    } catch (error) {
+      console.error('Error generating PDF report:', error);
+      throw error;
+    }
   },
 
   async sendCommunication(communicationId: string): Promise<void> {
-    const { error } = await supabase.functions.invoke('send-parent-communication', {
-      body: { communication_id: communicationId }
-    });
+    try {
+      const { error } = await supabase.functions.invoke('send-parent-communication', {
+        body: { communication_id: communicationId }
+      });
 
-    if (error) throw error;
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error sending communication:', error);
+      throw error;
+    }
   }
 };

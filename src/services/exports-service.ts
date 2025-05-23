@@ -14,26 +14,32 @@ export const exportsService = {
   },
 
   async requestExport(exportData: ExportRequestData): Promise<DataExport> {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) throw new Error('User not authenticated');
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('User not authenticated');
 
-    const { data, error } = await supabase
-      .from('data_exports')
-      .insert({
-        teacher_id: user.user.id,
-        ...exportData
-      })
-      .select()
-      .single();
+      const { data, error } = await supabase
+        .from('data_exports')
+        .insert({
+          teacher_id: user.user.id,
+          ...exportData,
+          status: 'pending'
+        })
+        .select()
+        .single();
 
-    if (error) throw error;
+      if (error) throw error;
 
-    // Trigger the export processing
-    await supabase.functions.invoke('process-data-export', {
-      body: { export_id: data.id }
-    });
+      // Trigger the export processing
+      await supabase.functions.invoke('process-data-export', {
+        body: { export_id: data.id }
+      });
 
-    return data as DataExport;
+      return data as DataExport;
+    } catch (error) {
+      console.error('Error requesting export:', error);
+      throw error;
+    }
   },
 
   async downloadExport(exportId: string): Promise<string> {

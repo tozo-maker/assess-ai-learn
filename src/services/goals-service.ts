@@ -83,12 +83,16 @@ export const goalsService = {
   },
 
   async generateAIGoalSuggestions(studentId: string): Promise<string[]> {
-    // This would call an edge function to generate AI suggestions
-    const { data, error } = await supabase.functions.invoke('generate-goal-suggestions', {
-      body: { student_id: studentId }
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-goal-suggestions', {
+        body: { student_id: studentId }
+      });
 
-    if (error) throw error;
-    return data.suggestions || [];
+      if (error) throw error;
+      return data.suggestions || [];
+    } catch (error) {
+      console.error('Error generating goal suggestions:', error);
+      throw error;
+    }
   }
 };
