@@ -13,8 +13,8 @@ export const authService = {
         data: {
           full_name: profileData.full_name,
           school: profileData.school,
-          grade_levels: profileData.grade_levels,
-          subjects: profileData.subjects,
+          grade_levels: profileData.grade_levels.join(','),
+          subjects: profileData.subjects.join(','),
           years_experience: profileData.years_experience
         }
       }
@@ -64,16 +64,18 @@ export const authService = {
     if (!user.user) return null;
     
     try {
-      // Use a type assertion with unknown first to avoid direct conversion errors
       const { data, error } = await supabase
-        .from('teacher_profiles' as any)
+        .from('teacher_profiles')
         .select('*')
         .eq('id', user.user.id)
         .single();
       
-      if (error) throw error;
-      // Safely convert to TeacherProfile
-      return data as unknown as TeacherProfile;
+      if (error) {
+        console.error('Error fetching teacher profile:', error);
+        return null;
+      }
+      
+      return data as TeacherProfile;
     } catch (error) {
       console.error('Error fetching teacher profile:', error);
       return null;
@@ -86,19 +88,40 @@ export const authService = {
     if (!user.user) throw new Error('No authenticated user');
     
     try {
-      // Use a type assertion with unknown first to avoid direct conversion errors
       const { data, error } = await supabase
-        .from('teacher_profiles' as any)
+        .from('teacher_profiles')
         .update(profile)
         .eq('id', user.user.id)
         .select()
         .single();
       
       if (error) throw error;
-      // Safely convert to TeacherProfile
-      return data as unknown as TeacherProfile;
+      return data as TeacherProfile;
     } catch (error) {
       console.error('Error updating teacher profile:', error);
+      throw error;
+    }
+  },
+
+  async createProfile(profile: Omit<TeacherProfile, 'id' | 'created_at' | 'updated_at'>): Promise<TeacherProfile> {
+    const { data: user } = await supabase.auth.getUser();
+    
+    if (!user.user) throw new Error('No authenticated user');
+    
+    try {
+      const { data, error } = await supabase
+        .from('teacher_profiles')
+        .insert({
+          id: user.user.id,
+          ...profile
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as TeacherProfile;
+    } catch (error) {
+      console.error('Error creating teacher profile:', error);
       throw error;
     }
   }

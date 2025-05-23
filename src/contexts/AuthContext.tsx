@@ -31,21 +31,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
         setState(prev => ({ ...prev, session, user: session?.user ?? null }));
         
         // Fetch user profile when auth state changes
         if (session?.user) {
           setTimeout(() => {
             fetchUserProfile(session.user.id);
-          }, 0);
+          }, 100);
         } else {
-          setState(prev => ({ ...prev, profile: null }));
+          setState(prev => ({ ...prev, profile: null, isLoading: false }));
         }
       }
     );
 
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.id);
       setState(prev => ({ ...prev, session, user: session?.user ?? null }));
       
       // Fetch initial user profile if session exists
@@ -61,9 +63,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async (userId: string, retryCount = 0) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const profile = await authService.getProfile();
+      
+      if (!profile && retryCount < 3) {
+        // Profile might not exist yet due to trigger delay, retry after a short delay
+        setTimeout(() => {
+          fetchUserProfile(userId, retryCount + 1);
+        }, 1000);
+        return;
+      }
+
       setState(prev => ({ 
         ...prev, 
         profile, 
@@ -71,6 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         error: null 
       }));
     } catch (error) {
+      console.error('Error fetching profile:', error);
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 

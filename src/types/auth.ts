@@ -4,8 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 export interface TeacherProfile {
   id: string;
   full_name: string;
-  email: string;
-  school: string;
+  school?: string;
   grade_levels: string[];
   subjects: string[];
   years_experience?: string;
