@@ -10,9 +10,12 @@ import {
   Plus,
   TrendingUp,
   Clock,
-  AlertCircle
+  AlertCircle,
+  BarChart3
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import PerformanceWidget from '@/components/dashboard/PerformanceWidget';
+import AlertsWidget from '@/components/dashboard/AlertsWidget';
 
 const Dashboard = () => {
   const stats = [
@@ -39,6 +42,44 @@ const Dashboard = () => {
       value: "84%",
       icon: <TrendingUp className="h-6 w-6 text-orange-600" />,
       trend: "+3% improvement"
+    }
+  ];
+
+  const performanceData = [
+    { period: 'Week 1', average: 78 },
+    { period: 'Week 2', average: 82 },
+    { period: 'Week 3', average: 79 },
+    { period: 'Week 4', average: 84 },
+    { period: 'Week 5', average: 87 },
+  ];
+
+  const alerts = [
+    {
+      id: '1',
+      type: 'performance' as const,
+      title: 'Students struggling with fractions',
+      description: 'Multiple students scoring below 60% on fraction assessments',
+      studentCount: 6,
+      severity: 'high' as const,
+      actionUrl: '/insights/skills'
+    },
+    {
+      id: '2',
+      type: 'performance' as const,
+      title: 'Reading comprehension decline',
+      description: 'Class average dropped 8% in recent assessments',
+      studentCount: 12,
+      severity: 'medium' as const,
+      actionUrl: '/insights/class'
+    },
+    {
+      id: '3',
+      type: 'attendance' as const,
+      title: 'Assessment participation low',
+      description: 'Some students missing multiple assessment opportunities',
+      studentCount: 3,
+      severity: 'medium' as const,
+      actionUrl: '/students'
     }
   ];
 
@@ -87,6 +128,13 @@ const Dashboard = () => {
       href: "/insights/class",
       icon: <Lightbulb className="h-5 w-5" />,
       color: "bg-purple-600 hover:bg-purple-700"
+    },
+    {
+      title: "Class Analytics",
+      description: "Comprehensive class performance analysis",
+      href: "/insights/class",
+      icon: <BarChart3 className="h-5 w-5" />,
+      color: "bg-orange-600 hover:bg-orange-700"
     }
   ];
 
@@ -117,6 +165,28 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Performance Widgets Row */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          <PerformanceWidget
+            data={performanceData}
+            title="Math Performance Trend"
+            currentScore={87}
+            trend="+9% this month"
+          />
+          <PerformanceWidget
+            data={performanceData.map(d => ({ ...d, average: d.average - 5 }))}
+            title="Reading Performance"
+            currentScore={82}
+            trend="+5% this month"
+          />
+          <PerformanceWidget
+            data={performanceData.map(d => ({ ...d, average: d.average + 3 }))}
+            title="Science Performance"
+            currentScore={90}
+            trend="+12% this month"
+          />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -152,8 +222,8 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          {/* Quick Actions */}
-          <div>
+          {/* Quick Actions and Alerts */}
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -162,19 +232,17 @@ const Dashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   {quickActions.map((action, index) => (
                     <Link key={index} to={action.href}>
                       <Button 
-                        className={`w-full justify-start h-auto p-4 ${action.color}`}
+                        className={`w-full h-auto p-3 ${action.color}`}
                         variant="default"
+                        size="sm"
                       >
-                        <div className="flex items-start space-x-3">
+                        <div className="flex flex-col items-center space-y-1">
                           {action.icon}
-                          <div className="text-left">
-                            <div className="font-medium">{action.title}</div>
-                            <div className="text-xs opacity-90">{action.description}</div>
-                          </div>
+                          <span className="text-xs font-medium">{action.title}</span>
                         </div>
                       </Button>
                     </Link>
@@ -183,37 +251,8 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Urgent Recommendations */}
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <AlertCircle className="h-5 w-5 text-red-600" />
-                  <span>Needs Attention</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="p-3 bg-red-50 rounded-lg">
-                    <h4 className="font-medium text-red-900">3 students struggling with fractions</h4>
-                    <p className="text-sm text-red-700">From recent Math Quiz #3</p>
-                    <Link to="/insights/recommendations">
-                      <Button size="sm" variant="outline" className="mt-2 text-red-600 border-red-200">
-                        View Recommendations
-                      </Button>
-                    </Link>
-                  </div>
-                  <div className="p-3 bg-amber-50 rounded-lg">
-                    <h4 className="font-medium text-amber-900">Reading comprehension below grade level</h4>
-                    <p className="text-sm text-amber-700">2 students need intervention</p>
-                    <Link to="/insights/individual">
-                      <Button size="sm" variant="outline" className="mt-2 text-amber-600 border-amber-200">
-                        View Details
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Priority Alerts */}
+            <AlertsWidget alerts={alerts} />
           </div>
         </div>
       </div>
