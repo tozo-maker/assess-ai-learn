@@ -79,48 +79,64 @@ const AssessmentAnalysis: React.FC = () => {
     return <AssessmentAnalysisDisplay assessmentId={id as string} studentId={selectedStudentId} />;
   };
 
-  // More robust filtering with debugging
+  // Enhanced filtering with comprehensive validation
   const validStudents = React.useMemo(() => {
-    if (!students) return [];
+    if (!students || !Array.isArray(students)) {
+      console.log('No students data or invalid array:', students);
+      return [];
+    }
     
     console.log('Raw students data:', students);
     
     const filtered = students.filter(student => {
-      // Check if student exists
-      if (!student) {
-        console.log('Found null/undefined student');
+      // Basic existence check
+      if (!student || typeof student !== 'object') {
+        console.log('Invalid student object:', student);
         return false;
       }
       
-      // Check if student has id property
-      if (!student.hasOwnProperty('id')) {
+      // Check for id property and validate it thoroughly
+      if (!('id' in student)) {
         console.log('Student missing id property:', student);
         return false;
       }
       
-      // Check if id is valid
-      const id = student.id;
-      if (id === null || id === undefined) {
+      const studentId = student.id;
+      
+      // Comprehensive ID validation
+      if (studentId === null || studentId === undefined) {
         console.log('Student has null/undefined id:', student);
         return false;
       }
       
-      // Check if id is not empty string
-      if (typeof id !== 'string' || id.trim() === '') {
+      if (typeof studentId !== 'string') {
+        console.log('Student id is not a string:', student);
+        return false;
+      }
+      
+      if (studentId === '' || studentId.trim() === '') {
         console.log('Student has empty string id:', student);
         return false;
       }
       
-      // Check if student has required name fields
-      if (!student.first_name || !student.last_name) {
-        console.log('Student missing name fields:', student);
+      // Check for required name fields
+      if (!student.first_name || typeof student.first_name !== 'string' || student.first_name.trim() === '') {
+        console.log('Student missing or invalid first_name:', student);
         return false;
       }
       
+      if (!student.last_name || typeof student.last_name !== 'string' || student.last_name.trim() === '') {
+        console.log('Student missing or invalid last_name:', student);
+        return false;
+      }
+      
+      console.log('Valid student found:', { id: studentId, name: `${student.first_name} ${student.last_name}` });
       return true;
     });
     
-    console.log('Filtered valid students:', filtered);
+    console.log('Filtered valid students count:', filtered.length);
+    console.log('Valid students:', filtered.map(s => ({ id: s.id, name: `${s.first_name} ${s.last_name}` })));
+    
     return filtered;
   }, [students]);
 
@@ -149,11 +165,14 @@ const AssessmentAnalysis: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 {validStudents.length > 0 ? (
-                  validStudents.map(student => (
-                    <SelectItem key={student.id} value={student.id}>
-                      {student.first_name} {student.last_name}
-                    </SelectItem>
-                  ))
+                  validStudents.map(student => {
+                    console.log('Rendering SelectItem for student:', { id: student.id, name: `${student.first_name} ${student.last_name}` });
+                    return (
+                      <SelectItem key={student.id} value={student.id}>
+                        {student.first_name} {student.last_name}
+                      </SelectItem>
+                    );
+                  })
                 ) : (
                   <SelectItem value="no-students" disabled>
                     No students available
