@@ -64,29 +64,28 @@ export const authService = {
     if (!user.user) return null;
     
     try {
-      // Use RPC to query teacher_profiles until types are regenerated
-      const { data, error } = await supabase.rpc('get_teacher_profile', {
+      // Try RPC function first
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_teacher_profile', {
         user_id: user.user.id
       });
       
-      if (error) {
-        console.error('Error fetching teacher profile via RPC:', error);
-        // Fallback to direct query with type assertion
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('teacher_profiles' as any)
-          .select('*')
-          .eq('id', user.user.id)
-          .single();
-        
-        if (fallbackError) {
-          console.error('Error fetching teacher profile:', fallbackError);
-          return null;
-        }
-        
-        return fallbackData as TeacherProfile;
+      if (!rpcError && rpcData && Array.isArray(rpcData) && rpcData.length > 0) {
+        return rpcData[0] as TeacherProfile;
       }
       
-      return data as TeacherProfile;
+      // Fallback to direct query
+      const { data: directData, error: directError } = await supabase
+        .from('teacher_profiles' as any)
+        .select('*')
+        .eq('id', user.user.id)
+        .single();
+      
+      if (directError) {
+        console.error('Error fetching teacher profile:', directError);
+        return null;
+      }
+      
+      return directData as TeacherProfile;
     } catch (error) {
       console.error('Error fetching teacher profile:', error);
       return null;
@@ -99,7 +98,6 @@ export const authService = {
     if (!user.user) throw new Error('No authenticated user');
     
     try {
-      // Use type assertion for teacher_profiles table
       const { data, error } = await supabase
         .from('teacher_profiles' as any)
         .update(profile)
@@ -121,7 +119,6 @@ export const authService = {
     if (!user.user) throw new Error('No authenticated user');
     
     try {
-      // Use type assertion for teacher_profiles table
       const { data, error } = await supabase
         .from('teacher_profiles' as any)
         .insert({

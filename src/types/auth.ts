@@ -28,7 +28,7 @@ export interface SignUpData {
   school: string;
   grade_levels: string[];
   subjects: string[];
-  years_experience?: string;
+  years_experience?: number;
 }
 
 export interface SignInData {

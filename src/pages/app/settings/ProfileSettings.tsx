@@ -24,7 +24,7 @@ import { TeacherProfile } from '@/types/auth';
 const profileSchema = z.object({
   full_name: z.string().min(1, 'Name is required'),
   school: z.string().min(1, 'School/Organization is required'),
-  years_experience: z.string().optional(),
+  years_experience: z.number().optional(),
   grade_levels: z.array(z.string()).min(1, 'Please select at least one grade level'),
   subjects: z.array(z.string()).min(1, 'Please select at least one subject')
 });
@@ -73,11 +73,11 @@ const subjectOptions = [
 ];
 
 const experienceOptions = [
-  { value: '0-1', label: '0-1 years' },
-  { value: '2-5', label: '2-5 years' },
-  { value: '6-10', label: '6-10 years' },
-  { value: '11-20', label: '11-20 years' },
-  { value: '20+', label: '20+ years' },
+  { value: 1, label: '0-1 years' },
+  { value: 3, label: '2-5 years' },
+  { value: 8, label: '6-10 years' },
+  { value: 15, label: '11-20 years' },
+  { value: 25, label: '20+ years' },
 ];
 
 const ProfileSettings = () => {
@@ -89,7 +89,7 @@ const ProfileSettings = () => {
     defaultValues: {
       full_name: '',
       school: '',
-      years_experience: '',
+      years_experience: undefined,
       grade_levels: [],
       subjects: [],
     },
@@ -108,7 +108,7 @@ const ProfileSettings = () => {
     if (profile) {
       profileForm.reset({
         full_name: profile.full_name,
-        school: profile.school,
+        school: profile.school || '',
         years_experience: profile.years_experience,
         grade_levels: profile.grade_levels,
         subjects: profile.subjects,
@@ -202,7 +202,10 @@ const ProfileSettings = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Years of Teaching Experience</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select 
+                          onValueChange={(value) => field.onChange(parseInt(value))} 
+                          value={field.value?.toString()}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select experience" />
@@ -210,7 +213,7 @@ const ProfileSettings = () => {
                           </FormControl>
                           <SelectContent>
                             {experienceOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
+                              <SelectItem key={option.value} value={option.value.toString()}>
                                 {option.label}
                               </SelectItem>
                             ))}
