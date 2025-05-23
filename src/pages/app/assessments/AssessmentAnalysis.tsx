@@ -77,8 +77,10 @@ const AssessmentAnalysis: React.FC = () => {
     return <AssessmentAnalysisDisplay assessmentId={id as string} studentId={selectedStudentId} />;
   };
 
-  // Filter out students with empty or undefined IDs
-  const validStudents = students?.filter(student => student && student.id) || [];
+  // Filter out students with empty, undefined, or null IDs
+  const validStudents = students?.filter(student => 
+    student && student.id && student.id.trim() !== ''
+  ) || [];
 
   return (
     <PageShell
@@ -105,7 +107,7 @@ const AssessmentAnalysis: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 {validStudents.map(student => (
-                  <SelectItem key={student.id} value={student.id || 'unknown-id'}>
+                  <SelectItem key={student.id} value={student.id}>
                     {student.first_name} {student.last_name}
                   </SelectItem>
                 ))}
