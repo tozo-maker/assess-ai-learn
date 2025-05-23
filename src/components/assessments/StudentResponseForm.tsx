@@ -24,7 +24,7 @@ import { Separator } from '@/components/ui/separator';
 const responseItemSchema = z.object({
   assessment_item_id: z.string(),
   score: z.number().min(0, "Score cannot be negative"),
-  error_type: z.string().optional(),
+  error_type: z.enum(['conceptual', 'procedural', 'factual', 'none']).optional(),
   teacher_notes: z.string().optional(),
 });
 

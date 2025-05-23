@@ -74,6 +74,7 @@ export interface AssessmentFormData {
   max_score: number;
   assessment_date?: string;
   is_draft?: boolean;
+  teacher_id?: string;
 }
 
 export interface AssessmentItemFormData {
@@ -83,6 +84,7 @@ export interface AssessmentItemFormData {
   difficulty_level: DifficultyLevel;
   standard_reference?: string;
   max_score: number;
+  assessment_id?: string;
 }
 
 export interface StudentResponseFormData {

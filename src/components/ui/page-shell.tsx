@@ -7,20 +7,24 @@ import { ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface PageShellProps {
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   icon?: React.ReactNode;
   children?: React.ReactNode;
   actions?: React.ReactNode;
+  link?: string;
+  linkText?: string;
   backLink?: string;
 }
 
-const PageShell: React.FC<PageShellProps> = ({ 
-  title, 
-  description, 
+export const PageShell: React.FC<PageShellProps> = ({ 
+  title = '', 
+  description = '', 
   icon, 
   children, 
   actions,
+  link,
+  linkText,
   backLink
 }) => {
   return (
@@ -30,14 +34,20 @@ const PageShell: React.FC<PageShellProps> = ({
           <div className="flex items-center space-x-3">
             {icon && <div className="p-2 bg-blue-100 rounded-lg">{icon}</div>}
             <div>
+              {(link && linkText) && (
+                <Link to={link} className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 mb-2">
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  <span>{linkText}</span>
+                </Link>
+              )}
               {backLink && (
                 <Link to={backLink} className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 mb-2">
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   <span>Back</span>
                 </Link>
               )}
-              <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
-              <p className="text-gray-600 mt-1">{description}</p>
+              {title && <h1 className="text-3xl font-bold text-gray-900">{title}</h1>}
+              {description && <p className="text-gray-600 mt-1">{description}</p>}
             </div>
           </div>
           {actions && <div className="flex space-x-3">{actions}</div>}

@@ -1,181 +1,218 @@
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.41.1";
-import { Configuration, OpenAIApi } from "https://esm.sh/openai@4.28.4";
+// Follow this setup guide to integrate the Deno language server with your editor:
+// https://deno.land/manual/getting_started/setup_your_environment
+// This enables autocomplete, go to definition, etc.
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { OpenAI } from 'https://esm.sh/openai@4';
+import { corsHeaders } from '../_shared/cors.ts';
+
+const openaiClient = new OpenAI({
+  apiKey: Deno.env.get('OPENAI_API_KEY') || '',
+});
 
 interface RequestBody {
   assessment_id: string;
   student_id: string;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
+  // Handle CORS pre-flight request
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+  
   try {
-    // Create a Supabase client with the Auth context of the logged in user
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      {
-        global: {
-          headers: { Authorization: req.headers.get("Authorization") ?? "" },
-        },
-      }
-    );
-
-    // Get the JSON body from the request
-    const body = await req.json() as RequestBody;
-    const { assessment_id, student_id } = body;
-
-    if (!assessment_id || !student_id) {
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey || !openaiClient.apiKey) {
       return new Response(
-        JSON.stringify({ error: "assessment_id and student_id are required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({ 
+          success: false, 
+          message: 'Server configuration error. Missing required environment variables.' 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
-    // Fetch assessment, assessment items, and student responses data
-    const { data: assessment, error: assessmentError } = await supabaseClient
-      .from("assessments")
-      .select("*")
-      .eq("id", assessment_id)
-      .single();
-
-    if (assessmentError) {
-      throw assessmentError;
+    // Create clients with the Auth context of the user that called the function
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Parse request body
+    const { assessment_id, student_id } = await req.json() as RequestBody;
+    
+    if (!assessment_id || !student_id) {
+      return new Response(
+        JSON.stringify({ success: false, message: 'Missing required parameters: assessment_id and student_id' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
 
+    // Step 1: Get the assessment data
+    const { data: assessment, error: assessmentError } = await supabaseClient
+      .from('assessments')
+      .select('*')
+      .eq('id', assessment_id)
+      .single();
+
+    if (assessmentError || !assessment) {
+      return new Response(
+        JSON.stringify({ success: false, message: 'Assessment not found', error: assessmentError }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+      );
+    }
+
+    // Step 2: Get the assessment items
     const { data: assessmentItems, error: itemsError } = await supabaseClient
-      .from("assessment_items")
-      .select("*")
-      .eq("assessment_id", assessment_id)
-      .order("item_number", { ascending: true });
+      .from('assessment_items')
+      .select('*')
+      .eq('assessment_id', assessment_id)
+      .order('item_number', { ascending: true });
 
     if (itemsError) {
-      throw itemsError;
+      return new Response(
+        JSON.stringify({ success: false, message: 'Failed to fetch assessment items', error: itemsError }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
 
-    const { data: student, error: studentError } = await supabaseClient
-      .from("students")
-      .select("*")
-      .eq("id", student_id)
-      .single();
-
-    if (studentError) {
-      throw studentError;
-    }
-
-    const { data: responses, error: responsesError } = await supabaseClient
-      .from("student_responses")
-      .select("*, assessment_items(*)")
-      .eq("assessment_id", assessment_id)
-      .eq("student_id", student_id);
+    // Step 3: Get the student responses
+    const { data: studentResponses, error: responsesError } = await supabaseClient
+      .from('student_responses')
+      .select('*')
+      .eq('assessment_id', assessment_id)
+      .eq('student_id', student_id);
 
     if (responsesError) {
-      throw responsesError;
+      return new Response(
+        JSON.stringify({ success: false, message: 'Failed to fetch student responses', error: responsesError }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
 
-    // Check if we already have an analysis for this assessment and student
-    const { data: existingAnalysis } = await supabaseClient
-      .from("assessment_analysis")
-      .select("*")
-      .eq("assessment_id", assessment_id)
-      .eq("student_id", student_id)
-      .maybeSingle();
+    if (!studentResponses || studentResponses.length === 0) {
+      return new Response(
+        JSON.stringify({ success: false, message: 'No student responses found for this assessment' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+      );
+    }
 
-    // Calculate student performance metrics
-    const totalScore = responses.reduce((sum, r) => sum + Number(r.score), 0);
-    const maxPossibleScore = assessmentItems.reduce((sum, item) => sum + Number(item.max_score), 0);
-    const percentScore = maxPossibleScore > 0 ? (totalScore / maxPossibleScore) * 100 : 0;
-    
-    // Prepare data for OpenAI
-    const responseDetails = responses.map(r => {
-      const item = assessmentItems.find(item => item.id === r.assessment_item_id);
-      return {
-        question_number: item?.item_number,
-        question_text: item?.question_text,
-        knowledge_type: item?.knowledge_type,
-        difficulty: item?.difficulty_level,
-        max_score: item?.max_score,
-        student_score: r.score,
-        error_type: r.error_type,
-        teacher_notes: r.teacher_notes,
-      };
-    });
+    // Step 4: Get the student information
+    const { data: student, error: studentError } = await supabaseClient
+      .from('students')
+      .select('*')
+      .eq('id', student_id)
+      .single();
 
-    // Initialize OpenAI
-    const configuration = new Configuration({
-      apiKey: Deno.env.get("OPENAI_API_KEY"),
-    });
-    const openai = new OpenAIApi(configuration);
+    if (studentError || !student) {
+      return new Response(
+        JSON.stringify({ success: false, message: 'Student not found', error: studentError }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+      );
+    }
 
-    // Create educational context-aware prompt
+    // Step 5: Prepare the analysis data for GPT
+    const assessmentData = {
+      assessment: assessment,
+      items: assessmentItems,
+      responses: studentResponses.map(response => {
+        const item = assessmentItems.find(item => item.id === response.assessment_item_id);
+        return {
+          ...response,
+          item_details: item,
+          score_percentage: item ? (response.score / item.max_score * 100) : 0,
+        };
+      }),
+      student: {
+        name: `${student.first_name} ${student.last_name}`,
+        grade: student.grade_level,
+        special_considerations: student.special_considerations || null,
+        learning_goals: student.learning_goals || null,
+      },
+      totalScore: studentResponses.reduce((total, response) => total + Number(response.score), 0),
+      maxPossibleScore: assessment.max_score,
+      scorePercentage: (studentResponses.reduce((total, response) => total + Number(response.score), 0) / assessment.max_score * 100).toFixed(1),
+    };
+
+    // Step 6: Create the prompt for GPT
     const prompt = `
-    You are an expert educational analyst specializing in identifying learning patterns and providing actionable insights for teachers.
-
-    Analyze the following assessment data for ${student.first_name} ${student.last_name}, a student in grade ${student.grade_level}:
-
+    As an educational assessment expert, analyze the following assessment data for a student and provide insights.
+    
     ASSESSMENT INFORMATION:
     - Title: ${assessment.title}
     - Subject: ${assessment.subject}
+    - Grade Level: ${assessment.grade_level}
     - Type: ${assessment.assessment_type}
-    - Score: ${totalScore}/${maxPossibleScore} (${percentScore.toFixed(1)}%)
-
-    STUDENT RESPONSES:
-    ${JSON.stringify(responseDetails, null, 2)}
-
-    Based on the patterns in this assessment data, provide the following analysis:
-    1. STRENGTHS: Identify 2-4 specific strengths demonstrated by the student in this assessment.
-    2. GROWTH AREAS: Identify 2-4 specific areas where the student needs improvement.
-    3. PATTERNS: Identify any patterns in the student's performance (e.g., struggles with specific knowledge types, difficulty levels, or concepts).
-    4. RECOMMENDATIONS: Provide 3-5 specific, actionable teaching strategies that could help address the identified growth areas.
-    5. SUMMARY: A brief paragraph summarizing the student's overall performance and key takeaways.
-
-    Provide your response in JSON format with the following structure:
+    - Standards Covered: ${assessment.standards_covered ? assessment.standards_covered.join(", ") : "None specified"}
+    
+    STUDENT INFORMATION:
+    - Name: ${assessmentData.student.name}
+    - Grade: ${assessmentData.student.grade}
+    - Special Considerations: ${assessmentData.student.special_considerations || "None"}
+    - Learning Goals: ${assessmentData.student.learning_goals || "None specified"}
+    
+    PERFORMANCE SUMMARY:
+    - Total Score: ${assessmentData.totalScore} out of ${assessmentData.maxPossibleScore} (${assessmentData.scorePercentage}%)
+    
+    DETAILED RESPONSES:
+    ${assessmentData.responses.map(r => `
+    Item #${r.item_details?.item_number || '?'}: "${r.item_details?.question_text || '?'}"
+    - Knowledge Type: ${r.item_details?.knowledge_type || '?'}
+    - Difficulty: ${r.item_details?.difficulty_level || '?'}
+    - Standard: ${r.item_details?.standard_reference || 'None'}
+    - Score: ${r.score} / ${r.item_details?.max_score || '?'} (${r.score_percentage.toFixed(1)}%)
+    - Error Type: ${r.error_type || 'None'}
+    - Teacher Notes: ${r.teacher_notes || 'None'}
+    `).join('\n')}
+    
+    Based on this assessment data, please provide:
+    
+    1. STRENGTHS: Identify 3-5 specific strengths demonstrated by the student in this assessment.
+    2. GROWTH AREAS: Identify 3-5 specific areas where the student needs improvement, based on the assessment results.
+    3. PATTERNS OBSERVED: Identify 2-4 patterns in the student's responses (e.g., struggles with certain types of problems, excels in specific areas, etc.)
+    4. RECOMMENDATIONS: Provide 3-5 specific, actionable recommendations for helping this student improve.
+    5. OVERALL SUMMARY: Provide a brief paragraph summarizing the student's performance and next steps.
+    
+    Format your response as JSON with the following structure:
     {
       "strengths": ["strength1", "strength2", ...],
       "growth_areas": ["area1", "area2", ...],
       "patterns_observed": ["pattern1", "pattern2", ...],
       "recommendations": ["recommendation1", "recommendation2", ...],
-      "overall_summary": "summary paragraph"
+      "overall_summary": "A paragraph summarizing the analysis..."
     }
     `;
 
-    // Call OpenAI API
-    const completion = await openai.createChatCompletion({
-      model: "gpt-4-turbo-preview",
+    // Step 7: Call the OpenAI API
+    const completion = await openaiClient.chat.completions.create({
+      model: "gpt-4o",
       messages: [
-        { role: "system", content: "You are an expert educational analyst providing insights based on student assessment data." },
+        { role: "system", content: "You are an expert educational assessment analyst that provides insightful analysis of student performance. You always respond in valid JSON format as specified." },
         { role: "user", content: prompt }
       ],
-      temperature: 0.7,
-      max_tokens: 1500
+      response_format: { type: "json_object" }
     });
 
-    const analysisText = completion.data.choices[0].message?.content || "";
-    let analysis: any = {};
-
+    const analysisText = completion.choices[0]?.message?.content || '{}';
+    let analysis;
+    
     try {
-      // Extract JSON from the response
-      const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysis = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error("Failed to parse AI response as JSON");
-      }
-    } catch (error) {
-      console.error("Error parsing OpenAI response:", error);
-      analysis = {
-        strengths: ["Analysis processing error"],
-        growth_areas: ["Analysis processing error"],
-        patterns_observed: ["Analysis processing error"],
-        recommendations: ["Please try again"],
-        overall_summary: "There was an error processing the analysis."
-      };
+      analysis = JSON.parse(analysisText);
+    } catch (e) {
+      console.error("Failed to parse OpenAI response as JSON:", e);
+      return new Response(
+        JSON.stringify({ success: false, message: 'Failed to parse AI analysis response', rawResponse: analysisText }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
 
-    // Save or update the analysis in the database
+    // Step 8: Store the analysis in the database
     const analysisData = {
-      assessment_id,
-      student_id,
+      assessment_id: assessment_id,
+      student_id: student_id,
       strengths: analysis.strengths || [],
       growth_areas: analysis.growth_areas || [],
       patterns_observed: analysis.patterns_observed || [],
@@ -184,47 +221,51 @@ serve(async (req) => {
       analysis_json: analysis
     };
 
-    let result;
+    // Check if an analysis already exists and update it, or create a new one
+    const { data: existingAnalysis, error: existingAnalysisError } = await supabaseClient
+      .from('assessment_analysis')
+      .select('id')
+      .eq('assessment_id', assessment_id)
+      .eq('student_id', student_id)
+      .maybeSingle();
+
+    let saveResult;
+    
     if (existingAnalysis) {
-      const { data, error } = await supabaseClient
-        .from("assessment_analysis")
+      // Update existing analysis
+      saveResult = await supabaseClient
+        .from('assessment_analysis')
         .update(analysisData)
-        .eq("id", existingAnalysis.id)
-        .select()
-        .single();
-        
-      if (error) throw error;
-      result = data;
+        .eq('id', existingAnalysis.id)
+        .select();
     } else {
-      const { data, error } = await supabaseClient
-        .from("assessment_analysis")
+      // Create new analysis
+      saveResult = await supabaseClient
+        .from('assessment_analysis')
         .insert(analysisData)
-        .select()
-        .single();
-        
-      if (error) throw error;
-      result = data;
+        .select();
+    }
+
+    if (saveResult.error) {
+      return new Response(
+        JSON.stringify({ success: false, message: 'Failed to save analysis', error: saveResult.error }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Analysis completed successfully", 
-        analysis: result 
+        message: 'Analysis completed and saved successfully', 
+        analysis_id: saveResult.data[0].id
       }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
+
   } catch (error) {
-    console.error("Error:", error);
     return new Response(
       JSON.stringify({ success: false, message: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
