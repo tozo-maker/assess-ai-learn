@@ -77,10 +77,50 @@ const AssessmentAnalysis: React.FC = () => {
     return <AssessmentAnalysisDisplay assessmentId={id as string} studentId={selectedStudentId} />;
   };
 
-  // Filter out students with empty, undefined, or null IDs
-  const validStudents = students?.filter(student => 
-    student && student.id && student.id.trim() !== ''
-  ) || [];
+  // More robust filtering with debugging
+  const validStudents = React.useMemo(() => {
+    if (!students) return [];
+    
+    console.log('Raw students data:', students);
+    
+    const filtered = students.filter(student => {
+      // Check if student exists
+      if (!student) {
+        console.log('Found null/undefined student');
+        return false;
+      }
+      
+      // Check if student has id property
+      if (!student.hasOwnProperty('id')) {
+        console.log('Student missing id property:', student);
+        return false;
+      }
+      
+      // Check if id is valid
+      const id = student.id;
+      if (id === null || id === undefined) {
+        console.log('Student has null/undefined id:', student);
+        return false;
+      }
+      
+      // Check if id is not empty string
+      if (typeof id !== 'string' || id.trim() === '') {
+        console.log('Student has empty string id:', student);
+        return false;
+      }
+      
+      // Check if student has required name fields
+      if (!student.first_name || !student.last_name) {
+        console.log('Student missing name fields:', student);
+        return false;
+      }
+      
+      return true;
+    });
+    
+    console.log('Filtered valid students:', filtered);
+    return filtered;
+  }, [students]);
 
   return (
     <PageShell
@@ -106,11 +146,17 @@ const AssessmentAnalysis: React.FC = () => {
                 <SelectValue placeholder="Select a student" />
               </SelectTrigger>
               <SelectContent>
-                {validStudents.map(student => (
-                  <SelectItem key={student.id} value={student.id}>
-                    {student.first_name} {student.last_name}
+                {validStudents.length > 0 ? (
+                  validStudents.map(student => (
+                    <SelectItem key={student.id} value={student.id}>
+                      {student.first_name} {student.last_name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-students" disabled>
+                    No students available
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
