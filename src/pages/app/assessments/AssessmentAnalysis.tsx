@@ -31,6 +31,8 @@ const AssessmentAnalysis: React.FC = () => {
   });
 
   const handleStudentChange = (studentId: string) => {
+    if (studentId === 'placeholder') return; // Ignore placeholder selection
+    
     setSelectedStudentId(studentId);
     setSearchParams({ student: studentId });
   };
@@ -141,7 +143,7 @@ const AssessmentAnalysis: React.FC = () => {
           </div>
           
           <div className="w-full sm:w-64">
-            <Select value={selectedStudentId} onValueChange={handleStudentChange}>
+            <Select value={selectedStudentId || undefined} onValueChange={handleStudentChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a student" />
               </SelectTrigger>
