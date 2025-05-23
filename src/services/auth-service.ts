@@ -64,31 +64,23 @@ export const authService = {
     if (!user.user) return null;
     
     try {
-      // Try RPC function first
-      const { data: rpcData, error: rpcError } = await supabase.rpc('get_teacher_profile', {
-        user_id: user.user.id
-      });
+      // For now, create a mock profile from user metadata until teacher_profiles table is created
+      const userMetadata = user.user.user_metadata;
       
-      if (!rpcError && rpcData) {
-        // Convert the received data to TeacherProfile
-        const profileData = Array.isArray(rpcData) && rpcData.length > 0 ? rpcData[0] : rpcData;
-        return profileData as TeacherProfile;
+      if (userMetadata && userMetadata.full_name) {
+        return {
+          id: user.user.id,
+          full_name: userMetadata.full_name,
+          school: userMetadata.school,
+          grade_levels: userMetadata.grade_levels ? userMetadata.grade_levels.split(',') : [],
+          subjects: userMetadata.subjects ? userMetadata.subjects.split(',') : [],
+          years_experience: userMetadata.years_experience,
+          created_at: user.user.created_at,
+          updated_at: user.user.updated_at || user.user.created_at
+        } as TeacherProfile;
       }
       
-      // Fallback to direct query - using "as any" to bypass type checking since teacher_profiles 
-      // isn't properly typed in the Supabase schema yet
-      const { data: directData, error: directError } = await supabase
-        .from('teacher_profiles' as any)
-        .select('*')
-        .eq('id', user.user.id)
-        .single();
-      
-      if (directError) {
-        console.error('Error fetching teacher profile:', directError);
-        return null;
-      }
-      
-      return directData as TeacherProfile;
+      return null;
     } catch (error) {
       console.error('Error fetching teacher profile:', error);
       return null;
@@ -101,15 +93,31 @@ export const authService = {
     if (!user.user) throw new Error('No authenticated user');
     
     try {
-      const { data, error } = await supabase
-        .from('teacher_profiles' as any)
-        .update(profile)
-        .eq('id', user.user.id)
-        .select()
-        .single();
+      // Update user metadata until teacher_profiles table is created
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          full_name: profile.full_name,
+          school: profile.school,
+          grade_levels: profile.grade_levels?.join(','),
+          subjects: profile.subjects?.join(','),
+          years_experience: profile.years_experience
+        }
+      });
       
       if (error) throw error;
-      return data as TeacherProfile;
+      
+      // Return updated profile
+      const updatedMetadata = data.user?.user_metadata;
+      return {
+        id: user.user.id,
+        full_name: updatedMetadata?.full_name || profile.full_name || '',
+        school: updatedMetadata?.school || profile.school,
+        grade_levels: updatedMetadata?.grade_levels ? updatedMetadata.grade_levels.split(',') : profile.grade_levels || [],
+        subjects: updatedMetadata?.subjects ? updatedMetadata.subjects.split(',') : profile.subjects || [],
+        years_experience: updatedMetadata?.years_experience || profile.years_experience,
+        created_at: user.user.created_at,
+        updated_at: new Date().toISOString()
+      } as TeacherProfile;
     } catch (error) {
       console.error('Error updating teacher profile:', error);
       throw error;
@@ -122,17 +130,25 @@ export const authService = {
     if (!user.user) throw new Error('No authenticated user');
     
     try {
-      const { data, error } = await supabase
-        .from('teacher_profiles' as any)
-        .insert({
-          id: user.user.id,
-          ...profile
-        })
-        .select()
-        .single();
+      // For now, store in user metadata until teacher_profiles table is created
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          full_name: profile.full_name,
+          school: profile.school,
+          grade_levels: profile.grade_levels.join(','),
+          subjects: profile.subjects.join(','),
+          years_experience: profile.years_experience
+        }
+      });
       
       if (error) throw error;
-      return data as TeacherProfile;
+      
+      return {
+        id: user.user.id,
+        ...profile,
+        created_at: user.user.created_at,
+        updated_at: new Date().toISOString()
+      } as TeacherProfile;
     } catch (error) {
       console.error('Error creating teacher profile:', error);
       throw error;

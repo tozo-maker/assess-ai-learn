@@ -35,7 +35,7 @@ const signupSchema = z.object({
   school: z.string().min(1, 'School/Organization is required'),
   grade_levels: z.array(z.string()).min(1, 'Please select at least one grade level'),
   subjects: z.array(z.string()).min(1, 'Please select at least one subject'),
-  years_experience: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined),
+  years_experience: z.number().optional(),
   terms: z.boolean().refine((val) => val === true, {
     message: 'You must agree to the terms and conditions',
   }),
@@ -69,11 +69,11 @@ const subjectOptions = [
 ];
 
 const experienceOptions = [
-  { value: '1', label: '0-1 years' },
-  { value: '3', label: '2-5 years' },
-  { value: '8', label: '6-10 years' },
-  { value: '15', label: '11-20 years' },
-  { value: '25', label: '20+ years' },
+  { value: 1, label: '0-1 years' },
+  { value: 3, label: '2-5 years' },
+  { value: 8, label: '6-10 years' },
+  { value: 15, label: '11-20 years' },
+  { value: 25, label: '20+ years' },
 ];
 
 const Signup = () => {
@@ -89,7 +89,7 @@ const Signup = () => {
       school: '',
       grade_levels: [],
       subjects: [],
-      years_experience: '',
+      years_experience: undefined,
       terms: false,
     },
   });
@@ -292,7 +292,7 @@ const Signup = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Years of Teaching Experience</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={(value) => field.onChange(parseInt(value, 10))} value={field.value?.toString()}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select experience" />
@@ -300,7 +300,7 @@ const Signup = () => {
                           </FormControl>
                           <SelectContent>
                             {experienceOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
+                              <SelectItem key={option.value} value={option.value.toString()}>
                                 {option.label}
                               </SelectItem>
                             ))}
