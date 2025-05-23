@@ -63,7 +63,7 @@ const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({ data, studentName }
           y={data[0]?.target_score || 85} 
           stroke="#dc2626" 
           strokeDasharray="5 5"
-          label={{ value: "Target Goal", position: "topRight" }}
+          label="Target Goal"
         />
       </LineChart>
     </ChartContainer>
