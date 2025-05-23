@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import PageShell from '@/components/ui/page-shell';
@@ -81,8 +82,8 @@ const Students = () => {
   const handleFilterChange = async () => {
     try {
       const filters = {
-        grade_level: gradeFilter,
-        performance_level: performanceFilter,
+        grade_level: gradeFilter === 'all' ? undefined : gradeFilter,
+        performance_level: performanceFilter === 'all' ? undefined : performanceFilter,
         needs_attention: attentionFilter
       };
       
@@ -166,7 +167,7 @@ const Students = () => {
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>
-          <Select value={gradeFilter} onValueChange={setGradeFilter}>
+          <Select value={gradeFilter || undefined} onValueChange={(value) => setGradeFilter(value === 'all' ? undefined : value)}>
             <SelectTrigger>
               <SelectValue placeholder="Grade Level" />
             </SelectTrigger>
@@ -178,7 +179,7 @@ const Students = () => {
             </SelectContent>
           </Select>
           <div className="flex space-x-2">
-            <Select value={performanceFilter} onValueChange={setPerformanceFilter}>
+            <Select value={performanceFilter || undefined} onValueChange={(value) => setPerformanceFilter(value === 'all' ? undefined : value)}>
               <SelectTrigger className="flex-1">
                 <SelectValue placeholder="Performance" />
               </SelectTrigger>
