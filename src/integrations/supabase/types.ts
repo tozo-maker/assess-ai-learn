@@ -161,6 +161,174 @@ export type Database = {
         }
         Relationships: []
       }
+      data_exports: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          export_format: string
+          export_type: string
+          file_url: string | null
+          filters: Json | null
+          id: string
+          status: string
+          teacher_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          export_format: string
+          export_type: string
+          file_url?: string | null
+          filters?: Json | null
+          id?: string
+          status?: string
+          teacher_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          export_format?: string
+          export_type?: string
+          file_url?: string | null
+          filters?: Json | null
+          id?: string
+          status?: string
+          teacher_id?: string
+        }
+        Relationships: []
+      }
+      goal_milestones: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          goal_id: string
+          id: string
+          target_date: string | null
+          title: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          goal_id: string
+          id?: string
+          target_date?: string | null
+          title: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          goal_id?: string
+          id?: string
+          target_date?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_milestones_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goals: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          progress_percentage: number | null
+          status: string
+          student_id: string
+          target_date: string | null
+          teacher_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          progress_percentage?: number | null
+          status?: string
+          student_id: string
+          target_date?: string | null
+          teacher_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          progress_percentage?: number | null
+          status?: string
+          student_id?: string
+          target_date?: string | null
+          teacher_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parent_communications: {
+        Row: {
+          communication_type: string
+          content: string
+          created_at: string
+          id: string
+          parent_email: string | null
+          pdf_url: string | null
+          sent_at: string | null
+          student_id: string
+          subject: string
+          teacher_id: string
+        }
+        Insert: {
+          communication_type: string
+          content: string
+          created_at?: string
+          id?: string
+          parent_email?: string | null
+          pdf_url?: string | null
+          sent_at?: string | null
+          student_id: string
+          subject: string
+          teacher_id: string
+        }
+        Update: {
+          communication_type?: string
+          content?: string
+          created_at?: string
+          id?: string
+          parent_email?: string | null
+          pdf_url?: string | null
+          sent_at?: string | null
+          student_id?: string
+          subject?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_communications_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_performance: {
         Row: {
           assessment_count: number
