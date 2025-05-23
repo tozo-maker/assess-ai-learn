@@ -35,7 +35,7 @@ const signupSchema = z.object({
   school: z.string().min(1, 'School/Organization is required'),
   grade_levels: z.array(z.string()).min(1, 'Please select at least one grade level'),
   subjects: z.array(z.string()).min(1, 'Please select at least one subject'),
-  years_experience: z.string().optional(),
+  years_experience: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined),
   terms: z.boolean().refine((val) => val === true, {
     message: 'You must agree to the terms and conditions',
   }),
@@ -69,11 +69,11 @@ const subjectOptions = [
 ];
 
 const experienceOptions = [
-  { value: '0-1', label: '0-1 years' },
-  { value: '2-5', label: '2-5 years' },
-  { value: '6-10', label: '6-10 years' },
-  { value: '11-20', label: '11-20 years' },
-  { value: '20+', label: '20+ years' },
+  { value: '1', label: '0-1 years' },
+  { value: '3', label: '2-5 years' },
+  { value: '8', label: '6-10 years' },
+  { value: '15', label: '11-20 years' },
+  { value: '25', label: '20+ years' },
 ];
 
 const Signup = () => {

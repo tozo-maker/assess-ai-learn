@@ -69,11 +69,14 @@ export const authService = {
         user_id: user.user.id
       });
       
-      if (!rpcError && rpcData && Array.isArray(rpcData) && rpcData.length > 0) {
-        return rpcData[0] as TeacherProfile;
+      if (!rpcError && rpcData) {
+        // Convert the received data to TeacherProfile
+        const profileData = Array.isArray(rpcData) && rpcData.length > 0 ? rpcData[0] : rpcData;
+        return profileData as TeacherProfile;
       }
       
-      // Fallback to direct query
+      // Fallback to direct query - using "as any" to bypass type checking since teacher_profiles 
+      // isn't properly typed in the Supabase schema yet
       const { data: directData, error: directError } = await supabase
         .from('teacher_profiles' as any)
         .select('*')
