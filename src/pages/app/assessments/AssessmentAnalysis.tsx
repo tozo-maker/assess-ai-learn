@@ -79,7 +79,7 @@ const AssessmentAnalysis: React.FC = () => {
     return <AssessmentAnalysisDisplay assessmentId={id as string} studentId={selectedStudentId} />;
   };
 
-  // Enhanced filtering with final validation before rendering
+  // Enhanced filtering with strict empty string validation
   const validStudents = React.useMemo(() => {
     if (!students || !Array.isArray(students)) {
       console.log('No students data or invalid array:', students);
@@ -89,11 +89,13 @@ const AssessmentAnalysis: React.FC = () => {
     const filtered = students.filter(student => {
       // Basic existence check
       if (!student || typeof student !== 'object') {
+        console.log('Invalid student object:', student);
         return false;
       }
       
       // Check for id property and validate it thoroughly
       if (!('id' in student)) {
+        console.log('Student missing id property:', student);
         return false;
       }
       
@@ -101,29 +103,36 @@ const AssessmentAnalysis: React.FC = () => {
       
       // Comprehensive ID validation - MUST be a non-empty string
       if (studentId === null || studentId === undefined) {
+        console.log('Student has null/undefined id:', student);
         return false;
       }
       
       if (typeof studentId !== 'string') {
+        console.log('Student id is not a string:', studentId, typeof studentId);
         return false;
       }
       
+      // CRITICAL: Check for empty string specifically
       if (studentId === '' || studentId.trim() === '') {
+        console.log('Student has empty string id:', student);
         return false;
       }
       
       // Check for required name fields
       if (!student.first_name || typeof student.first_name !== 'string' || student.first_name.trim() === '') {
+        console.log('Student missing valid first_name:', student);
         return false;
       }
       
       if (!student.last_name || typeof student.last_name !== 'string' || student.last_name.trim() === '') {
+        console.log('Student missing valid last_name:', student);
         return false;
       }
       
       return true;
     });
     
+    console.log('Valid students after filtering:', filtered.length, 'out of', students.length);
     return filtered;
   }, [students]);
 
@@ -155,14 +164,23 @@ const AssessmentAnalysis: React.FC = () => {
                   <SelectValue placeholder="Select a student" />
                 </SelectTrigger>
                 <SelectContent>
-                  {validStudents.map(student => (
-                    <SelectItem 
-                      key={student.id} 
-                      value={student.id || "invalid-id"} // Fallback to prevent empty string
-                    >
-                      {student.first_name} {student.last_name}
-                    </SelectItem>
-                  ))}
+                  {validStudents.map(student => {
+                    // Double-check student.id is valid before using it
+                    const studentId = student.id;
+                    if (!studentId || typeof studentId !== 'string' || studentId.trim() === '') {
+                      console.warn('Skipping student with invalid id in render:', student);
+                      return null;
+                    }
+                    
+                    return (
+                      <SelectItem 
+                        key={studentId} 
+                        value={studentId}
+                      >
+                        {student.first_name} {student.last_name}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             ) : (
