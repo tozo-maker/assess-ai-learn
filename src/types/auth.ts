@@ -7,7 +7,7 @@ export interface TeacherProfile {
   school?: string;
   grade_levels: string[];
   subjects: string[];
-  years_experience?: string;
+  years_experience?: number;
   avatar_url?: string;
   created_at: string;
   updated_at: string;

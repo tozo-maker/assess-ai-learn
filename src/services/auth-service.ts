@@ -64,15 +64,26 @@ export const authService = {
     if (!user.user) return null;
     
     try {
-      const { data, error } = await supabase
-        .from('teacher_profiles')
-        .select('*')
-        .eq('id', user.user.id)
-        .single();
+      // Use RPC to query teacher_profiles until types are regenerated
+      const { data, error } = await supabase.rpc('get_teacher_profile', {
+        user_id: user.user.id
+      });
       
       if (error) {
-        console.error('Error fetching teacher profile:', error);
-        return null;
+        console.error('Error fetching teacher profile via RPC:', error);
+        // Fallback to direct query with type assertion
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('teacher_profiles' as any)
+          .select('*')
+          .eq('id', user.user.id)
+          .single();
+        
+        if (fallbackError) {
+          console.error('Error fetching teacher profile:', fallbackError);
+          return null;
+        }
+        
+        return fallbackData as TeacherProfile;
       }
       
       return data as TeacherProfile;
@@ -88,8 +99,9 @@ export const authService = {
     if (!user.user) throw new Error('No authenticated user');
     
     try {
+      // Use type assertion for teacher_profiles table
       const { data, error } = await supabase
-        .from('teacher_profiles')
+        .from('teacher_profiles' as any)
         .update(profile)
         .eq('id', user.user.id)
         .select()
@@ -109,8 +121,9 @@ export const authService = {
     if (!user.user) throw new Error('No authenticated user');
     
     try {
+      // Use type assertion for teacher_profiles table
       const { data, error } = await supabase
-        .from('teacher_profiles')
+        .from('teacher_profiles' as any)
         .insert({
           id: user.user.id,
           ...profile
