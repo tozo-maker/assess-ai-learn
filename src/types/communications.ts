@@ -1,4 +1,6 @@
 
+import { Goal } from './goals';
+
 export interface ParentCommunication {
   id: string;
   student_id: string;

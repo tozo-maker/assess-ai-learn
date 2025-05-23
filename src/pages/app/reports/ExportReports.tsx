@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PageShell from '@/components/ui/page-shell';
@@ -91,10 +90,12 @@ const ExportReports = () => {
     requestExportMutation.mutate(exportData);
   };
 
-  const handleStudentSelection = (studentId: string, checked: boolean) => {
+  const handleStudentSelection = (studentId: string, checked: boolean | string) => {
+    // Convert checked to boolean to fix the type error
+    const isChecked = checked === true;
     setExportConfig(prev => ({
       ...prev,
-      selected_students: checked
+      selected_students: isChecked
         ? [...prev.selected_students, studentId]
         : prev.selected_students.filter(id => id !== studentId)
     }));
@@ -128,7 +129,7 @@ const ExportReports = () => {
   };
 
   const uniqueGradeLevels = [...new Set(students.map(s => s.grade_level))];
-  const uniqueSubjects = ['math', 'reading', 'science', 'social', 'writing']; // This could come from assessments
+  const uniqueSubjects = ['math', 'reading', 'science', 'social', 'writing'];
 
   return (
     <PageShell 
