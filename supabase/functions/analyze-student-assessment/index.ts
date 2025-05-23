@@ -1,271 +1,499 @@
 
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
-
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { OpenAI } from 'https://esm.sh/openai@4';
 import { corsHeaders } from '../_shared/cors.ts';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
-const openaiClient = new OpenAI({
-  apiKey: Deno.env.get('OPENAI_API_KEY') || '',
-});
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
-interface RequestBody {
-  assessment_id: string;
-  student_id: string;
-}
-
-Deno.serve(async (req) => {
-  // Handle CORS pre-flight request
+serve(async (req: Request) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
-  
+
   try {
-    // Create Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    // Parse the request body
+    const { assessment_id, student_id } = await req.json();
     
-    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey || !openaiClient.apiKey) {
+    // Check for required parameters
+    if (!assessment_id || !student_id) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: 'Server configuration error. Missing required environment variables.' 
+          message: 'Missing required parameters: assessment_id or student_id' 
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 400 }
       );
     }
 
-    // Create clients with the Auth context of the user that called the function
-    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
-    
-    // Parse request body
-    const { assessment_id, student_id } = await req.json() as RequestBody;
-    
-    if (!assessment_id || !student_id) {
+    // Check if we have the API key
+    if (!OPENAI_API_KEY) {
       return new Response(
-        JSON.stringify({ success: false, message: 'Missing required parameters: assessment_id and student_id' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        JSON.stringify({ 
+          success: false, 
+          message: 'OpenAI API key not configured. Please set the OPENAI_API_KEY environment variable.' 
+        }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
       );
     }
-
-    // Step 1: Get the assessment data
+    
+    // Create Supabase client using service role (for querying the database)
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') || '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+    );
+    
+    // Fetch assessment data
     const { data: assessment, error: assessmentError } = await supabaseClient
       .from('assessments')
-      .select('*')
+      .select('*, assessment_items(*)')
       .eq('id', assessment_id)
       .single();
-
-    if (assessmentError || !assessment) {
+    
+    if (assessmentError) {
       return new Response(
-        JSON.stringify({ success: false, message: 'Assessment not found', error: assessmentError }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+        JSON.stringify({ success: false, message: `Error fetching assessment: ${assessmentError.message}` }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
       );
     }
-
-    // Step 2: Get the assessment items
-    const { data: assessmentItems, error: itemsError } = await supabaseClient
-      .from('assessment_items')
-      .select('*')
-      .eq('assessment_id', assessment_id)
-      .order('item_number', { ascending: true });
-
-    if (itemsError) {
-      return new Response(
-        JSON.stringify({ success: false, message: 'Failed to fetch assessment items', error: itemsError }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
-
-    // Step 3: Get the student responses
-    const { data: studentResponses, error: responsesError } = await supabaseClient
-      .from('student_responses')
-      .select('*')
-      .eq('assessment_id', assessment_id)
-      .eq('student_id', student_id);
-
-    if (responsesError) {
-      return new Response(
-        JSON.stringify({ success: false, message: 'Failed to fetch student responses', error: responsesError }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
-
-    if (!studentResponses || studentResponses.length === 0) {
-      return new Response(
-        JSON.stringify({ success: false, message: 'No student responses found for this assessment' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
-      );
-    }
-
-    // Step 4: Get the student information
+    
+    // Fetch student data
     const { data: student, error: studentError } = await supabaseClient
       .from('students')
       .select('*')
       .eq('id', student_id)
       .single();
-
-    if (studentError || !student) {
+    
+    if (studentError) {
       return new Response(
-        JSON.stringify({ success: false, message: 'Student not found', error: studentError }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+        JSON.stringify({ success: false, message: `Error fetching student: ${studentError.message}` }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
       );
     }
-
-    // Step 5: Prepare the analysis data for GPT
-    const assessmentData = {
-      assessment: assessment,
-      items: assessmentItems,
-      responses: studentResponses.map(response => {
-        const item = assessmentItems.find(item => item.id === response.assessment_item_id);
-        return {
-          ...response,
-          item_details: item,
-          score_percentage: item ? (response.score / item.max_score * 100) : 0,
+    
+    // Fetch student responses for this assessment
+    const { data: responses, error: responsesError } = await supabaseClient
+      .from('student_responses')
+      .select('*, assessment_item:assessment_item_id(*)')
+      .eq('assessment_id', assessment_id)
+      .eq('student_id', student_id);
+    
+    if (responsesError) {
+      return new Response(
+        JSON.stringify({ success: false, message: `Error fetching responses: ${responsesError.message}` }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
+      );
+    }
+    
+    if (!responses || responses.length === 0) {
+      return new Response(
+        JSON.stringify({ success: false, message: 'No student responses found for this assessment' }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 404 }
+      );
+    }
+    
+    // Process the data for AI analysis
+    const totalItems = assessment.assessment_items.length;
+    const totalCorrectItems = responses.filter(r => r.score > 0).length;
+    const totalScore = responses.reduce((sum, r) => sum + Number(r.score), 0);
+    const maxPossibleScore = responses.reduce((sum, r) => sum + Number(r.assessment_item.max_score), 0);
+    const scorePercentage = (totalScore / maxPossibleScore) * 100;
+    
+    const errorTypeBreakdown = responses.reduce((acc, r) => {
+      if (r.error_type && r.error_type !== 'none') {
+        acc[r.error_type] = (acc[r.error_type] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const knowledgeTypeBreakdown = responses.reduce((acc, r) => {
+      const knowledgeType = r.assessment_item.knowledge_type;
+      if (!acc[knowledgeType]) {
+        acc[knowledgeType] = {
+          total: 0,
+          correct: 0,
+          score: 0,
+          maxScore: 0
         };
-      }),
-      student: {
-        name: `${student.first_name} ${student.last_name}`,
-        grade: student.grade_level,
-        special_considerations: student.special_considerations || null,
-        learning_goals: student.learning_goals || null,
-      },
-      totalScore: studentResponses.reduce((total, response) => total + Number(response.score), 0),
-      maxPossibleScore: assessment.max_score,
-      scorePercentage: (studentResponses.reduce((total, response) => total + Number(response.score), 0) / assessment.max_score * 100).toFixed(1),
-    };
-
-    // Step 6: Create the prompt for GPT
+      }
+      
+      acc[knowledgeType].total += 1;
+      if (r.score === r.assessment_item.max_score) {
+        acc[knowledgeType].correct += 1;
+      }
+      acc[knowledgeType].score += Number(r.score);
+      acc[knowledgeType].maxScore += Number(r.assessment_item.max_score);
+      
+      return acc;
+    }, {} as Record<string, { total: number; correct: number; score: number; maxScore: number }>);
+    
+    const difficultyBreakdown = responses.reduce((acc, r) => {
+      const difficulty = r.assessment_item.difficulty_level;
+      if (!acc[difficulty]) {
+        acc[difficulty] = {
+          total: 0,
+          correct: 0,
+          score: 0,
+          maxScore: 0
+        };
+      }
+      
+      acc[difficulty].total += 1;
+      if (r.score === r.assessment_item.max_score) {
+        acc[difficulty].correct += 1;
+      }
+      acc[difficulty].score += Number(r.score);
+      acc[difficulty].maxScore += Number(r.assessment_item.max_score);
+      
+      return acc;
+    }, {} as Record<string, { total: number; correct: number; score: number; maxScore: number }>);
+    
+    // Create a detailed prompt for the AI
     const prompt = `
-    As an educational assessment expert, analyze the following assessment data for a student and provide insights.
-    
-    ASSESSMENT INFORMATION:
-    - Title: ${assessment.title}
-    - Subject: ${assessment.subject}
-    - Grade Level: ${assessment.grade_level}
-    - Type: ${assessment.assessment_type}
-    - Standards Covered: ${assessment.standards_covered ? assessment.standards_covered.join(", ") : "None specified"}
-    
-    STUDENT INFORMATION:
-    - Name: ${assessmentData.student.name}
-    - Grade: ${assessmentData.student.grade}
-    - Special Considerations: ${assessmentData.student.special_considerations || "None"}
-    - Learning Goals: ${assessmentData.student.learning_goals || "None specified"}
-    
-    PERFORMANCE SUMMARY:
-    - Total Score: ${assessmentData.totalScore} out of ${assessmentData.maxPossibleScore} (${assessmentData.scorePercentage}%)
-    
-    DETAILED RESPONSES:
-    ${assessmentData.responses.map(r => `
-    Item #${r.item_details?.item_number || '?'}: "${r.item_details?.question_text || '?'}"
-    - Knowledge Type: ${r.item_details?.knowledge_type || '?'}
-    - Difficulty: ${r.item_details?.difficulty_level || '?'}
-    - Standard: ${r.item_details?.standard_reference || 'None'}
-    - Score: ${r.score} / ${r.item_details?.max_score || '?'} (${r.score_percentage.toFixed(1)}%)
-    - Error Type: ${r.error_type || 'None'}
-    - Teacher Notes: ${r.teacher_notes || 'None'}
-    `).join('\n')}
-    
-    Based on this assessment data, please provide:
-    
-    1. STRENGTHS: Identify 3-5 specific strengths demonstrated by the student in this assessment.
-    2. GROWTH AREAS: Identify 3-5 specific areas where the student needs improvement, based on the assessment results.
-    3. PATTERNS OBSERVED: Identify 2-4 patterns in the student's responses (e.g., struggles with certain types of problems, excels in specific areas, etc.)
-    4. RECOMMENDATIONS: Provide 3-5 specific, actionable recommendations for helping this student improve.
-    5. OVERALL SUMMARY: Provide a brief paragraph summarizing the student's performance and next steps.
-    
-    Format your response as JSON with the following structure:
-    {
-      "strengths": ["strength1", "strength2", ...],
-      "growth_areas": ["area1", "area2", ...],
-      "patterns_observed": ["pattern1", "pattern2", ...],
-      "recommendations": ["recommendation1", "recommendation2", ...],
-      "overall_summary": "A paragraph summarizing the analysis..."
-    }
+      You are an expert educational analyst. Please analyze the following assessment data for a student and provide insights:
+      
+      STUDENT INFORMATION:
+      Name: ${student.first_name} ${student.last_name}
+      Grade Level: ${student.grade_level}
+      
+      ASSESSMENT INFORMATION:
+      Title: ${assessment.title}
+      Subject: ${assessment.subject}
+      Type: ${assessment.assessment_type}
+      
+      PERFORMANCE SUMMARY:
+      Total Score: ${totalScore}/${maxPossibleScore} (${scorePercentage.toFixed(1)}%)
+      
+      ERROR TYPE BREAKDOWN:
+      ${Object.entries(errorTypeBreakdown).map(([type, count]) => 
+        `${type}: ${count} items (${((count / totalItems) * 100).toFixed(1)}%)`
+      ).join('\n')}
+      
+      KNOWLEDGE TYPE PERFORMANCE:
+      ${Object.entries(knowledgeTypeBreakdown).map(([type, data]) => 
+        `${type}: ${data.score}/${data.maxScore} (${((data.score / data.maxScore) * 100).toFixed(1)}%)`
+      ).join('\n')}
+      
+      DIFFICULTY LEVEL PERFORMANCE:
+      ${Object.entries(difficultyBreakdown).map(([level, data]) => 
+        `${level}: ${data.score}/${data.maxScore} (${((data.score / data.maxScore) * 100).toFixed(1)}%)`
+      ).join('\n')}
+      
+      DETAILED RESPONSES:
+      ${responses.map((r, i) => 
+        `Item ${i+1}: "${r.assessment_item.question_text}"
+        - Knowledge Type: ${r.assessment_item.knowledge_type}
+        - Difficulty: ${r.assessment_item.difficulty_level}
+        - Score: ${r.score}/${r.assessment_item.max_score}
+        - Error Type: ${r.error_type || 'None'}
+        - Notes: ${r.teacher_notes || 'None'}`
+      ).join('\n\n')}
+      
+      Based on this assessment data, please provide:
+      1. 3-5 specific strengths the student demonstrated (be specific)
+      2. 3-5 specific growth areas where the student needs improvement (be specific)
+      3. 3-5 learning patterns observed in the student's performance
+      4. 4-6 personalized teaching recommendations to help this student improve
+      5. A brief overall summary of the student's performance (2-3 sentences)
+      
+      Format your response as a JSON object with these keys: strengths, growth_areas, patterns_observed, recommendations, overall_summary.
+      Each field except overall_summary should be an array of strings. overall_summary should be a string.
     `;
-
-    // Step 7: Call the OpenAI API
-    const completion = await openaiClient.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: "You are an expert educational assessment analyst that provides insightful analysis of student performance. You always respond in valid JSON format as specified." },
-        { role: "user", content: prompt }
-      ],
-      response_format: { type: "json_object" }
-    });
-
-    const analysisText = completion.choices[0]?.message?.content || '{}';
-    let analysis;
     
-    try {
-      analysis = JSON.parse(analysisText);
-    } catch (e) {
-      console.error("Failed to parse OpenAI response as JSON:", e);
+    // Call OpenAI API
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'You are an expert educational analyst providing insights based on student assessment data.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+      })
+    });
+    
+    const openAIData = await openAIResponse.json();
+    
+    if (!openAIResponse.ok) {
       return new Response(
-        JSON.stringify({ success: false, message: 'Failed to parse AI analysis response', rawResponse: analysisText }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        JSON.stringify({ 
+          success: false, 
+          message: `Error from OpenAI: ${openAIData.error?.message || 'Unknown error'}` 
+        }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
       );
     }
-
-    // Step 8: Store the analysis in the database
+    
+    // Extract the analysis from the API response
+    let analysis;
+    try {
+      // Parse the JSON from the response content
+      const responseText = openAIData.choices[0].message.content;
+      analysis = JSON.parse(responseText);
+    } catch (e) {
+      // If parsing fails, try to use regex to extract the JSON
+      const responseText = openAIData.choices[0].message.content;
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          analysis = JSON.parse(jsonMatch[0]);
+        } catch (e2) {
+          return new Response(
+            JSON.stringify({ success: false, message: 'Failed to parse AI response' }),
+            { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
+          );
+        }
+      } else {
+        return new Response(
+          JSON.stringify({ success: false, message: 'Invalid AI response format' }),
+          { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
+        );
+      }
+    }
+    
+    // Check if the analysis has the expected structure
+    if (!analysis || !analysis.strengths || !analysis.growth_areas || 
+        !analysis.patterns_observed || !analysis.recommendations) {
+      return new Response(
+        JSON.stringify({ success: false, message: 'Incomplete AI analysis' }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
+      );
+    }
+    
+    // Save the analysis to the database
     const analysisData = {
       assessment_id: assessment_id,
       student_id: student_id,
-      strengths: analysis.strengths || [],
-      growth_areas: analysis.growth_areas || [],
-      patterns_observed: analysis.patterns_observed || [],
-      recommendations: analysis.recommendations || [],
-      overall_summary: analysis.overall_summary || "",
-      analysis_json: analysis
+      strengths: analysis.strengths,
+      growth_areas: analysis.growth_areas,
+      patterns_observed: analysis.patterns_observed,
+      recommendations: analysis.recommendations,
+      overall_summary: analysis.overall_summary,
+      analysis_json: {
+        performance: {
+          totalScore,
+          maxPossibleScore,
+          scorePercentage,
+          errorTypeBreakdown,
+          knowledgeTypeBreakdown,
+          difficultyBreakdown
+        },
+        responses: responses.map(r => ({
+          question: r.assessment_item.question_text,
+          knowledge_type: r.assessment_item.knowledge_type,
+          difficulty: r.assessment_item.difficulty_level,
+          score: r.score,
+          max_score: r.assessment_item.max_score,
+          error_type: r.error_type,
+          notes: r.teacher_notes
+        }))
+      }
     };
-
-    // Check if an analysis already exists and update it, or create a new one
-    const { data: existingAnalysis, error: existingAnalysisError } = await supabaseClient
+    
+    // Check if an analysis already exists and update or insert accordingly
+    const { data: existingAnalysis } = await supabaseClient
       .from('assessment_analysis')
       .select('id')
       .eq('assessment_id', assessment_id)
       .eq('student_id', student_id)
       .maybeSingle();
-
-    let saveResult;
     
+    let dbResult;
     if (existingAnalysis) {
-      // Update existing analysis
-      saveResult = await supabaseClient
+      // Update the existing analysis
+      dbResult = await supabaseClient
         .from('assessment_analysis')
         .update(analysisData)
         .eq('id', existingAnalysis.id)
-        .select();
+        .select()
+        .single();
     } else {
-      // Create new analysis
-      saveResult = await supabaseClient
+      // Insert a new analysis
+      dbResult = await supabaseClient
         .from('assessment_analysis')
         .insert(analysisData)
-        .select();
+        .select()
+        .single();
     }
-
-    if (saveResult.error) {
+    
+    if (dbResult.error) {
       return new Response(
-        JSON.stringify({ success: false, message: 'Failed to save analysis', error: saveResult.error }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        JSON.stringify({ success: false, message: `Error saving analysis: ${dbResult.error.message}` }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
       );
     }
-
+    
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Analysis completed and saved successfully', 
-        analysis_id: saveResult.data[0].id
+        message: 'Analysis completed successfully',
+        analysis: dbResult.data
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
-
-  } catch (error) {
+    
+  } catch (err) {
+    console.error('Error in analyze-student-assessment function:', err);
     return new Response(
-      JSON.stringify({ success: false, message: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      JSON.stringify({ success: false, message: err.message }),
+      { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
     );
   }
 });
+
+// Helper function to create Supabase client
+function createClient(supabaseUrl: string, supabaseKey: string) {
+  return {
+    from(table: string) {
+      return {
+        select(columns = '*') {
+          let url = `${supabaseUrl}/rest/v1/${table}?select=${columns}`;
+          let headers = {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`
+          };
+          let query: Record<string, any> = {};
+          
+          return {
+            eq(column: string, value: any) {
+              query[column] = `eq.${value}`;
+              return this;
+            },
+            single() {
+              url += '&limit=1';
+              return fetch(url, { 
+                headers,
+                method: 'GET',
+                signal: AbortSignal.timeout(15000)
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (Array.isArray(data) && data.length > 0) {
+                  return { data: data[0], error: null };
+                } else if (Array.isArray(data) && data.length === 0) {
+                  return { data: null, error: { message: 'No rows found' } };
+                }
+                return { data, error: null };
+              })
+              .catch(error => ({ data: null, error }));
+            },
+            maybeSingle() {
+              url += '&limit=1';
+              return fetch(url, { 
+                headers,
+                method: 'GET',
+                signal: AbortSignal.timeout(15000)
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (Array.isArray(data) && data.length > 0) {
+                  return { data: data[0], error: null };
+                } else if (Array.isArray(data) && data.length === 0) {
+                  return { data: null, error: null };
+                }
+                return { data, error: null };
+              })
+              .catch(error => ({ data: null, error }));
+            },
+            then(resolve: any) {
+              Object.keys(query).forEach(key => {
+                url += `&${key}=${encodeURIComponent(query[key])}`;
+              });
+              
+              return fetch(url, { 
+                headers,
+                method: 'GET',
+                signal: AbortSignal.timeout(15000)
+              })
+              .then(response => response.json())
+              .then(data => resolve({ data, error: null }))
+              .catch(error => resolve({ data: null, error }));
+            }
+          };
+        },
+        insert(data: any) {
+          const url = `${supabaseUrl}/rest/v1/${table}`;
+          const headers = {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Prefer': 'return=representation'
+          };
+          
+          return {
+            select(columns = '*') {
+              return fetch(url, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(data),
+                signal: AbortSignal.timeout(15000)
+              })
+              .then(response => response.json())
+              .then(result => ({ data: result, error: null }))
+              .catch(error => ({ data: null, error }));
+            }
+          };
+        },
+        update(data: any) {
+          let url = `${supabaseUrl}/rest/v1/${table}`;
+          const headers = {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Prefer': 'return=representation'
+          };
+          let conditions: Record<string, any> = {};
+          
+          return {
+            eq(column: string, value: any) {
+              conditions[column] = `eq.${value}`;
+              return this;
+            },
+            select(columns = '*') {
+              Object.keys(conditions).forEach((key, index) => {
+                url += `${index === 0 ? '?' : '&'}${key}=${encodeURIComponent(conditions[key])}`;
+              });
+              
+              return fetch(url, {
+                method: 'PATCH',
+                headers,
+                body: JSON.stringify(data),
+                signal: AbortSignal.timeout(15000)
+              })
+              .then(response => response.json())
+              .then(result => ({ data: result, error: null }))
+              .catch(error => ({ data: null, error }));
+            },
+            single() {
+              Object.keys(conditions).forEach((key, index) => {
+                url += `${index === 0 ? '?' : '&'}${key}=${encodeURIComponent(conditions[key])}`;
+              });
+              url += '&limit=1';
+              
+              return fetch(url, {
+                method: 'PATCH',
+                headers,
+                body: JSON.stringify(data),
+                signal: AbortSignal.timeout(15000)
+              })
+              .then(response => response.json())
+              .then(result => {
+                if (Array.isArray(result) && result.length > 0) {
+                  return { data: result[0], error: null };
+                }
+                return { data: result, error: null };
+              })
+              .catch(error => ({ data: null, error }));
+            }
+          };
+        }
+      };
+    }
+  };
+}

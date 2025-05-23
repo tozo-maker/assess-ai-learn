@@ -74,7 +74,7 @@ export interface AssessmentFormData {
   max_score: number;
   assessment_date?: string;
   is_draft?: boolean;
-  teacher_id?: string;
+  teacher_id: string; // Changed from optional to required to match the database schema
 }
 
 export interface AssessmentItemFormData {

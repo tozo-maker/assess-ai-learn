@@ -13,34 +13,22 @@ import {
 export const assessmentService = {
   // Assessment CRUD
   async createAssessment(data: AssessmentFormData): Promise<Assessment> {
-    // If teacher_id is not provided, get it from auth
+    // Ensure teacher_id is set
     if (!data.teacher_id) {
       const { data: authData } = await supabase.auth.getUser();
       if (!authData.user) throw new Error("User not authenticated");
       
-      const formattedData = {
-        ...data,
-        teacher_id: authData.user.id
-      };
-      
-      const { data: assessment, error } = await supabase
-        .from('assessments')
-        .insert(formattedData)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return assessment as Assessment;
-    } else {
-      const { data: assessment, error } = await supabase
-        .from('assessments')
-        .insert(data)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return assessment as Assessment;
+      data.teacher_id = authData.user.id;
     }
+    
+    const { data: assessment, error } = await supabase
+      .from('assessments')
+      .insert(data)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return assessment as Assessment;
   },
 
   async getAssessments(): Promise<Assessment[]> {

@@ -25,6 +25,7 @@ import {
   DifficultyLevel,
   difficultyLevelOptions 
 } from '@/types/assessment';
+import { supabase } from '@/integrations/supabase/client';
 
 // Validation schemas
 const basicInfoSchema = z.object({
@@ -100,19 +101,19 @@ const AssessmentWizard: React.FC = () => {
     if (activeTab === 'basic-info') {
       const basicInfoResult = await form.trigger([
         'title', 'subject', 'grade_level', 'assessment_type'
-      ]);
+      ], { shouldFocus: true });
       
       if (basicInfoResult) {
         setActiveTab('assessment-items');
       }
     } else if (activeTab === 'assessment-items') {
-      const itemsResult = await form.trigger('items');
+      const itemsResult = await form.trigger('items', { shouldFocus: true });
       
       if (itemsResult) {
         setActiveTab('scoring-setup');
       }
     } else if (activeTab === 'scoring-setup') {
-      const scoringResult = await form.trigger(['max_score']);
+      const scoringResult = await form.trigger(['max_score'], { shouldFocus: true });
       
       if (scoringResult) {
         setActiveTab('review');
@@ -132,6 +133,17 @@ const AssessmentWizard: React.FC = () => {
 
   const onSubmit = async (data: AssessmentWizardValues) => {
     try {
+      // Get current user
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) {
+        toast({
+          title: "Authentication Error",
+          description: "You must be logged in to create an assessment",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       // Calculate total max score from items
       const totalItemsScore = data.items.reduce((sum, item) => sum + Number(item.max_score), 0);
       
@@ -146,6 +158,7 @@ const AssessmentWizard: React.FC = () => {
         max_score: data.max_score,
         assessment_date: data.assessment_date,
         is_draft: data.is_draft,
+        teacher_id: authData.user.id,
       });
       
       // Then create the assessment items
@@ -158,7 +171,8 @@ const AssessmentWizard: React.FC = () => {
           difficulty_level: item.difficulty_level as DifficultyLevel,
           max_score: Number(item.max_score),
           standard_reference: item.standard_reference,
-        }))
+        })),
+        assessment.id
       );
       
       toast({
