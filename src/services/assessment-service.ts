@@ -7,7 +7,8 @@ import {
   AssessmentItemFormData,
   StudentResponse,
   StudentResponseFormData,
-  AssessmentAnalysis
+  AssessmentAnalysis,
+  AIModelType
 } from '@/types/assessment';
 
 export const assessmentService = {
@@ -161,8 +162,10 @@ export const assessmentService = {
     return data as AssessmentAnalysis | null;
   },
 
-  async triggerAnalysis(assessmentId: string, studentId: string): Promise<{ success: boolean, message: string }> {
-    const { data, error } = await supabase.functions.invoke('analyze-student-assessment', {
+  async triggerAnalysis(assessmentId: string, studentId: string, model: AIModelType = 'openai'): Promise<{ success: boolean, message: string }> {
+    const functionName = model === 'anthropic' ? 'analyze-with-anthropic' : 'analyze-student-assessment';
+    
+    const { data, error } = await supabase.functions.invoke(functionName, {
       body: { assessment_id: assessmentId, student_id: studentId }
     });
 

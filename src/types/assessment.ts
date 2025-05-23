@@ -95,3 +95,7 @@ export interface StudentResponseFormData {
   error_type?: ErrorType;
   teacher_notes?: string;
 }
+
+// AI Model options for assessment analysis
+export type AIModelType = 'openai' | 'anthropic';
+export const aiModelOptions: AIModelType[] = ['openai', 'anthropic'];
