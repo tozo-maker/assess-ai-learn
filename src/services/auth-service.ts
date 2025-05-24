@@ -68,12 +68,32 @@ export const authService = {
       const userMetadata = user.user.user_metadata;
       
       if (userMetadata && userMetadata.full_name) {
+        // Handle grade_levels - it might be a string or array
+        let gradeLevels: string[] = [];
+        if (userMetadata.grade_levels) {
+          if (Array.isArray(userMetadata.grade_levels)) {
+            gradeLevels = userMetadata.grade_levels;
+          } else if (typeof userMetadata.grade_levels === 'string') {
+            gradeLevels = userMetadata.grade_levels.split(',');
+          }
+        }
+
+        // Handle subjects - it might be a string or array
+        let subjects: string[] = [];
+        if (userMetadata.subjects) {
+          if (Array.isArray(userMetadata.subjects)) {
+            subjects = userMetadata.subjects;
+          } else if (typeof userMetadata.subjects === 'string') {
+            subjects = userMetadata.subjects.split(',');
+          }
+        }
+
         return {
           id: user.user.id,
           full_name: userMetadata.full_name,
           school: userMetadata.school,
-          grade_levels: userMetadata.grade_levels ? userMetadata.grade_levels.split(',') : [],
-          subjects: userMetadata.subjects ? userMetadata.subjects.split(',') : [],
+          grade_levels: gradeLevels,
+          subjects: subjects,
           years_experience: userMetadata.years_experience,
           created_at: user.user.created_at,
           updated_at: user.user.updated_at || user.user.created_at
@@ -112,8 +132,16 @@ export const authService = {
         id: user.user.id,
         full_name: updatedMetadata?.full_name || profile.full_name || '',
         school: updatedMetadata?.school || profile.school,
-        grade_levels: updatedMetadata?.grade_levels ? updatedMetadata.grade_levels.split(',') : profile.grade_levels || [],
-        subjects: updatedMetadata?.subjects ? updatedMetadata.subjects.split(',') : profile.subjects || [],
+        grade_levels: updatedMetadata?.grade_levels ? 
+          (Array.isArray(updatedMetadata.grade_levels) ? 
+            updatedMetadata.grade_levels : 
+            updatedMetadata.grade_levels.split(',')) : 
+          profile.grade_levels || [],
+        subjects: updatedMetadata?.subjects ? 
+          (Array.isArray(updatedMetadata.subjects) ? 
+            updatedMetadata.subjects : 
+            updatedMetadata.subjects.split(',')) : 
+          profile.subjects || [],
         years_experience: updatedMetadata?.years_experience || profile.years_experience,
         created_at: user.user.created_at,
         updated_at: new Date().toISOString()
