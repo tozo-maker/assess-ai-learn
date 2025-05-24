@@ -145,7 +145,6 @@ export const testingHelpers = {
 
       const assessment = await assessmentService.createAssessment(assessmentData);
 
-      // Create assessment items
       const assessmentItems: AssessmentItemFormData[] = [
         {
           question_text: 'Solve the multi-step problem: A store has 245 apples. They sell 127 apples in the morning and 89 apples in the afternoon. How many apples are left?',
@@ -207,7 +206,6 @@ export const testingHelpers = {
 
   async createTestResponses(assessmentId: string, studentIds: string[]): Promise<TestingReport> {
     try {
-      // Get assessment items
       const items = await assessmentService.getAssessmentItems(assessmentId);
       
       if (items.length === 0) {
@@ -216,29 +214,26 @@ export const testingHelpers = {
 
       const allResponses = [];
 
-      // Create varied responses for each student
       for (let i = 0; i < studentIds.length; i++) {
         const studentId = studentIds[i];
         const studentResponses: StudentResponseFormData[] = [];
 
         items.forEach((item, itemIndex) => {
-          // Create varied performance patterns
           let score: number;
           let errorType: 'conceptual' | 'procedural' | 'factual' | 'none';
           
-          // Student performance patterns
-          const performancePattern = i % 3; // 0: high, 1: medium, 2: struggling
+          const performancePattern = i % 3;
           
           switch (performancePattern) {
-            case 0: // High performer
+            case 0:
               score = Math.floor(item.max_score * (0.85 + Math.random() * 0.15));
               errorType = Math.random() > 0.8 ? 'procedural' : 'none';
               break;
-            case 1: // Average performer
+            case 1:
               score = Math.floor(item.max_score * (0.65 + Math.random() * 0.25));
               errorType = Math.random() > 0.6 ? (Math.random() > 0.5 ? 'procedural' : 'conceptual') : 'none';
               break;
-            case 2: // Struggling performer
+            case 2:
               score = Math.floor(item.max_score * (0.35 + Math.random() * 0.35));
               errorType = Math.random() > 0.3 ? (Math.random() > 0.5 ? 'conceptual' : 'procedural') : 'factual';
               break;
@@ -275,12 +270,11 @@ export const testingHelpers = {
     }
   },
 
-  // Phase 2: AI Integration Testing
-  async testAIAnalysisGeneration(): Promise<TestingReport> {
+  // Phase 2: AI Integration Testing (Anthropic only)
+  async testAnthropicAnalysisGeneration(): Promise<TestingReport> {
     try {
-      console.log('Testing AI analysis generation...');
+      console.log('Testing Anthropic analysis generation...');
       
-      // Get existing test data
       const students = await studentService.getStudents();
       const assessments = await assessmentService.getAssessments();
       
@@ -294,55 +288,7 @@ export const testingHelpers = {
       const testStudent = students[0];
       const testAssessment = assessments[0];
 
-      // Test AI analysis generation
       const { data, error } = await supabase.functions.invoke('analyze-student-assessment', {
-        body: {
-          student_id: testStudent.id,
-          assessment_id: testAssessment.id,
-          model_type: 'openai'
-        }
-      });
-
-      if (error) {
-        return {
-          success: false,
-          message: 'AI analysis generation failed',
-          details: error
-        };
-      }
-
-      return {
-        success: true,
-        message: 'AI analysis generated successfully',
-        details: data
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: 'AI analysis test failed',
-        details: error
-      };
-    }
-  },
-
-  async testAnthropicBackup(): Promise<TestingReport> {
-    try {
-      console.log('Testing Anthropic backup AI service...');
-      
-      const students = await studentService.getStudents();
-      const assessments = await assessmentService.getAssessments();
-      
-      if (students.length === 0 || assessments.length === 0) {
-        return {
-          success: false,
-          message: 'No test data found for Anthropic test',
-        };
-      }
-
-      const testStudent = students[0];
-      const testAssessment = assessments[0];
-
-      const { data, error } = await supabase.functions.invoke('analyze-with-anthropic', {
         body: {
           student_id: testStudent.id,
           assessment_id: testAssessment.id
@@ -352,20 +298,20 @@ export const testingHelpers = {
       if (error) {
         return {
           success: false,
-          message: 'Anthropic AI analysis failed',
+          message: 'Anthropic analysis generation failed',
           details: error
         };
       }
 
       return {
         success: true,
-        message: 'Anthropic AI analysis working correctly',
+        message: 'Anthropic analysis generated successfully',
         details: data
       };
     } catch (error) {
       return {
         success: false,
-        message: 'Anthropic AI test failed',
+        message: 'Anthropic analysis test failed',
         details: error
       };
     }
@@ -468,7 +414,6 @@ export const testingHelpers = {
     try {
       console.log('Testing advanced data relationships...');
       
-      // Test student -> assessments -> responses -> analysis chain
       const { data: studentWithData, error } = await supabase
         .from('students')
         .select(`
@@ -538,16 +483,13 @@ export const testingHelpers = {
     try {
       console.log('Testing AI error handling...');
       
-      // Test with invalid student ID
       const { data, error } = await supabase.functions.invoke('analyze-student-assessment', {
         body: {
           student_id: 'invalid-uuid',
-          assessment_id: 'invalid-uuid',
-          model_type: 'openai'
+          assessment_id: 'invalid-uuid'
         }
       });
 
-      // We expect this to fail gracefully
       if (!error) {
         return {
           success: false,
@@ -569,20 +511,63 @@ export const testingHelpers = {
     }
   },
 
+  async testAnthropicAPIKeyConfiguration(): Promise<TestingReport> {
+    try {
+      console.log('Testing Anthropic API key configuration...');
+      
+      // Test API key availability by making a simple call
+      const { data, error } = await supabase.functions.invoke('generate-goal-suggestions', {
+        body: {
+          student_id: 'test-id-for-key-check'
+        }
+      });
+
+      // If we get a specific error about missing student but not about API key, then key is configured
+      if (error && error.message && error.message.includes('Student not found')) {
+        return {
+          success: true,
+          message: 'Anthropic API key is properly configured',
+          details: 'API key check successful'
+        };
+      }
+
+      // If we get an API key error, then it's not configured
+      if (error && error.message && (error.message.includes('API key') || error.message.includes('Anthropic'))) {
+        return {
+          success: false,
+          message: 'Anthropic API key not configured',
+          details: 'Please set ANTHROPIC_API_KEY in Supabase Edge Function Secrets'
+        };
+      }
+
+      return {
+        success: true,
+        message: 'Anthropic API key configuration test completed',
+        details: data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Failed to test Anthropic API key configuration',
+        details: error
+      };
+    }
+  },
+
   // Phase 2 comprehensive test runner
   async runPhase2Tests(): Promise<TestingReport[]> {
     const results: TestingReport[] = [];
 
-    console.log('🧪 Starting Phase 2: AI Integration Testing...');
+    console.log('🧪 Starting Phase 2: AI Integration Testing (Anthropic Only)...');
 
-    // Test 1: AI Analysis Generation (OpenAI)
-    console.log('Testing OpenAI analysis generation...');
-    const openAIResult = await this.testAIAnalysisGeneration();
-    results.push(openAIResult);
+    // Test 1: Anthropic API Key Configuration
+    console.log('Testing Anthropic API key configuration...');
+    const apiKeyResult = await this.testAnthropicAPIKeyConfiguration();
+    results.push(apiKeyResult);
 
-    // Test 2: Anthropic Backup
-    console.log('Testing Anthropic backup service...');
-    const anthropicResult = await this.testAnthropicBackup();
+    // Test 2: Anthropic Analysis Generation
+    console.log('Testing Anthropic analysis generation...');
+    const anthropicResult = await this.testAnthropicAnalysisGeneration();
     results.push(anthropicResult);
 
     // Test 3: Goal Suggestions

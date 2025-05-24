@@ -3,7 +3,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 
 serve(async (req: Request) => {
   // Handle CORS preflight requests
@@ -27,11 +27,11 @@ serve(async (req: Request) => {
     }
 
     // Check if we have the API key
-    if (!OPENAI_API_KEY) {
+    if (!ANTHROPIC_API_KEY) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: 'OpenAI API key not configured. Please set the OPENAI_API_KEY environment variable.' 
+          message: 'Anthropic API key not configured. Please set the ANTHROPIC_API_KEY environment variable.' 
         }),
         { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
       );
@@ -148,7 +148,7 @@ serve(async (req: Request) => {
       return acc;
     }, {} as Record<string, { total: number; correct: number; score: number; maxScore: number }>);
     
-    // Create a detailed prompt for the AI
+    // Create a detailed prompt for Claude
     const prompt = `
       You are an expert educational analyst. Please analyze the following assessment data for a student and provide insights:
       
@@ -200,30 +200,34 @@ serve(async (req: Request) => {
       Each field except overall_summary should be an array of strings. overall_summary should be a string.
     `;
     
-    // Call OpenAI API
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Anthropic API
+    const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'claude-3-sonnet-20240229',
+        max_tokens: 2000,
         messages: [
-          { role: 'system', content: 'You are an expert educational analyst providing insights based on student assessment data.' },
-          { role: 'user', content: prompt }
+          { 
+            role: 'user', 
+            content: prompt 
+          }
         ],
         temperature: 0.7,
       })
     });
     
-    const openAIData = await openAIResponse.json();
+    const anthropicData = await anthropicResponse.json();
     
-    if (!openAIResponse.ok) {
+    if (!anthropicResponse.ok) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: `Error from OpenAI: ${openAIData.error?.message || 'Unknown error'}` 
+          message: `Error from Anthropic: ${anthropicData.error?.message || 'Unknown error'}` 
         }),
         { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
       );
@@ -233,11 +237,11 @@ serve(async (req: Request) => {
     let analysis;
     try {
       // Parse the JSON from the response content
-      const responseText = openAIData.choices[0].message.content;
+      const responseText = anthropicData.content[0].text;
       analysis = JSON.parse(responseText);
     } catch (e) {
       // If parsing fails, try to use regex to extract the JSON
-      const responseText = openAIData.choices[0].message.content;
+      const responseText = anthropicData.content[0].text;
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try {
@@ -275,6 +279,7 @@ serve(async (req: Request) => {
       recommendations: analysis.recommendations,
       overall_summary: analysis.overall_summary,
       analysis_json: {
+        model: 'claude-3-sonnet-20240229',
         performance: {
           totalScore,
           maxPossibleScore,
@@ -331,7 +336,7 @@ serve(async (req: Request) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Analysis completed successfully',
+        message: 'Analysis completed successfully using Anthropic Claude',
         analysis: dbResult.data
       }),
       { headers: { 'Content-Type': 'application/json', ...corsHeaders } }

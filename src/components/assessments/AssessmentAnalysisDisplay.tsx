@@ -4,10 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { RefreshCcw, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { assessmentService } from '@/services/assessment-service';
-import { AIModelType, aiModelOptions } from '@/types/assessment';
 
 interface AssessmentAnalysisDisplayProps {
   assessmentId: string;
@@ -16,7 +14,6 @@ interface AssessmentAnalysisDisplayProps {
 
 const AssessmentAnalysisDisplay: React.FC<AssessmentAnalysisDisplayProps> = ({ assessmentId, studentId }) => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<AIModelType>('openai');
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -31,10 +28,10 @@ const AssessmentAnalysisDisplay: React.FC<AssessmentAnalysisDisplayProps> = ({ a
     setSuccessMessage(null);
     
     try {
-      const result = await assessmentService.triggerAnalysis(assessmentId, studentId, selectedModel);
+      const result = await assessmentService.triggerAnalysis(assessmentId, studentId);
       
       if (result.success) {
-        setSuccessMessage(`Analysis generated successfully using ${selectedModel.toUpperCase()}`);
+        setSuccessMessage('Analysis generated successfully using Anthropic Claude');
         refetch();
       } else {
         setGenerationError(result.message || 'Unknown error occurred');
@@ -75,38 +72,23 @@ const AssessmentAnalysisDisplay: React.FC<AssessmentAnalysisDisplayProps> = ({ a
           <CardHeader>
             <CardTitle>Generate AI Analysis</CardTitle>
             <CardDescription>
-              No analysis found for this student's assessment. Generate an AI-powered analysis to get insights.
+              No analysis found for this student's assessment. Generate an AI-powered analysis using Anthropic Claude to get insights.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
-              <Select 
-                value={selectedModel}
-                onValueChange={(value) => setSelectedModel(value as AIModelType)}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select AI model" />
-                </SelectTrigger>
-                <SelectContent>
-                  {aiModelOptions.map((model) => (
-                    <SelectItem key={model} value={model}>
-                      {model === 'openai' ? 'OpenAI GPT' : 'Anthropic Claude'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <Button 
                 onClick={handleGenerateAnalysis}
                 disabled={isGenerating}
-                className="ml-2"
+                className="bg-blue-600 hover:bg-blue-700"
               >
                 {isGenerating ? (
                   <>
                     <RefreshCcw className="h-4 w-4 mr-2 animate-spin" />
-                    Generating...
+                    Generating with Claude...
                   </>
                 ) : (
-                  'Generate Analysis'
+                  'Generate Analysis with Claude'
                 )}
               </Button>
             </div>
@@ -136,8 +118,8 @@ const AssessmentAnalysisDisplay: React.FC<AssessmentAnalysisDisplayProps> = ({ a
 
   // Get model used from analysis_json if available
   const modelUsed = analysis.analysis_json?.model 
-    ? analysis.analysis_json.model.includes('claude') ? 'Anthropic Claude' : 'OpenAI GPT'
-    : 'AI';
+    ? analysis.analysis_json.model.includes('claude') ? 'Anthropic Claude' : 'AI'
+    : 'Anthropic Claude';
 
   return (
     <div className="space-y-6">
@@ -171,43 +153,23 @@ const AssessmentAnalysisDisplay: React.FC<AssessmentAnalysisDisplayProps> = ({ a
           </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-6">
-            <div className="flex items-center gap-4 mb-4">
-              <Select 
-                value={selectedModel}
-                onValueChange={(value) => setSelectedModel(value as AIModelType)}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select AI model" />
-                </SelectTrigger>
-                <SelectContent>
-                  {aiModelOptions.map((model) => (
-                    <SelectItem key={model} value={model}>
-                      {model === 'openai' ? 'OpenAI GPT' : 'Anthropic Claude'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {generationError && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
+              <div className="flex items-start">
+                <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+                <p>{generationError}</p>
+              </div>
             </div>
-            
-            {generationError && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
-                <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-                  <p>{generationError}</p>
-                </div>
+          )}
+          
+          {successMessage && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
+              <div className="flex items-start">
+                <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+                <p>{successMessage}</p>
               </div>
-            )}
-            
-            {successMessage && (
-              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
-                <div className="flex items-start">
-                  <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-                  <p>{successMessage}</p>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="p-4 mb-6 bg-blue-50 border border-blue-200 rounded-md">
             <h3 className="font-semibold text-blue-900 mb-2">Overall Summary</h3>

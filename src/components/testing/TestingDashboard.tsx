@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,7 +75,7 @@ const TestingDashboard: React.FC = () => {
     try {
       toast({
         title: "Starting Phase 2 Tests",
-        description: "Running AI integration validation..."
+        description: "Running Anthropic AI integration validation..."
       });
 
       const testResults = await testingHelpers.runPhase2Tests();
@@ -88,7 +87,7 @@ const TestingDashboard: React.FC = () => {
       if (successCount === totalCount) {
         toast({
           title: "Phase 2 Complete! 🚀",
-          description: `${successCount}/${totalCount} AI integration tests passed`
+          description: `${successCount}/${totalCount} Anthropic AI tests passed`
         });
       } else {
         toast({
@@ -177,14 +176,14 @@ const TestingDashboard: React.FC = () => {
           LearnSpark AI Platform Testing
         </h1>
         <p className="text-lg text-gray-600">
-          Comprehensive validation of core platform functionality and AI integration
+          Comprehensive validation using Anthropic Claude AI integration
         </p>
       </div>
 
       <Tabs value={activePhase} onValueChange={(value) => setActivePhase(value as 'phase1' | 'phase2')}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="phase1">Phase 1: Foundation</TabsTrigger>
-          <TabsTrigger value="phase2">Phase 2: AI Integration</TabsTrigger>
+          <TabsTrigger value="phase2">Phase 2: Anthropic AI</TabsTrigger>
         </TabsList>
 
         <TabsContent value="phase1" className="space-y-6">
@@ -251,25 +250,25 @@ const TestingDashboard: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Brain className="h-6 w-6 text-purple-600" />
-                <span>Phase 2: AI Integration Testing</span>
+                <span>Phase 2: Anthropic AI Integration Testing</span>
               </CardTitle>
               <CardDescription>
-                Tests AI analysis generation, goal suggestions, and advanced data relationships
+                Tests Anthropic Claude analysis generation, goal suggestions, and advanced data relationships
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
                 <div className="space-y-2">
                   <Brain className="h-8 w-8 text-purple-600 mx-auto" />
-                  <p className="text-sm font-medium">AI Analysis</p>
+                  <p className="text-sm font-medium">Claude Analysis</p>
                 </div>
                 <div className="space-y-2">
                   <Target className="h-8 w-8 text-green-600 mx-auto" />
-                  <p className="text-sm font-medium">Goal Suggestions</p>
+                  <p className="text-sm font-medium">AI Goal Suggestions</p>
                 </div>
                 <div className="space-y-2">
                   <Zap className="h-8 w-8 text-yellow-600 mx-auto" />
-                  <p className="text-sm font-medium">Backup Systems</p>
+                  <p className="text-sm font-medium">API Configuration</p>
                 </div>
                 <div className="space-y-2">
                   <Network className="h-8 w-8 text-blue-600 mx-auto" />
@@ -297,12 +296,12 @@ const TestingDashboard: React.FC = () => {
                   {isRunning ? (
                     <>
                       <Clock className="h-5 w-5 animate-spin" />
-                      <span>Running AI Tests...</span>
+                      <span>Running Anthropic Tests...</span>
                     </>
                   ) : (
                     <>
                       <Brain className="h-5 w-5" />
-                      <span>Start AI Integration Tests</span>
+                      <span>Start Anthropic AI Tests</span>
                     </>
                   )}
                 </Button>
@@ -316,7 +315,7 @@ const TestingDashboard: React.FC = () => {
                 <AlertCircle className="mx-auto h-12 w-12 text-yellow-600 mb-4" />
                 <h3 className="text-lg font-medium mb-2">Phase 1 Required</h3>
                 <p className="text-gray-500 mb-4">
-                  Please run Phase 1 foundation tests first to create the necessary test data for AI integration testing.
+                  Please run Phase 1 foundation tests first to create the necessary test data for Anthropic AI integration testing.
                 </p>
                 <Button 
                   onClick={() => setActivePhase('phase1')}
@@ -342,9 +341,9 @@ const TestingDashboard: React.FC = () => {
         <CardContent className="space-y-3">
           <div className="text-sm space-y-2">
             <p><strong>Phase 1 (Foundation):</strong> Creates test students, assessments, and responses</p>
-            <p><strong>Phase 2 (AI Integration):</strong> Tests AI analysis, goal suggestions, and error handling</p>
-            <p><strong>Prerequisites:</strong> Ensure you're logged in and have internet connectivity for AI services</p>
-            <p><strong>AI Services:</strong> Tests both OpenAI and Anthropic integration with proper fallbacks</p>
+            <p><strong>Phase 2 (Anthropic AI):</strong> Tests Claude analysis, goal suggestions, and error handling</p>
+            <p><strong>Prerequisites:</strong> Ensure you're logged in and have ANTHROPIC_API_KEY configured</p>
+            <p><strong>AI Services:</strong> Uses only Anthropic Claude for all AI functionality with proper fallbacks</p>
             <p><strong>Clean Up:</strong> Test data can be deleted manually after validation completes</p>
           </div>
         </CardContent>
