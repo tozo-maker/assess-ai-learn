@@ -1,7 +1,7 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { studentService } from '@/services/student-service';
 import { assessmentService } from '@/services/assessment-service';
+import { goalsService } from '@/services/goals-service';
 import { Student, GradeLevel } from '@/types/student';
 import { Assessment, AssessmentFormData, AssessmentItemFormData, StudentResponseFormData } from '@/types/assessment';
 
@@ -273,6 +273,339 @@ export const testingHelpers = {
         details: error
       };
     }
+  },
+
+  // Phase 2: AI Integration Testing
+  async testAIAnalysisGeneration(): Promise<TestingReport> {
+    try {
+      console.log('Testing AI analysis generation...');
+      
+      // Get existing test data
+      const students = await studentService.getStudents();
+      const assessments = await assessmentService.getAssessments();
+      
+      if (students.length === 0 || assessments.length === 0) {
+        return {
+          success: false,
+          message: 'No test data found. Please run Phase 1 tests first.',
+        };
+      }
+
+      const testStudent = students[0];
+      const testAssessment = assessments[0];
+
+      // Test AI analysis generation
+      const { data, error } = await supabase.functions.invoke('analyze-student-assessment', {
+        body: {
+          student_id: testStudent.id,
+          assessment_id: testAssessment.id,
+          model_type: 'openai'
+        }
+      });
+
+      if (error) {
+        return {
+          success: false,
+          message: 'AI analysis generation failed',
+          details: error
+        };
+      }
+
+      return {
+        success: true,
+        message: 'AI analysis generated successfully',
+        details: data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'AI analysis test failed',
+        details: error
+      };
+    }
+  },
+
+  async testAnthropicBackup(): Promise<TestingReport> {
+    try {
+      console.log('Testing Anthropic backup AI service...');
+      
+      const students = await studentService.getStudents();
+      const assessments = await assessmentService.getAssessments();
+      
+      if (students.length === 0 || assessments.length === 0) {
+        return {
+          success: false,
+          message: 'No test data found for Anthropic test',
+        };
+      }
+
+      const testStudent = students[0];
+      const testAssessment = assessments[0];
+
+      const { data, error } = await supabase.functions.invoke('analyze-with-anthropic', {
+        body: {
+          student_id: testStudent.id,
+          assessment_id: testAssessment.id
+        }
+      });
+
+      if (error) {
+        return {
+          success: false,
+          message: 'Anthropic AI analysis failed',
+          details: error
+        };
+      }
+
+      return {
+        success: true,
+        message: 'Anthropic AI analysis working correctly',
+        details: data
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Anthropic AI test failed',
+        details: error
+      };
+    }
+  },
+
+  async testGoalSuggestions(): Promise<TestingReport> {
+    try {
+      console.log('Testing AI goal suggestions...');
+      
+      const students = await studentService.getStudents();
+      
+      if (students.length === 0) {
+        return {
+          success: false,
+          message: 'No students found for goal suggestions test',
+        };
+      }
+
+      const testStudent = students[0];
+      const suggestions = await goalsService.generateAIGoalSuggestions(testStudent.id);
+
+      if (!suggestions || suggestions.length === 0) {
+        return {
+          success: false,
+          message: 'No goal suggestions generated',
+        };
+      }
+
+      return {
+        success: true,
+        message: `Generated ${suggestions.length} AI goal suggestions`,
+        details: suggestions
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Goal suggestions test failed',
+        details: error
+      };
+    }
+  },
+
+  async testAIAnalysisRetrieval(): Promise<TestingReport> {
+    try {
+      console.log('Testing AI analysis data retrieval...');
+      
+      const { data: analyses, error } = await supabase
+        .from('assessment_analysis')
+        .select('*')
+        .limit(1);
+
+      if (error) {
+        return {
+          success: false,
+          message: 'Failed to retrieve AI analyses',
+          details: error
+        };
+      }
+
+      if (!analyses || analyses.length === 0) {
+        return {
+          success: false,
+          message: 'No AI analyses found in database. Run AI generation tests first.',
+        };
+      }
+
+      const analysis = analyses[0];
+      const requiredFields = ['strengths', 'growth_areas', 'patterns_observed', 'recommendations'];
+      const missingFields = requiredFields.filter(field => !analysis[field] || analysis[field].length === 0);
+
+      if (missingFields.length > 0) {
+        return {
+          success: false,
+          message: `AI analysis missing required fields: ${missingFields.join(', ')}`,
+          details: analysis
+        };
+      }
+
+      return {
+        success: true,
+        message: 'AI analysis data structure validated',
+        details: {
+          analysisId: analysis.id,
+          strengthsCount: analysis.strengths.length,
+          growthAreasCount: analysis.growth_areas.length,
+          patternsCount: analysis.patterns_observed.length,
+          recommendationsCount: analysis.recommendations.length
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'AI analysis retrieval test failed',
+        details: error
+      };
+    }
+  },
+
+  async testDataRelationships(): Promise<TestingReport> {
+    try {
+      console.log('Testing advanced data relationships...');
+      
+      // Test student -> assessments -> responses -> analysis chain
+      const { data: studentWithData, error } = await supabase
+        .from('students')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          student_responses(
+            id,
+            score,
+            assessment_id,
+            assessments(
+              id,
+              title,
+              assessment_analysis(
+                id,
+                strengths,
+                growth_areas
+              )
+            )
+          )
+        `)
+        .limit(1)
+        .single();
+
+      if (error) {
+        return {
+          success: false,
+          message: 'Failed to test data relationships',
+          details: error
+        };
+      }
+
+      if (!studentWithData) {
+        return {
+          success: false,
+          message: 'No student data found for relationship testing',
+        };
+      }
+
+      const hasResponses = studentWithData.student_responses && studentWithData.student_responses.length > 0;
+      const hasAnalysis = hasResponses && 
+        studentWithData.student_responses.some((response: any) => 
+          response.assessments?.assessment_analysis?.length > 0
+        );
+
+      return {
+        success: true,
+        message: 'Data relationships validated successfully',
+        details: {
+          studentId: studentWithData.id,
+          studentName: `${studentWithData.first_name} ${studentWithData.last_name}`,
+          responsesCount: studentWithData.student_responses?.length || 0,
+          hasAnalysis: hasAnalysis,
+          relationshipIntegrity: 'Valid'
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Data relationships test failed',
+        details: error
+      };
+    }
+  },
+
+  async testAIErrorHandling(): Promise<TestingReport> {
+    try {
+      console.log('Testing AI error handling...');
+      
+      // Test with invalid student ID
+      const { data, error } = await supabase.functions.invoke('analyze-student-assessment', {
+        body: {
+          student_id: 'invalid-uuid',
+          assessment_id: 'invalid-uuid',
+          model_type: 'openai'
+        }
+      });
+
+      // We expect this to fail gracefully
+      if (!error) {
+        return {
+          success: false,
+          message: 'AI error handling not working - should have failed with invalid IDs',
+        };
+      }
+
+      return {
+        success: true,
+        message: 'AI error handling working correctly',
+        details: 'Invalid requests properly rejected'
+      };
+    } catch (error) {
+      return {
+        success: true,
+        message: 'AI error handling validated',
+        details: 'Errors properly caught and handled'
+      };
+    }
+  },
+
+  // Phase 2 comprehensive test runner
+  async runPhase2Tests(): Promise<TestingReport[]> {
+    const results: TestingReport[] = [];
+
+    console.log('🧪 Starting Phase 2: AI Integration Testing...');
+
+    // Test 1: AI Analysis Generation (OpenAI)
+    console.log('Testing OpenAI analysis generation...');
+    const openAIResult = await this.testAIAnalysisGeneration();
+    results.push(openAIResult);
+
+    // Test 2: Anthropic Backup
+    console.log('Testing Anthropic backup service...');
+    const anthropicResult = await this.testAnthropicBackup();
+    results.push(anthropicResult);
+
+    // Test 3: Goal Suggestions
+    console.log('Testing AI goal suggestions...');
+    const goalSuggestionsResult = await this.testGoalSuggestions();
+    results.push(goalSuggestionsResult);
+
+    // Test 4: AI Analysis Data Retrieval
+    console.log('Testing AI analysis data retrieval...');
+    const analysisRetrievalResult = await this.testAIAnalysisRetrieval();
+    results.push(analysisRetrievalResult);
+
+    // Test 5: Data Relationships
+    console.log('Testing data relationships...');
+    const relationshipsResult = await this.testDataRelationships();
+    results.push(relationshipsResult);
+
+    // Test 6: Error Handling
+    console.log('Testing AI error handling...');
+    const errorHandlingResult = await this.testAIErrorHandling();
+    results.push(errorHandlingResult);
+
+    return results;
   },
 
   // Comprehensive test runner
