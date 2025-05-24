@@ -52,6 +52,9 @@ import SubjectsSettings from "./pages/app/settings/SubjectsSettings";
 import NotificationsSettings from "./pages/app/settings/NotificationsSettings";
 import IntegrationsSettings from "./pages/app/settings/IntegrationsSettings";
 
+// Testing Page
+import Testing from "./pages/Testing";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,6 +73,16 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/demo" element={<Demo />} />
             <Route path="/contact" element={<Contact />} />
+
+            {/* Testing Page - Protected Route */}
+            <Route 
+              path="/testing" 
+              element={
+                <ProtectedRoute>
+                  <Testing />
+                </ProtectedRoute>
+              } 
+            />
 
             {/* Auth Pages */}
             <Route path="/auth/signup" element={<Signup />} />
