@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface TestingReport {
@@ -628,6 +627,169 @@ export const testingHelpers = {
       results.push({
         success: false,
         message: `AI integration testing failed: ${error.message}`,
+        details: error,
+      });
+      return results;
+    }
+  },
+
+  // Enhanced validation function to check test data completeness
+  async validateTestDataCompleteness(): Promise<TestingReport[]> {
+    const results: TestingReport[] = [];
+    
+    try {
+      console.log('🔍 Validating test data completeness...');
+      
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) {
+        results.push({
+          success: false,
+          message: 'User not authenticated for data validation',
+        });
+        return results;
+      }
+
+      // Check students count
+      const { data: studentsCount } = await supabase
+        .from('students')
+        .select('id', { count: 'exact' })
+        .eq('teacher_id', authData.user.id);
+
+      // Check assessments count
+      const { data: assessmentsCount } = await supabase
+        .from('assessments')
+        .select('id', { count: 'exact' })
+        .eq('teacher_id', authData.user.id);
+
+      // Check responses count
+      const { data: responsesCount } = await supabase
+        .from('student_responses')
+        .select('id', { count: 'exact' });
+
+      // Check assessment items count
+      const { data: itemsCount } = await supabase
+        .from('assessment_items')
+        .select('id', { count: 'exact' });
+
+      const dataCompleteness = {
+        students: studentsCount?.length || 0,
+        assessments: assessmentsCount?.length || 0,
+        responses: responsesCount?.length || 0,
+        items: itemsCount?.length || 0
+      };
+
+      const hasCompleteData = dataCompleteness.students >= 3 && 
+                             dataCompleteness.assessments >= 1 && 
+                             dataCompleteness.responses >= 10 && 
+                             dataCompleteness.items >= 5;
+
+      results.push({
+        success: hasCompleteData,
+        message: hasCompleteData 
+          ? 'Test data completeness validated' 
+          : 'Insufficient test data for comprehensive testing',
+        details: {
+          ...dataCompleteness,
+          minimumRequirements: {
+            students: 3,
+            assessments: 1,
+            responses: 10,
+            items: 5
+          },
+          recommendation: hasCompleteData 
+            ? 'Data is sufficient for all test phases'
+            : 'Run Phase 1 Foundation Tests to create adequate test data'
+        }
+      });
+
+      return results;
+    } catch (error) {
+      console.error('Data completeness validation failed:', error);
+      results.push({
+        success: false,
+        message: `Data completeness validation failed: ${error.message}`,
+        details: error,
+      });
+      return results;
+    }
+  },
+
+  // Form validation testing
+  async testFormValidations(): Promise<TestingReport[]> {
+    const results: TestingReport[] = [];
+    
+    try {
+      console.log('📋 Testing form validation scenarios...');
+      
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) {
+        results.push({
+          success: false,
+          message: 'User not authenticated for form validation testing',
+        });
+        return results;
+      }
+
+      // Test 1: Student creation with missing required fields
+      console.log('Testing student form validation...');
+      
+      const invalidStudentData = {
+        first_name: '', // Required field empty
+        last_name: 'TestValidation',
+        grade_level: '4th',
+        teacher_id: authData.user.id
+      };
+
+      const { error: studentValidationError } = await supabase
+        .from('students')
+        .insert(invalidStudentData);
+
+      results.push({
+        success: !!studentValidationError, // We expect this to fail
+        message: studentValidationError 
+          ? 'Student form validation working correctly' 
+          : 'Student form validation not enforcing required fields',
+        details: {
+          testedField: 'first_name (required)',
+          validationResult: studentValidationError ? 'Rejected as expected' : 'Unexpectedly accepted',
+          error: studentValidationError?.message
+        }
+      });
+
+      // Test 2: Assessment creation with invalid data
+      console.log('Testing assessment form validation...');
+      
+      const invalidAssessmentData = {
+        title: '', // Required field empty
+        subject: 'Mathematics',
+        grade_level: '5th',
+        assessment_type: 'test',
+        max_score: -1, // Invalid negative score
+        teacher_id: authData.user.id
+      };
+
+      const { error: assessmentValidationError } = await supabase
+        .from('assessments')
+        .insert(invalidAssessmentData);
+
+      results.push({
+        success: !!assessmentValidationError, // We expect this to fail
+        message: assessmentValidationError 
+          ? 'Assessment form validation working correctly' 
+          : 'Assessment form validation not enforcing constraints',
+        details: {
+          testedFields: ['title (required)', 'max_score (positive)'],
+          validationResult: assessmentValidationError ? 'Rejected as expected' : 'Unexpectedly accepted',
+          error: assessmentValidationError?.message
+        }
+      });
+
+      return results;
+    } catch (error) {
+      console.error('Form validation testing failed:', error);
+      results.push({
+        success: false,
+        message: `Form validation testing failed: ${error.message}`,
         details: error,
       });
       return results;
