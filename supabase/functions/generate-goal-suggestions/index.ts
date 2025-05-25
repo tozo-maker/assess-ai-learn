@@ -32,7 +32,7 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Fetch student data and assessment analysis
+    // Fetch student data
     const { data: students, error: studentError } = await supabase
       .from('students')
       .select('*')
@@ -66,11 +66,11 @@ serve(async (req) => {
 
     let suggestions = [];
     
-    // If we have AI analysis and Anthropic API key, generate AI-powered suggestions
+    // Generate AI-powered suggestions if we have data and API key
     if (ANTHROPIC_API_KEY && (analysis?.length > 0 || responses?.length > 0)) {
       try {
         const prompt = `
-          You are an expert educational consultant specializing in personalized learning goals. Based on the following student data, generate 5 specific, actionable learning goals.
+          You are an expert educational consultant specializing in personalized learning goals. Generate 5 specific, actionable learning goals based on the student data below.
 
           STUDENT INFORMATION:
           Name: ${student.first_name} ${student.last_name}
@@ -98,15 +98,17 @@ serve(async (req) => {
           `).join('\n')}
           ` : ''}
 
-          Please generate 5 specific, measurable learning goals that:
-          1. Are appropriate for a ${student.grade_level} grade student
+          Generate 5 specific, measurable learning goals that:
+          1. Are developmentally appropriate for ${student.grade_level} grade
           2. Address identified growth areas while building on strengths
           3. Are achievable within a 6-8 week timeframe
-          4. Include specific actions or strategies
-          5. Consider the student's special needs and learning style
+          4. Include specific learning objectives and success criteria
+          5. Consider the student's individual needs and learning profile
 
-          Format your response as a JSON array of strings, where each string is a complete goal statement.
+          Format your response as a JSON array of strings, where each string is a complete, actionable goal statement.
           Example format: ["Goal 1 text here", "Goal 2 text here", ...]
+          
+          Make goals specific, measurable, and educationally sound.
         `;
 
         const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
@@ -139,15 +141,15 @@ serve(async (req) => {
               suggestions = aiSuggestions;
             }
           } catch (parseError) {
-            console.log('Failed to parse AI suggestions, falling back to template goals');
+            console.log('Failed to parse AI suggestions, using template goals');
           }
         }
       } catch (aiError) {
-        console.log('AI goal generation failed, falling back to template goals:', aiError);
+        console.log('AI goal generation failed, using template goals:', aiError);
       }
     }
     
-    // If AI didn't generate suggestions, create template suggestions based on available data
+    // Fallback to template suggestions if AI didn't work
     if (suggestions.length === 0) {
       // Use analysis data if available
       if (analysis && analysis.length > 0) {
@@ -155,7 +157,7 @@ serve(async (req) => {
         
         for (const area of growthAreas.slice(0, 3)) {
           suggestions.push(
-            `Improve understanding of ${area} through daily practice exercises and targeted instruction`
+            `Improve understanding of ${area} through targeted practice and instruction`
           );
         }
       }
@@ -164,33 +166,33 @@ serve(async (req) => {
       if (student.grade_level) {
         if (['K', '1st', '2nd', '3rd'].includes(student.grade_level)) {
           suggestions.push(
-            "Increase reading fluency by reading for 20 minutes daily",
-            "Develop number sense through counting games and activities",
-            "Improve fine motor skills through writing and drawing exercises"
+            "Increase reading fluency through daily guided reading practice",
+            "Develop number sense through hands-on mathematical activities",
+            "Improve writing skills through daily journal writing"
           );
         } else if (['4th', '5th', '6th'].includes(student.grade_level)) {
           suggestions.push(
-            "Strengthen reading comprehension skills with weekly chapter summaries",
-            "Master multiplication facts with timed practice sessions",
-            "Develop critical thinking through problem-solving activities"
+            "Strengthen reading comprehension through weekly text analysis",
+            "Master mathematical problem-solving with multi-step word problems",
+            "Develop research skills through structured inquiry projects"
           );
         } else {
           suggestions.push(
-            "Improve academic writing skills with weekly essays",
-            "Develop study habits through consistent daily schedules",
-            "Build test-taking strategies with practice assessments"
+            "Enhance critical thinking through analytical essay writing",
+            "Develop advanced study skills for academic success",
+            "Build presentation skills through regular class presentations"
           );
         }
       }
       
-      // Ensure we have at least 5 suggestions
+      // Ensure we have enough suggestions
       while (suggestions.length < 5) {
         const generalGoals = [
-          "Complete assigned homework consistently and on time",
-          "Actively participate in class discussions",
-          "Review notes daily to reinforce learning",
-          "Ask questions when concepts are unclear",
-          "Set specific academic goals for each quarter"
+          "Complete assignments consistently with quality work",
+          "Participate actively in classroom discussions and activities",
+          "Develop self-reflection skills for continuous improvement",
+          "Build collaboration skills through group projects",
+          "Set and track personal academic goals"
         ];
         
         for (const goal of generalGoals) {
@@ -201,7 +203,7 @@ serve(async (req) => {
       }
     }
     
-    // Limit to 5 unique suggestions
+    // Return unique suggestions, limited to 5
     const uniqueSuggestions = [...new Set(suggestions)].slice(0, 5);
     
     return new Response(JSON.stringify({

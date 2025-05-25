@@ -1,3 +1,4 @@
+
 export type GradeLevel = 'K' | '1st' | '2nd' | '3rd' | '4th' | '5th' | '6th' | '7th' | '8th' | '9th' | '10th' | '11th' | '12th';
 export type AssessmentType = 'quiz' | 'test' | 'project' | 'homework' | 'classwork' | 'other';
 export type KnowledgeType = 'factual' | 'conceptual' | 'procedural' | 'metacognitive';
@@ -35,7 +36,7 @@ export interface AssessmentFormData {
   max_score: number;
   assessment_date?: string;
   is_draft?: boolean;
-  teacher_id: string; // Make this required instead of optional
+  teacher_id: string;
 }
 
 export interface AssessmentItem {
@@ -94,7 +95,3 @@ export interface AssessmentAnalysis {
   created_at: string;
   updated_at: string;
 }
-
-// AI Model options for assessment analysis
-export type AIModelType = 'openai' | 'anthropic';
-export const aiModelOptions: AIModelType[] = ['openai', 'anthropic'];

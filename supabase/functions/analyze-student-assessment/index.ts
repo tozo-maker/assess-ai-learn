@@ -36,7 +36,7 @@ serve(async (req: Request) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: 'Anthropic API key not configured. Please set the ANTHROPIC_API_KEY environment variable.' 
+          message: 'AI service not configured. Please set the ANTHROPIC_API_KEY environment variable.' 
         }),
         { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
       );
@@ -159,9 +159,9 @@ serve(async (req: Request) => {
       return acc;
     }, {} as Record<string, { total: number; correct: number; score: number; maxScore: number }>);
     
-    // Create a detailed prompt for Claude
+    // Create educational prompt for AI analysis
     const prompt = `
-      You are an expert educational analyst. Please analyze the following assessment data for a student and provide insights:
+      You are an expert educational analyst specializing in student learning assessment. Analyze the following assessment data and provide comprehensive educational insights:
       
       STUDENT INFORMATION:
       Name: ${student.first_name} ${student.last_name}
@@ -200,18 +200,20 @@ serve(async (req: Request) => {
         - Notes: ${r.teacher_notes || 'None'}`
       ).join('\n\n')}
       
-      Based on this assessment data, please provide:
-      1. 3-5 specific strengths the student demonstrated (be specific)
-      2. 3-5 specific growth areas where the student needs improvement (be specific)
-      3. 3-5 learning patterns observed in the student's performance
-      4. 4-6 personalized teaching recommendations to help this student improve
-      5. A brief overall summary of the student's performance (2-3 sentences)
+      Based on this comprehensive assessment data, provide:
+      1. 3-5 specific learning strengths demonstrated (be specific and evidence-based)
+      2. 3-5 specific growth areas needing improvement (be specific and actionable)
+      3. 3-5 learning patterns observed in performance (identify trends and behaviors)
+      4. 4-6 personalized teaching recommendations for improvement (specific strategies)
+      5. A concise overall summary of educational progress (2-3 sentences)
       
       Format your response as a JSON object with these keys: strengths, growth_areas, patterns_observed, recommendations, overall_summary.
       Each field except overall_summary should be an array of strings. overall_summary should be a string.
+      
+      Focus on educational insights that help teachers understand learning needs and develop targeted interventions.
     `;
     
-    // Call Anthropic API
+    // Call Anthropic Claude API
     const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -238,20 +240,19 @@ serve(async (req: Request) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: `Error from Anthropic: ${anthropicData.error?.message || 'Unknown error'}` 
+          message: `AI service error: ${anthropicData.error?.message || 'Unknown error'}` 
         }),
         { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
       );
     }
     
-    // Extract the analysis from the API response
+    // Extract and parse AI analysis
     let analysis;
     try {
-      // Parse the JSON from the response content
       const responseText = anthropicData.content[0].text;
       analysis = JSON.parse(responseText);
     } catch (e) {
-      // If parsing fails, try to use regex to extract the JSON
+      // Fallback: try to extract JSON from response
       const responseText = anthropicData.content[0].text;
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -259,7 +260,7 @@ serve(async (req: Request) => {
           analysis = JSON.parse(jsonMatch[0]);
         } catch (e2) {
           return new Response(
-            JSON.stringify({ success: false, message: 'Failed to parse AI response' }),
+            JSON.stringify({ success: false, message: 'Failed to parse AI analysis response' }),
             { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
           );
         }
@@ -271,16 +272,16 @@ serve(async (req: Request) => {
       }
     }
     
-    // Check if the analysis has the expected structure
+    // Validate analysis structure
     if (!analysis || !analysis.strengths || !analysis.growth_areas || 
         !analysis.patterns_observed || !analysis.recommendations) {
       return new Response(
-        JSON.stringify({ success: false, message: 'Incomplete AI analysis' }),
+        JSON.stringify({ success: false, message: 'Incomplete AI analysis response' }),
         { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
       );
     }
     
-    // Save the analysis to the database
+    // Prepare analysis data for database
     const analysisData = {
       assessment_id: assessment_id,
       student_id: student_id,
@@ -311,7 +312,7 @@ serve(async (req: Request) => {
       }
     };
     
-    // Check if an analysis already exists and update or insert accordingly
+    // Save or update analysis in database
     const { data: existingAnalysis } = await supabaseClient
       .from('assessment_analysis')
       .select('id')
@@ -321,7 +322,6 @@ serve(async (req: Request) => {
     
     let dbResult;
     if (existingAnalysis) {
-      // Update the existing analysis
       dbResult = await supabaseClient
         .from('assessment_analysis')
         .update(analysisData)
@@ -329,7 +329,6 @@ serve(async (req: Request) => {
         .select()
         .single();
     } else {
-      // Insert a new analysis
       dbResult = await supabaseClient
         .from('assessment_analysis')
         .insert(analysisData)
@@ -347,7 +346,7 @@ serve(async (req: Request) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Analysis completed successfully using Anthropic Claude',
+        message: 'Educational analysis completed successfully',
         analysis: dbResult.data
       }),
       { headers: { 'Content-Type': 'application/json', ...corsHeaders } }
