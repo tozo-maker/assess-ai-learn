@@ -255,13 +255,8 @@ const AssessmentList: React.FC = () => {
       {filteredAssessments && filteredAssessments.length > 0 && (
         <div className="flex items-center gap-2 p-2 border-b">
           <Checkbox
-            checked={isAllSelected}
+            checked={isAllSelected ? true : isIndeterminate ? "indeterminate" : false}
             onCheckedChange={handleSelectAll}
-            ref={(el) => {
-              if (el) {
-                el.indeterminate = isIndeterminate;
-              }
-            }}
           />
           <span className="text-sm text-gray-600">
             Select all assessments
