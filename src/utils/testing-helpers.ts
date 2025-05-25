@@ -347,16 +347,10 @@ export const testingHelpers = {
       for (const assessment of teacherAssessments) {
         console.log(`Checking assessment ${assessment.id} for responses...`);
         
+        // First get responses for this assessment
         const { data: responses, error: responsesError } = await supabase
           .from('student_responses')
-          .select(`
-            student_id,
-            students (
-              id,
-              first_name,
-              last_name
-            )
-          `)
+          .select('student_id')
           .eq('assessment_id', assessment.id)
           .limit(1);
 
@@ -368,7 +362,20 @@ export const testingHelpers = {
         if (responses && responses.length > 0) {
           testAssessmentId = assessment.id;
           testStudentId = responses[0].student_id;
-          testStudent = responses[0].students;
+          
+          // Now get the student details separately
+          const { data: studentData, error: studentError } = await supabase
+            .from('students')
+            .select('id, first_name, last_name')
+            .eq('id', testStudentId)
+            .single();
+
+          if (studentError) {
+            console.error(`Error fetching student ${testStudentId}:`, studentError);
+            continue;
+          }
+
+          testStudent = studentData;
           console.log(`Found assessment ${testAssessmentId} with responses for student ${testStudentId}`);
           break;
         }
@@ -378,6 +385,10 @@ export const testingHelpers = {
         results.push({
           success: false,
           message: 'No assessments with student responses found. Please run Phase 1 first.',
+          details: {
+            totalAssessments: teacherAssessments.length,
+            message: 'Found assessments but no responses. Run Phase 1 to create test data.'
+          }
         });
         return results;
       }
@@ -429,7 +440,7 @@ export const testingHelpers = {
       try {
         console.log(`Analyzing assessment ${testAssessmentId} for student ${testStudentId}`);
         
-        const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-student-assessment', {
+        const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-with-anthropic', {
           body: { 
             assessment_id: testAssessmentId, 
             student_id: testStudentId 
@@ -546,14 +557,6 @@ export const testingHelpers = {
           .eq('student_id', testStudentId)
           .eq('assessment_id', testAssessmentId);
 
-        const { data: studentData, error: studentError } = await supabase
-          .from('students')
-          .select('id, first_name, last_name')
-          .eq('id', testStudentId)
-          .single();
-
-        if (studentError) throw studentError;
-
         // Check if analysis exists
         const { data: analysisExists } = await supabase
           .from('assessment_analysis')
@@ -563,8 +566,8 @@ export const testingHelpers = {
           .maybeSingle();
 
         const relationshipData = {
-          studentId: studentData.id,
-          studentName: `${studentData.first_name} ${studentData.last_name}`,
+          studentId: testStudent.id,
+          studentName: `${testStudent.first_name} ${testStudent.last_name}`,
           responsesCount: responsesCount?.length || 0,
           hasAnalysis: !!analysisExists,
           relationshipIntegrity: 'Valid'
@@ -588,7 +591,7 @@ export const testingHelpers = {
       console.log('Testing AI error handling...');
       try {
         // Test with invalid UUIDs
-        const { data: invalidData, error: invalidError } = await supabase.functions.invoke('analyze-student-assessment', {
+        const { data: invalidData, error: invalidError } = await supabase.functions.invoke('analyze-with-anthropic', {
           body: { 
             assessment_id: 'invalid-uuid', 
             student_id: 'invalid-uuid' 
