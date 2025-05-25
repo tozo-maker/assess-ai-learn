@@ -222,7 +222,7 @@ serve(async (req: Request) => {
     `;
     
     console.log('Calling Anthropic API...');
-    // Call Anthropic API
+    // Call Anthropic API with the updated model
     const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -231,7 +231,7 @@ serve(async (req: Request) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-sonnet-20240229',
+        model: 'claude-3-5-sonnet-20241022',
         max_tokens: 4000,
         messages: [
           { role: 'user', content: prompt }
@@ -322,7 +322,7 @@ serve(async (req: Request) => {
           error_type: r.error_type,
           notes: r.teacher_notes
         })),
-        model: 'claude-3-sonnet-20240229'
+        model: 'claude-3-5-sonnet-20241022'
       }
     };
     
