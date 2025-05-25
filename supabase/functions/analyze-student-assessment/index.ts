@@ -106,7 +106,6 @@ serve(async (req: Request) => {
     
     // Process the data for AI analysis
     const totalItems = assessment.assessment_items.length;
-    const totalCorrectItems = responses.filter(r => r.score > 0).length;
     const totalScore = responses.reduce((sum, r) => sum + Number(r.score), 0);
     const maxPossibleScore = responses.reduce((sum, r) => sum + Number(r.assessment_items.max_score), 0);
     const scorePercentage = (totalScore / maxPossibleScore) * 100;
