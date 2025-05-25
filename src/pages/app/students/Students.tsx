@@ -5,6 +5,7 @@ import PageShell from '@/components/ui/page-shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -12,6 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -22,7 +34,8 @@ import {
   User, 
   TrendingUp, 
   AlertCircle,
-  Clock
+  Trash2,
+  MoreVertical
 } from 'lucide-react';
 import { studentService } from '@/services/student-service';
 import { StudentWithPerformance, gradeLevelOptions, performanceLevelOptions } from '@/types/student';
@@ -35,6 +48,8 @@ const Students = () => {
   const [gradeFilter, setGradeFilter] = useState<string | undefined>(undefined);
   const [performanceFilter, setPerformanceFilter] = useState<string | undefined>(undefined);
   const [attentionFilter, setAttentionFilter] = useState<boolean | undefined>(undefined);
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Fetch students data
   const { 
@@ -56,6 +71,53 @@ const Students = () => {
     queryKey: ['studentMetrics'],
     queryFn: () => studentService.getStudentMetrics(),
   });
+
+  // Handle bulk selection
+  const handleSelectAll = (checked: boolean) => {
+    if (checked && students) {
+      setSelectedStudents(students.map(student => student.id));
+    } else {
+      setSelectedStudents([]);
+    }
+  };
+
+  const handleSelectStudent = (studentId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedStudents(prev => [...prev, studentId]);
+    } else {
+      setSelectedStudents(prev => prev.filter(id => id !== studentId));
+    }
+  };
+
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedStudents.length === 0) return;
+    
+    setIsDeleting(true);
+    try {
+      // Delete students one by one
+      await Promise.all(
+        selectedStudents.map(studentId => studentService.deleteStudent(studentId))
+      );
+      
+      toast({
+        title: "Students deleted",
+        description: `${selectedStudents.length} student(s) have been successfully deleted.`,
+      });
+      
+      setSelectedStudents([]);
+      refetchStudents();
+    } catch (error) {
+      console.error("Error deleting students:", error);
+      toast({
+        title: "Error deleting students",
+        description: "There was an error deleting the selected students.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
   
   // Handle search submit
   const handleSearch = async () => {
@@ -66,7 +128,6 @@ const Students = () => {
     
     try {
       const searchResults = await studentService.searchStudents(searchQuery);
-      // We'll handle this in a more elegant way in a real app
       console.log(searchResults);
     } catch (error) {
       console.error("Error searching:", error);
@@ -88,7 +149,6 @@ const Students = () => {
       };
       
       const filteredStudents = await studentService.getStudentsByFilter(filters);
-      // We'll handle this in a more elegant way in a real app
       console.log(filteredStudents);
     } catch (error) {
       console.error("Error applying filters:", error);
@@ -138,14 +198,15 @@ const Students = () => {
       return defaultValue;
     }
     
-    // If performance is an array, we don't have proper data yet
     if (Array.isArray(student.performance)) {
       return defaultValue;
     }
     
-    // Now TypeScript knows student.performance is an object
     return (student.performance as any)[property] ?? defaultValue;
   };
+
+  const isAllSelected = students && selectedStudents.length === students.length && students.length > 0;
+  const isIndeterminate = selectedStudents.length > 0 && (!students || selectedStudents.length < students.length);
 
   return (
     <PageShell 
@@ -193,6 +254,60 @@ const Students = () => {
             <Button variant="outline" onClick={handleFilterChange}>Apply</Button>
           </div>
         </div>
+
+        {/* Bulk Actions Bar */}
+        {selectedStudents.length > 0 && (
+          <Card className="border-blue-200 bg-blue-50">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm font-medium text-blue-900">
+                    {selectedStudents.length} student(s) selected
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        disabled={isDeleting}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Selected
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Students</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete {selectedStudents.length} student(s)? 
+                          This action cannot be undone and will remove all associated data including assessments and performance records.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={handleBulkDelete}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Delete Students
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSelectedStudents([])}
+                  >
+                    Clear Selection
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -278,56 +393,83 @@ const Students = () => {
                 ))}
               </div>
             ) : students && students.length > 0 ? (
-              <div className="divide-y">
-                {students.map((student) => (
-                  <div 
-                    key={student.id} 
-                    className="p-6 hover:bg-gray-50 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/students/${student.id}`)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="font-medium text-blue-600">
-                            {student.first_name[0]}{student.last_name[0]}
-                          </span>
+              <div>
+                {/* Header with Select All */}
+                <div className="p-4 border-b bg-gray-50">
+                  <div className="flex items-center space-x-4">
+                    <Checkbox
+                      checked={isAllSelected}
+                      ref={(ref) => {
+                        if (ref) ref.indeterminate = isIndeterminate;
+                      }}
+                      onCheckedChange={handleSelectAll}
+                    />
+                    <span className="text-sm font-medium text-gray-600">
+                      Select All Students
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Students List */}
+                <div className="divide-y">
+                  {students.map((student) => (
+                    <div 
+                      key={student.id} 
+                      className="p-6 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <Checkbox
+                            checked={selectedStudents.includes(student.id)}
+                            onCheckedChange={(checked) => handleSelectStudent(student.id, checked as boolean)}
+                          />
+                          <div 
+                            className="flex items-center space-x-4 cursor-pointer flex-1"
+                            onClick={() => navigate(`/students/${student.id}`)}
+                          >
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="font-medium text-blue-600">
+                                {student.first_name[0]}{student.last_name[0]}
+                              </span>
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-gray-900">
+                                {student.first_name} {student.last_name}
+                              </h3>
+                              <p className="text-sm text-gray-600">{student.grade_level} Grade</p>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-medium text-gray-900">
-                            {student.first_name} {student.last_name}
-                          </h3>
-                          <p className="text-sm text-gray-600">{student.grade_level} Grade</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-6">
-                        <div className="text-right">
-                          <p className="text-sm text-gray-600">Last Assessment</p>
-                          <p className="text-sm font-medium">
-                            {getPerformanceProperty(student, 'last_assessment_date', null) 
-                              ? new Date(getPerformanceProperty(student, 'last_assessment_date', '')).toLocaleDateString()
-                              : "No assessments yet"}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-600">Performance</p>
-                          <div className="flex items-center space-x-2">
-                            <span className={`text-sm font-medium ${
-                              getPerformanceProperty<string | null>(student, 'performance_level', null) === 'Above Average' ? 'text-green-600' :
-                              getPerformanceProperty<string | null>(student, 'performance_level', null) === 'Below Average' ? 'text-red-600' :
-                              getPerformanceProperty<string | null>(student, 'performance_level', null) === 'Average' ? 'text-yellow-600' :
-                              'text-gray-500'
-                            }`}>
-                              {getPerformanceProperty(student, 'performance_level', "Not assessed")}
-                            </span>
-                            {getPerformanceProperty(student, 'needs_attention', false) && (
-                              <AlertCircle className="h-4 w-4 text-red-500" />
-                            )}
+                        <div className="flex items-center space-x-6">
+                          <div className="text-right">
+                            <p className="text-sm text-gray-600">Last Assessment</p>
+                            <p className="text-sm font-medium">
+                              {getPerformanceProperty(student, 'last_assessment_date', null) 
+                                ? new Date(getPerformanceProperty(student, 'last_assessment_date', '')).toLocaleDateString()
+                                : "No assessments yet"}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-gray-600">Performance</p>
+                            <div className="flex items-center space-x-2">
+                              <span className={`text-sm font-medium ${
+                                getPerformanceProperty<string | null>(student, 'performance_level', null) === 'Above Average' ? 'text-green-600' :
+                                getPerformanceProperty<string | null>(student, 'performance_level', null) === 'Below Average' ? 'text-red-600' :
+                                getPerformanceProperty<string | null>(student, 'performance_level', null) === 'Average' ? 'text-yellow-600' :
+                                'text-gray-500'
+                              }`}>
+                                {getPerformanceProperty(student, 'performance_level', "Not assessed")}
+                              </span>
+                              {getPerformanceProperty(student, 'needs_attention', false) && (
+                                <AlertCircle className="h-4 w-4 text-red-500" />
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="p-8 text-center">
