@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import PageShell from '@/components/ui/page-shell';
 import { Button } from '@/components/ui/button';
@@ -50,6 +50,7 @@ const Students = () => {
   const [attentionFilter, setAttentionFilter] = useState<boolean | undefined>(undefined);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const selectAllRef = useRef<HTMLButtonElement>(null);
   
   // Fetch students data
   const { 
@@ -171,6 +172,15 @@ const Students = () => {
     }
   }, [studentsError, metricsError, toast]);
 
+  // Handle indeterminate state for select all checkbox
+  useEffect(() => {
+    if (selectAllRef.current) {
+      const checkbox = selectAllRef.current;
+      const isIndeterminate = selectedStudents.length > 0 && (!students || selectedStudents.length < students.length);
+      (checkbox as any).indeterminate = isIndeterminate;
+    }
+  }, [selectedStudents.length, students]);
+
   const actions = (
     <>
       <Link to="/students/import">
@@ -206,7 +216,6 @@ const Students = () => {
   };
 
   const isAllSelected = students && selectedStudents.length === students.length && students.length > 0;
-  const isIndeterminate = selectedStudents.length > 0 && (!students || selectedStudents.length < students.length);
 
   return (
     <PageShell 
@@ -398,10 +407,8 @@ const Students = () => {
                 <div className="p-4 border-b bg-gray-50">
                   <div className="flex items-center space-x-4">
                     <Checkbox
+                      ref={selectAllRef}
                       checked={isAllSelected}
-                      ref={(ref) => {
-                        if (ref) ref.indeterminate = isIndeterminate;
-                      }}
                       onCheckedChange={handleSelectAll}
                     />
                     <span className="text-sm font-medium text-gray-600">
