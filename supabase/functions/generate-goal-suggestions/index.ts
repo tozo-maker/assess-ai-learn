@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
-import { GoalSuggestionsRequest } from '../_shared/types.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,15 +16,20 @@ serve(async (req) => {
   }
 
   try {
-    const { student_id }: GoalSuggestionsRequest = await req.json();
+    const { student_id } = await req.json();
     
     if (!student_id) {
       throw new Error('Student ID is required');
     }
     
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') as string;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase configuration missing');
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Fetch student data and assessment analysis

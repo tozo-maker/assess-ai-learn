@@ -1,7 +1,12 @@
 
-import { corsHeaders } from '../_shared/cors.ts';
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 
@@ -37,11 +42,18 @@ serve(async (req: Request) => {
       );
     }
     
-    // Create Supabase client using service role (for querying the database)
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') || '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-    );
+    // Create Supabase client using service role
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return new Response(
+        JSON.stringify({ success: false, message: 'Supabase configuration missing' }),
+        { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
+      );
+    }
+    
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
     
     // Fetch assessment data
     const { data: assessment, error: assessmentError } = await supabaseClient
@@ -74,7 +86,7 @@ serve(async (req: Request) => {
     // Fetch student responses for this assessment
     const { data: responses, error: responsesError } = await supabaseClient
       .from('student_responses')
-      .select('*, assessment_item:assessment_item_id(*)')
+      .select('*, assessment_items!inner(*)')
       .eq('assessment_id', assessment_id)
       .eq('student_id', student_id);
     
@@ -96,7 +108,7 @@ serve(async (req: Request) => {
     const totalItems = assessment.assessment_items.length;
     const totalCorrectItems = responses.filter(r => r.score > 0).length;
     const totalScore = responses.reduce((sum, r) => sum + Number(r.score), 0);
-    const maxPossibleScore = responses.reduce((sum, r) => sum + Number(r.assessment_item.max_score), 0);
+    const maxPossibleScore = responses.reduce((sum, r) => sum + Number(r.assessment_items.max_score), 0);
     const scorePercentage = (totalScore / maxPossibleScore) * 100;
     
     const errorTypeBreakdown = responses.reduce((acc, r) => {
@@ -107,7 +119,7 @@ serve(async (req: Request) => {
     }, {} as Record<string, number>);
     
     const knowledgeTypeBreakdown = responses.reduce((acc, r) => {
-      const knowledgeType = r.assessment_item.knowledge_type;
+      const knowledgeType = r.assessment_items.knowledge_type;
       if (!acc[knowledgeType]) {
         acc[knowledgeType] = {
           total: 0,
@@ -118,17 +130,17 @@ serve(async (req: Request) => {
       }
       
       acc[knowledgeType].total += 1;
-      if (r.score === r.assessment_item.max_score) {
+      if (r.score === r.assessment_items.max_score) {
         acc[knowledgeType].correct += 1;
       }
       acc[knowledgeType].score += Number(r.score);
-      acc[knowledgeType].maxScore += Number(r.assessment_item.max_score);
+      acc[knowledgeType].maxScore += Number(r.assessment_items.max_score);
       
       return acc;
     }, {} as Record<string, { total: number; correct: number; score: number; maxScore: number }>);
     
     const difficultyBreakdown = responses.reduce((acc, r) => {
-      const difficulty = r.assessment_item.difficulty_level;
+      const difficulty = r.assessment_items.difficulty_level;
       if (!acc[difficulty]) {
         acc[difficulty] = {
           total: 0,
@@ -139,11 +151,11 @@ serve(async (req: Request) => {
       }
       
       acc[difficulty].total += 1;
-      if (r.score === r.assessment_item.max_score) {
+      if (r.score === r.assessment_items.max_score) {
         acc[difficulty].correct += 1;
       }
       acc[difficulty].score += Number(r.score);
-      acc[difficulty].maxScore += Number(r.assessment_item.max_score);
+      acc[difficulty].maxScore += Number(r.assessment_items.max_score);
       
       return acc;
     }, {} as Record<string, { total: number; correct: number; score: number; maxScore: number }>);
@@ -181,10 +193,10 @@ serve(async (req: Request) => {
       
       DETAILED RESPONSES:
       ${responses.map((r, i) => 
-        `Item ${i+1}: "${r.assessment_item.question_text}"
-        - Knowledge Type: ${r.assessment_item.knowledge_type}
-        - Difficulty: ${r.assessment_item.difficulty_level}
-        - Score: ${r.score}/${r.assessment_item.max_score}
+        `Item ${i+1}: "${r.assessment_items.question_text}"
+        - Knowledge Type: ${r.assessment_items.knowledge_type}
+        - Difficulty: ${r.assessment_items.difficulty_level}
+        - Score: ${r.score}/${r.assessment_items.max_score}
         - Error Type: ${r.error_type || 'None'}
         - Notes: ${r.teacher_notes || 'None'}`
       ).join('\n\n')}
@@ -289,11 +301,11 @@ serve(async (req: Request) => {
           difficultyBreakdown
         },
         responses: responses.map(r => ({
-          question: r.assessment_item.question_text,
-          knowledge_type: r.assessment_item.knowledge_type,
-          difficulty: r.assessment_item.difficulty_level,
+          question: r.assessment_items.question_text,
+          knowledge_type: r.assessment_items.knowledge_type,
+          difficulty: r.assessment_items.difficulty_level,
           score: r.score,
-          max_score: r.assessment_item.max_score,
+          max_score: r.assessment_items.max_score,
           error_type: r.error_type,
           notes: r.teacher_notes
         }))
@@ -350,155 +362,3 @@ serve(async (req: Request) => {
     );
   }
 });
-
-// Helper function to create Supabase client
-function createClient(supabaseUrl: string, supabaseKey: string) {
-  return {
-    from(table: string) {
-      return {
-        select(columns = '*') {
-          let url = `${supabaseUrl}/rest/v1/${table}?select=${columns}`;
-          let headers = {
-            'Content-Type': 'application/json',
-            'apikey': supabaseKey,
-            'Authorization': `Bearer ${supabaseKey}`
-          };
-          let query: Record<string, any> = {};
-          
-          return {
-            eq(column: string, value: any) {
-              query[column] = `eq.${value}`;
-              return this;
-            },
-            single() {
-              url += '&limit=1';
-              return fetch(url, { 
-                headers,
-                method: 'GET',
-                signal: AbortSignal.timeout(15000)
-              })
-              .then(response => response.json())
-              .then(data => {
-                if (Array.isArray(data) && data.length > 0) {
-                  return { data: data[0], error: null };
-                } else if (Array.isArray(data) && data.length === 0) {
-                  return { data: null, error: { message: 'No rows found' } };
-                }
-                return { data, error: null };
-              })
-              .catch(error => ({ data: null, error }));
-            },
-            maybeSingle() {
-              url += '&limit=1';
-              return fetch(url, { 
-                headers,
-                method: 'GET',
-                signal: AbortSignal.timeout(15000)
-              })
-              .then(response => response.json())
-              .then(data => {
-                if (Array.isArray(data) && data.length > 0) {
-                  return { data: data[0], error: null };
-                } else if (Array.isArray(data) && data.length === 0) {
-                  return { data: null, error: null };
-                }
-                return { data, error: null };
-              })
-              .catch(error => ({ data: null, error }));
-            },
-            then(resolve: any) {
-              Object.keys(query).forEach(key => {
-                url += `&${key}=${encodeURIComponent(query[key])}`;
-              });
-              
-              return fetch(url, { 
-                headers,
-                method: 'GET',
-                signal: AbortSignal.timeout(15000)
-              })
-              .then(response => response.json())
-              .then(data => resolve({ data, error: null }))
-              .catch(error => resolve({ data: null, error }));
-            }
-          };
-        },
-        insert(data: any) {
-          const url = `${supabaseUrl}/rest/v1/${table}`;
-          const headers = {
-            'Content-Type': 'application/json',
-            'apikey': supabaseKey,
-            'Authorization': `Bearer ${supabaseKey}`,
-            'Prefer': 'return=representation'
-          };
-          
-          return {
-            select(columns = '*') {
-              return fetch(url, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(data),
-                signal: AbortSignal.timeout(15000)
-              })
-              .then(response => response.json())
-              .then(result => ({ data: result, error: null }))
-              .catch(error => ({ data: null, error }));
-            }
-          };
-        },
-        update(data: any) {
-          let url = `${supabaseUrl}/rest/v1/${table}`;
-          const headers = {
-            'Content-Type': 'application/json',
-            'apikey': supabaseKey,
-            'Authorization': `Bearer ${supabaseKey}`,
-            'Prefer': 'return=representation'
-          };
-          let conditions: Record<string, any> = {};
-          
-          return {
-            eq(column: string, value: any) {
-              conditions[column] = `eq.${value}`;
-              return this;
-            },
-            select(columns = '*') {
-              Object.keys(conditions).forEach((key, index) => {
-                url += `${index === 0 ? '?' : '&'}${key}=${encodeURIComponent(conditions[key])}`;
-              });
-              
-              return fetch(url, {
-                method: 'PATCH',
-                headers,
-                body: JSON.stringify(data),
-                signal: AbortSignal.timeout(15000)
-              })
-              .then(response => response.json())
-              .then(result => ({ data: result, error: null }))
-              .catch(error => ({ data: null, error }));
-            },
-            single() {
-              Object.keys(conditions).forEach((key, index) => {
-                url += `${index === 0 ? '?' : '&'}${key}=${encodeURIComponent(conditions[key])}`;
-              });
-              url += '&limit=1';
-              
-              return fetch(url, {
-                method: 'PATCH',
-                headers,
-                body: JSON.stringify(data),
-                signal: AbortSignal.timeout(15000)
-              })
-              .then(response => response.json())
-              .then(result => {
-                if (Array.isArray(result) && result.length > 0) {
-                  return { data: result[0], error: null };
-                }
-                return { data: result, error: null };
-              })
-              .catch(error => ({ data: null, error }));
-            }
-          };
-        }
-      };
-    }
-  };
-}
