@@ -312,22 +312,24 @@ export const testingHelpers = {
         return results;
       }
 
-      // Get the most recent assessment with responses
-      const { data: assessmentWithResponses, error: assessmentError } = await supabase
+      // Get assessments for this teacher
+      const { data: teacherAssessments, error: assessmentsError } = await supabase
         .from('assessments')
-        .select(`
-          id,
-          title,
-          student_responses (
-            student_id,
-            count
-          )
-        `)
+        .select('id, title, created_at')
         .eq('teacher_id', authData.user.id)
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .order('created_at', { ascending: false });
 
-      if (assessmentError || !assessmentWithResponses || assessmentWithResponses.length === 0) {
+      if (assessmentsError) {
+        console.error('Error fetching assessments:', assessmentsError);
+        results.push({
+          success: false,
+          message: 'Failed to fetch assessments',
+          details: assessmentsError,
+        });
+        return results;
+      }
+
+      if (!teacherAssessments || teacherAssessments.length === 0) {
         results.push({
           success: false,
           message: 'No test assessments found. Please run Phase 1 first.',
@@ -335,24 +337,50 @@ export const testingHelpers = {
         return results;
       }
 
-      // Get students who have responses for this assessment
-      const { data: studentsWithResponses, error: studentsError } = await supabase
-        .from('student_responses')
-        .select('student_id, students (id, first_name, last_name)')
-        .eq('assessment_id', assessmentWithResponses[0].id)
-        .limit(1);
+      console.log(`Found ${teacherAssessments.length} assessments for teacher`);
 
-      if (studentsError || !studentsWithResponses || studentsWithResponses.length === 0) {
+      // Find an assessment that has student responses
+      let testAssessmentId = null;
+      let testStudentId = null;
+      let testStudent = null;
+
+      for (const assessment of teacherAssessments) {
+        console.log(`Checking assessment ${assessment.id} for responses...`);
+        
+        const { data: responses, error: responsesError } = await supabase
+          .from('student_responses')
+          .select(`
+            student_id,
+            students (
+              id,
+              first_name,
+              last_name
+            )
+          `)
+          .eq('assessment_id', assessment.id)
+          .limit(1);
+
+        if (responsesError) {
+          console.error(`Error checking responses for assessment ${assessment.id}:`, responsesError);
+          continue;
+        }
+
+        if (responses && responses.length > 0) {
+          testAssessmentId = assessment.id;
+          testStudentId = responses[0].student_id;
+          testStudent = responses[0].students;
+          console.log(`Found assessment ${testAssessmentId} with responses for student ${testStudentId}`);
+          break;
+        }
+      }
+
+      if (!testAssessmentId || !testStudentId || !testStudent) {
         results.push({
           success: false,
-          message: 'No students with responses found. Please run Phase 1 first.',
+          message: 'No assessments with student responses found. Please run Phase 1 first.',
         });
         return results;
       }
-
-      const testAssessmentId = assessmentWithResponses[0].id;
-      const testStudentId = studentsWithResponses[0].student_id;
-      const testStudent = studentsWithResponses[0].students;
 
       console.log(`Using assessment ${testAssessmentId} and student ${testStudentId} for testing`);
 
@@ -362,7 +390,8 @@ export const testingHelpers = {
         details: {
           assessmentId: testAssessmentId,
           studentId: testStudentId,
-          studentName: `${testStudent.first_name} ${testStudent.last_name}`
+          studentName: `${testStudent.first_name} ${testStudent.last_name}`,
+          totalAssessments: teacherAssessments.length
         },
       });
 
@@ -495,7 +524,7 @@ export const testingHelpers = {
         } else {
           results.push({
             success: false,
-            message: 'No AI analyses found in database. Run AI generation tests first.',
+            message: 'No AI analyses found in database. Analysis generation may have failed.',
           });
         }
       } catch (error) {
@@ -510,15 +539,16 @@ export const testingHelpers = {
       // Test 5: Data Relationships
       console.log('Testing advanced data relationships...');
       try {
-        // Get student with response count
+        // Get student with response count for the specific assessment
+        const { data: responsesCount } = await supabase
+          .from('student_responses')
+          .select('id', { count: 'exact' })
+          .eq('student_id', testStudentId)
+          .eq('assessment_id', testAssessmentId);
+
         const { data: studentData, error: studentError } = await supabase
           .from('students')
-          .select(`
-            id,
-            first_name,
-            last_name,
-            student_responses (count)
-          `)
+          .select('id, first_name, last_name')
           .eq('id', testStudentId)
           .single();
 
@@ -535,7 +565,7 @@ export const testingHelpers = {
         const relationshipData = {
           studentId: studentData.id,
           studentName: `${studentData.first_name} ${studentData.last_name}`,
-          responsesCount: studentData.student_responses?.[0]?.count || 0,
+          responsesCount: responsesCount?.length || 0,
           hasAnalysis: !!analysisExists,
           relationshipIntegrity: 'Valid'
         };
