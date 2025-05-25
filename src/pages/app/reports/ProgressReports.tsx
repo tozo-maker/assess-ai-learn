@@ -22,7 +22,7 @@ const ProgressReports = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-  const [gradeFilter, setGradeFilter] = useState<string>('');
+  const [gradeFilter, setGradeFilter] = useState<string>('all');
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [currentReportData, setCurrentReportData] = useState<ProgressReportData | null>(null);
@@ -83,7 +83,7 @@ const ProgressReports = () => {
     const matchesSearch = searchQuery === '' || 
       `${student.first_name} ${student.last_name}`.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesGrade = gradeFilter === '' || student.grade_level === gradeFilter;
+    const matchesGrade = gradeFilter === 'all' || student.grade_level === gradeFilter;
     
     return matchesSearch && matchesGrade;
   });
@@ -245,7 +245,7 @@ const ProgressReports = () => {
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Grades</SelectItem>
+                  <SelectItem value="all">All Grades</SelectItem>
                   {gradelevels.map((grade) => (
                     <SelectItem key={grade} value={grade}>
                       Grade {grade}
@@ -296,7 +296,7 @@ const ProgressReports = () => {
                     <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium">No students found</h3>
                     <p className="text-gray-500">
-                      {searchQuery || gradeFilter ? 'Try adjusting your filters.' : 'Add students to generate reports.'}
+                      {searchQuery || gradeFilter !== 'all' ? 'Try adjusting your filters.' : 'Add students to generate reports.'}
                     </p>
                   </CardContent>
                 </Card>
