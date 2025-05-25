@@ -1,4 +1,3 @@
-
 export interface Student {
   id: string;
   first_name: string;
@@ -9,6 +8,7 @@ export interface Student {
   special_considerations?: string;
   teacher_id: string;
   avatar_url?: string;
+  parent_email?: string;
   created_at: string;
   updated_at: string;
 }

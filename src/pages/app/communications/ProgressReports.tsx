@@ -1,13 +1,28 @@
 
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { FileText } from 'lucide-react';
 import { PageShell } from '@/components/ui/page-shell';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProgressReportGenerator from '@/components/communications/ProgressReportGenerator';
 import ProgressReportsOverview from '@/components/reports/ProgressReportsOverview';
 import RecentReports from '@/components/reports/RecentReports';
+import { studentService } from '@/services/student-service';
+import { communicationsService } from '@/services/communications-service';
 
 const ProgressReports: React.FC = () => {
+  const { data: students = [] } = useQuery({
+    queryKey: ['students'],
+    queryFn: studentService.getStudents,
+  });
+
+  const { data: reports = [] } = useQuery({
+    queryKey: ['communications'],
+    queryFn: () => communicationsService.getCommunications().then(comms => 
+      comms.filter(c => c.communication_type === 'progress_report')
+    ),
+  });
+
   return (
     <PageShell
       title="Progress Reports"
@@ -26,11 +41,15 @@ const ProgressReports: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="overview" className="space-y-6">
-          <ProgressReportsOverview />
+          <ProgressReportsOverview 
+            students={students}
+            reports={reports}
+            selectedCount={0}
+          />
         </TabsContent>
 
         <TabsContent value="history" className="space-y-6">
-          <RecentReports />
+          <RecentReports reports={reports} />
         </TabsContent>
       </Tabs>
     </PageShell>

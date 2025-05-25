@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { studentService } from '@/services/student-service';
+import { supabase } from '@/integrations/supabase/client';
 import PageShell from '@/components/ui/page-shell';
 
 interface ImportResult {
@@ -77,6 +78,12 @@ const ImportStudents = () => {
     setProgress(0);
 
     try {
+      // Get current user for teacher_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
       const csvText = await file.text();
       const parsedStudents = parseCSV(csvText);
 
@@ -102,7 +109,8 @@ const ImportStudents = () => {
             student_id: studentData.student_id || studentData.id || studentData['student id'] || '',
             grade_level: studentData.grade_level || studentData.grade || studentData['grade level'] || '1st',
             learning_goals: studentData.learning_goals || studentData['learning goals'] || '',
-            special_considerations: studentData.special_considerations || studentData['special considerations'] || ''
+            special_considerations: studentData.special_considerations || studentData['special considerations'] || '',
+            teacher_id: user.id
           };
 
           // Validate required fields

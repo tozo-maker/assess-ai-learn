@@ -122,7 +122,7 @@ const ProgressReportGenerator: React.FC = () => {
               communication_type: 'progress_report',
               subject: `Progress Report for ${student.first_name} ${student.last_name}`,
               report_data: reportData,
-              parent_email: student.parent_email || 'parent@example.com' // Would need to add this field
+              parent_email: student.parent_email || 'parent@example.com'
             }
           });
 
