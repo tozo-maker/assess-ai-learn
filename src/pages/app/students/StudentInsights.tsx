@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -166,14 +165,17 @@ const StudentInsights: React.FC = () => {
     return acc;
   }, {} as Record<string, SubjectPerformanceData>);
 
-  const subjectAverages = Object.entries(subjectPerformance).map(([subject, data]) => ({
-    subject,
-    average: Math.round(data.total / data.count),
-    assessmentCount: data.count,
-    trend: data.scores.length > 1 
-      ? data.scores[data.scores.length - 1] - data.scores[0] 
-      : 0
-  }));
+  const subjectAverages = Object.entries(subjectPerformance).map(([subject, data]) => {
+    const typedData = data as SubjectPerformanceData;
+    return {
+      subject,
+      average: Math.round(typedData.total / typedData.count),
+      assessmentCount: typedData.count,
+      trend: typedData.scores.length > 1 
+        ? typedData.scores[typedData.scores.length - 1] - typedData.scores[0] 
+        : 0
+    };
+  });
 
   return (
     <PageShell
