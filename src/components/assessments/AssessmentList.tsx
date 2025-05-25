@@ -92,7 +92,7 @@ const AssessmentList: React.FC = () => {
           <FileText className="mr-2 h-5 w-5" />
           <h1 className="text-2xl font-bold">Assessments</h1>
         </div>
-        <Button onClick={() => navigate('/app/assessments/add')}>
+        <Button onClick={() => navigate('/assessments/add')}>
           <Plus className="mr-2 h-4 w-4" />
           New Assessment
         </Button>
@@ -147,7 +147,7 @@ const AssessmentList: React.FC = () => {
                 'Start by creating your first assessment.'}
             </p>
             {!searchQuery && !typeFilter && (
-              <Button className="mt-4" onClick={() => navigate('/app/assessments/add')}>
+              <Button className="mt-4" onClick={() => navigate('/assessments/add')}>
                 <Plus className="mr-2 h-4 w-4" />
                 New Assessment
               </Button>
@@ -173,20 +173,20 @@ const AssessmentList: React.FC = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => navigate(`/app/assessments/${assessment.id}`)}>
+                      <DropdownMenuItem onClick={() => navigate(`/assessments/${assessment.id}`)}>
                         <FileText className="mr-2 h-4 w-4" />
                         View Details
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate(`/app/assessments/${assessment.id}/add-responses`)}>
+                      <DropdownMenuItem onClick={() => navigate(`/assessments/${assessment.id}/responses`)}>
                         <Users className="mr-2 h-4 w-4" />
                         Add Student Responses
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate(`/app/assessments/${assessment.id}/analysis`)}>
+                      <DropdownMenuItem onClick={() => navigate(`/assessments/${assessment.id}/analysis`)}>
                         <BarChart2 className="mr-2 h-4 w-4" />
                         View Analysis
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate(`/app/assessments/edit/${assessment.id}`)}>
+                      <DropdownMenuItem onClick={() => navigate(`/assessments/edit/${assessment.id}`)}>
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit Assessment
                       </DropdownMenuItem>
@@ -227,10 +227,10 @@ const AssessmentList: React.FC = () => {
               <CardFooter className="pt-0">
                 <div className="flex space-x-2 text-sm">
                   <Button variant="outline" size="sm" asChild className="h-8 flex-1">
-                    <Link to={`/app/assessments/${assessment.id}`}>View Details</Link>
+                    <Link to={`/assessments/${assessment.id}`}>View Details</Link>
                   </Button>
                   <Button size="sm" asChild className="h-8 flex-1">
-                    <Link to={`/app/assessments/${assessment.id}/add-responses`}>Add Responses</Link>
+                    <Link to={`/assessments/${assessment.id}/responses`}>Add Responses</Link>
                   </Button>
                 </div>
               </CardFooter>

@@ -36,6 +36,7 @@ import AddAssessment from "./pages/app/assessments/AddAssessment";
 import BatchAssessment from "./pages/app/assessments/BatchAssessment";
 import AssessmentDetails from "./pages/app/assessments/AssessmentDetails";
 import AssessmentAnalysis from "./pages/app/assessments/AssessmentAnalysis";
+import AddStudentResponses from "./pages/app/assessments/AddStudentResponses";
 
 import ClassInsights from "./pages/app/insights/ClassInsights";
 import IndividualInsights from "./pages/app/insights/IndividualInsights";
@@ -204,6 +205,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AssessmentAnalysis />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/assessments/:id/responses" 
+              element={
+                <ProtectedRoute>
+                  <AddStudentResponses />
                 </ProtectedRoute>
               } 
             />

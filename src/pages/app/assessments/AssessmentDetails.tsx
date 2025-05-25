@@ -33,7 +33,7 @@ const AssessmentDetails: React.FC = () => {
       <PageShell
         title="Loading Assessment..."
         description="Please wait"
-        link="/app/assessments"
+        link="/assessments"
         linkText="Back to Assessments"
       >
         <div className="flex justify-center items-center h-64">
@@ -51,13 +51,13 @@ const AssessmentDetails: React.FC = () => {
       <PageShell
         title="Assessment Not Found"
         description="The requested assessment could not be found"
-        link="/app/assessments"
+        link="/assessments"
         linkText="Back to Assessments"
       >
         <div className="text-center p-8">
           <h2 className="text-xl font-semibold">Assessment not found</h2>
           <p className="mt-2">The requested assessment could not be loaded.</p>
-          <Button onClick={() => navigate('/app/assessments')} className="mt-4">Back to Assessments</Button>
+          <Button onClick={() => navigate('/assessments')} className="mt-4">Back to Assessments</Button>
         </div>
       </PageShell>
     );
@@ -67,7 +67,7 @@ const AssessmentDetails: React.FC = () => {
     <PageShell
       title={assessment.title}
       description={`${assessment.subject} | Grade ${assessment.grade_level}`}
-      link="/app/assessments"
+      link="/assessments"
       linkText="Back to Assessments"
     >
       <div className="space-y-6">
@@ -91,15 +91,15 @@ const AssessmentDetails: React.FC = () => {
                 </CardDescription>
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
-                <Button variant="outline" onClick={() => navigate(`/app/assessments/edit/${assessment.id}`)}>
+                <Button variant="outline" onClick={() => navigate(`/assessments/edit/${assessment.id}`)}>
                   <Edit className="mr-2 h-4 w-4" />
                   Edit
                 </Button>
-                <Button onClick={() => navigate(`/app/assessments/${assessment.id}/add-responses`)}>
+                <Button onClick={() => navigate(`/assessments/${assessment.id}/responses`)}>
                   <Users className="mr-2 h-4 w-4" />
                   Add Responses
                 </Button>
-                <Button variant="secondary" onClick={() => navigate(`/app/assessments/${assessment.id}/analysis`)}>
+                <Button variant="secondary" onClick={() => navigate(`/assessments/${assessment.id}/analysis`)}>
                   <BarChart2 className="mr-2 h-4 w-4" />
                   View Analysis
                 </Button>
