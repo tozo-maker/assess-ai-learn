@@ -6,8 +6,8 @@ export interface Goal {
   title: string;
   description?: string;
   target_date?: string;
-  status: 'active' | 'completed' | 'paused' | 'cancelled';
-  progress_percentage: number;
+  status: 'active' | 'completed' | 'paused';
+  progress_percentage?: number;
   created_at: string;
   updated_at: string;
 }
@@ -22,14 +22,14 @@ export interface GoalMilestone {
   created_at: string;
 }
 
+export interface GoalWithMilestones extends Goal {
+  milestones: GoalMilestone[];
+}
+
 export interface GoalFormData {
   title: string;
   description?: string;
   target_date?: string;
-  status?: 'active' | 'completed' | 'paused' | 'cancelled';
+  status?: 'active' | 'completed' | 'paused';
   progress_percentage?: number;
-}
-
-export interface GoalWithMilestones extends Goal {
-  milestones: GoalMilestone[];
 }
