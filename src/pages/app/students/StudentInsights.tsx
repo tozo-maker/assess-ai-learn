@@ -14,6 +14,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { studentService } from '@/services/student-service';
 import { assessmentService } from '@/services/assessment-service';
 
+interface SubjectPerformanceData {
+  total: number;
+  count: number;
+  scores: number[];
+}
+
 const StudentInsights: React.FC = () => {
   const { id } = useParams<{ id: string }>();
 
@@ -144,7 +150,7 @@ const StudentInsights: React.FC = () => {
   const uniqueRecommendations = [...new Set(allRecommendations)];
   const uniquePatterns = [...new Set(allPatterns)];
 
-  // Performance by subject
+  // Performance by subject with proper typing
   const subjectPerformance = completedAssessments.reduce((acc, assessment) => {
     const subject = assessment.assessment.subject;
     const percentage = (assessment.totalScore / assessment.maxScore) * 100;
@@ -158,7 +164,7 @@ const StudentInsights: React.FC = () => {
     acc[subject].scores.push(percentage);
     
     return acc;
-  }, {} as Record<string, { total: number; count: number; scores: number[] }>);
+  }, {} as Record<string, SubjectPerformanceData>);
 
   const subjectAverages = Object.entries(subjectPerformance).map(([subject, data]) => ({
     subject,
