@@ -78,24 +78,6 @@ export const testingHelpers = {
           student_id: 'AIP003',
           learning_goals: 'Build confidence in public speaking and collaborative work',
           special_considerations: 'Shy personality, excels in independent work'
-        },
-        {
-          first_name: 'David',
-          last_name: 'Kim',
-          grade_level: '5th' as GradeLevel,
-          teacher_id: user.user.id,
-          student_id: 'DAK004',
-          learning_goals: 'Improve organizational skills and time management',
-          special_considerations: 'ADHD, benefits from frequent breaks and movement'
-        },
-        {
-          first_name: 'Sofia',
-          last_name: 'Chen',
-          grade_level: '5th' as GradeLevel,
-          teacher_id: user.user.id,
-          student_id: 'SOC005',
-          learning_goals: 'Develop critical thinking and creative expression',
-          special_considerations: 'Gifted learner, needs enrichment activities'
         }
       ];
 
@@ -104,8 +86,14 @@ export const testingHelpers = {
         try {
           const student = await studentService.createStudent(studentData);
           createdStudents.push(student);
+          console.log(`Created student: ${student.first_name} ${student.last_name} (ID: ${student.id})`);
         } catch (error) {
           console.error(`Failed to create student ${studentData.first_name}:`, error);
+          return {
+            success: false,
+            message: `Failed to create student ${studentData.first_name}: ${error.message}`,
+            details: error
+          };
         }
       }
 
@@ -143,7 +131,9 @@ export const testingHelpers = {
         teacher_id: user.user.id
       };
 
+      console.log('Creating assessment with data:', assessmentData);
       const assessment = await assessmentService.createAssessment(assessmentData);
+      console.log('Created assessment:', assessment);
 
       const assessmentItems: AssessmentItemFormData[] = [
         {
@@ -188,14 +178,17 @@ export const testingHelpers = {
         }
       ];
 
+      console.log('Creating assessment items...');
       const createdItems = await assessmentService.createAssessmentItems(assessmentItems, assessment.id);
+      console.log(`Created ${createdItems.length} assessment items`);
 
       return {
         success: true,
-        message: 'Successfully created test assessment with items',
+        message: `Successfully created test assessment with ${createdItems.length} items`,
         details: { assessment, items: createdItems }
       };
     } catch (error) {
+      console.error('Failed to create test assessment:', error);
       return {
         success: false,
         message: 'Failed to create test assessment',
@@ -206,34 +199,41 @@ export const testingHelpers = {
 
   async createTestResponses(assessmentId: string, studentIds: string[]): Promise<TestingReport> {
     try {
+      console.log(`Creating responses for assessment ${assessmentId} and ${studentIds.length} students`);
+      
       const items = await assessmentService.getAssessmentItems(assessmentId);
+      console.log(`Found ${items.length} assessment items`);
       
       if (items.length === 0) {
-        return { success: false, message: 'No assessment items found' };
+        return { success: false, message: 'No assessment items found for this assessment' };
       }
 
       const allResponses = [];
+      let totalResponsesCreated = 0;
 
       for (let i = 0; i < studentIds.length; i++) {
         const studentId = studentIds[i];
+        console.log(`Creating responses for student ${i + 1}/${studentIds.length} (ID: ${studentId})`);
+        
         const studentResponses: StudentResponseFormData[] = [];
 
         items.forEach((item, itemIndex) => {
           let score: number;
           let errorType: 'conceptual' | 'procedural' | 'factual' | 'none';
           
+          // Create varied performance patterns
           const performancePattern = i % 3;
           
           switch (performancePattern) {
-            case 0:
+            case 0: // High performer
               score = Math.floor(item.max_score * (0.85 + Math.random() * 0.15));
               errorType = Math.random() > 0.8 ? 'procedural' : 'none';
               break;
-            case 1:
+            case 1: // Average performer
               score = Math.floor(item.max_score * (0.65 + Math.random() * 0.25));
               errorType = Math.random() > 0.6 ? (Math.random() > 0.5 ? 'procedural' : 'conceptual') : 'none';
               break;
-            case 2:
+            case 2: // Struggling performer
               score = Math.floor(item.max_score * (0.35 + Math.random() * 0.35));
               errorType = Math.random() > 0.3 ? (Math.random() > 0.5 ? 'conceptual' : 'procedural') : 'factual';
               break;
@@ -252,19 +252,99 @@ export const testingHelpers = {
           });
         });
 
-        const responses = await assessmentService.submitStudentResponses(studentResponses);
-        allResponses.push(...responses);
+        console.log(`Submitting ${studentResponses.length} responses for student ${studentId}`);
+        
+        try {
+          const responses = await assessmentService.submitStudentResponses(studentResponses);
+          allResponses.push(...responses);
+          totalResponsesCreated += responses.length;
+          console.log(`Successfully created ${responses.length} responses for student ${studentId}`);
+        } catch (error) {
+          console.error(`Failed to create responses for student ${studentId}:`, error);
+          return {
+            success: false,
+            message: `Failed to create responses for student ${i + 1}: ${error.message}`,
+            details: error
+          };
+        }
+      }
+
+      console.log(`Total responses created: ${totalResponsesCreated}`);
+
+      return {
+        success: true,
+        message: `Successfully created ${totalResponsesCreated} test responses for ${studentIds.length} students`,
+        details: {
+          totalResponses: totalResponsesCreated,
+          studentsCount: studentIds.length,
+          itemsCount: items.length,
+          responses: allResponses
+        }
+      };
+    } catch (error) {
+      console.error('Failed to create test responses:', error);
+      return {
+        success: false,
+        message: 'Failed to create test responses',
+        details: error
+      };
+    }
+  },
+
+  // Validate test data before Phase 2
+  async validateTestData(): Promise<TestingReport> {
+    try {
+      console.log('Validating test data...');
+      
+      const students = await studentService.getStudents();
+      const assessments = await assessmentService.getAssessments();
+      
+      if (students.length === 0) {
+        return { success: false, message: 'No test students found' };
+      }
+      
+      if (assessments.length === 0) {
+        return { success: false, message: 'No test assessments found' };
+      }
+
+      const testAssessment = assessments[0];
+      const items = await assessmentService.getAssessmentItems(testAssessment.id);
+      
+      if (items.length === 0) {
+        return { success: false, message: 'No assessment items found' };
+      }
+
+      // Check for responses
+      const { data: responses, error } = await supabase
+        .from('student_responses')
+        .select('*')
+        .eq('assessment_id', testAssessment.id);
+
+      if (error) {
+        return { success: false, message: `Error checking responses: ${error.message}` };
+      }
+
+      if (!responses || responses.length === 0) {
+        return { 
+          success: false, 
+          message: 'No student responses found. Please run Phase 1 tests to create test data first.' 
+        };
       }
 
       return {
         success: true,
-        message: `Successfully created ${allResponses.length} test responses`,
-        details: allResponses
+        message: 'Test data validation successful',
+        details: {
+          studentsCount: students.length,
+          assessmentsCount: assessments.length,
+          itemsCount: items.length,
+          responsesCount: responses.length
+        }
       };
     } catch (error) {
       return {
         success: false,
-        message: 'Failed to create test responses',
+        message: 'Test data validation failed',
         details: error
       };
     }
@@ -275,18 +355,19 @@ export const testingHelpers = {
     try {
       console.log('Testing Anthropic analysis generation...');
       
+      // First validate that we have test data
+      const validation = await this.validateTestData();
+      if (!validation.success) {
+        return validation;
+      }
+      
       const students = await studentService.getStudents();
       const assessments = await assessmentService.getAssessments();
       
-      if (students.length === 0 || assessments.length === 0) {
-        return {
-          success: false,
-          message: 'No test data found. Please run Phase 1 tests first.',
-        };
-      }
-
       const testStudent = students[0];
       const testAssessment = assessments[0];
+
+      console.log(`Analyzing assessment ${testAssessment.id} for student ${testStudent.id}`);
 
       const { data, error } = await supabase.functions.invoke('analyze-student-assessment', {
         body: {
@@ -296,10 +377,19 @@ export const testingHelpers = {
       });
 
       if (error) {
+        console.error('Anthropic analysis error:', error);
         return {
           success: false,
           message: 'Anthropic analysis generation failed',
           details: error
+        };
+      }
+
+      if (!data || !data.success) {
+        return {
+          success: false,
+          message: data?.message || 'Anthropic analysis failed',
+          details: data
         };
       }
 
@@ -309,6 +399,7 @@ export const testingHelpers = {
         details: data
       };
     } catch (error) {
+      console.error('Anthropic analysis test failed:', error);
       return {
         success: false,
         message: 'Anthropic analysis test failed',
@@ -560,6 +651,16 @@ export const testingHelpers = {
 
     console.log('🧪 Starting Phase 2: AI Integration Testing (Anthropic Only)...');
 
+    // Test 0: Validate test data first
+    console.log('Validating test data...');
+    const dataValidation = await this.validateTestData();
+    results.push(dataValidation);
+
+    if (!dataValidation.success) {
+      console.log('❌ Test data validation failed, stopping Phase 2 tests');
+      return results;
+    }
+
     // Test 1: Anthropic API Key Configuration
     console.log('Testing Anthropic API key configuration...');
     const apiKeyResult = await this.testAnthropicAPIKeyConfiguration();
@@ -593,7 +694,7 @@ export const testingHelpers = {
     return results;
   },
 
-  // Comprehensive test runner
+  // Enhanced comprehensive test runner for Phase 1
   async runFoundationTests(): Promise<TestingReport[]> {
     const results: TestingReport[] = [];
 
@@ -614,41 +715,77 @@ export const testingHelpers = {
     const studentsResult = await this.createTestStudents();
     results.push(studentsResult);
 
+    if (!studentsResult.success) {
+      console.error('❌ Student creation failed, stopping tests');
+      return results;
+    }
+
     // Test 3: Assessment Creation
     console.log('Creating test assessment...');
     const assessmentResult = await this.createTestAssessment();
     results.push(assessmentResult);
 
-    // Test 4: Student Responses
-    if (studentsResult.success && assessmentResult.success) {
-      console.log('Creating test responses...');
-      const studentIds = studentsResult.details?.map((s: Student) => s.id) || [];
-      const assessmentId = assessmentResult.details?.assessment?.id;
-      
-      if (studentIds.length > 0 && assessmentId) {
-        const responsesResult = await this.createTestResponses(assessmentId, studentIds);
-        results.push(responsesResult);
-      }
+    if (!assessmentResult.success) {
+      console.error('❌ Assessment creation failed, stopping tests');
+      return results;
     }
 
-    // Test 5: Data Retrieval
-    console.log('Testing data retrieval...');
+    // Test 4: Student Responses
+    console.log('Creating test responses...');
+    const studentIds = studentsResult.details?.map((s: Student) => s.id) || [];
+    const assessmentId = assessmentResult.details?.assessment?.id;
+    
+    if (studentIds.length > 0 && assessmentId) {
+      const responsesResult = await this.createTestResponses(assessmentId, studentIds);
+      results.push(responsesResult);
+
+      if (!responsesResult.success) {
+        console.error('❌ Response creation failed');
+        return results;
+      }
+    } else {
+      results.push({
+        success: false,
+        message: 'Cannot create responses: missing student IDs or assessment ID',
+        details: { studentIds, assessmentId }
+      });
+      return results;
+    }
+
+    // Test 5: Data Retrieval Validation
+    console.log('Validating created data...');
     try {
       const students = await studentService.getStudents();
       const assessments = await assessmentService.getAssessments();
       
-      results.push({
-        success: true,
-        message: 'Data retrieval successful',
-        details: {
-          studentsCount: students.length,
-          assessmentsCount: assessments.length
-        }
-      });
+      // Check responses were actually created
+      const { data: responses, error } = await supabase
+        .from('student_responses')
+        .select('*')
+        .eq('assessment_id', assessmentId);
+
+      if (error) {
+        results.push({
+          success: false,
+          message: 'Failed to validate created responses',
+          details: error
+        });
+      } else {
+        results.push({
+          success: true,
+          message: 'Foundation data validation successful',
+          details: {
+            studentsCount: students.length,
+            assessmentsCount: assessments.length,
+            responsesCount: responses?.length || 0,
+            assessmentItemsCount: assessmentResult.details?.items?.length || 0
+          }
+        });
+      }
     } catch (error) {
       results.push({
         success: false,
-        message: 'Data retrieval failed',
+        message: 'Data validation failed',
         details: error
       });
     }

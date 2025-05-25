@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +17,8 @@ import {
   Brain,
   Target,
   Zap,
-  Network
+  Network,
+  Info
 } from 'lucide-react';
 import { testingHelpers, TestingReport } from '@/utils/testing-helpers';
 import { useToast } from '@/hooks/use-toast';
@@ -47,13 +49,13 @@ const TestingDashboard: React.FC = () => {
       if (successCount === totalCount) {
         toast({
           title: "Phase 1 Complete! ✅",
-          description: `${successCount}/${totalCount} foundation tests passed`
+          description: `${successCount}/${totalCount} foundation tests passed. Ready for Phase 2!`
         });
       } else {
         toast({
           variant: "destructive",
           title: "Phase 1 Issues ⚠️",
-          description: `${successCount}/${totalCount} tests passed. Review failed tests.`
+          description: `${successCount}/${totalCount} tests passed. Fix issues before running Phase 2.`
         });
       }
     } catch (error) {
@@ -124,6 +126,27 @@ const TestingDashboard: React.FC = () => {
     );
   };
 
+  const isPhase1Complete = () => {
+    return phase1Results.length > 0 && phase1Results.every(r => r.success);
+  };
+
+  const getPhase1Summary = () => {
+    if (phase1Results.length === 0) return null;
+    
+    const lastResult = phase1Results[phase1Results.length - 1];
+    if (lastResult?.details && typeof lastResult.details === 'object') {
+      const details = lastResult.details;
+      return (
+        <div className="text-sm text-gray-600 mt-2">
+          <Info className="h-4 w-4 inline mr-1" />
+          Created: {details.studentsCount || 0} students, {details.assessmentsCount || 0} assessments, 
+          {' '}{details.responsesCount || 0} responses, {details.assessmentItemsCount || 0} items
+        </div>
+      );
+    }
+    return null;
+  };
+
   const renderTestResults = (results: TestingReport[]) => {
     if (results.length === 0) return null;
 
@@ -153,7 +176,7 @@ const TestingDashboard: React.FC = () => {
                 
                 {result.details && (
                   <div className="mt-3 p-3 bg-gray-50 rounded text-sm">
-                    <pre className="text-xs overflow-x-auto">
+                    <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
                       {typeof result.details === 'string' 
                         ? result.details 
                         : JSON.stringify(result.details, null, 2)
@@ -182,8 +205,14 @@ const TestingDashboard: React.FC = () => {
 
       <Tabs value={activePhase} onValueChange={(value) => setActivePhase(value as 'phase1' | 'phase2')}>
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="phase1">Phase 1: Foundation</TabsTrigger>
-          <TabsTrigger value="phase2">Phase 2: Anthropic AI</TabsTrigger>
+          <TabsTrigger value="phase1">
+            Phase 1: Foundation
+            {isPhase1Complete() && <CheckCircle className="h-4 w-4 ml-2 text-green-600" />}
+          </TabsTrigger>
+          <TabsTrigger value="phase2">
+            Phase 2: Anthropic AI
+            {!isPhase1Complete() && <AlertCircle className="h-4 w-4 ml-2 text-yellow-600" />}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="phase1" className="space-y-6">
@@ -194,7 +223,7 @@ const TestingDashboard: React.FC = () => {
                 <span>Phase 1: Foundation Testing</span>
               </CardTitle>
               <CardDescription>
-                Validates authentication, student management, assessments, and data integrity
+                Creates test data and validates authentication, student management, assessments, and data integrity
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -205,17 +234,19 @@ const TestingDashboard: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <Users className="h-8 w-8 text-green-600 mx-auto" />
-                  <p className="text-sm font-medium">Student Management</p>
+                  <p className="text-sm font-medium">Test Students</p>
                 </div>
                 <div className="space-y-2">
                   <FileText className="h-8 w-8 text-purple-600 mx-auto" />
-                  <p className="text-sm font-medium">Assessments</p>
+                  <p className="text-sm font-medium">Test Assessments</p>
                 </div>
                 <div className="space-y-2">
                   <Database className="h-8 w-8 text-orange-600 mx-auto" />
-                  <p className="text-sm font-medium">Data Integrity</p>
+                  <p className="text-sm font-medium">Test Responses</p>
                 </div>
               </div>
+              
+              {getPhase1Summary()}
               
               <Separator />
               
@@ -289,8 +320,8 @@ const TestingDashboard: React.FC = () => {
               <div className="flex justify-center">
                 <Button 
                   onClick={runPhase2Tests} 
-                  disabled={isRunning}
-                  className="bg-purple-600 hover:bg-purple-700 flex items-center space-x-2"
+                  disabled={isRunning || !isPhase1Complete()}
+                  className="bg-purple-600 hover:bg-purple-700 flex items-center space-x-2 disabled:opacity-50"
                   size="lg"
                 >
                   {isRunning ? (
@@ -306,10 +337,17 @@ const TestingDashboard: React.FC = () => {
                   )}
                 </Button>
               </div>
+
+              {!isPhase1Complete() && (
+                <div className="text-center text-yellow-600 text-sm mt-2">
+                  <AlertCircle className="h-4 w-4 inline mr-1" />
+                  Phase 1 must complete successfully before running Phase 2
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {phase1Results.length === 0 && (
+          {!isPhase1Complete() && (
             <Card>
               <CardContent className="pt-6 text-center">
                 <AlertCircle className="mx-auto h-12 w-12 text-yellow-600 mb-4" />
@@ -340,10 +378,11 @@ const TestingDashboard: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="text-sm space-y-2">
-            <p><strong>Phase 1 (Foundation):</strong> Creates test students, assessments, and responses</p>
+            <p><strong>Phase 1 (Foundation):</strong> Creates test students, assessments, items, and responses</p>
             <p><strong>Phase 2 (Anthropic AI):</strong> Tests Claude analysis, goal suggestions, and error handling</p>
             <p><strong>Prerequisites:</strong> Ensure you're logged in and have ANTHROPIC_API_KEY configured</p>
             <p><strong>AI Services:</strong> Uses only Anthropic Claude for all AI functionality with proper fallbacks</p>
+            <p><strong>Data Validation:</strong> Phase 2 automatically validates that Phase 1 data exists before running</p>
             <p><strong>Clean Up:</strong> Test data can be deleted manually after validation completes</p>
           </div>
         </CardContent>
