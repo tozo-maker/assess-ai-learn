@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Assessment, 
@@ -14,16 +13,17 @@ export const assessmentService = {
   // Assessment CRUD
   async createAssessment(data: AssessmentFormData): Promise<Assessment> {
     // Ensure teacher_id is set
-    if (!data.teacher_id) {
+    let assessmentData = { ...data };
+    if (!assessmentData.teacher_id) {
       const { data: authData } = await supabase.auth.getUser();
       if (!authData.user) throw new Error("User not authenticated");
       
-      data.teacher_id = authData.user.id;
+      assessmentData.teacher_id = authData.user.id;
     }
     
     const { data: assessment, error } = await supabase
       .from('assessments')
-      .insert(data)
+      .insert(assessmentData)
       .select()
       .single();
 

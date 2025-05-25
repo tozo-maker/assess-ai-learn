@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,7 +22,8 @@ import {
   KnowledgeType,
   knowledgeTypeOptions,
   DifficultyLevel,
-  difficultyLevelOptions 
+  difficultyLevelOptions,
+  GradeLevel
 } from '@/types/assessment';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -152,7 +152,7 @@ const AssessmentWizard: React.FC = () => {
         title: data.title,
         description: data.description,
         subject: data.subject,
-        grade_level: data.grade_level,
+        grade_level: data.grade_level as GradeLevel,
         assessment_type: data.assessment_type as AssessmentType,
         standards_covered: data.standards_covered,
         max_score: data.max_score,
