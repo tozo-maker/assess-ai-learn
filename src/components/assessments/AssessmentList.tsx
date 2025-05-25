@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +17,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { assessmentService } from '@/services/assessment-service';
 import { Assessment, AssessmentType, assessmentTypeOptions } from '@/types/assessment';
@@ -25,6 +37,8 @@ const AssessmentList: React.FC = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined);
+  const [selectedAssessments, setSelectedAssessments] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data: assessments, isLoading, error, refetch } = useQuery({
     queryKey: ['assessments'],
@@ -49,6 +63,54 @@ const AssessmentList: React.FC = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedAssessments.size === 0) return;
+    
+    setIsDeleting(true);
+    try {
+      const deletePromises = Array.from(selectedAssessments).map(id => 
+        assessmentService.deleteAssessment(id)
+      );
+      
+      await Promise.all(deletePromises);
+      
+      toast({
+        title: "Assessments deleted",
+        description: `Successfully deleted ${selectedAssessments.size} assessment${selectedAssessments.size > 1 ? 's' : ''}`,
+      });
+      
+      setSelectedAssessments(new Set());
+      refetch();
+    } catch (error) {
+      console.error('Error deleting assessments:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete some assessments",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleSelectAssessment = (assessmentId: string, checked: boolean) => {
+    const newSelected = new Set(selectedAssessments);
+    if (checked) {
+      newSelected.add(assessmentId);
+    } else {
+      newSelected.delete(assessmentId);
+    }
+    setSelectedAssessments(newSelected);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked && filteredAssessments) {
+      setSelectedAssessments(new Set(filteredAssessments.map(a => a.id)));
+    } else {
+      setSelectedAssessments(new Set());
+    }
+  };
+
   const filteredAssessments = assessments?.filter(assessment => {
     const matchesSearch = searchQuery === '' || 
       assessment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -63,6 +125,11 @@ const AssessmentList: React.FC = () => {
     if (!dateString) return 'No date';
     return new Date(dateString).toLocaleDateString();
   };
+
+  const isAllSelected = filteredAssessments?.length > 0 && 
+    filteredAssessments.every(assessment => selectedAssessments.has(assessment.id));
+
+  const isIndeterminate = selectedAssessments.size > 0 && !isAllSelected;
 
   if (isLoading) {
     return (
@@ -133,6 +200,74 @@ const AssessmentList: React.FC = () => {
           {filteredAssessments?.length || 0} assessment{filteredAssessments?.length !== 1 ? 's' : ''} found
         </div>
       </div>
+
+      {/* Bulk Actions Bar */}
+      {selectedAssessments.size > 0 && (
+        <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-blue-900">
+              {selectedAssessments.size} assessment{selectedAssessments.size > 1 ? 's' : ''} selected
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedAssessments(new Set())}
+            >
+              Clear selection
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Selected
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Assessments</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete {selectedAssessments.size} assessment{selectedAssessments.size > 1 ? 's' : ''}? 
+                    This action cannot be undone and will also delete all associated student responses and analysis data.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleBulkDelete}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      )}
+
+      {/* Select All Checkbox */}
+      {filteredAssessments && filteredAssessments.length > 0 && (
+        <div className="flex items-center gap-2 p-2 border-b">
+          <Checkbox
+            checked={isAllSelected}
+            onCheckedChange={handleSelectAll}
+            ref={(el) => {
+              if (el) {
+                el.indeterminate = isIndeterminate;
+              }
+            }}
+          />
+          <span className="text-sm text-gray-600">
+            Select all assessments
+          </span>
+        </div>
+      )}
       
       {filteredAssessments?.length === 0 ? (
         <Card className="border-dashed">
@@ -160,11 +295,20 @@ const AssessmentList: React.FC = () => {
             <Card key={assessment.id} className="overflow-hidden">
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="font-medium">{assessment.title}</CardTitle>
-                    <CardDescription>
-                      {assessment.subject} | Grade {assessment.grade_level}
-                    </CardDescription>
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={selectedAssessments.has(assessment.id)}
+                      onCheckedChange={(checked) => 
+                        handleSelectAssessment(assessment.id, checked as boolean)
+                      }
+                      className="mt-1"
+                    />
+                    <div>
+                      <CardTitle className="font-medium">{assessment.title}</CardTitle>
+                      <CardDescription>
+                        {assessment.subject} | Grade {assessment.grade_level}
+                      </CardDescription>
+                    </div>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
