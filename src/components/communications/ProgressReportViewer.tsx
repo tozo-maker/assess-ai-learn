@@ -75,7 +75,11 @@ const ProgressReportViewer: React.FC<ProgressReportViewerProps> = ({ reportData 
 
         {/* Goals Tab */}
         <TabsContent value="goals" className="space-y-4">
-          <GoalsTabContent goals={goalsWithMilestones} />
+          <GoalsTabContent 
+            goals={goalsWithMilestones} 
+            studentId={reportData.student.id}
+            studentName={`${reportData.student.first_name} ${reportData.student.last_name}`}
+          />
         </TabsContent>
 
         {/* Recommendations Tab */}
