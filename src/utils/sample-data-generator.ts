@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { performanceService } from '@/services/performance-service';
 
@@ -65,21 +64,88 @@ export const sampleDataGenerator = {
   },
 
   async clearExistingData(teacherId: string) {
-    // Delete in correct order to respect foreign key constraints
-    await supabase.from('goal_milestones').delete().eq('goal_id', 'in', 
-      `(SELECT id FROM goals WHERE teacher_id = '${teacherId}')`);
-    await supabase.from('goals').delete().eq('teacher_id', teacherId);
-    await supabase.from('parent_communications').delete().eq('teacher_id', teacherId);
-    await supabase.from('assessment_analysis').delete().eq('assessment_id', 'in',
-      `(SELECT id FROM assessments WHERE teacher_id = '${teacherId}')`);
-    await supabase.from('student_responses').delete().eq('assessment_id', 'in',
-      `(SELECT id FROM assessments WHERE teacher_id = '${teacherId}')`);
-    await supabase.from('assessment_items').delete().eq('assessment_id', 'in',
-      `(SELECT id FROM assessments WHERE teacher_id = '${teacherId}')`);
-    await supabase.from('assessments').delete().eq('teacher_id', teacherId);
-    await supabase.from('student_performance').delete().eq('student_id', 'in',
-      `(SELECT id FROM students WHERE teacher_id = '${teacherId}')`);
-    await supabase.from('students').delete().eq('teacher_id', teacherId);
+    // Fetch goals to delete first
+    const { data: goals } = await supabase
+      .from('goals')
+      .select('id')
+      .eq('teacher_id', teacherId);
+
+    if (goals && goals.length > 0) {
+      const goalIds = goals.map(goal => goal.id);
+      // Delete goal milestones
+      await supabase
+        .from('goal_milestones')
+        .delete()
+        .in('goal_id', goalIds);
+
+      // Delete goals
+      await supabase
+        .from('goals')
+        .delete()
+        .eq('teacher_id', teacherId);
+    }
+
+    // Delete parent communications
+    await supabase
+      .from('parent_communications')
+      .delete()
+      .eq('teacher_id', teacherId);
+
+    // Fetch assessments to delete
+    const { data: assessments } = await supabase
+      .from('assessments')
+      .select('id')
+      .eq('teacher_id', teacherId);
+
+    if (assessments && assessments.length > 0) {
+      const assessmentIds = assessments.map(assessment => assessment.id);
+      
+      // Delete assessment analysis
+      await supabase
+        .from('assessment_analysis')
+        .delete()
+        .in('assessment_id', assessmentIds);
+      
+      // Delete student responses
+      await supabase
+        .from('student_responses')
+        .delete()
+        .in('assessment_id', assessmentIds);
+        
+      // Delete assessment items
+      await supabase
+        .from('assessment_items')
+        .delete()
+        .in('assessment_id', assessmentIds);
+    }
+    
+    // Delete assessments
+    await supabase
+      .from('assessments')
+      .delete()
+      .eq('teacher_id', teacherId);
+      
+    // Fetch students to delete
+    const { data: students } = await supabase
+      .from('students')
+      .select('id')
+      .eq('teacher_id', teacherId);
+      
+    if (students && students.length > 0) {
+      const studentIds = students.map(student => student.id);
+      
+      // Delete student performance records
+      await supabase
+        .from('student_performance')
+        .delete()
+        .in('student_id', studentIds);
+    }
+    
+    // Delete students
+    await supabase
+      .from('students')
+      .delete()
+      .eq('teacher_id', teacherId);
   },
 
   async createStudents(teacherId: string) {
