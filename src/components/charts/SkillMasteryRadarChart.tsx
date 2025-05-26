@@ -15,8 +15,23 @@ interface SkillMasteryRadarChartProps {
   studentName?: string;
 }
 
+interface ChartConfig {
+  current_level: {
+    label: string;
+    color: string;
+  };
+  target_level: {
+    label: string;
+    color: string;
+  };
+  class_average: {
+    label: string;
+    color: string;
+  };
+}
+
 const SkillMasteryRadarChart: React.FC<SkillMasteryRadarChartProps> = ({ data, studentName }) => {
-  const chartConfig = {
+  const chartConfig: ChartConfig = {
     current_level: {
       label: `${studentName || 'Student'} Current`,
       color: '#10b981',

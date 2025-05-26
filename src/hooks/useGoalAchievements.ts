@@ -4,7 +4,16 @@ import { useQuery } from '@tanstack/react-query';
 import { goalAchievementsService } from '@/services/goal-achievements-service';
 import { GoalAchievement } from '@/types/goals';
 
-export const useGoalAchievements = (studentId: string) => {
+interface UseGoalAchievementsReturn {
+  achievements: GoalAchievement[];
+  celebratingAchievement: GoalAchievement | null;
+  handleDismissAchievement: (achievementId: string) => Promise<void>;
+  handleCelebrate: (achievement: GoalAchievement) => void;
+  handleCloseCelebration: () => void;
+  refetchAchievements: () => void;
+}
+
+export const useGoalAchievements = (studentId: string): UseGoalAchievementsReturn => {
   const [celebratingAchievement, setCelebratingAchievement] = useState<GoalAchievement | null>(null);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
@@ -18,20 +27,20 @@ export const useGoalAchievements = (studentId: string) => {
     achievement => !dismissedIds.has(achievement.id) && !achievement.dismissed_at
   );
 
-  const handleDismissAchievement = async (achievementId: string) => {
+  const handleDismissAchievement = async (achievementId: string): Promise<void> => {
     try {
       await goalAchievementsService.dismissAchievement(achievementId);
       setDismissedIds(prev => new Set([...prev, achievementId]));
     } catch (error) {
-      console.error('Error dismissing achievement:', error);
+      // Error handling - could add toast notification here
     }
   };
 
-  const handleCelebrate = (achievement: GoalAchievement) => {
+  const handleCelebrate = (achievement: GoalAchievement): void => {
     setCelebratingAchievement(achievement);
   };
 
-  const handleCloseCelebration = () => {
+  const handleCloseCelebration = (): void => {
     setCelebratingAchievement(null);
   };
 

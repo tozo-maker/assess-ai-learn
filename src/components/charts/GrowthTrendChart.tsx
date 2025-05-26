@@ -16,8 +16,23 @@ interface GrowthTrendChartProps {
   studentName?: string;
 }
 
+interface ChartConfig {
+  actual_score: {
+    label: string;
+    color: string;
+  };
+  predicted_score: {
+    label: string;
+    color: string;
+  };
+  target_score: {
+    label: string;
+    color: string;
+  };
+}
+
 const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({ data, studentName }) => {
-  const chartConfig = {
+  const chartConfig: ChartConfig = {
     actual_score: {
       label: 'Actual Performance',
       color: '#2563eb',
@@ -31,6 +46,8 @@ const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({ data, studentName }
       color: '#dc2626',
     },
   };
+
+  const targetScore = data[0]?.target_score || 85;
 
   return (
     <ChartContainer config={chartConfig} className="h-80">
@@ -60,7 +77,7 @@ const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({ data, studentName }
           name="Predicted Trend"
         />
         <ReferenceLine 
-          y={data[0]?.target_score || 85} 
+          y={targetScore} 
           stroke="#dc2626" 
           strokeDasharray="5 5"
           label="Target Goal"

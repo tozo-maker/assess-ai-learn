@@ -15,8 +15,19 @@ interface PerformanceTimelineChartProps {
   studentName?: string;
 }
 
+interface ChartConfig {
+  score: {
+    label: string;
+    color: string;
+  };
+  class_average: {
+    label: string;
+    color: string;
+  };
+}
+
 const PerformanceTimelineChart: React.FC<PerformanceTimelineChartProps> = ({ data, studentName }) => {
-  const chartConfig = {
+  const chartConfig: ChartConfig = {
     score: {
       label: `${studentName || 'Student'} Score`,
       color: '#2563eb',

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,8 @@ interface InsightsTabContentProps {
   onInsightsUpdated?: () => void;
 }
 
+type SortOption = 'date' | 'subject' | 'type';
+
 const InsightsTabContent: React.FC<InsightsTabContentProps> = ({ 
   insights, 
   isLoading, 
@@ -57,12 +60,11 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'date' | 'subject' | 'type'>('date');
+  const [sortBy, setSortBy] = useState<SortOption>('date');
 
   // Find assessments that don't have AI analysis yet
   const assessmentsWithoutAnalysis = assessments.filter(assessment => {
     if (!assessment || !assessment.id) {
-      console.warn('Invalid assessment found:', assessment);
       return false;
     }
     
@@ -75,7 +77,7 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
   });
 
   // Get unique subjects for filtering
-  const availableSubjects = [...new Set(insights.map(insight => insight.assessments?.subject).filter(Boolean))];
+  const availableSubjects = [...new Set(insights.map(insight => insight.assessments?.subject).filter(Boolean))] as string[];
 
   // Filter and sort insights
   const filteredInsights = insights.filter(insight => {
@@ -96,7 +98,7 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
       case 'subject':
         return (a.assessments?.subject || '').localeCompare(b.assessments?.subject || '');
       case 'type':
-        return a.assessments?.title.localeCompare(b.assessments?.title || '') || 0;
+        return (a.assessments?.title || '').localeCompare(b.assessments?.title || '');
       default:
         return 0;
     }
@@ -109,9 +111,8 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
     recommendations: [...new Set(filteredInsights.flatMap(insight => insight.recommendations || []))],
   };
 
-  const handleGenerateAnalysis = async (assessmentIds: string[]) => {
+  const handleGenerateAnalysis = async (assessmentIds: string[]): Promise<void> => {
     if (!studentId || assessmentIds.length === 0) {
-      console.error('Missing studentId or assessmentIds:', { studentId, assessmentIds });
       toast({
         title: "Error",
         description: "Missing student ID or no assessments selected.",
@@ -130,7 +131,6 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
           await assessmentService.generateAssessmentAnalysis(assessmentId, studentId);
           successCount++;
         } catch (error) {
-          console.error(`Failed to generate analysis for assessment ${assessmentId}:`, error);
           failureCount++;
         }
       }
@@ -154,7 +154,6 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
         });
       }
     } catch (error) {
-      console.error('Error in analysis generation process:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred while generating analysis.",
@@ -167,16 +166,16 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
     }
   };
 
-  const handleGenerateAll = () => {
+  const handleGenerateAll = (): void => {
     const allAssessmentIds = assessmentsWithoutAnalysis.map(a => a.id).filter(Boolean);
     handleGenerateAnalysis(allAssessmentIds);
   };
 
-  const handleGenerateSelected = () => {
+  const handleGenerateSelected = (): void => {
     handleGenerateAnalysis(selectedAssessments);
   };
 
-  const toggleAssessmentSelection = (assessmentId: string) => {
+  const toggleAssessmentSelection = (assessmentId: string): void => {
     setSelectedAssessments(prev => 
       prev.includes(assessmentId) 
         ? prev.filter(id => id !== assessmentId)
@@ -184,13 +183,13 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
     );
   };
 
-  const handleClearFilters = () => {
+  const handleClearFilters = (): void => {
     setSearchTerm('');
     setSelectedSubjects([]);
     setSortBy('date');
   };
 
-  const handleSubjectToggle = (subject: string) => {
+  const handleSubjectToggle = (subject: string): void => {
     setSelectedSubjects(prev =>
       prev.includes(subject)
         ? prev.filter(s => s !== subject)
@@ -198,14 +197,14 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
     );
   };
 
-  const handleMarkAsAddressed = (item: string) => {
+  const handleMarkAsAddressed = (item: string): void => {
     toast({
       title: "Marked as Addressed",
       description: "This recommendation has been marked as addressed.",
     });
   };
 
-  const handleCreateGoal = (item: string) => {
+  const handleCreateGoal = (item: string): void => {
     if (!studentId) {
       toast({
         title: "Error",

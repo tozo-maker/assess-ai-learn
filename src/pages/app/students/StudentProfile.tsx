@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeftCircle, Edit } from 'lucide-react';
@@ -38,17 +39,57 @@ const formSchema = z.object({
     message: "Please enter a valid email address.",
   }).optional(),
   parent_phone: z.string().optional(),
-})
+});
 
-const StudentProfile = () => {
+interface PerformanceData {
+  averageScore: number;
+  assessmentsCompleted: number;
+  needsAttention: boolean;
+}
+
+interface AssessmentResponse {
+  score: number;
+}
+
+interface AssessmentWithData {
+  id: string;
+  title: string;
+  subject: string;
+  assessment_date?: string;
+  max_score: number;
+  totalScore: number;
+  responses: AssessmentResponse[];
+}
+
+interface StudentInsight {
+  id: string;
+  overall_summary?: string;
+  strengths: string[];
+  growth_areas: string[];
+  recommendations: string[];
+  patterns_observed: string[];
+  created_at: string;
+  assessments: {
+    id: string;
+    title: string;
+    subject: string;
+    assessment_date?: string;
+  };
+}
+
+interface StudentAssessmentsData {
+  assessments: AssessmentWithData[];
+  insights: StudentInsight[];
+}
+
+const StudentProfile: React.FC = () => {
   const params = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const studentId = params.id;
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  
-  const [performanceData, setPerformanceData] = useState({
+  const [performanceData, setPerformanceData] = useState<PerformanceData>({
     averageScore: 0,
     assessmentsCompleted: 0,
     needsAttention: false,
@@ -63,8 +104,7 @@ const StudentProfile = () => {
   } = useQuery({
     queryKey: ['student', studentId],
     queryFn: () => {
-      console.log('StudentProfile: Fetching student with ID:', studentId);
-      return studentService.getStudentById(studentId);
+      return studentService.getStudentById(studentId!);
     },
     enabled: !!studentId,
   });
@@ -78,7 +118,7 @@ const StudentProfile = () => {
     isLoading: goalsLoading,
   } = useQuery({
     queryKey: ['student-goals', studentId],
-    queryFn: () => goalsService.getStudentGoals(studentId),
+    queryFn: () => goalsService.getStudentGoals(studentId!),
     enabled: !!studentId,
   });
 
@@ -89,25 +129,25 @@ const StudentProfile = () => {
   });
 
   // Fetch student assessments and insights with improved error handling
-  const { data: studentAssessmentsData, isLoading: assessmentsLoading, refetch: refetchAssessments } = useQuery({
+  const { 
+    data: studentAssessmentsData, 
+    isLoading: assessmentsLoading, 
+    refetch: refetchAssessments 
+  } = useQuery<StudentAssessmentsData>({
     queryKey: ['student-assessments', studentId],
-    queryFn: async () => {
+    queryFn: async (): Promise<StudentAssessmentsData> => {
       if (!allAssessments || !studentId) return { assessments: [], insights: [] };
       
-      console.log('Fetching student assessments for:', studentId);
-      console.log('Available assessments:', allAssessments.length);
-      
-      const assessmentsWithResponses = [];
-      const insights = [];
+      const assessmentsWithResponses: AssessmentWithData[] = [];
+      const insights: StudentInsight[] = [];
       
       for (const assessment of allAssessments) {
         try {
-          console.log('Processing assessment:', assessment.id, assessment.title);
           const responses = await assessmentService.getStudentResponses(assessment.id, studentId);
           
           if (responses.length > 0) {
-            const totalScore = responses.reduce((sum, r) => sum + r.score, 0);
-            const assessmentWithData = {
+            const totalScore = responses.reduce((sum: number, r: AssessmentResponse) => sum + r.score, 0);
+            const assessmentWithData: AssessmentWithData = {
               id: assessment.id,
               title: assessment.title,
               subject: assessment.subject,
@@ -117,14 +157,12 @@ const StudentProfile = () => {
               responses,
             };
             
-            console.log('Assessment with responses found:', assessmentWithData.id, assessmentWithData.title);
             assessmentsWithResponses.push(assessmentWithData);
             
             // Try to get analysis
             try {
               const analysis = await assessmentService.getAssessmentAnalysis(assessment.id, studentId);
               if (analysis) {
-                console.log('Found existing analysis for assessment:', assessment.id);
                 insights.push({
                   id: analysis.id,
                   overall_summary: analysis.overall_summary,
@@ -140,29 +178,22 @@ const StudentProfile = () => {
                     assessment_date: assessment.assessment_date
                   }
                 });
-              } else {
-                console.log('No analysis found for assessment:', assessment.id);
               }
             } catch (error) {
-              console.log(`No analysis found for assessment ${assessment.id}:`, error);
+              // No analysis found - this is expected for some assessments
             }
-          } else {
-            console.log('No responses found for assessment:', assessment.id);
           }
         } catch (error) {
-          console.error(`Error fetching data for assessment ${assessment.id}:`, error);
+          // Error fetching data for assessment - continue with next assessment
         }
       }
-      
-      console.log('Final assessments data:', assessmentsWithResponses.length, 'assessments');
-      console.log('Final insights data:', insights.length, 'insights');
       
       return { assessments: assessmentsWithResponses, insights };
     },
     enabled: !!allAssessments && !!studentId,
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (student && student.performance && !Array.isArray(student.performance)) {
       setPerformanceData({
         averageScore: student.performance.average_score || 0,
@@ -172,12 +203,12 @@ const StudentProfile = () => {
     }
   }, [student]);
 
-  const handleRefreshInsights = () => {
+  const handleRefreshInsights = (): void => {
     // Refetch the student assessments data to get updated insights
     refetchAssessments();
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>): Promise<void> => {
     try {
       if (!studentId) {
         toast({
@@ -196,16 +227,15 @@ const StudentProfile = () => {
       setIsEditDialogOpen(false);
       refetchStudent(); // Refresh student data
     } catch (error) {
-      console.error("Error updating student:", error);
       toast({
         title: "Error",
         description: "Failed to update student profile. Please try again.",
         variant: "destructive",
       });
     }
-  }
+  };
 
-  const handleDelete = async () => {
+  const handleDelete = async (): Promise<void> => {
     try {
       if (!studentId) {
         toast({
@@ -223,14 +253,13 @@ const StudentProfile = () => {
       });
       navigate("/app/students"); // Redirect to students list
     } catch (error) {
-      console.error("Error deleting student:", error);
       toast({
         title: "Error",
         description: "Failed to delete student. Please try again.",
         variant: "destructive",
       });
     }
-  }
+  };
 
   const actions = (
     <>

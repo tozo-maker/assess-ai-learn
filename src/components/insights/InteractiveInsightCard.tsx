@@ -46,7 +46,7 @@ const InteractiveInsightCard: React.FC<InteractiveInsightCardProps> = ({
     }
   };
 
-  const getTypeColor = () => {
+  const getTypeColor = (): string => {
     switch (type) {
       case 'strength':
         return 'text-green-700 border-green-200 bg-green-50';
@@ -59,7 +59,7 @@ const InteractiveInsightCard: React.FC<InteractiveInsightCardProps> = ({
     }
   };
 
-  const handleMarkAsAddressed = (item: string) => {
+  const handleMarkAsAddressed = (item: string): void => {
     const newAddressed = new Set(addressedItems);
     if (newAddressed.has(item)) {
       newAddressed.delete(item);
@@ -70,7 +70,7 @@ const InteractiveInsightCard: React.FC<InteractiveInsightCardProps> = ({
     onMarkAsAddressed?.(item);
   };
 
-  const handleShowMore = () => {
+  const handleShowMore = (): void => {
     setShowMore(!showMore);
   };
 

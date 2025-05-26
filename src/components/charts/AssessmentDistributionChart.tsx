@@ -14,15 +14,22 @@ interface AssessmentDistributionChartProps {
   title: string;
 }
 
+interface ChartConfig {
+  count: {
+    label: string;
+    color: string;
+  };
+}
+
 const AssessmentDistributionChart: React.FC<AssessmentDistributionChartProps> = ({ data, title }) => {
-  const chartConfig = {
+  const chartConfig: ChartConfig = {
     count: {
       label: 'Number of Students',
       color: '#3b82f6',
     },
   };
 
-  const getBarColor = (range: string) => {
+  const getBarColor = (range: string): string => {
     if (range.includes('90-100')) return '#10b981';
     if (range.includes('80-89')) return '#22c55e';
     if (range.includes('70-79')) return '#eab308';
@@ -40,7 +47,7 @@ const AssessmentDistributionChart: React.FC<AssessmentDistributionChartProps> = 
           content={<ChartTooltipContent />}
           labelFormatter={(label) => `Score Range: ${label}`}
           formatter={(value, name, props) => {
-            const entry = data.find(d => d.range === props.payload?.range);
+            const entry = data.find(d => d.range === props?.payload?.range);
             return [`${value} students (${entry?.percentage || 0}%)`, 'Count'];
           }}
         />
