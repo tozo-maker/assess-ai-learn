@@ -21,7 +21,7 @@ export const goalAchievementsService = {
       .single();
 
     if (error) throw error;
-    return data as GoalAchievement;
+    return data as unknown as GoalAchievement;
   },
 
   async getStudentAchievements(studentId: string, limit: number = 10): Promise<GoalAchievement[]> {
@@ -33,7 +33,7 @@ export const goalAchievementsService = {
       .limit(limit);
 
     if (error) throw error;
-    return data as GoalAchievement[];
+    return data as unknown as GoalAchievement[];
   },
 
   async getRecentAchievements(studentId: string, days: number = 7): Promise<GoalAchievement[]> {
@@ -48,7 +48,7 @@ export const goalAchievementsService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data as GoalAchievement[];
+    return data as unknown as GoalAchievement[];
   },
 
   async dismissAchievement(achievementId: string): Promise<void> {

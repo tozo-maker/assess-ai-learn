@@ -59,12 +59,13 @@ export interface GoalProgressHistory {
   created_at: string;
 }
 
-// Goal Achievement
+// Goal Achievement - Updated to include dismissed_at
 export interface GoalAchievement {
   id: string;
   goal_id: string;
   student_id: string;
   achievement_type: 'milestone_completed' | 'goal_completed' | 'progress_milestone';
   achievement_data: any;
+  dismissed_at?: string;
   created_at: string;
 }

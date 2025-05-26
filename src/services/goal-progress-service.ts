@@ -15,7 +15,7 @@ export const goalProgressService = {
       .single();
 
     if (error) throw error;
-    return data as GoalProgressHistory;
+    return data as unknown as GoalProgressHistory;
   },
 
   async getProgressHistory(goalId: string): Promise<GoalProgressHistory[]> {
@@ -26,7 +26,7 @@ export const goalProgressService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data as GoalProgressHistory[];
+    return data as unknown as GoalProgressHistory[];
   },
 
   async getStudentProgressTrend(studentId: string, days: number = 30): Promise<Array<{date: string, averageProgress: number}>> {
@@ -46,7 +46,7 @@ export const goalProgressService = {
 
     if (error) throw error;
 
-    // Group by date and calculate average progress
+    // Group by date and calculate average progress with proper typing
     const progressByDate = (data as any[]).reduce((acc, entry) => {
       const date = entry.created_at.split('T')[0];
       if (!acc[date]) {
