@@ -13,6 +13,7 @@ import PerformanceSummaryCard from './PerformanceSummaryCard';
 import StudentActionsCard from './StudentActionsCard';
 import AssessmentsTabContent from '@/components/communications/AssessmentsTabContent';
 import InsightsTabContent from '@/components/communications/InsightsTabContent';
+import GoalsTabContent from '@/components/communications/GoalsTabContent';
 
 interface StudentProfileTabsProps {
   student: StudentWithPerformance | null;
@@ -119,20 +120,14 @@ const StudentProfileTabs: React.FC<StudentProfileTabsProps> = ({
       <TabsContent value="goals">
         <Card>
           <CardHeader>
-            <CardTitle>Student Goals</CardTitle>
-            <CardDescription>Track and manage student learning objectives</CardDescription>
+            <CardTitle>Learning Goals</CardTitle>
+            <CardDescription>Track and manage learning objectives for {student?.first_name} {student?.last_name}</CardDescription>
           </CardHeader>
           <CardContent>
             {goalsLoading ? (
               <p>Loading goals...</p>
-            ) : studentGoals.length > 0 ? (
-              <ul>
-                {studentGoals.map((goal) => (
-                  <li key={goal.id}>{goal.description}</li>
-                ))}
-              </ul>
             ) : (
-              <p>No goals set for this student yet.</p>
+              <GoalsTabContent goals={studentGoals} />
             )}
           </CardContent>
         </Card>
