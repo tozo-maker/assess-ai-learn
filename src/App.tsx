@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
@@ -59,6 +59,42 @@ import Testing from "./pages/Testing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+// Helper components for legacy redirects with parameters
+const StudentRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/app/students/${id}`} replace />;
+};
+
+const StudentAssessmentsRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/app/students/${id}/assessments`} replace />;
+};
+
+const StudentInsightsRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/app/students/${id}/insights`} replace />;
+};
+
+const StudentGoalsRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/app/students/${id}/goals`} replace />;
+};
+
+const AssessmentRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/app/assessments/${id}`} replace />;
+};
+
+const AssessmentAnalysisRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/app/assessments/${id}/analysis`} replace />;
+};
+
+const AssessmentResponsesRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/app/assessments/${id}/responses`} replace />;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -319,10 +355,21 @@ const App = () => (
               } 
             />
 
-            {/* Simple legacy routes - redirect to /app prefix */}
+            {/* Legacy routes - redirect to /app prefix */}
             <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
             <Route path="/students" element={<Navigate to="/app/students" replace />} />
+            <Route path="/students/add" element={<Navigate to="/app/students/add" replace />} />
+            <Route path="/students/import" element={<Navigate to="/app/students/import" replace />} />
+            <Route path="/students/:id" element={<StudentRedirect />} />
+            <Route path="/students/:id/assessments" element={<StudentAssessmentsRedirect />} />
+            <Route path="/students/:id/insights" element={<StudentInsightsRedirect />} />
+            <Route path="/students/:id/goals" element={<StudentGoalsRedirect />} />
             <Route path="/assessments" element={<Navigate to="/app/assessments" replace />} />
+            <Route path="/assessments/add" element={<Navigate to="/app/assessments/add" replace />} />
+            <Route path="/assessments/batch" element={<Navigate to="/app/assessments/batch" replace />} />
+            <Route path="/assessments/:id" element={<AssessmentRedirect />} />
+            <Route path="/assessments/:id/analysis" element={<AssessmentAnalysisRedirect />} />
+            <Route path="/assessments/:id/responses" element={<AssessmentResponsesRedirect />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
