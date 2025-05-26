@@ -5,9 +5,10 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface AppLayoutProps {
   children: React.ReactNode;
+  showBreadcrumbs?: boolean;
 }
 
-const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
+const AppLayout: React.FC<AppLayoutProps> = ({ children, showBreadcrumbs = true }) => {
   const { user } = useAuth();
 
   return (
