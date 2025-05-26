@@ -1,6 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { GoalFormData, Goal, GoalMilestone, GoalWithMilestones } from '@/types/goals';
+import { goalProgressService } from './goal-progress-service';
+import { goalAchievementsService } from './goal-achievements-service';
 
 export const goalsService = {
   // Goals CRUD
@@ -21,6 +23,16 @@ export const goalsService = {
       .single();
 
     if (error) throw error;
+    
+    // Add initial progress entry
+    if (goal.progress_percentage && goal.progress_percentage > 0) {
+      await goalProgressService.addProgressEntry(
+        goal.id, 
+        goal.progress_percentage, 
+        'Initial goal creation'
+      );
+    }
+    
     return goal as Goal;
   },
 
@@ -60,7 +72,14 @@ export const goalsService = {
   },
 
   // Smart Progress Calculation
-  async updateGoalProgress(goalId: string, progress: number): Promise<Goal> {
+  async updateGoalProgress(goalId: string, progress: number, notes?: string): Promise<Goal> {
+    // Get current goal data
+    const { data: currentGoal } = await supabase
+      .from('goals')
+      .select('*, student_id')
+      .eq('id', goalId)
+      .single();
+
     const { data: goal, error } = await supabase
       .from('goals')
       .update({ 
@@ -72,6 +91,39 @@ export const goalsService = {
       .single();
 
     if (error) throw error;
+    
+    // Add progress history entry
+    await goalProgressService.addProgressEntry(goalId, Math.round(progress), notes);
+    
+    // Check for achievements
+    if (currentGoal) {
+      const oldProgress = currentGoal.progress_percentage || 0;
+      const newProgress = Math.round(progress);
+      
+      // Goal completion achievement
+      if (oldProgress < 100 && newProgress >= 100) {
+        await goalAchievementsService.createAchievement(
+          goalId,
+          currentGoal.student_id,
+          'goal_completed',
+          { title: goal.title, progress: newProgress }
+        );
+      }
+      
+      // Progress milestone achievements (25%, 50%, 75%)
+      const milestones = [25, 50, 75];
+      for (const milestone of milestones) {
+        if (oldProgress < milestone && newProgress >= milestone) {
+          await goalAchievementsService.createAchievement(
+            goalId,
+            currentGoal.student_id,
+            'progress_milestone',
+            { title: goal.title, milestone, progress: newProgress }
+          );
+        }
+      }
+    }
+    
     return goal as Goal;
   },
 
@@ -133,7 +185,7 @@ export const goalsService = {
     
     // Update goal progress based on milestones
     const newProgress = await this.calculateMilestoneProgress(goalId);
-    await this.updateGoalProgress(goalId, newProgress);
+    await this.updateGoalProgress(goalId, newProgress, 'Milestone added');
     
     return data as GoalMilestone;
   },
@@ -168,7 +220,7 @@ export const goalsService = {
     // Update goal progress after deletion
     if (milestone) {
       const newProgress = await this.calculateMilestoneProgress(milestone.goal_id);
-      await this.updateGoalProgress(milestone.goal_id, newProgress);
+      await this.updateGoalProgress(milestone.goal_id, newProgress, 'Milestone removed');
     }
   },
 
@@ -184,9 +236,28 @@ export const goalsService = {
 
     if (error) throw error;
     
+    // Get goal and student info for achievements
+    const { data: goal } = await supabase
+      .from('goals')
+      .select('title, student_id')
+      .eq('id', data.goal_id)
+      .single();
+    
+    // Create milestone achievement
+    if (completed && goal) {
+      await goalAchievementsService.createAchievement(
+        data.goal_id,
+        goal.student_id,
+        'milestone_completed',
+        { title: data.title, goalTitle: goal.title }
+      );
+    }
+    
     // Update goal progress based on milestone completion
     const newProgress = await this.calculateMilestoneProgress(data.goal_id);
-    await this.updateGoalProgress(data.goal_id, newProgress);
+    await this.updateGoalProgress(data.goal_id, newProgress, 
+      completed ? `Milestone completed: ${data.title}` : `Milestone uncompleted: ${data.title}`
+    );
     
     return data as GoalMilestone;
   }

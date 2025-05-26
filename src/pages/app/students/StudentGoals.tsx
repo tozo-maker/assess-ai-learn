@@ -1,18 +1,21 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PageShell from '@/components/ui/page-shell';
-import { CheckCircle, Plus, Lightbulb } from 'lucide-react';
+import { CheckCircle, Plus, Lightbulb, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import GoalForm from '@/components/goals/GoalForm';
 import EnhancedGoalsList from '@/components/goals/EnhancedGoalsList';
+import GoalAnalyticsDashboard from '@/components/goals/GoalAnalyticsDashboard';
+import GoalAchievementNotification from '@/components/goals/GoalAchievementNotification';
+import GoalCelebration from '@/components/goals/GoalCelebration';
 import { goalsService } from '@/services/goals-service';
 import { studentService } from '@/services/student-service';
 import { GoalFormData, GoalWithMilestones } from '@/types/goals';
+import { useGoalAchievements } from '@/hooks/useGoalAchievements';
 
 const StudentGoals = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +24,17 @@ const StudentGoals = () => {
   const [isGoalDialogOpen, setIsGoalDialogOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<GoalWithMilestones | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+
+  // Use the achievement hook
+  const {
+    achievements,
+    celebratingAchievement,
+    handleDismissAchievement,
+    handleCelebrate,
+    handleCloseCelebration,
+    refetchAchievements
+  } = useGoalAchievements(id!);
 
   const { data: student } = useQuery({
     queryKey: ['student', id],
@@ -46,6 +60,7 @@ const StudentGoals = () => {
       queryClient.invalidateQueries({ queryKey: ['student-goals', id] });
       setIsGoalDialogOpen(false);
       setEditingGoal(null);
+      refetchAchievements();
       toast({
         title: 'Goal created successfully',
         description: 'The learning goal has been added to the student\'s profile.'
@@ -67,6 +82,7 @@ const StudentGoals = () => {
       queryClient.invalidateQueries({ queryKey: ['student-goals', id] });
       setIsGoalDialogOpen(false);
       setEditingGoal(null);
+      refetchAchievements();
       toast({
         title: 'Goal updated successfully',
         description: 'The learning goal has been updated.'
@@ -90,6 +106,7 @@ const StudentGoals = () => {
       goalsService.addMilestone(goalId, milestone),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['student-goals', id] });
+      refetchAchievements();
       toast({
         title: 'Milestone added',
         description: 'A new milestone has been added to the goal.'
@@ -102,6 +119,7 @@ const StudentGoals = () => {
       goalsService.updateMilestone(milestoneId, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['student-goals', id] });
+      refetchAchievements();
       toast({
         title: 'Milestone updated',
         description: 'The milestone has been updated.'
@@ -125,6 +143,7 @@ const StudentGoals = () => {
       goalsService.toggleMilestoneCompletion(milestoneId, completed),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['student-goals', id] });
+      refetchAchievements();
     }
   });
 
@@ -167,6 +186,23 @@ const StudentGoals = () => {
       icon={<CheckCircle className="h-6 w-6 text-blue-600" />}
     >
       <div className="space-y-6">
+        {/* Achievement Notifications */}
+        {achievements.length > 0 && (
+          <div className="space-y-2">
+            {achievements.slice(0, 3).map((achievement) => (
+              <GoalAchievementNotification
+                key={achievement.id}
+                achievement={achievement}
+                onDismiss={handleDismissAchievement}
+                onViewGoal={(goalId) => {
+                  const goal = goals.find(g => g.id === goalId);
+                  if (goal) handleEditGoal(goal);
+                }}
+              />
+            ))}
+          </div>
+        )}
+
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold">Learning Goals</h2>
@@ -175,6 +211,13 @@ const StudentGoals = () => {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowAnalytics(!showAnalytics)}
+            >
+              <Trophy className="h-4 w-4 mr-2" />
+              Analytics
+            </Button>
             <Button
               variant="outline"
               onClick={() => setShowSuggestions(!showSuggestions)}
@@ -204,6 +247,10 @@ const StudentGoals = () => {
             </Dialog>
           </div>
         </div>
+
+        {showAnalytics && (
+          <GoalAnalyticsDashboard studentId={id!} goals={goals} />
+        )}
 
         {showSuggestions && (
           <Card>
@@ -245,6 +292,16 @@ const StudentGoals = () => {
           isLoading={isLoading}
         />
       </div>
+
+      {/* Goal Celebration Modal */}
+      {celebratingAchievement && (
+        <GoalCelebration
+          isVisible={!!celebratingAchievement}
+          goalTitle={celebratingAchievement.achievement_data?.title || 'Learning Goal'}
+          achievementType={celebratingAchievement.achievement_type}
+          onClose={handleCloseCelebration}
+        />
+      )}
     </PageShell>
   );
 };
