@@ -16,93 +16,200 @@ export const sampleDataGenerator = {
     }
 
     const teacherId = authData.user.id;
+    console.log('👤 Teacher ID:', teacherId);
     
     if (config.clearExistingData) {
       await this.clearExistingData(teacherId);
     }
 
-    // Step 1: Generate diverse students
-    const students = await this.generateDiverseStudents(teacherId);
-    console.log(`✅ Created ${students.length} diverse students`);
+    try {
+      // Step 1: Generate diverse students
+      console.log('📚 Step 1: Generating students...');
+      const students = await this.generateDiverseStudents(teacherId);
+      console.log(`✅ Created ${students.length} diverse students`);
 
-    // Step 2: Create comprehensive assessments
-    const assessments = await this.generateComprehensiveAssessments(teacherId);
-    console.log(`✅ Created ${assessments.length} comprehensive assessments`);
+      // Step 2: Create comprehensive assessments
+      console.log('📝 Step 2: Generating assessments...');
+      const assessments = await this.generateComprehensiveAssessments(teacherId);
+      console.log(`✅ Created ${assessments.length} comprehensive assessments`);
 
-    // Step 3: Generate assessment items for each assessment
-    const allItems = [];
-    for (const assessment of assessments) {
-      const items = await this.generateAssessmentItems(assessment);
-      allItems.push(...items);
+      // Step 3: Generate assessment items for each assessment
+      console.log('🔢 Step 3: Generating assessment items...');
+      const allItems = [];
+      for (const assessment of assessments) {
+        try {
+          const items = await this.generateAssessmentItems(assessment);
+          allItems.push(...items);
+          console.log(`  - Added ${items.length} items to "${assessment.title}"`);
+        } catch (error) {
+          console.error(`Error creating items for ${assessment.title}:`, error);
+        }
+      }
+      console.log(`✅ Created ${allItems.length} assessment items total`);
+
+      // Step 4: Generate realistic student responses
+      console.log('📊 Step 4: Generating student responses...');
+      await this.generateRealisticResponses(students, assessments, allItems);
+      console.log('✅ Generated realistic student responses');
+
+      // Step 5: Generate learning goals
+      console.log('🎯 Step 5: Generating learning goals...');
+      await this.generateLearningGoals(students, teacherId);
+      console.log('✅ Created learning goals and milestones');
+
+      // Step 6: Generate AI analysis (if enabled)
+      if (config.generateAnalysis) {
+        console.log('🧠 Step 6: Generating AI analysis...');
+        await this.generateAIAnalysisData(students, assessments);
+        console.log('✅ Generated AI analysis data');
+      }
+
+      // Step 7: Generate communication history
+      console.log('📧 Step 7: Generating communication history...');
+      await this.generateCommunicationHistory(students, teacherId);
+      console.log('✅ Created communication history');
+
+      // Step 8: Verify data creation
+      console.log('🔍 Step 8: Verifying data creation...');
+      await this.verifyDataCreation(teacherId);
+
+      console.log('🎉 Comprehensive sample data generation completed successfully!');
+    } catch (error) {
+      console.error('❌ Error during sample data generation:', error);
+      throw error;
     }
-    console.log(`✅ Created ${allItems.length} assessment items`);
+  },
 
-    // Step 4: Generate realistic student responses
-    await this.generateRealisticResponses(students, assessments, allItems);
-    console.log('✅ Generated realistic student responses');
+  async verifyDataCreation(teacherId: string): Promise<void> {
+    try {
+      // Check students
+      const { data: students, error: studentsError } = await supabase
+        .from('students')
+        .select('id, first_name, last_name')
+        .eq('teacher_id', teacherId);
+      
+      if (studentsError) throw studentsError;
+      console.log(`📊 Verification - Students created: ${students?.length || 0}`);
 
-    // Step 5: Generate learning goals
-    await this.generateLearningGoals(students, teacherId);
-    console.log('✅ Created learning goals and milestones');
+      // Check assessments
+      const { data: assessments, error: assessmentsError } = await supabase
+        .from('assessments')
+        .select('id, title')
+        .eq('teacher_id', teacherId);
+      
+      if (assessmentsError) throw assessmentsError;
+      console.log(`📊 Verification - Assessments created: ${assessments?.length || 0}`);
 
-    // Step 6: Generate AI analysis (if enabled)
-    if (config.generateAnalysis) {
-      await this.generateAIAnalysisData(students, assessments);
-      console.log('✅ Generated AI analysis data');
+      // Check assessment items
+      if (assessments && assessments.length > 0) {
+        const { data: items, error: itemsError } = await supabase
+          .from('assessment_items')
+          .select('id')
+          .in('assessment_id', assessments.map(a => a.id));
+        
+        if (itemsError) throw itemsError;
+        console.log(`📊 Verification - Assessment items created: ${items?.length || 0}`);
+      }
+
+      // Check student responses
+      if (assessments && assessments.length > 0) {
+        const { data: responses, error: responsesError } = await supabase
+          .from('student_responses')
+          .select('id')
+          .in('assessment_id', assessments.map(a => a.id));
+        
+        if (responsesError) throw responsesError;
+        console.log(`📊 Verification - Student responses created: ${responses?.length || 0}`);
+      }
+
+      // Check AI analysis
+      if (students && students.length > 0 && assessments && assessments.length > 0) {
+        const { data: analysis, error: analysisError } = await supabase
+          .from('assessment_analysis')
+          .select('id')
+          .in('student_id', students.map(s => s.id));
+        
+        if (analysisError) throw analysisError;
+        console.log(`📊 Verification - AI analysis records created: ${analysis?.length || 0}`);
+      }
+
+      // Check goals
+      const { data: goals, error: goalsError } = await supabase
+        .from('goals')
+        .select('id')
+        .eq('teacher_id', teacherId);
+      
+      if (goalsError) throw goalsError;
+      console.log(`📊 Verification - Goals created: ${goals?.length || 0}`);
+
+    } catch (error) {
+      console.error('Error during verification:', error);
     }
-
-    // Step 7: Generate communication history
-    await this.generateCommunicationHistory(students, teacherId);
-    console.log('✅ Created communication history');
-
-    console.log('🎉 Comprehensive sample data generation completed!');
   },
 
   async clearExistingData(teacherId: string): Promise<void> {
     console.log('🧹 Clearing existing data...');
     
-    // Get student IDs for this teacher first
-    const { data: students } = await supabase
-      .from('students')
-      .select('id')
-      .eq('teacher_id', teacherId);
-    
-    const studentIds = students?.map(s => s.id) || [];
-    
-    // Get assessment IDs for this teacher
-    const { data: assessments } = await supabase
-      .from('assessments')
-      .select('id')
-      .eq('teacher_id', teacherId);
-    
-    const assessmentIds = assessments?.map(a => a.id) || [];
-    
-    // Get goal IDs for this teacher
-    const { data: goals } = await supabase
-      .from('goals')
-      .select('id')
-      .eq('teacher_id', teacherId);
-    
-    const goalIds = goals?.map(g => g.id) || [];
-    
-    // Delete in reverse dependency order
-    if (studentIds.length > 0) {
-      await supabase.from('assessment_analysis').delete().in('student_id', studentIds);
+    try {
+      // Get student IDs for this teacher first
+      const { data: students } = await supabase
+        .from('students')
+        .select('id')
+        .eq('teacher_id', teacherId);
+      
+      const studentIds = students?.map(s => s.id) || [];
+      console.log(`  - Found ${studentIds.length} existing students to clean up`);
+      
+      // Get assessment IDs for this teacher
+      const { data: assessments } = await supabase
+        .from('assessments')
+        .select('id')
+        .eq('teacher_id', teacherId);
+      
+      const assessmentIds = assessments?.map(a => a.id) || [];
+      console.log(`  - Found ${assessmentIds.length} existing assessments to clean up`);
+      
+      // Get goal IDs for this teacher
+      const { data: goals } = await supabase
+        .from('goals')
+        .select('id')
+        .eq('teacher_id', teacherId);
+      
+      const goalIds = goals?.map(g => g.id) || [];
+      console.log(`  - Found ${goalIds.length} existing goals to clean up`);
+      
+      // Delete in reverse dependency order
+      if (studentIds.length > 0) {
+        await supabase.from('assessment_analysis').delete().in('student_id', studentIds);
+        console.log('  - Cleared assessment analysis');
+      }
+      
+      if (assessmentIds.length > 0) {
+        await supabase.from('student_responses').delete().in('assessment_id', assessmentIds);
+        console.log('  - Cleared student responses');
+        await supabase.from('assessment_items').delete().in('assessment_id', assessmentIds);
+        console.log('  - Cleared assessment items');
+      }
+      
+      if (goalIds.length > 0) {
+        await supabase.from('goal_milestones').delete().in('goal_id', goalIds);
+        console.log('  - Cleared goal milestones');
+      }
+      
+      await supabase.from('goals').delete().eq('teacher_id', teacherId);
+      console.log('  - Cleared goals');
+      await supabase.from('parent_communications').delete().eq('teacher_id', teacherId);
+      console.log('  - Cleared communications');
+      await supabase.from('assessments').delete().eq('teacher_id', teacherId);
+      console.log('  - Cleared assessments');
+      await supabase.from('students').delete().eq('teacher_id', teacherId);
+      console.log('  - Cleared students');
+      
+      console.log('✅ Data cleanup completed');
+    } catch (error) {
+      console.error('Error during data cleanup:', error);
+      throw error;
     }
-    
-    if (assessmentIds.length > 0) {
-      await supabase.from('student_responses').delete().in('assessment_id', assessmentIds);
-      await supabase.from('assessment_items').delete().in('assessment_id', assessmentIds);
-    }
-    
-    if (goalIds.length > 0) {
-      await supabase.from('goal_milestones').delete().in('goal_id', goalIds);
-    }
-    
-    await supabase.from('goals').delete().eq('teacher_id', teacherId);
-    await supabase.from('parent_communications').delete().eq('teacher_id', teacherId);
-    await supabase.from('assessments').delete().eq('teacher_id', teacherId);
-    await supabase.from('students').delete().eq('teacher_id', teacherId);
   },
 
   async generateDiverseStudents(teacherId: string) {
@@ -229,7 +336,10 @@ export const sampleDataGenerator = {
       .insert(students)
       .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating students:', error);
+      throw error;
+    }
     return data;
   },
 
@@ -345,7 +455,10 @@ export const sampleDataGenerator = {
       .insert(assessments)
       .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating assessments:', error);
+      throw error;
+    }
     return data;
   },
 
@@ -458,11 +571,16 @@ export const sampleDataGenerator = {
       .insert(itemsWithAssessmentId)
       .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error(`Error creating items for ${assessment.title}:`, error);
+      throw error;
+    }
     return data;
   },
 
   async generateRealisticResponses(students: any[], assessments: any[], allItems: any[]) {
+    console.log(`📊 Generating responses for ${students.length} students across ${assessments.length} assessments...`);
+    
     // Define student performance profiles
     const performanceProfiles = {
       high: { scoreRange: [85, 95], errorRate: 0.1 },
@@ -489,6 +607,8 @@ export const sampleDataGenerator = {
         assessment.grade_level === 'Mixed' ||
         (student.grade_level === '6th' && ['4th', '5th'].includes(assessment.grade_level))
       );
+
+      console.log(`  - ${student.first_name}: ${relevantAssessments.length} relevant assessments`);
 
       for (const assessment of relevantAssessments) {
         const assessmentItems = allItems.filter(item => item.assessment_id === assessment.id);
@@ -536,6 +656,8 @@ export const sampleDataGenerator = {
 
           if (error) {
             console.error(`Error inserting responses for ${student.first_name}:`, error);
+          } else {
+            console.log(`    ✓ Added ${responses.length} responses for "${assessment.title}"`);
           }
         }
       }
@@ -643,6 +765,8 @@ export const sampleDataGenerator = {
   },
 
   async generateAIAnalysisData(students: any[], assessments: any[]) {
+    console.log(`🧠 Generating AI analysis for ${students.length} students across ${assessments.length} assessments...`);
+    
     const analysisTemplates = {
       high: {
         strengths: [
@@ -727,6 +851,8 @@ export const sampleDataGenerator = {
         (student.grade_level === '6th' && ['4th', '5th'].includes(assessment.grade_level))
       );
 
+      console.log(`  - Generating analysis for ${student.first_name}: ${relevantAssessments.length} assessments`);
+
       for (const assessment of relevantAssessments) {
         // Create analysis for each assessment
         const analysis = {
@@ -759,7 +885,9 @@ export const sampleDataGenerator = {
           .insert(analysis);
 
         if (error) {
-          console.error('Error creating analysis:', error);
+          console.error(`Error creating analysis for ${student.first_name} - ${assessment.title}:`, error);
+        } else {
+          console.log(`    ✓ Created analysis for "${assessment.title}"`);
         }
       }
     }
