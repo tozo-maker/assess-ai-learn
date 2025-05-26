@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -75,14 +76,21 @@ import { studentFormSchema, StudentFormValues } from '@/lib/validations/student'
 import { gradeLevelOptions, PerformanceLevel } from '@/types/student';
 
 const StudentProfile = () => {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
-  if (!id) {
-    navigate('/students');
+  // Get the student ID from params and validate it
+  const studentId = params.id;
+  
+  console.log('StudentProfile: params:', params);
+  console.log('StudentProfile: studentId:', studentId);
+  
+  if (!studentId) {
+    console.error('StudentProfile: No student ID found in URL params');
+    navigate('/app/students');
     return null;
   }
 
@@ -92,19 +100,23 @@ const StudentProfile = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['student', id],
-    queryFn: () => studentService.getStudentById(id),
+    queryKey: ['student', studentId],
+    queryFn: () => {
+      console.log('StudentProfile: Fetching student with ID:', studentId);
+      return studentService.getStudentById(studentId);
+    },
+    enabled: !!studentId,
   });
 
   // Delete student mutation
   const deleteStudentMutation = useMutation({
-    mutationFn: () => studentService.deleteStudent(id),
+    mutationFn: () => studentService.deleteStudent(studentId),
     onSuccess: () => {
       toast({
         title: 'Student deleted',
         description: 'The student has been removed successfully.',
       });
-      navigate('/students');
+      navigate('/app/students');
     },
     onError: (error) => {
       console.error('Error deleting student:', error);
@@ -146,9 +158,9 @@ const StudentProfile = () => {
   // Update student mutation
   const updateStudentMutation = useMutation({
     mutationFn: (values: StudentFormValues) =>
-      studentService.updateStudent(id, values),
+      studentService.updateStudent(studentId, values),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['student', id] });
+      queryClient.invalidateQueries({ queryKey: ['student', studentId] });
       toast({
         title: 'Student updated',
         description: 'The student information has been updated.',
@@ -194,7 +206,7 @@ const StudentProfile = () => {
         title="Student Profile"
         description="Loading student information"
         icon={<User className="h-6 w-6 text-blue-600" />}
-        backLink="/students"
+        backLink="/app/students"
       >
         <div className="space-y-6">
           <Card>
@@ -219,12 +231,13 @@ const StudentProfile = () => {
   }
 
   if (error) {
+    console.error('StudentProfile: Error loading student:', error);
     return (
       <PageShell
         title="Error"
         description="There was a problem loading the student"
         icon={<AlertCircle className="h-6 w-6 text-red-600" />}
-        backLink="/students"
+        backLink="/app/students"
       >
         <Card>
           <CardContent className="pt-6 text-center">
@@ -233,7 +246,10 @@ const StudentProfile = () => {
             <p className="text-gray-500 mb-4">
               There was an error retrieving the student information. Please try again.
             </p>
-            <Button onClick={() => navigate('/students')}>Return to Students</Button>
+            <div className="space-x-2">
+              <Button onClick={() => window.location.reload()}>Retry</Button>
+              <Button variant="outline" onClick={() => navigate('/app/students')}>Return to Students</Button>
+            </div>
           </CardContent>
         </Card>
       </PageShell>
@@ -246,7 +262,7 @@ const StudentProfile = () => {
         title="Student Not Found"
         description="This student doesn't exist or you don't have access"
         icon={<User className="h-6 w-6 text-gray-600" />}
-        backLink="/students"
+        backLink="/app/students"
       >
         <Card>
           <CardContent className="pt-6 text-center">
@@ -255,7 +271,7 @@ const StudentProfile = () => {
             <p className="text-gray-500 mb-4">
               The requested student doesn't exist or you don't have permission to view it.
             </p>
-            <Button onClick={() => navigate('/students')}>Return to Students</Button>
+            <Button onClick={() => navigate('/app/students')}>Return to Students</Button>
           </CardContent>
         </Card>
       </PageShell>
@@ -439,7 +455,7 @@ const StudentProfile = () => {
       title={fullName}
       description={`${student.grade_level} Grade Student Profile`}
       icon={<User className="h-6 w-6 text-blue-600" />}
-      backLink="/students"
+      backLink="/app/students"
       actions={actions}
     >
       <div className="space-y-6">
