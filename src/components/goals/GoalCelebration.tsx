@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trophy, Star, Sparkles, PartyPopper } from 'lucide-react';
@@ -18,21 +18,53 @@ const GoalCelebration: React.FC<GoalCelebrationProps> = ({
   onClose
 }) => {
   const [animationPhase, setAnimationPhase] = useState<'enter' | 'celebrate' | 'exit'>('enter');
+  const [isClosing, setIsClosing] = useState(false);
+  const timersRef = useRef<NodeJS.Timeout[]>([]);
+
+  // Clear all timers function
+  const clearAllTimers = () => {
+    timersRef.current.forEach(timer => clearTimeout(timer));
+    timersRef.current = [];
+  };
+
+  // Immediate close handler for manual close
+  const handleManualClose = () => {
+    setIsClosing(true);
+    clearAllTimers();
+    // Give a brief moment for any exit animation then close immediately
+    const exitTimer = setTimeout(() => {
+      onClose();
+    }, 150);
+    timersRef.current.push(exitTimer);
+  };
 
   useEffect(() => {
-    if (isVisible) {
+    if (isVisible && !isClosing) {
       setAnimationPhase('enter');
-      const timer1 = setTimeout(() => setAnimationPhase('celebrate'), 200);
-      const timer2 = setTimeout(() => setAnimationPhase('exit'), 3000);
-      const timer3 = setTimeout(() => onClose(), 3300);
       
-      return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
-        clearTimeout(timer3);
-      };
+      // Set up automatic timers only if not manually closing
+      const timer1 = setTimeout(() => {
+        if (!isClosing) setAnimationPhase('celebrate');
+      }, 200);
+      
+      const timer2 = setTimeout(() => {
+        if (!isClosing) setAnimationPhase('exit');
+      }, 3000);
+      
+      const timer3 = setTimeout(() => {
+        if (!isClosing) onClose();
+      }, 3300);
+      
+      timersRef.current = [timer1, timer2, timer3];
+      
+      return clearAllTimers;
+    } else if (!isVisible) {
+      // Reset state when not visible
+      setIsClosing(false);
+      setAnimationPhase('enter');
+      clearAllTimers();
     }
-  }, [isVisible, onClose]);
+  }, [isVisible, isClosing, onClose]);
 
   if (!isVisible) return null;
 
@@ -76,6 +108,10 @@ const GoalCelebration: React.FC<GoalCelebrationProps> = ({
   const config = getCelebrationConfig();
 
   const getAnimationClasses = () => {
+    if (isClosing) {
+      return 'scale-95 opacity-0';
+    }
+    
     switch (animationPhase) {
       case 'enter':
         return 'scale-95 opacity-0';
@@ -113,7 +149,7 @@ const GoalCelebration: React.FC<GoalCelebrationProps> = ({
             </div>
             
             <Button 
-              onClick={onClose}
+              onClick={handleManualClose}
               className="mt-2 transition-all duration-200 hover:scale-105"
               variant="outline"
             >
