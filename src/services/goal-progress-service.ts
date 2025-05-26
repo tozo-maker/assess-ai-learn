@@ -47,7 +47,7 @@ export const goalProgressService = {
     if (error) throw error;
 
     // Group by date and calculate average progress with proper typing
-    const progressByDate = (data as any[]).reduce((acc, entry) => {
+    const progressByDate = (data as any[]).reduce((acc: Record<string, { total: number, count: number }>, entry: any) => {
       const date = entry.created_at.split('T')[0];
       if (!acc[date]) {
         acc[date] = { total: 0, count: 0 };
@@ -55,7 +55,7 @@ export const goalProgressService = {
       acc[date].total += entry.progress_percentage;
       acc[date].count += 1;
       return acc;
-    }, {} as Record<string, { total: number, count: number }>);
+    }, {});
 
     return Object.entries(progressByDate).map(([date, data]) => ({
       date,
