@@ -18,7 +18,6 @@ const GoalCelebration: React.FC<GoalCelebrationProps> = ({
   onClose
 }) => {
   const [animationPhase, setAnimationPhase] = useState<'enter' | 'celebrate' | 'exit'>('enter');
-  const [isClosing, setIsClosing] = useState(false);
   const timersRef = useRef<NodeJS.Timeout[]>([]);
 
   // Clear all timers function
@@ -29,42 +28,28 @@ const GoalCelebration: React.FC<GoalCelebrationProps> = ({
 
   // Immediate close handler for manual close
   const handleManualClose = () => {
-    setIsClosing(true);
     clearAllTimers();
-    // Give a brief moment for any exit animation then close immediately
-    const exitTimer = setTimeout(() => {
-      onClose();
-    }, 150);
-    timersRef.current.push(exitTimer);
+    onClose(); // Call immediately without delay
   };
 
   useEffect(() => {
-    if (isVisible && !isClosing) {
+    if (isVisible) {
       setAnimationPhase('enter');
       
-      // Set up automatic timers only if not manually closing
-      const timer1 = setTimeout(() => {
-        if (!isClosing) setAnimationPhase('celebrate');
-      }, 200);
-      
-      const timer2 = setTimeout(() => {
-        if (!isClosing) setAnimationPhase('exit');
-      }, 3000);
-      
-      const timer3 = setTimeout(() => {
-        if (!isClosing) onClose();
-      }, 3300);
+      // Set up automatic timers
+      const timer1 = setTimeout(() => setAnimationPhase('celebrate'), 200);
+      const timer2 = setTimeout(() => setAnimationPhase('exit'), 3000);
+      const timer3 = setTimeout(() => onClose(), 3300);
       
       timersRef.current = [timer1, timer2, timer3];
       
       return clearAllTimers;
-    } else if (!isVisible) {
+    } else {
       // Reset state when not visible
-      setIsClosing(false);
       setAnimationPhase('enter');
       clearAllTimers();
     }
-  }, [isVisible, isClosing, onClose]);
+  }, [isVisible, onClose]);
 
   if (!isVisible) return null;
 
@@ -108,10 +93,6 @@ const GoalCelebration: React.FC<GoalCelebrationProps> = ({
   const config = getCelebrationConfig();
 
   const getAnimationClasses = () => {
-    if (isClosing) {
-      return 'scale-95 opacity-0';
-    }
-    
     switch (animationPhase) {
       case 'enter':
         return 'scale-95 opacity-0';
