@@ -8,7 +8,10 @@ export interface Student {
   special_considerations?: string;
   teacher_id: string;
   avatar_url?: string;
+  email?: string;
+  parent_name?: string;
   parent_email?: string;
+  parent_phone?: string;
   created_at: string;
   updated_at: string;
 }

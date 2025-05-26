@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -52,6 +53,7 @@ import { studentService } from '@/services/student-service';
 import { assessmentService } from '@/services/assessment-service';
 import { goalsService } from '@/services/goals-service';
 import { useToast } from '@/hooks/use-toast';
+import { normalizeStudentPerformance } from '@/types/student';
 import InsightsTabContent from '@/components/communications/InsightsTabContent';
 
 const formSchema = z.object({
@@ -63,7 +65,7 @@ const formSchema = z.object({
   }),
   email: z.string().email({
     message: "Please enter a valid email address.",
-  }),
+  }).optional(),
   student_id: z.string().min(3, {
     message: "Student ID must be at least 3 characters.",
   }),
@@ -108,7 +110,7 @@ const StudentProfile = () => {
 
   // Fetch student data
   const {
-    data: student,
+    data: rawStudent,
     isLoading: studentLoading,
     error: studentError,
     refetch: refetchStudent,
@@ -120,6 +122,9 @@ const StudentProfile = () => {
     },
     enabled: !!studentId,
   });
+
+  // Normalize student data
+  const student = rawStudent ? normalizeStudentPerformance(rawStudent) : null;
 
   // Fetch student goals
   const {
@@ -182,7 +187,7 @@ const StudentProfile = () => {
   });
 
   React.useEffect(() => {
-    if (student && student.performance) {
+    if (student && student.performance && !Array.isArray(student.performance)) {
       setPerformanceData({
         averageScore: student.performance.average_score || 0,
         assessmentsCompleted: student.performance.assessment_count || 0,
@@ -298,7 +303,7 @@ const StudentProfile = () => {
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center space-x-4">
               <Avatar>
-                <AvatarImage src={`https://avatar.vercel.sh/${student?.email}.png`} />
+                <AvatarImage src={`https://avatar.vercel.sh/${student?.email || student?.first_name}.png`} />
                 <AvatarFallback>{student?.first_name[0]}{student?.last_name[0]}</AvatarFallback>
               </Avatar>
               <div>
@@ -307,11 +312,11 @@ const StudentProfile = () => {
               </div>
             </div>
             <div>
-              <p>Email: {student?.email}</p>
+              {student?.email && <p>Email: {student.email}</p>}
               <p>Grade Level: {student?.grade_level}</p>
-              {student?.parent_name && <p>Parent Name: {student?.parent_name}</p>}
-              {student?.parent_email && <p>Parent Email: {student?.parent_email}</p>}
-              {student?.parent_phone && <p>Parent Phone: {student?.parent_phone}</p>}
+              {student?.parent_name && <p>Parent Name: {student.parent_name}</p>}
+              {student?.parent_email && <p>Parent Email: {student.parent_email}</p>}
+              {student?.parent_phone && <p>Parent Phone: {student.parent_phone}</p>}
             </div>
           </CardContent>
         </Card>

@@ -24,6 +24,7 @@ const ProgressReportViewer: React.FC<ProgressReportViewerProps> = ({ reportData 
     patterns_observed: [],
     created_at: new Date().toISOString(),
     assessments: {
+      id: 'progress-report-assessment',
       title: 'Progress Report Analysis',
       subject: 'Multiple Subjects',
       assessment_date: new Date().toISOString().split('T')[0]
