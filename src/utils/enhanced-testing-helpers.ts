@@ -1,6 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { TestingReport } from './testing-helpers';
+import { performanceCalculator } from './performance-calculator';
 
 export interface EnhancedTestingReport extends TestingReport {
   category?: string;
@@ -741,6 +740,287 @@ export const enhancedTestingHelpers = {
         duration: 0
       });
       return allResults;
+    }
+  },
+
+  // Helper methods
+  async clearAllData() {
+    console.log('Clearing all data...');
+    const { error: clearError } = await supabase
+      .from('students')
+      .delete();
+    
+    if (clearError) {
+      console.error('Error clearing students data:', clearError);
+      throw clearError;
+    }
+    
+    const { error: assessmentsError } = await supabase
+      .from('assessments')
+      .delete();
+    
+    if (assessmentsError) {
+      console.error('Error clearing assessments data:', assessmentsError);
+      throw assessmentsError;
+    }
+    
+    const { error: responsesError } = await supabase
+      .from('student_responses')
+      .delete();
+    
+    if (responsesError) {
+      console.error('Error clearing student responses data:', responsesError);
+      throw responsesError;
+    }
+    
+    const { error: performanceError } = await supabase
+      .from('student_performance')
+      .delete();
+    
+    if (performanceError) {
+      console.error('Error clearing student performance data:', performanceError);
+      throw performanceError;
+    }
+    
+    console.log('All data cleared');
+  },
+
+  async generateStudents() {
+    console.log('Generating students...');
+    const students = [];
+    
+    // Create 100 students
+    for (let i = 1; i <= 100; i++) {
+      const student = {
+        first_name: `Student${i}`,
+        last_name: `Test${i}`,
+        grade_level: '3rd',
+        teacher_id: 'teacher123',
+        student_id: `STUDENT-${i}`
+      };
+      students.push(student);
+    }
+    
+    // Insert students in batches
+    const batchSize = 50;
+    for (let i = 0; i < students.length; i += batchSize) {
+      const batch = students.slice(i, i + batchSize);
+      const { error } = await supabase
+        .from('students')
+        .insert(batch);
+      
+      if (error) {
+        console.error('Error inserting student batch:', error);
+        throw error;
+      }
+    }
+    
+    console.log(`Generated ${students.length} students`);
+    return students;
+  },
+
+  async generateAssessments() {
+    console.log('Generating assessments...');
+    const assessments = [];
+    
+    // Create 50 assessments
+    for (let i = 1; i <= 50; i++) {
+      const assessment = {
+        title: `Assessment${i}`,
+        subject: 'Math',
+        teacher_id: 'teacher123',
+        assessment_id: `ASSESSMENT-${i}`
+      };
+      assessments.push(assessment);
+    }
+    
+    // Insert assessments in batches
+    const batchSize = 50;
+    for (let i = 0; i < assessments.length; i += batchSize) {
+      const batch = assessments.slice(i, i + batchSize);
+      const { error } = await supabase
+        .from('assessments')
+        .insert(batch);
+      
+      if (error) {
+        console.error('Error inserting assessment batch:', error);
+        throw error;
+      }
+    }
+    
+    console.log(`Generated ${assessments.length} assessments`);
+    return assessments;
+  },
+
+  async generateAssessmentItems(assessments: any[]) {
+    console.log('Generating assessment items...');
+    const items = [];
+    
+    // Create 100 assessment items
+    for (let i = 1; i <= 100; i++) {
+      const item = {
+        assessment_id: `ASSESSMENT-${i}`,
+        item_id: `ITEM-${i}`,
+        max_score: 100,
+        description: `Item ${i}`
+      };
+      items.push(item);
+    }
+    
+    // Insert items in batches
+    const batchSize = 50;
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      const { error } = await supabase
+        .from('assessment_items')
+        .insert(batch);
+      
+      if (error) {
+        console.error('Error inserting item batch:', error);
+        throw error;
+      }
+    }
+    
+    console.log(`Generated ${items.length} assessment items`);
+    return items;
+  },
+
+  async generateStudentResponses(students: any[], assessments: any[]) {
+    console.log('Generating student responses...');
+    const responses = [];
+
+    // Create responses for each student-assessment combination
+    for (const student of students) {
+      for (const assessment of assessments) {
+        // Skip if grade levels don't match
+        if (student.grade_level !== assessment.grade_level) continue;
+
+        // Get assessment items
+        const { data: items } = await supabase
+          .from('assessment_items')
+          .select('*')
+          .eq('assessment_id', assessment.id);
+
+        if (!items || items.length === 0) continue;
+
+        // Generate responses for each item
+        for (const item of items) {
+          const basePerformance = this.getStudentBasePerformance(student.id);
+          const score = this.generateItemScore(item.max_score, basePerformance);
+          
+          const response = {
+            student_id: student.id,
+            assessment_id: assessment.id,
+            assessment_item_id: item.id,
+            score: score,
+            error_type: score < item.max_score * 0.7 ? this.getRandomErrorType() : null,
+            teacher_notes: score < item.max_score * 0.5 ? 'Needs additional support' : null
+          };
+
+          responses.push(response);
+        }
+      }
+    }
+
+    // Insert responses in batches
+    const batchSize = 50;
+    for (let i = 0; i < responses.length; i += batchSize) {
+      const batch = responses.slice(i, i + batchSize);
+      const { error } = await supabase
+        .from('student_responses')
+        .insert(batch);
+      
+      if (error) {
+        console.error('Error inserting response batch:', error);
+        throw error;
+      }
+    }
+
+    console.log(`Generated ${responses.length} student responses`);
+    return responses;
+  },
+
+  async generateStudentPerformance(students: any[], assessments: any[]) {
+    console.log('Calculating and generating student performance records...');
+    
+    // Get all student responses with assessment data
+    const { data: responsesData, error } = await supabase
+      .from('student_responses')
+      .select(`
+        student_id,
+        score,
+        assessment_items!inner(max_score),
+        assessments!inner(assessment_date)
+      `);
+
+    if (error) {
+      console.error('Error fetching responses for performance calculation:', error);
+      throw error;
+    }
+
+    // Transform data for performance calculator
+    const responsesByStudent = responsesData?.map(response => ({
+      student_id: response.student_id,
+      score: response.score,
+      max_score: response.assessment_items.max_score,
+      assessment_date: response.assessments.assessment_date
+    })) || [];
+
+    // Calculate performance metrics
+    const performanceData = performanceCalculator.calculateStudentPerformance(responsesByStudent);
+
+    // Insert performance records
+    const performanceRecords = performanceData.map(perf => ({
+      student_id: perf.student_id,
+      assessment_count: perf.assessment_count,
+      average_score: perf.average_score,
+      performance_level: perf.performance_level,
+      needs_attention: perf.needs_attention,
+      last_assessment_date: perf.last_assessment_date
+    }));
+
+    const { error: insertError } = await supabase
+      .from('student_performance')
+      .insert(performanceRecords);
+
+    if (insertError) {
+      console.error('Error inserting performance records:', insertError);
+      throw insertError;
+    }
+
+    console.log(`Generated ${performanceRecords.length} student performance records`);
+    return performanceRecords;
+  },
+
+  async generateComprehensiveData({ clearExistingData = true, generateAnalysis = true } = {}) {
+    try {
+      if (clearExistingData) {
+        await this.clearAllData();
+      }
+
+      // Generate base data
+      const students = await this.generateStudents();
+      const assessments = await this.generateAssessments();
+      await this.generateAssessmentItems(assessments);
+      await this.generateStudentResponses(students, assessments);
+      
+      // Generate performance records AFTER responses are created
+      await this.generateStudentPerformance(students, assessments);
+
+      if (generateAnalysis) {
+        await this.generateAnalysisData(students, assessments);
+        await this.generateGoalsData(students);
+        await this.generateCommunicationsData(students);
+      }
+
+      return {
+        students,
+        assessments,
+        message: 'Comprehensive sample data generated successfully with performance metrics!'
+      };
+    } catch (error) {
+      console.error('Error in generateComprehensiveData:', error);
+      throw error;
     }
   }
 };

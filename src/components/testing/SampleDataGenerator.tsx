@@ -22,7 +22,7 @@ const SampleDataGenerator = () => {
       
       toast({
         title: 'Generating Sample Data',
-        description: 'Creating comprehensive educational dataset. This may take a few minutes...',
+        description: 'Creating comprehensive educational dataset with performance metrics. This may take a few minutes...',
       });
 
       await sampleDataGenerator.generateComprehensiveData({
@@ -33,7 +33,7 @@ const SampleDataGenerator = () => {
       setGenerationComplete(true);
       toast({
         title: 'Sample Data Generated Successfully!',
-        description: 'Your LearnSpark AI platform is now populated with realistic educational data.',
+        description: 'Your LearnSpark AI platform is now populated with realistic educational data and performance metrics.',
       });
 
     } catch (error) {
@@ -85,7 +85,7 @@ const SampleDataGenerator = () => {
             Generate Comprehensive Sample Data
           </CardTitle>
           <CardDescription>
-            Create a complete educational dataset to fully test LearnSpark AI capabilities without manual work
+            Create a complete educational dataset with performance analytics to fully test LearnSpark AI capabilities
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -183,7 +183,7 @@ const SampleDataGenerator = () => {
 
           {/* Expected Generation Time */}
           <p className="text-center text-sm text-gray-600">
-            Expected generation time: 2-5 minutes
+            Expected generation time: 2-5 minutes (now includes performance calculation)
           </p>
         </CardContent>
       </Card>
