@@ -8,6 +8,7 @@ import PerformanceTabContent from './PerformanceTabContent';
 import InsightsTabContent from './InsightsTabContent';
 import GoalsTabContent from './GoalsTabContent';
 import RecommendationsTabContent from './RecommendationsTabContent';
+import { GoalWithMilestones } from '@/types/goals';
 
 interface ProgressReportViewerProps {
   reportData: ProgressReportData;
@@ -30,6 +31,12 @@ const ProgressReportViewer: React.FC<ProgressReportViewerProps> = ({ reportData 
       assessment_date: new Date().toISOString().split('T')[0]
     }
   }];
+
+  // Transform goals to include empty milestones array if not present
+  const goalsWithMilestones: GoalWithMilestones[] = reportData.goals.map(goal => ({
+    ...goal,
+    milestones: goal.milestones || []
+  }));
 
   return (
     <div className="space-y-6 print:py-10">
@@ -68,7 +75,7 @@ const ProgressReportViewer: React.FC<ProgressReportViewerProps> = ({ reportData 
 
         {/* Goals Tab */}
         <TabsContent value="goals" className="space-y-4">
-          <GoalsTabContent goals={reportData.goals} />
+          <GoalsTabContent goals={goalsWithMilestones} />
         </TabsContent>
 
         {/* Recommendations Tab */}
