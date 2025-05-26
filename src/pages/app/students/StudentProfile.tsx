@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -90,7 +89,7 @@ const StudentProfile = () => {
   });
 
   // Fetch student assessments and insights
-  const { data: studentAssessmentsData, isLoading: assessmentsLoading } = useQuery({
+  const { data: studentAssessmentsData, isLoading: assessmentsLoading, refetch: refetchAssessments } = useQuery({
     queryKey: ['student-assessments', studentId],
     queryFn: async () => {
       if (!allAssessments || !studentId) return { assessments: [], insights: [] };
@@ -104,10 +103,13 @@ const StudentProfile = () => {
           if (responses.length > 0) {
             const totalScore = responses.reduce((sum, r) => sum + r.score, 0);
             assessmentsWithResponses.push({
-              assessment,
-              responses,
+              id: assessment.id,
+              title: assessment.title,
+              subject: assessment.subject,
+              assessment_date: assessment.assessment_date,
+              max_score: assessment.max_score,
               totalScore,
-              maxScore: assessment.max_score,
+              responses,
             });
             
             // Try to get analysis
@@ -122,7 +124,12 @@ const StudentProfile = () => {
                   recommendations: analysis.recommendations || [],
                   patterns_observed: analysis.patterns_observed || [],
                   created_at: analysis.created_at,
-                  assessments: assessment
+                  assessments: {
+                    id: assessment.id,
+                    title: assessment.title,
+                    subject: assessment.subject,
+                    assessment_date: assessment.assessment_date
+                  }
                 });
               }
             } catch (error) {
@@ -133,6 +140,9 @@ const StudentProfile = () => {
           console.error(`Error fetching data for assessment ${assessment.id}:`, error);
         }
       }
+      
+      console.log('Final assessments data:', assessmentsWithResponses);
+      console.log('Final insights data:', insights);
       
       return { assessments: assessmentsWithResponses, insights };
     },
@@ -151,10 +161,7 @@ const StudentProfile = () => {
 
   const handleRefreshInsights = () => {
     // Refetch the student assessments data to get updated insights
-    if (studentAssessmentsData) {
-      // Force a refetch by invalidating the query
-      window.location.reload(); // Simple approach for now
-    }
+    refetchAssessments();
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
