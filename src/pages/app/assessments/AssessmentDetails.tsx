@@ -33,7 +33,7 @@ const AssessmentDetails: React.FC = () => {
       <PageShell
         title="Loading Assessment..."
         description="Please wait"
-        link="/assessments"
+        link="/app/assessments"
         linkText="Back to Assessments"
       >
         <div className="flex justify-center items-center h-64">
@@ -51,13 +51,13 @@ const AssessmentDetails: React.FC = () => {
       <PageShell
         title="Assessment Not Found"
         description="The requested assessment could not be found"
-        link="/assessments"
+        link="/app/assessments"
         linkText="Back to Assessments"
       >
         <div className="text-center p-8">
           <h2 className="text-xl font-semibold">Assessment not found</h2>
           <p className="mt-2">The requested assessment could not be loaded.</p>
-          <Button onClick={() => navigate('/assessments')} className="mt-4">Back to Assessments</Button>
+          <Button onClick={() => navigate('/app/assessments')} className="mt-4">Back to Assessments</Button>
         </div>
       </PageShell>
     );
@@ -67,7 +67,7 @@ const AssessmentDetails: React.FC = () => {
     <PageShell
       title={assessment.title}
       description={`${assessment.subject} | Grade ${assessment.grade_level}`}
-      link="/assessments"
+      link="/app/assessments"
       linkText="Back to Assessments"
     >
       <div className="space-y-6">
