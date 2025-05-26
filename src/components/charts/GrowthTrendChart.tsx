@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 
 interface GrowthTrendData {
   period: string;
@@ -14,21 +14,6 @@ interface GrowthTrendData {
 interface GrowthTrendChartProps {
   data: GrowthTrendData[];
   studentName?: string;
-}
-
-interface ChartConfig {
-  actual_score: {
-    label: string;
-    color: string;
-  };
-  predicted_score: {
-    label: string;
-    color: string;
-  };
-  target_score: {
-    label: string;
-    color: string;
-  };
 }
 
 const GrowthTrendChart: React.FC<GrowthTrendChartProps> = ({ data, studentName }) => {

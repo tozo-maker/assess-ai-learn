@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 
 interface PerformanceTimelineData {
   assessment_name: string;
@@ -13,17 +13,6 @@ interface PerformanceTimelineData {
 interface PerformanceTimelineChartProps {
   data: PerformanceTimelineData[];
   studentName?: string;
-}
-
-interface ChartConfig {
-  score: {
-    label: string;
-    color: string;
-  };
-  class_average: {
-    label: string;
-    color: string;
-  };
 }
 
 const PerformanceTimelineChart: React.FC<PerformanceTimelineChartProps> = ({ data, studentName }) => {

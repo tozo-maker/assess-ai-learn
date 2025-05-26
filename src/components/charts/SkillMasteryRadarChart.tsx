@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Legend } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 
 interface SkillMasteryData {
   skill: string;
@@ -13,21 +13,6 @@ interface SkillMasteryData {
 interface SkillMasteryRadarChartProps {
   data: SkillMasteryData[];
   studentName?: string;
-}
-
-interface ChartConfig {
-  current_level: {
-    label: string;
-    color: string;
-  };
-  target_level: {
-    label: string;
-    color: string;
-  };
-  class_average: {
-    label: string;
-    color: string;
-  };
 }
 
 const SkillMasteryRadarChart: React.FC<SkillMasteryRadarChartProps> = ({ data, studentName }) => {

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 
 interface DistributionData {
   range: string;
@@ -12,13 +12,6 @@ interface DistributionData {
 interface AssessmentDistributionChartProps {
   data: DistributionData[];
   title: string;
-}
-
-interface ChartConfig {
-  count: {
-    label: string;
-    color: string;
-  };
 }
 
 const AssessmentDistributionChart: React.FC<AssessmentDistributionChartProps> = ({ data, title }) => {
