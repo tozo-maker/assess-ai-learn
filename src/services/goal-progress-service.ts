@@ -57,9 +57,9 @@ export const goalProgressService = {
       return acc;
     }, {});
 
-    return Object.entries(progressByDate).map(([date, data]) => ({
+    return Object.entries(progressByDate).map(([date, progressData]: [string, { total: number, count: number }]) => ({
       date,
-      averageProgress: data.total / data.count
+      averageProgress: progressData.total / progressData.count
     }));
   }
 };
