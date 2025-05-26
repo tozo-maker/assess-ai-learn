@@ -169,5 +169,27 @@ export const assessmentService = {
 
     if (error) throw error;
     return data;
+  },
+
+  async generateAssessmentAnalysis(assessmentId: string, studentId: string) {
+    try {
+      // Call the Supabase Edge Function to generate AI analysis
+      const { data, error } = await supabase.functions.invoke('analyze-student-assessment', {
+        body: {
+          assessmentId,
+          studentId
+        }
+      });
+
+      if (error) {
+        console.error('Error calling analysis function:', error);
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error generating assessment analysis:', error);
+      throw error;
+    }
   }
 };

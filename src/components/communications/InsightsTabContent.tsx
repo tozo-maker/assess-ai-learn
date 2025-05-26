@@ -1,18 +1,24 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Brain, 
   TrendingUp, 
   Target, 
   AlertCircle, 
   CheckCircle2,
-  Calendar 
+  Calendar,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { assessmentService } from '@/services/assessment-service';
 
 interface Assessment {
+  id: string;
   title: string;
   subject: string;
   assessment_date?: string;
@@ -33,13 +39,95 @@ interface InsightsTabContentProps {
   insights: StudentInsight[];
   isLoading: boolean;
   onViewAssessments: () => void;
+  studentId?: string;
+  assessments?: Assessment[];
+  onInsightsUpdated?: () => void;
 }
 
 const InsightsTabContent: React.FC<InsightsTabContentProps> = ({ 
   insights, 
   isLoading, 
-  onViewAssessments 
+  onViewAssessments,
+  studentId,
+  assessments = [],
+  onInsightsUpdated
 }) => {
+  const { toast } = useToast();
+  const [generatingAnalysis, setGeneratingAnalysis] = useState(false);
+  const [selectedAssessments, setSelectedAssessments] = useState<string[]>([]);
+  const [showAssessmentSelection, setShowAssessmentSelection] = useState(false);
+
+  // Find assessments that don't have AI analysis yet
+  const assessmentsWithoutAnalysis = assessments.filter(assessment => 
+    !insights.some(insight => insight.assessments?.id === assessment.id)
+  );
+
+  const handleGenerateAnalysis = async (assessmentIds: string[]) => {
+    if (!studentId || assessmentIds.length === 0) return;
+
+    setGeneratingAnalysis(true);
+    let successCount = 0;
+    let failureCount = 0;
+
+    try {
+      for (const assessmentId of assessmentIds) {
+        try {
+          await assessmentService.generateAssessmentAnalysis(assessmentId, studentId);
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to generate analysis for assessment ${assessmentId}:`, error);
+          failureCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast({
+          title: "Analysis Generated",
+          description: `Successfully generated AI analysis for ${successCount} assessment${successCount > 1 ? 's' : ''}${failureCount > 0 ? `. ${failureCount} failed.` : '.'}`,
+        });
+        
+        // Refresh the insights data
+        if (onInsightsUpdated) {
+          onInsightsUpdated();
+        }
+      } else {
+        toast({
+          title: "Analysis Failed",
+          description: "Failed to generate AI analysis. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error generating analysis:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while generating analysis.",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingAnalysis(false);
+      setSelectedAssessments([]);
+      setShowAssessmentSelection(false);
+    }
+  };
+
+  const handleGenerateAll = () => {
+    const allAssessmentIds = assessmentsWithoutAnalysis.map(a => a.id);
+    handleGenerateAnalysis(allAssessmentIds);
+  };
+
+  const handleGenerateSelected = () => {
+    handleGenerateAnalysis(selectedAssessments);
+  };
+
+  const toggleAssessmentSelection = (assessmentId: string) => {
+    setSelectedAssessments(prev => 
+      prev.includes(assessmentId) 
+        ? prev.filter(id => id !== assessmentId)
+        : [...prev, assessmentId]
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="text-center py-8">
@@ -57,15 +145,127 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
         <p className="text-gray-500 mb-4">
           Insights will be generated after the student completes assessments and AI analysis is performed.
         </p>
-        <Button className="bg-blue-600 hover:bg-blue-700" onClick={onViewAssessments}>
-          View Assessments
-        </Button>
+        
+        {assessmentsWithoutAnalysis.length > 0 ? (
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <p className="text-blue-800 text-sm mb-3">
+                Found {assessmentsWithoutAnalysis.length} assessment{assessmentsWithoutAnalysis.length > 1 ? 's' : ''} that can have AI analysis generated.
+              </p>
+              
+              {!showAssessmentSelection ? (
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button 
+                    onClick={handleGenerateAll}
+                    disabled={generatingAnalysis}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {generatingAnalysis ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 mr-2" />
+                    )}
+                    Generate AI Analysis for All
+                  </Button>
+                  
+                  {assessmentsWithoutAnalysis.length > 1 && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => setShowAssessmentSelection(true)}
+                      disabled={generatingAnalysis}
+                    >
+                      Choose Specific Assessments
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="text-left">
+                    <h4 className="text-sm font-medium text-blue-900 mb-2">Select assessments for AI analysis:</h4>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {assessmentsWithoutAnalysis.map((assessment) => (
+                        <div key={assessment.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={assessment.id}
+                            checked={selectedAssessments.includes(assessment.id)}
+                            onCheckedChange={() => toggleAssessmentSelection(assessment.id)}
+                          />
+                          <label htmlFor={assessment.id} className="text-sm text-blue-800 cursor-pointer">
+                            {assessment.title} ({assessment.subject})
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleGenerateSelected}
+                      disabled={generatingAnalysis || selectedAssessments.length === 0}
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {generatingAnalysis ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4 mr-2" />
+                      )}
+                      Generate Selected ({selectedAssessments.length})
+                    </Button>
+                    
+                    <Button 
+                      variant="outline"
+                      onClick={() => setShowAssessmentSelection(false)}
+                      disabled={generatingAnalysis}
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <Button className="bg-blue-600 hover:bg-blue-700" onClick={onViewAssessments}>
+            View Assessments
+          </Button>
+        )}
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      {/* Generate More Analysis Button */}
+      {assessmentsWithoutAnalysis.length > 0 && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-900">Generate More Insights</p>
+                <p className="text-sm text-blue-700">
+                  {assessmentsWithoutAnalysis.length} more assessment{assessmentsWithoutAnalysis.length > 1 ? 's' : ''} can have AI analysis generated
+                </p>
+              </div>
+              <Button 
+                onClick={handleGenerateAll}
+                disabled={generatingAnalysis}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {generatingAnalysis ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4 mr-2" />
+                )}
+                Generate Analysis
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Latest Overall Summary */}
       {insights[0]?.overall_summary && (
         <Card className="bg-blue-50 border-blue-200">
