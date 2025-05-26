@@ -74,35 +74,35 @@ const Dashboard = () => {
     );
   }
 
-  // Calculate real statistics
-  const totalStudents = students.length;
-  const totalAssessments = assessments.length;
-  const aiInsights = communications.filter(c => c.communication_type === 'ai_insight').length;
+  // Calculate real statistics with proper fallbacks
+  const totalStudents = students?.length || 0;
+  const totalAssessments = assessments?.length || 0;
+  const aiInsights = communications?.filter(c => c.communication_type === 'ai_insight')?.length || 0;
   
   // Calculate recent assessments (this week)
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  const recentAssessments = assessments.filter(a => 
+  const recentAssessments = assessments?.filter(a => 
     new Date(a.created_at) >= oneWeekAgo
-  ).length;
+  )?.length || 0;
 
   // Calculate this month's new students
   const oneMonthAgo = new Date();
   oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-  const newStudentsThisMonth = students.filter(s => 
+  const newStudentsThisMonth = students?.filter(s => 
     new Date(s.created_at) >= oneMonthAgo
-  ).length;
+  )?.length || 0;
 
   // Calculate today's new insights
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todaysInsights = communications.filter(c => 
+  const todaysInsights = communications?.filter(c => 
     c.communication_type === 'ai_insight' && new Date(c.created_at) >= today
-  ).length;
+  )?.length || 0;
 
-  // Generate alerts based on real data
+  // Generate alerts based on real data with proper fallbacks
   const alerts = [
-    ...(studentMetrics?.studentsNeedingAttention > 0 ? [{
+    ...(studentMetrics?.studentsNeedingAttention && studentMetrics.studentsNeedingAttention > 0 ? [{
       id: '1',
       type: 'performance' as const,
       title: 'Students need attention',
@@ -134,6 +134,14 @@ const Dashboard = () => {
   const teacherName = teacherProfile?.full_name || "Teacher";
   const firstName = teacherName.split(' ')[0];
 
+  // Provide safe defaults for components
+  const safeStudentMetrics = studentMetrics || {
+    totalStudents,
+    studentsNeedingAttention: 0,
+    aboveAverageCount: 0,
+    averagePerformance: "N/A"
+  };
+
   return (
     <AppLayout>
       <ErrorBoundary>
@@ -153,15 +161,15 @@ const Dashboard = () => {
               recentAssessments={recentAssessments}
               newStudentsThisMonth={newStudentsThisMonth}
               todaysInsights={todaysInsights}
-              studentMetrics={studentMetrics}
+              studentMetrics={safeStudentMetrics}
             />
           </ErrorBoundary>
 
           {/* Performance Widgets Row */}
           <ErrorBoundary fallback={<ErrorState title="Performance data unavailable" />}>
             <PerformanceSection 
-              assessments={assessments}
-              studentMetrics={studentMetrics}
+              assessments={assessments || []}
+              studentMetrics={safeStudentMetrics}
             />
           </ErrorBoundary>
 
@@ -172,7 +180,7 @@ const Dashboard = () => {
                 <RecentActivitiesList
                   recentAssessments={recentAssessments}
                   todaysInsights={todaysInsights}
-                  studentMetrics={studentMetrics}
+                  studentMetrics={safeStudentMetrics}
                 />
               </ErrorBoundary>
             </div>
