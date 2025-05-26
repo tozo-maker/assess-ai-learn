@@ -269,9 +269,9 @@ serve(async (req: Request) => {
       Focus on educational insights that help teachers understand learning needs and develop targeted interventions.
     `;
     
-    console.log('Calling Anthropic API...');
+    console.log('Calling Anthropic API with updated model...');
     
-    // Call Anthropic Claude API
+    // Call Anthropic Claude API with the updated model
     const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -280,7 +280,7 @@ serve(async (req: Request) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-sonnet-20240229',
+        model: 'claude-3-5-sonnet-20241022', // Updated to current Sonnet model
         max_tokens: 2000,
         messages: [
           { 
@@ -305,6 +305,8 @@ serve(async (req: Request) => {
         { headers: { 'Content-Type': 'application/json', ...corsHeaders }, status: 500 }
       );
     }
+    
+    console.log('Anthropic API call successful!');
     
     // Extract and parse AI analysis
     let analysis;
@@ -354,7 +356,7 @@ serve(async (req: Request) => {
       recommendations: analysis.recommendations,
       overall_summary: analysis.overall_summary,
       analysis_json: {
-        model: 'claude-3-sonnet-20240229',
+        model: 'claude-3-5-sonnet-20241022',
         performance: {
           totalScore,
           maxPossibleScore,
