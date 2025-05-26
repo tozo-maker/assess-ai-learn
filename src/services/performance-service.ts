@@ -6,12 +6,14 @@ export const performanceService = {
   async updateStudentPerformance(studentId: string) {
     console.log(`Updating performance for student: ${studentId}`);
     
-    // Get all responses for this student
+    // Get all responses for this student with proper joins
     const { data: responses, error } = await supabase
       .from('student_responses')
       .select(`
         student_id,
         score,
+        assessment_item_id,
+        assessment_id,
         assessment_items!inner(max_score),
         assessments!inner(assessment_date)
       `)
@@ -24,6 +26,9 @@ export const performanceService = {
 
     if (!responses || responses.length === 0) {
       console.log(`No responses found for student ${studentId}`);
+      
+      // Create empty performance record for students with no responses
+      await this.createEmptyPerformanceRecord(studentId);
       return null;
     }
 
@@ -40,6 +45,7 @@ export const performanceService = {
 
     if (!performanceData) {
       console.log(`No performance data calculated for student ${studentId}`);
+      await this.createEmptyPerformanceRecord(studentId);
       return null;
     }
 
@@ -48,7 +54,7 @@ export const performanceService = {
       .from('student_performance')
       .select('id')
       .eq('student_id', studentId)
-      .single();
+      .maybeSingle();
 
     const performanceRecord = {
       student_id: performanceData.student_id,
@@ -89,6 +95,39 @@ export const performanceService = {
 
       return data;
     }
+  },
+
+  async createEmptyPerformanceRecord(studentId: string) {
+    const { data: existingRecord } = await supabase
+      .from('student_performance')
+      .select('id')
+      .eq('student_id', studentId)
+      .maybeSingle();
+
+    if (existingRecord) {
+      console.log(`Performance record already exists for student ${studentId}`);
+      return existingRecord;
+    }
+
+    const { data, error } = await supabase
+      .from('student_performance')
+      .insert([{
+        student_id: studentId,
+        assessment_count: 0,
+        average_score: null,
+        performance_level: null,
+        needs_attention: false,
+        last_assessment_date: null
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating empty performance record:', error);
+      throw error;
+    }
+
+    return data;
   },
 
   async updateAllStudentPerformances() {
