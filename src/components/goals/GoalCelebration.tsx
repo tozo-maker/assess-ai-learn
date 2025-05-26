@@ -22,9 +22,9 @@ const GoalCelebration: React.FC<GoalCelebrationProps> = ({
   useEffect(() => {
     if (isVisible) {
       setAnimationPhase('enter');
-      const timer1 = setTimeout(() => setAnimationPhase('celebrate'), 300);
+      const timer1 = setTimeout(() => setAnimationPhase('celebrate'), 200);
       const timer2 = setTimeout(() => setAnimationPhase('exit'), 3000);
-      const timer3 = setTimeout(() => onClose(), 3500);
+      const timer3 = setTimeout(() => onClose(), 3300);
       
       return () => {
         clearTimeout(timer1);
@@ -78,9 +78,9 @@ const GoalCelebration: React.FC<GoalCelebrationProps> = ({
   const getAnimationClasses = () => {
     switch (animationPhase) {
       case 'enter':
-        return 'scale-50 opacity-0';
+        return 'scale-95 opacity-0';
       case 'celebrate':
-        return 'scale-100 opacity-100 animate-bounce';
+        return 'scale-100 opacity-100';
       case 'exit':
         return 'scale-95 opacity-80';
       default:
@@ -89,35 +89,39 @@ const GoalCelebration: React.FC<GoalCelebrationProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <Card className={`
-        ${config.bgColor} ${config.borderColor} border-2 shadow-2xl max-w-md w-full mx-4
-        transition-all duration-300 ${getAnimationClasses()}
-      `}>
-        <CardContent className="p-8 text-center">
-          <div className="mb-4 flex justify-center">
-            {config.icon}
-          </div>
-          
-          <h2 className="text-2xl font-bold mb-2">{config.title}</h2>
-          <p className="text-lg text-gray-700 mb-2">{config.message}</p>
-          <p className="text-base font-medium text-gray-800 mb-6">"{goalTitle}"</p>
-          
-          <div className="flex justify-center space-x-4">
-            <div className="animate-pulse">🌟</div>
-            <div className="animate-pulse delay-100">🎉</div>
-            <div className="animate-pulse delay-200">🌟</div>
-          </div>
-          
-          <Button 
-            onClick={onClose}
-            className="mt-6"
-            variant="outline"
-          >
-            Continue
-          </Button>
-        </CardContent>
-      </Card>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="relative">
+        <Card className={`
+          ${config.bgColor} ${config.borderColor} border-2 shadow-2xl max-w-md w-full mx-4
+          transform-gpu transition-all duration-300 ease-out origin-center ${getAnimationClasses()}
+        `}>
+          <CardContent className="p-8 text-center">
+            <div className="mb-4 flex justify-center transform transition-transform duration-500">
+              {config.icon}
+            </div>
+            
+            <h2 className="text-2xl font-bold mb-2 transform transition-all duration-300">
+              {config.title}
+            </h2>
+            <p className="text-lg text-gray-700 mb-2">{config.message}</p>
+            <p className="text-base font-medium text-gray-800 mb-6">"{goalTitle}"</p>
+            
+            <div className="flex justify-center space-x-4 mb-4">
+              <div className="animate-pulse">🌟</div>
+              <div className="animate-pulse delay-100">🎉</div>
+              <div className="animate-pulse delay-200">🌟</div>
+            </div>
+            
+            <Button 
+              onClick={onClose}
+              className="mt-2 transition-all duration-200 hover:scale-105"
+              variant="outline"
+            >
+              Continue
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
