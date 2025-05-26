@@ -15,13 +15,15 @@ import {
   Brain,
   Plus
 } from 'lucide-react';
-import { Assessment } from '@/types/assessment';
 
 interface AssessmentWithScore {
-  assessment: Assessment;
-  responses: any[];
+  id: string;
+  title: string;
+  subject: string;
+  assessment_date?: string;
+  max_score: number;
   totalScore: number;
-  maxScore: number;
+  responses: any[];
 }
 
 interface AssessmentsTabContentProps {
@@ -62,11 +64,11 @@ const AssessmentsTabContent: React.FC<AssessmentsTabContentProps> = ({
     if (assessments.length === 0) return { averageScore: 0, totalAssessments: 0, aboveAverage: 0 };
     
     const totalPercentage = assessments.reduce((sum, assessment) => {
-      return sum + (assessment.totalScore / assessment.maxScore) * 100;
+      return sum + (assessment.totalScore / assessment.max_score) * 100;
     }, 0);
     
     const averageScore = Math.round(totalPercentage / assessments.length);
-    const aboveAverage = assessments.filter(a => (a.totalScore / a.maxScore) * 100 >= 80).length;
+    const aboveAverage = assessments.filter(a => (a.totalScore / a.max_score) * 100 >= 80).length;
     
     return {
       averageScore,
@@ -196,54 +198,47 @@ const AssessmentsTabContent: React.FC<AssessmentsTabContentProps> = ({
         <CardContent>
           <div className="space-y-4">
             {assessments.map((assessmentData) => {
-              const percentage = Math.round((assessmentData.totalScore / assessmentData.maxScore) * 100);
+              const percentage = Math.round((assessmentData.totalScore / assessmentData.max_score) * 100);
               return (
                 <div 
-                  key={assessmentData.assessment.id} 
+                  key={assessmentData.id} 
                   className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-medium">{assessmentData.assessment.title}</h4>
-                        <Badge variant="secondary">{assessmentData.assessment.subject}</Badge>
-                        <Badge variant="outline">{assessmentData.assessment.assessment_type}</Badge>
-                        {getPerformanceIcon(assessmentData.totalScore, assessmentData.maxScore)}
+                        <h4 className="font-medium">{assessmentData.title}</h4>
+                        <Badge variant="secondary">{assessmentData.subject}</Badge>
+                        {getPerformanceIcon(assessmentData.totalScore, assessmentData.max_score)}
                       </div>
                       <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
-                          {assessmentData.assessment.assessment_date 
-                            ? new Date(assessmentData.assessment.assessment_date).toLocaleDateString()
+                          {assessmentData.assessment_date 
+                            ? new Date(assessmentData.assessment_date).toLocaleDateString()
                             : 'No date set'}
                         </span>
-                        <span>Grade {assessmentData.assessment.grade_level}</span>
                         <span>
-                          Score: {assessmentData.totalScore}/{assessmentData.maxScore}
+                          Score: {assessmentData.totalScore}/{assessmentData.max_score}
                         </span>
                       </div>
-                      {assessmentData.assessment.description && (
-                        <p className="text-sm text-gray-600 mb-2">
-                          {assessmentData.assessment.description}
-                        </p>
-                      )}
                     </div>
                     <div className="text-right">
-                      <div className={`text-lg font-bold ${getPerformanceColor(assessmentData.totalScore, assessmentData.maxScore)}`}>
+                      <div className={`text-lg font-bold ${getPerformanceColor(assessmentData.totalScore, assessmentData.max_score)}`}>
                         {percentage}%
                       </div>
-                      <div className={`text-sm mb-3 ${getPerformanceColor(assessmentData.totalScore, assessmentData.maxScore)}`}>
-                        {getPerformanceLabel(assessmentData.totalScore, assessmentData.maxScore)}
+                      <div className={`text-sm mb-3 ${getPerformanceColor(assessmentData.totalScore, assessmentData.max_score)}`}>
+                        {getPerformanceLabel(assessmentData.totalScore, assessmentData.max_score)}
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" asChild>
-                          <Link to={`/app/assessments/${assessmentData.assessment.id}/responses?student=${studentId}`}>
+                          <Link to={`/app/assessments/${assessmentData.id}/responses?student=${studentId}`}>
                             <Eye className="mr-1 h-3 w-3" />
                             Details
                           </Link>
                         </Button>
                         <Button size="sm" asChild>
-                          <Link to={`/app/assessments/${assessmentData.assessment.id}/analysis?student=${studentId}`}>
+                          <Link to={`/app/assessments/${assessmentData.id}/analysis?student=${studentId}`}>
                             <Brain className="mr-1 h-3 w-3" />
                             Analysis
                           </Link>
