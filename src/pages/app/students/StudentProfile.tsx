@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -60,6 +59,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 import { 
   User, 
@@ -69,11 +69,16 @@ import {
   Brain, 
   Target,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  TrendingUp,
+  Calendar,
+  BarChart3
 } from 'lucide-react';
 import { studentService } from '@/services/student-service';
+import { assessmentService } from '@/services/assessment-service';
 import { studentFormSchema, StudentFormValues } from '@/lib/validations/student';
 import { gradeLevelOptions, PerformanceLevel } from '@/types/student';
+import { supabase } from '@/integrations/supabase/client';
 
 const StudentProfile = () => {
   const params = useParams<{ id: string }>();
@@ -104,6 +109,101 @@ const StudentProfile = () => {
     queryFn: () => {
       console.log('StudentProfile: Fetching student with ID:', studentId);
       return studentService.getStudentById(studentId);
+    },
+    enabled: !!studentId,
+  });
+
+  // Fetch student assessments with responses
+  const {
+    data: studentAssessments,
+    isLoading: assessmentsLoading,
+  } = useQuery({
+    queryKey: ['student-assessments', studentId],
+    queryFn: async () => {
+      console.log('Fetching assessments for student:', studentId);
+      
+      // Get all student responses first
+      const { data: responses, error: responsesError } = await supabase
+        .from('student_responses')
+        .select(`
+          *,
+          assessments!inner(
+            id,
+            title,
+            subject,
+            assessment_type,
+            max_score,
+            assessment_date,
+            grade_level
+          ),
+          assessment_items!inner(
+            question_text,
+            max_score
+          )
+        `)
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false });
+
+      if (responsesError) {
+        console.error('Error fetching student responses:', responsesError);
+        throw responsesError;
+      }
+
+      // Group responses by assessment
+      const assessmentMap = new Map();
+      responses?.forEach(response => {
+        const assessmentId = response.assessment_id;
+        if (!assessmentMap.has(assessmentId)) {
+          assessmentMap.set(assessmentId, {
+            assessment: response.assessments,
+            responses: [],
+            totalScore: 0,
+            maxScore: 0
+          });
+        }
+        
+        const assessmentData = assessmentMap.get(assessmentId);
+        assessmentData.responses.push(response);
+        assessmentData.totalScore += Number(response.score || 0);
+        assessmentData.maxScore += Number(response.assessment_items.max_score || 0);
+      });
+
+      return Array.from(assessmentMap.values()).map(data => ({
+        ...data.assessment,
+        responses: data.responses,
+        totalScore: data.totalScore,
+        maxScore: data.maxScore,
+        percentage: data.maxScore > 0 ? Math.round((data.totalScore / data.maxScore) * 100) : 0
+      }));
+    },
+    enabled: !!studentId,
+  });
+
+  // Fetch student AI insights
+  const {
+    data: studentInsights,
+    isLoading: insightsLoading,
+  } = useQuery({
+    queryKey: ['student-insights', studentId],
+    queryFn: async () => {
+      console.log('Fetching AI insights for student:', studentId);
+      
+      const { data: analysisData, error } = await supabase
+        .from('assessment_analysis')
+        .select(`
+          *,
+          assessments!inner(title, subject, assessment_date)
+        `)
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching analysis data:', error);
+        throw error;
+      }
+
+      console.log('Fetched analysis data:', analysisData?.length || 0, 'records');
+      return analysisData || [];
     },
     enabled: !!studentId,
   });
@@ -489,15 +589,15 @@ const StudentProfile = () => {
                 <div className="bg-gray-50 px-4 py-2 rounded-lg">
                   <div className="text-sm text-gray-500">Assessments</div>
                   <div className="text-lg font-medium">
-                    {getPerformanceProperty('assessment_count', 0)}
+                    {studentAssessments?.length || 0}
                   </div>
                 </div>
 
                 <div className="bg-gray-50 px-4 py-2 rounded-lg">
                   <div className="text-sm text-gray-500">Average Score</div>
                   <div className="text-lg font-medium">
-                    {getPerformanceProperty('average_score', null)
-                      ? `${getPerformanceProperty('average_score', 0)}%`
+                    {studentAssessments?.length 
+                      ? `${Math.round(studentAssessments.reduce((acc, a) => acc + a.percentage, 0) / studentAssessments.length)}%`
                       : 'N/A'}
                   </div>
                 </div>
@@ -606,35 +706,235 @@ const StudentProfile = () => {
             </div>
           </TabsContent>
 
-          {/* Assessments Tab (Placeholder) */}
+          {/* Assessments Tab - Now with real data */}
           <TabsContent value="assessments">
             <Card>
               <CardHeader>
                 <CardTitle>Student Assessments</CardTitle>
                 <CardDescription>View all assessments taken by this student</CardDescription>
               </CardHeader>
-              <CardContent className="text-center py-12">
-                <FileText className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium mb-2">No assessments yet</h3>
-                <p className="text-gray-500 mb-4">This student hasn't taken any assessments yet.</p>
-                <Button className="bg-blue-600 hover:bg-blue-700">Add Assessment</Button>
+              <CardContent>
+                {assessmentsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p>Loading assessments...</p>
+                  </div>
+                ) : studentAssessments && studentAssessments.length > 0 ? (
+                  <div className="space-y-4">
+                    {studentAssessments.map((assessment, index) => (
+                      <Card key={assessment.id} className="border-l-4 border-l-blue-500">
+                        <CardContent className="pt-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <h4 className="font-semibold text-lg">{assessment.title}</h4>
+                              <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
+                                <span>{assessment.subject}</span>
+                                <span>•</span>
+                                <span>{assessment.assessment_type}</span>
+                                {assessment.assessment_date && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      {new Date(assessment.assessment_date).toLocaleDateString()}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-2xl font-bold text-blue-600">
+                                {assessment.percentage}%
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {assessment.totalScore}/{assessment.maxScore} points
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <Badge variant={
+                              assessment.percentage >= 85 ? 'default' :
+                              assessment.percentage >= 70 ? 'secondary' : 'destructive'
+                            }>
+                              {assessment.percentage >= 85 ? 'Excellent' :
+                               assessment.percentage >= 70 ? 'Good' : 'Needs Improvement'}
+                            </Badge>
+                            
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" onClick={() => navigate(`/app/assessments/${assessment.id}`)}>
+                                <FileText className="h-4 w-4 mr-1" />
+                                View Details
+                              </Button>
+                              <Button size="sm" onClick={() => navigate(`/app/assessments/${assessment.id}/analysis`)}>
+                                <BarChart3 className="h-4 w-4 mr-1" />
+                                View Analysis
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <FileText className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No assessments yet</h3>
+                    <p className="text-gray-500 mb-4">This student hasn't taken any assessments yet.</p>
+                    <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate('/app/assessments')}>
+                      View All Assessments
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Insights Tab (Placeholder) */}
+          {/* Insights Tab - Now with real AI data */}
           <TabsContent value="insights">
             <Card>
               <CardHeader>
                 <CardTitle>Learning Insights</CardTitle>
                 <CardDescription>AI-generated insights based on assessment data</CardDescription>
               </CardHeader>
-              <CardContent className="text-center py-12">
-                <Brain className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium mb-2">No insights available</h3>
-                <p className="text-gray-500 mb-4">
-                  Insights will be generated after the student completes assessments.
-                </p>
+              <CardContent>
+                {insightsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p>Loading insights...</p>
+                  </div>
+                ) : studentInsights && studentInsights.length > 0 ? (
+                  <div className="space-y-6">
+                    {/* Latest Overall Summary */}
+                    {studentInsights[0]?.overall_summary && (
+                      <Card className="bg-blue-50 border-blue-200">
+                        <CardHeader>
+                          <CardTitle className="text-blue-900 flex items-center gap-2">
+                            <Brain className="h-5 w-5" />
+                            Latest Assessment Summary
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-blue-800">{studentInsights[0].overall_summary}</p>
+                          <div className="text-sm text-blue-600 mt-2">
+                            Based on: {studentInsights[0].assessments?.title} ({studentInsights[0].assessments?.subject})
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Strengths */}
+                    {studentInsights.some(insight => insight.strengths?.length > 0) && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-green-700 flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5" />
+                            Strengths
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className="space-y-2">
+                            {Array.from(new Set(
+                              studentInsights.flatMap(insight => insight.strengths || [])
+                            )).map((strength, index) => (
+                              <li key={index} className="flex items-start gap-2">
+                                <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                <span className="text-green-800">{strength}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Growth Areas */}
+                    {studentInsights.some(insight => insight.growth_areas?.length > 0) && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-orange-700 flex items-center gap-2">
+                            <Target className="h-5 w-5" />
+                            Areas for Growth
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className="space-y-2">
+                            {Array.from(new Set(
+                              studentInsights.flatMap(insight => insight.growth_areas || [])
+                            )).map((area, index) => (
+                              <li key={index} className="flex items-start gap-2">
+                                <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                                <span className="text-orange-800">{area}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Recommendations */}
+                    {studentInsights.some(insight => insight.recommendations?.length > 0) && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-purple-700 flex items-center gap-2">
+                            <Brain className="h-5 w-5" />
+                            Recommendations
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {Array.from(new Set(
+                              studentInsights.flatMap(insight => insight.recommendations || [])
+                            )).map((recommendation, index) => (
+                              <div key={index} className="p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                                <p className="text-purple-800">{recommendation}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Assessment History */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Assessment Analysis History</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {studentInsights.map((insight, index) => (
+                            <div key={insight.id} className="border rounded-lg p-4">
+                              <div className="flex justify-between items-start mb-2">
+                                <h4 className="font-medium">{insight.assessments?.title}</h4>
+                                <span className="text-sm text-gray-500">
+                                  {new Date(insight.created_at).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <div className="text-sm text-gray-600 mb-2">
+                                Subject: {insight.assessments?.subject}
+                              </div>
+                              {insight.patterns_observed?.length > 0 && (
+                                <div className="text-sm">
+                                  <strong>Patterns:</strong> {insight.patterns_observed.join(', ')}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Brain className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No insights available</h3>
+                    <p className="text-gray-500 mb-4">
+                      Insights will be generated after the student completes assessments and AI analysis is performed.
+                    </p>
+                    <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate('/app/assessments')}>
+                      View Assessments
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
