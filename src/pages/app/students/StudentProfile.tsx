@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -55,6 +54,7 @@ import { goalsService } from '@/services/goals-service';
 import { useToast } from '@/hooks/use-toast';
 import { normalizeStudentPerformance } from '@/types/student';
 import InsightsTabContent from '@/components/communications/InsightsTabContent';
+import AssessmentsTabContent from '@/components/communications/AssessmentsTabContent';
 
 const formSchema = z.object({
   first_name: z.string().min(2, {
@@ -155,7 +155,13 @@ const StudentProfile = () => {
         try {
           const responses = await assessmentService.getStudentResponses(assessment.id, studentId);
           if (responses.length > 0) {
-            assessmentsWithResponses.push(assessment);
+            const totalScore = responses.reduce((sum, r) => sum + r.score, 0);
+            assessmentsWithResponses.push({
+              assessment,
+              responses,
+              totalScore,
+              maxScore: assessment.max_score,
+            });
             
             // Try to get analysis
             try {
@@ -411,14 +417,16 @@ const StudentProfile = () => {
           <TabsContent value="assessments">
             <Card>
               <CardHeader>
-                <CardTitle>Assessments</CardTitle>
-                <CardDescription>List of assessments taken by the student</CardDescription>
+                <CardTitle>Assessments Overview</CardTitle>
+                <CardDescription>Assessment performance and history for {student?.first_name} {student?.last_name}</CardDescription>
               </CardHeader>
               <CardContent>
-                <p>This section is under development. Coming soon!</p>
-                <Button onClick={() => navigate(`/app/students/${studentId}/assessments`)}>
-                  View Assessments
-                </Button>
+                <AssessmentsTabContent 
+                  assessments={studentAssessmentsData?.assessments || []}
+                  isLoading={assessmentsLoading}
+                  studentId={studentId || ''}
+                  studentName={student ? `${student.first_name} ${student.last_name}` : ''}
+                />
               </CardContent>
             </Card>
           </TabsContent>
