@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,9 +38,13 @@ type ResponseFormValues = z.infer<typeof responseFormSchema>;
 
 interface StudentResponseFormProps {
   assessmentId: string;
+  preSelectedStudentId?: string;
 }
 
-const StudentResponseForm: React.FC<StudentResponseFormProps> = ({ assessmentId }) => {
+const StudentResponseForm: React.FC<StudentResponseFormProps> = ({ 
+  assessmentId, 
+  preSelectedStudentId 
+}) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -69,7 +72,7 @@ const StudentResponseForm: React.FC<StudentResponseFormProps> = ({ assessmentId 
   const form = useForm<ResponseFormValues>({
     resolver: zodResolver(responseFormSchema),
     defaultValues: {
-      student_id: '',
+      student_id: preSelectedStudentId || '',
       responses: [],
       triggerAnalysis: true,
     },
@@ -86,6 +89,17 @@ const StudentResponseForm: React.FC<StudentResponseFormProps> = ({ assessmentId 
       })));
     }
   }, [assessmentItems, form]);
+
+  // Set pre-selected student when students load
+  useEffect(() => {
+    if (preSelectedStudentId && students) {
+      const student = students.find(s => s.id === preSelectedStudentId);
+      if (student) {
+        form.setValue('student_id', preSelectedStudentId);
+        setSelectedStudent(student);
+      }
+    }
+  }, [preSelectedStudentId, students, form]);
 
   // Update selected student when form value changes
   useEffect(() => {
@@ -191,7 +205,11 @@ const StudentResponseForm: React.FC<StudentResponseFormProps> = ({ assessmentId 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Student</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={field.value}
+                    disabled={!!preSelectedStudentId}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a student" />
@@ -205,6 +223,11 @@ const StudentResponseForm: React.FC<StudentResponseFormProps> = ({ assessmentId 
                       ))}
                     </SelectContent>
                   </Select>
+                  {preSelectedStudentId && (
+                    <div className="text-xs text-blue-600">
+                      Student pre-selected from student profile
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

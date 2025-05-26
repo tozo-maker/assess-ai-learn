@@ -61,7 +61,7 @@ const StudentAssessments: React.FC = () => {
       <PageShell
         title="Loading..."
         description="Please wait"
-        link={`/students/${id}`}
+        link={`/app/students/${id}`}
         linkText="Back to Student Profile"
       >
         <div className="space-y-6">
@@ -89,13 +89,13 @@ const StudentAssessments: React.FC = () => {
       <PageShell
         title="Student Not Found"
         description="The requested student could not be found"
-        link="/students"
+        link="/app/students"
         linkText="Back to Students"
       >
         <div className="text-center p-8">
           <h2 className="text-xl font-semibold">Student not found</h2>
           <p className="mt-2">The requested student could not be loaded.</p>
-          <Button onClick={() => navigate('/students')} className="mt-4">Back to Students</Button>
+          <Button onClick={() => navigate('/app/students')} className="mt-4">Back to Students</Button>
         </div>
       </PageShell>
     );
@@ -124,14 +124,14 @@ const StudentAssessments: React.FC = () => {
     <PageShell
       title={`${student.first_name} ${student.last_name}'s Assessments`}
       description={`Grade ${student.grade_level}`}
-      link={`/students/${id}`}
+      link={`/app/students/${id}`}
       linkText="Back to Student Profile"
     >
       <div className="space-y-6">
         {/* Header with back button and actions */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <Button variant="ghost" className="self-start" asChild>
-            <Link to={`/students/${id}`}>
+            <Link to={`/app/students/${id}`}>
               <ChevronLeft className="mr-1 h-4 w-4" />
               Back to Student Profile
             </Link>
@@ -139,14 +139,14 @@ const StudentAssessments: React.FC = () => {
           
           <div className="flex gap-2">
             <Button variant="outline" asChild>
-              <Link to="/assessments">
+              <Link to="/app/assessments">
                 <Plus className="mr-2 h-4 w-4" />
                 Create New Assessment
               </Link>
             </Button>
             {availableAssessments.length > 0 && (
               <Button asChild>
-                <Link to={`/assessments/batch?student=${id}`}>
+                <Link to={`/app/assessments/batch?student=${id}`}>
                   <FileText className="mr-2 h-4 w-4" />
                   Add Assessment Data
                 </Link>
@@ -258,7 +258,7 @@ const StudentAssessments: React.FC = () => {
                             className="mt-2"
                             asChild
                           >
-                            <Link to={`/assessments/${completed.assessment.id}/analysis?student=${id}`}>
+                            <Link to={`/app/assessments/${completed.assessment.id}/analysis?student=${id}`}>
                               View Analysis
                             </Link>
                           </Button>
@@ -277,14 +277,14 @@ const StudentAssessments: React.FC = () => {
                 </p>
                 {availableAssessments.length > 0 ? (
                   <Button asChild>
-                    <Link to={`/assessments/batch?student=${id}`}>
+                    <Link to={`/app/assessments/batch?student=${id}`}>
                       <Plus className="mr-2 h-4 w-4" />
                       Add Assessment Data
                     </Link>
                   </Button>
                 ) : (
                   <Button asChild>
-                    <Link to="/assessments">
+                    <Link to="/app/assessments">
                       <Plus className="mr-2 h-4 w-4" />
                       Create New Assessment
                     </Link>
@@ -334,12 +334,12 @@ const StudentAssessments: React.FC = () => {
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" asChild>
-                          <Link to={`/assessments/${assessment.id}`}>
+                          <Link to={`/app/assessments/${assessment.id}`}>
                             View Details
                           </Link>
                         </Button>
                         <Button size="sm" asChild>
-                          <Link to={`/assessments/${assessment.id}/responses?student=${id}`}>
+                          <Link to={`/app/assessments/${assessment.id}/responses?student=${id}`}>
                             Add Data
                           </Link>
                         </Button>

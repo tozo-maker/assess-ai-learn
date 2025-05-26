@@ -1,11 +1,13 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { PageShell } from '@/components/ui/page-shell';
 import StudentResponseForm from '@/components/assessments/StudentResponseForm';
 
 const AddStudentResponses: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const preSelectedStudentId = searchParams.get('student');
 
   if (!id) {
     return (
@@ -30,7 +32,10 @@ const AddStudentResponses: React.FC = () => {
       link={`/app/assessments/${id}`}
       linkText="Back to Assessment"
     >
-      <StudentResponseForm assessmentId={id} />
+      <StudentResponseForm 
+        assessmentId={id} 
+        preSelectedStudentId={preSelectedStudentId || undefined}
+      />
     </PageShell>
   );
 };
