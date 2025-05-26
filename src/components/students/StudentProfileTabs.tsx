@@ -120,15 +120,15 @@ const StudentProfileTabs: React.FC<StudentProfileTabsProps> = ({
       <TabsContent value="goals">
         <Card>
           <CardHeader>
-            <CardTitle>Learning Goals</CardTitle>
-            <CardDescription>Track and manage learning objectives for {student?.first_name} {student?.last_name}</CardDescription>
+            <CardTitle>Learning Goals Management</CardTitle>
+            <CardDescription>Create, track, and manage learning objectives for {student?.first_name} {student?.last_name}</CardDescription>
           </CardHeader>
           <CardContent>
-            {goalsLoading ? (
-              <p>Loading goals...</p>
-            ) : (
-              <GoalsTabContent goals={studentGoals} />
-            )}
+            <GoalsTabContent 
+              goals={studentGoals} 
+              studentId={studentId}
+              studentName={student ? `${student.first_name} ${student.last_name}` : ''}
+            />
           </CardContent>
         </Card>
       </TabsContent>
