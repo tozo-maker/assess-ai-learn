@@ -12,7 +12,7 @@ import {
   Target, 
   FileOutput, 
   Settings,
-  TestTube,
+  Zap, // Changed from TestTube to Zap for enhanced testing
   LogOut,
   GraduationCap
 } from 'lucide-react';
@@ -28,7 +28,7 @@ const AppSidebar = () => {
     { name: 'Insights', href: '/app/insights', icon: BarChart3 },
     { name: 'Goals', href: '/app/goals', icon: Target },
     { name: 'Reports', href: '/app/reports', icon: FileOutput },
-    { name: 'Testing', href: '/app/testing', icon: TestTube },
+    { name: 'Advanced Testing', href: '/app/testing', icon: Zap }, // Updated name and icon
     { name: 'Settings', href: '/app/settings', icon: Settings },
   ];
 

@@ -8,24 +8,37 @@ import {
   Database, 
   Settings,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Navigation,
+  TrendingUp,
+  Brain,
+  Zap
 } from 'lucide-react';
 import FunctionalityTester from '@/components/testing/FunctionalityTester';
 import DataIntegrityChecker from '@/components/testing/DataIntegrityChecker';
 import TestingDashboard from '@/components/testing/TestingDashboard';
+import ComprehensiveTestSuite from '@/components/testing/ComprehensiveTestSuite';
+import E2ETestRunner from '@/components/testing/E2ETestRunner';
+import PerformanceTestSuite from '@/components/testing/PerformanceTestSuite';
+import SecurityTestValidator from '@/components/testing/SecurityTestValidator';
+import BusinessLogicValidator from '@/components/testing/BusinessLogicValidator';
 
 const Testing = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Quality Assurance & Testing</h1>
+        <h1 className="text-3xl font-bold">Advanced Testing & Quality Assurance</h1>
         <p className="text-gray-600 mt-2">
-          Comprehensive testing suite to ensure platform reliability and data integrity
+          Comprehensive testing suite ensuring platform reliability, security, and educational domain accuracy
         </p>
       </div>
 
-      <Tabs defaultValue="functionality" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="comprehensive" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-8">
+          <TabsTrigger value="comprehensive" className="flex items-center">
+            <Zap className="h-4 w-4 mr-2" />
+            Complete Suite
+          </TabsTrigger>
           <TabsTrigger value="functionality" className="flex items-center">
             <Shield className="h-4 w-4 mr-2" />
             Core Testing
@@ -34,15 +47,31 @@ const Testing = () => {
             <Database className="h-4 w-4 mr-2" />
             Data Integrity
           </TabsTrigger>
-          <TabsTrigger value="comprehensive" className="flex items-center">
-            <TestTube className="h-4 w-4 mr-2" />
-            Full Suite
+          <TabsTrigger value="e2e" className="flex items-center">
+            <Navigation className="h-4 w-4 mr-2" />
+            E2E Testing
+          </TabsTrigger>
+          <TabsTrigger value="performance" className="flex items-center">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Performance
+          </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center">
+            <Shield className="h-4 w-4 mr-2" />
+            Security
+          </TabsTrigger>
+          <TabsTrigger value="business" className="flex items-center">
+            <Brain className="h-4 w-4 mr-2" />
+            Business Logic
           </TabsTrigger>
           <TabsTrigger value="status" className="flex items-center">
             <Settings className="h-4 w-4 mr-2" />
             Status
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="comprehensive" className="space-y-6">
+          <ComprehensiveTestSuite />
+        </TabsContent>
 
         <TabsContent value="functionality" className="space-y-6">
           <FunctionalityTester />
@@ -52,8 +81,20 @@ const Testing = () => {
           <DataIntegrityChecker />
         </TabsContent>
 
-        <TabsContent value="comprehensive" className="space-y-6">
-          <TestingDashboard />
+        <TabsContent value="e2e" className="space-y-6">
+          <E2ETestRunner />
+        </TabsContent>
+
+        <TabsContent value="performance" className="space-y-6">
+          <PerformanceTestSuite />
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-6">
+          <SecurityTestValidator />
+        </TabsContent>
+
+        <TabsContent value="business" className="space-y-6">
+          <BusinessLogicValidator />
         </TabsContent>
 
         <TabsContent value="status" className="space-y-6">
