@@ -1,4 +1,3 @@
-
 import React from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import AlertsWidget from '@/components/dashboard/AlertsWidget';
@@ -6,6 +5,9 @@ import DashboardStats from '@/components/dashboard/DashboardStats';
 import EnhancedQuickActionsCard from '@/components/dashboard/EnhancedQuickActionsCard';
 import RecentActivitiesList from '@/components/dashboard/RecentActivitiesList';
 import EnhancedPerformanceWidget from '@/components/dashboard/EnhancedPerformanceWidget';
+import AnalyticsDashboard from '@/components/dashboard/AnalyticsDashboard';
+import StudentInsightsCard from '@/components/dashboard/StudentInsightsCard';
+import AIRecommendationsWidget from '@/components/dashboard/AIRecommendationsWidget';
 import Breadcrumbs from '@/components/navigation/Breadcrumbs';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import EnhancedLoadingState from '@/components/common/EnhancedLoadingState';
@@ -156,6 +158,54 @@ const Dashboard = () => {
   const readingPerformanceData = generatePerformanceData(assessments, -5);
   const sciencePerformanceData = generatePerformanceData(assessments, 3);
 
+  // Create analytics data
+  const analyticsData = {
+    totalStudents,
+    totalAssessments,
+    averagePerformance: parseFloat(studentMetrics?.averagePerformance?.replace('%', '') || '75'),
+    studentsAtRisk: studentMetrics?.studentsNeedingAttention || 0,
+    studentsExcelling: Math.floor(totalStudents * 0.3) || 0,
+    recentGrowth: Math.floor(Math.random() * 10) + 1,
+    completionRate: totalAssessments > 0 ? Math.floor(Math.random() * 20) + 80 : 0,
+    engagementScore: Math.floor(Math.random() * 20) + 75
+  };
+
+  // Generate sample student insights
+  const studentInsights = students.slice(0, 6).map((student, index) => ({
+    id: student.id,
+    name: `${student.first_name} ${student.last_name}`,
+    performance: Math.floor(Math.random() * 40) + 60,
+    trend: ['up', 'down', 'stable'][Math.floor(Math.random() * 3)] as 'up' | 'down' | 'stable',
+    trendValue: Math.floor(Math.random() * 15) + 1,
+    status: ['excellent', 'good', 'needs_attention', 'at_risk'][Math.floor(Math.random() * 4)] as any,
+    lastAssessment: '2 days ago',
+    improvementArea: ['Math concepts', 'Reading comprehension', 'Problem solving'][Math.floor(Math.random() * 3)]
+  }));
+
+  // Generate sample AI recommendations
+  const aiRecommendations = [
+    {
+      id: '1',
+      type: 'intervention' as const,
+      title: 'Small Group Math Intervention',
+      description: 'Create a focused group for students struggling with fraction concepts',
+      priority: 'high' as const,
+      affectedStudents: 4,
+      actionUrl: '/app/students',
+      estimatedImpact: '15% improvement'
+    },
+    {
+      id: '2',
+      type: 'assessment' as const,
+      title: 'Reading Comprehension Check',
+      description: 'Schedule a diagnostic assessment to identify reading gaps',
+      priority: 'medium' as const,
+      affectedStudents: 8,
+      actionUrl: '/app/assessments/add',
+      estimatedImpact: '10% improvement'
+    }
+  ];
+
   return (
     <AppLayout>
       <ErrorBoundary>
@@ -183,6 +233,13 @@ const Dashboard = () => {
             </div>
           </ErrorBoundary>
 
+          {/* Analytics Dashboard */}
+          <ErrorBoundary fallback={<ErrorState title="Analytics unavailable" />}>
+            <div className="animate-fade-in">
+              <AnalyticsDashboard data={analyticsData} />
+            </div>
+          </ErrorBoundary>
+
           {/* Enhanced Performance Widgets */}
           <ErrorBoundary fallback={<ErrorState title="Performance data unavailable" />}>
             <div className="grid lg:grid-cols-3 gap-6 animate-fade-in">
@@ -207,28 +264,50 @@ const Dashboard = () => {
             </div>
           </ErrorBoundary>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Recent Activity */}
-            <div className="lg:col-span-2 animate-fade-in">
+          <div className="grid lg:grid-cols-12 gap-8">
+            {/* Main Content Area */}
+            <div className="lg:col-span-8 space-y-6">
+              {/* Recent Activity */}
               <ErrorBoundary fallback={<ErrorState title="Activity feed unavailable" />}>
-                <RecentActivitiesList
-                  recentAssessments={recentAssessments}
-                  todaysInsights={todaysInsights}
-                  studentMetrics={studentMetrics || { studentsNeedingAttention: 0 }}
-                />
+                <div className="animate-fade-in">
+                  <RecentActivitiesList
+                    recentAssessments={recentAssessments}
+                    todaysInsights={todaysInsights}
+                    studentMetrics={studentMetrics || { studentsNeedingAttention: 0 }}
+                  />
+                </div>
+              </ErrorBoundary>
+
+              {/* Student Insights */}
+              <ErrorBoundary fallback={<ErrorState title="Student insights unavailable" />}>
+                <div className="animate-fade-in">
+                  <StudentInsightsCard insights={studentInsights} />
+                </div>
               </ErrorBoundary>
             </div>
 
-            {/* Quick Actions and Alerts */}
-            <div className="space-y-6 animate-fade-in">
+            {/* Sidebar */}
+            <div className="lg:col-span-4 space-y-6">
+              {/* Quick Actions */}
               <ErrorBoundary>
-                <EnhancedQuickActionsCard />
+                <div className="animate-fade-in">
+                  <EnhancedQuickActionsCard />
+                </div>
               </ErrorBoundary>
               
+              {/* AI Recommendations */}
+              <ErrorBoundary fallback={<ErrorState title="Recommendations unavailable" />}>
+                <div className="animate-fade-in">
+                  <AIRecommendationsWidget recommendations={aiRecommendations} />
+                </div>
+              </ErrorBoundary>
+
               {/* Priority Alerts */}
               {alerts.length > 0 && (
                 <ErrorBoundary fallback={<ErrorState title="Alerts unavailable" />}>
-                  <AlertsWidget alerts={alerts} />
+                  <div className="animate-fade-in">
+                    <AlertsWidget alerts={alerts} />
+                  </div>
                 </ErrorBoundary>
               )}
             </div>
