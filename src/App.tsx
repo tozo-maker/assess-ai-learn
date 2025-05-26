@@ -101,7 +101,7 @@ const App = () => (
 
             {/* Main Application - Protected Routes */}
             <Route 
-              path="/dashboard" 
+              path="/app/dashboard" 
               element={
                 <ProtectedRoute>
                   <Dashboard />
@@ -111,7 +111,7 @@ const App = () => (
             
             {/* Students - Protected Routes */}
             <Route 
-              path="/students" 
+              path="/app/students" 
               element={
                 <ProtectedRoute>
                   <Students />
@@ -119,7 +119,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/students/add" 
+              path="/app/students/add" 
               element={
                 <ProtectedRoute>
                   <AddStudent />
@@ -127,7 +127,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/students/import" 
+              path="/app/students/import" 
               element={
                 <ProtectedRoute>
                   <ImportStudents />
@@ -135,7 +135,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/students/:id" 
+              path="/app/students/:id" 
               element={
                 <ProtectedRoute>
                   <StudentProfile />
@@ -143,7 +143,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/students/:id/assessments" 
+              path="/app/students/:id/assessments" 
               element={
                 <ProtectedRoute>
                   <StudentAssessments />
@@ -151,7 +151,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/students/:id/insights" 
+              path="/app/students/:id/insights" 
               element={
                 <ProtectedRoute>
                   <StudentInsights />
@@ -159,7 +159,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/students/:id/goals" 
+              path="/app/students/:id/goals" 
               element={
                 <ProtectedRoute>
                   <StudentGoals />
@@ -169,7 +169,7 @@ const App = () => (
 
             {/* Assessments - Protected Routes */}
             <Route 
-              path="/assessments" 
+              path="/app/assessments" 
               element={
                 <ProtectedRoute>
                   <Assessments />
@@ -177,7 +177,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/assessments/add" 
+              path="/app/assessments/add" 
               element={
                 <ProtectedRoute>
                   <AddAssessment />
@@ -185,7 +185,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/assessments/batch" 
+              path="/app/assessments/batch" 
               element={
                 <ProtectedRoute>
                   <BatchAssessment />
@@ -193,7 +193,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/assessments/:id" 
+              path="/app/assessments/:id" 
               element={
                 <ProtectedRoute>
                   <AssessmentDetails />
@@ -201,7 +201,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/assessments/:id/analysis" 
+              path="/app/assessments/:id/analysis" 
               element={
                 <ProtectedRoute>
                   <AssessmentAnalysis />
@@ -209,7 +209,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/assessments/:id/responses" 
+              path="/app/assessments/:id/responses" 
               element={
                 <ProtectedRoute>
                   <AddStudentResponses />
@@ -219,7 +219,7 @@ const App = () => (
 
             {/* Insights - Protected Routes */}
             <Route 
-              path="/insights/class" 
+              path="/app/insights/class" 
               element={
                 <ProtectedRoute>
                   <ClassInsights />
@@ -227,7 +227,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/insights/individual" 
+              path="/app/insights/individual" 
               element={
                 <ProtectedRoute>
                   <IndividualInsights />
@@ -235,7 +235,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/insights/skills" 
+              path="/app/insights/skills" 
               element={
                 <ProtectedRoute>
                   <SkillsInsights />
@@ -243,7 +243,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/insights/recommendations" 
+              path="/app/insights/recommendations" 
               element={
                 <ProtectedRoute>
                   <Recommendations />
@@ -253,7 +253,7 @@ const App = () => (
 
             {/* Reports - Protected Routes */}
             <Route 
-              path="/reports/progress" 
+              path="/app/reports/progress" 
               element={
                 <ProtectedRoute>
                   <ProgressReports />
@@ -261,7 +261,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/reports/parent" 
+              path="/app/reports/parent" 
               element={
                 <ProtectedRoute>
                   <ParentReports />
@@ -269,7 +269,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/reports/admin" 
+              path="/app/reports/admin" 
               element={
                 <ProtectedRoute>
                   <AdminReports />
@@ -277,7 +277,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/reports/export" 
+              path="/app/reports/export" 
               element={
                 <ProtectedRoute>
                   <ExportReports />
@@ -287,7 +287,7 @@ const App = () => (
 
             {/* Settings - Protected Routes */}
             <Route 
-              path="/settings/profile" 
+              path="/app/settings/profile" 
               element={
                 <ProtectedRoute>
                   <ProfileSettings />
@@ -295,7 +295,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/settings/subjects" 
+              path="/app/settings/subjects" 
               element={
                 <ProtectedRoute>
                   <SubjectsSettings />
@@ -303,7 +303,7 @@ const App = () => (
               } 
             />
             <Route 
-              path="/settings/notifications" 
+              path="/app/settings/notifications" 
               element={
                 <ProtectedRoute>
                   <NotificationsSettings />
@@ -311,13 +311,18 @@ const App = () => (
               } 
             />
             <Route 
-              path="/settings/integrations" 
+              path="/app/settings/integrations" 
               element={
                 <ProtectedRoute>
                   <IntegrationsSettings />
                 </ProtectedRoute>
               } 
             />
+
+            {/* Legacy routes - redirect to /app prefix */}
+            <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="/students" element={<Navigate to="/app/students" replace />} />
+            <Route path="/assessments" element={<Navigate to="/app/assessments" replace />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
