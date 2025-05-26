@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -57,25 +56,29 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
   const [selectedAssessments, setSelectedAssessments] = useState<string[]>([]);
   const [showAssessmentSelection, setShowAssessmentSelection] = useState(false);
 
-  // Find assessments that don't have AI analysis yet
+  // Find assessments that don't have AI analysis yet with improved filtering
   const assessmentsWithoutAnalysis = assessments.filter(assessment => {
     if (!assessment || !assessment.id) {
       console.warn('Invalid assessment found:', assessment);
       return false;
     }
     
-    return !insights.some(insight => {
+    const hasAnalysis = insights.some(insight => {
       if (!insight.assessments) return false;
       return insight.assessments.id === assessment.id;
     });
+    
+    console.log(`Assessment ${assessment.id} (${assessment.title}) has analysis:`, hasAnalysis);
+    return !hasAnalysis;
   });
 
-  console.log('Assessments without analysis:', assessmentsWithoutAnalysis);
-  console.log('All assessments:', assessments);
-  console.log('All insights:', insights);
+  console.log('Insights tab - Total assessments:', assessments.length);
+  console.log('Insights tab - Assessments without analysis:', assessmentsWithoutAnalysis.length);
+  console.log('Insights tab - Current insights:', insights.length);
 
   const handleGenerateAnalysis = async (assessmentIds: string[]) => {
     if (!studentId || assessmentIds.length === 0) {
+      console.error('Missing studentId or assessmentIds:', { studentId, assessmentIds });
       toast({
         title: "Error",
         description: "Missing student ID or no assessments selected.",
@@ -84,6 +87,7 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
       return;
     }
 
+    console.log('Starting analysis generation for:', { studentId, assessmentIds });
     setGeneratingAnalysis(true);
     let successCount = 0;
     let failureCount = 0;
@@ -93,7 +97,8 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
       for (const assessmentId of assessmentIds) {
         try {
           console.log(`Generating analysis for assessment ${assessmentId} and student ${studentId}`);
-          await assessmentService.generateAssessmentAnalysis(assessmentId, studentId);
+          const result = await assessmentService.generateAssessmentAnalysis(assessmentId, studentId);
+          console.log('Analysis generation result:', result);
           successCount++;
         } catch (error) {
           console.error(`Failed to generate analysis for assessment ${assessmentId}:`, error);

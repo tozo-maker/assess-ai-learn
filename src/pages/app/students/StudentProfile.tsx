@@ -88,21 +88,26 @@ const StudentProfile = () => {
     queryFn: () => assessmentService.getAssessments(),
   });
 
-  // Fetch student assessments and insights
+  // Fetch student assessments and insights with improved error handling
   const { data: studentAssessmentsData, isLoading: assessmentsLoading, refetch: refetchAssessments } = useQuery({
     queryKey: ['student-assessments', studentId],
     queryFn: async () => {
       if (!allAssessments || !studentId) return { assessments: [], insights: [] };
+      
+      console.log('Fetching student assessments for:', studentId);
+      console.log('Available assessments:', allAssessments.length);
       
       const assessmentsWithResponses = [];
       const insights = [];
       
       for (const assessment of allAssessments) {
         try {
+          console.log('Processing assessment:', assessment.id, assessment.title);
           const responses = await assessmentService.getStudentResponses(assessment.id, studentId);
+          
           if (responses.length > 0) {
             const totalScore = responses.reduce((sum, r) => sum + r.score, 0);
-            assessmentsWithResponses.push({
+            const assessmentWithData = {
               id: assessment.id,
               title: assessment.title,
               subject: assessment.subject,
@@ -110,12 +115,16 @@ const StudentProfile = () => {
               max_score: assessment.max_score,
               totalScore,
               responses,
-            });
+            };
+            
+            console.log('Assessment with responses found:', assessmentWithData.id, assessmentWithData.title);
+            assessmentsWithResponses.push(assessmentWithData);
             
             // Try to get analysis
             try {
               const analysis = await assessmentService.getAssessmentAnalysis(assessment.id, studentId);
               if (analysis) {
+                console.log('Found existing analysis for assessment:', assessment.id);
                 insights.push({
                   id: analysis.id,
                   overall_summary: analysis.overall_summary,
@@ -131,18 +140,22 @@ const StudentProfile = () => {
                     assessment_date: assessment.assessment_date
                   }
                 });
+              } else {
+                console.log('No analysis found for assessment:', assessment.id);
               }
             } catch (error) {
-              console.log(`No analysis found for assessment ${assessment.id}`);
+              console.log(`No analysis found for assessment ${assessment.id}:`, error);
             }
+          } else {
+            console.log('No responses found for assessment:', assessment.id);
           }
         } catch (error) {
           console.error(`Error fetching data for assessment ${assessment.id}:`, error);
         }
       }
       
-      console.log('Final assessments data:', assessmentsWithResponses);
-      console.log('Final insights data:', insights);
+      console.log('Final assessments data:', assessmentsWithResponses.length, 'assessments');
+      console.log('Final insights data:', insights.length, 'insights');
       
       return { assessments: assessmentsWithResponses, insights };
     },
