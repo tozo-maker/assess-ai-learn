@@ -35,7 +35,7 @@ const ProgressReportViewer: React.FC<ProgressReportViewerProps> = ({ reportData 
   // Transform goals to include empty milestones array if not present
   const goalsWithMilestones: GoalWithMilestones[] = reportData.goals.map(goal => ({
     ...goal,
-    milestones: goal.milestones || []
+    milestones: (goal as any).milestones || []
   }));
 
   return (
