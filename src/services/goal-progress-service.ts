@@ -5,7 +5,7 @@ import { GoalProgressHistory } from '@/types/goals';
 export const goalProgressService = {
   async addProgressEntry(goalId: string, progress: number, notes?: string): Promise<GoalProgressHistory> {
     const { data, error } = await supabase
-      .from('goal_progress_history')
+      .from('goal_progress_history' as any)
       .insert({
         goal_id: goalId,
         progress_percentage: progress,
@@ -20,7 +20,7 @@ export const goalProgressService = {
 
   async getProgressHistory(goalId: string): Promise<GoalProgressHistory[]> {
     const { data, error } = await supabase
-      .from('goal_progress_history')
+      .from('goal_progress_history' as any)
       .select('*')
       .eq('goal_id', goalId)
       .order('created_at', { ascending: false });
@@ -34,7 +34,7 @@ export const goalProgressService = {
     startDate.setDate(startDate.getDate() - days);
 
     const { data, error } = await supabase
-      .from('goal_progress_history')
+      .from('goal_progress_history' as any)
       .select(`
         created_at,
         progress_percentage,
@@ -47,7 +47,7 @@ export const goalProgressService = {
     if (error) throw error;
 
     // Group by date and calculate average progress
-    const progressByDate = data.reduce((acc, entry) => {
+    const progressByDate = (data as any[]).reduce((acc, entry) => {
       const date = entry.created_at.split('T')[0];
       if (!acc[date]) {
         acc[date] = { total: 0, count: 0 };

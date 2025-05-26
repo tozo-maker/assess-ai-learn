@@ -10,7 +10,7 @@ export const goalAchievementsService = {
     achievementData: any
   ): Promise<GoalAchievement> {
     const { data, error } = await supabase
-      .from('goal_achievements')
+      .from('goal_achievements' as any)
       .insert({
         goal_id: goalId,
         student_id: studentId,
@@ -26,7 +26,7 @@ export const goalAchievementsService = {
 
   async getStudentAchievements(studentId: string, limit: number = 10): Promise<GoalAchievement[]> {
     const { data, error } = await supabase
-      .from('goal_achievements')
+      .from('goal_achievements' as any)
       .select('*')
       .eq('student_id', studentId)
       .order('created_at', { ascending: false })
@@ -41,7 +41,7 @@ export const goalAchievementsService = {
     startDate.setDate(startDate.getDate() - days);
 
     const { data, error } = await supabase
-      .from('goal_achievements')
+      .from('goal_achievements' as any)
       .select('*')
       .eq('student_id', studentId)
       .gte('created_at', startDate.toISOString())
@@ -53,7 +53,7 @@ export const goalAchievementsService = {
 
   async dismissAchievement(achievementId: string): Promise<void> {
     const { error } = await supabase
-      .from('goal_achievements')
+      .from('goal_achievements' as any)
       .update({ dismissed_at: new Date().toISOString() })
       .eq('id', achievementId);
 

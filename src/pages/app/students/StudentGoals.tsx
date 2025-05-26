@@ -249,7 +249,7 @@ const StudentGoals = () => {
         </div>
 
         {showAnalytics && (
-          <GoalAnalyticsDashboard studentId={id!} goals={goals} />
+          <GoalAnalyticsDashboard goals={goals} />
         )}
 
         {showSuggestions && (

@@ -197,6 +197,51 @@ export type Database = {
         }
         Relationships: []
       }
+      goal_achievements: {
+        Row: {
+          achievement_data: Json | null
+          achievement_type: string
+          created_at: string
+          dismissed_at: string | null
+          goal_id: string
+          id: string
+          student_id: string
+        }
+        Insert: {
+          achievement_data?: Json | null
+          achievement_type: string
+          created_at?: string
+          dismissed_at?: string | null
+          goal_id: string
+          id?: string
+          student_id: string
+        }
+        Update: {
+          achievement_data?: Json | null
+          achievement_type?: string
+          created_at?: string
+          dismissed_at?: string | null
+          goal_id?: string
+          id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_achievements_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goal_achievements_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goal_milestones: {
         Row: {
           completed_at: string | null
@@ -228,6 +273,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "goal_milestones_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goal_progress_history: {
+        Row: {
+          created_at: string
+          goal_id: string
+          id: string
+          notes: string | null
+          progress_percentage: number
+        }
+        Insert: {
+          created_at?: string
+          goal_id: string
+          id?: string
+          notes?: string | null
+          progress_percentage: number
+        }
+        Update: {
+          created_at?: string
+          goal_id?: string
+          id?: string
+          notes?: string | null
+          progress_percentage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_progress_history_goal_id_fkey"
             columns: ["goal_id"]
             isOneToOne: false
             referencedRelation: "goals"

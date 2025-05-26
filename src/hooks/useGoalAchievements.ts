@@ -15,7 +15,7 @@ export const useGoalAchievements = (studentId: string) => {
   });
 
   const visibleAchievements = achievements.filter(
-    achievement => !dismissedIds.has(achievement.id)
+    achievement => !dismissedIds.has(achievement.id) && !achievement.dismissed_at
   );
 
   const handleDismissAchievement = async (achievementId: string) => {
@@ -38,7 +38,7 @@ export const useGoalAchievements = (studentId: string) => {
   // Auto-celebrate new achievements
   useEffect(() => {
     const newAchievements = achievements.filter(
-      achievement => !dismissedIds.has(achievement.id)
+      achievement => !dismissedIds.has(achievement.id) && !achievement.dismissed_at
     );
     
     if (newAchievements.length > 0) {
