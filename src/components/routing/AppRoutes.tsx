@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -49,8 +48,9 @@ import SubjectsSettings from '@/pages/app/settings/SubjectsSettings';
 import NotificationsSettings from '@/pages/app/settings/NotificationsSettings';
 import IntegrationsSettings from '@/pages/app/settings/IntegrationsSettings';
 
-// Testing Page
+// Testing Pages
 import Testing from '@/pages/Testing';
+import TestingDashboard from '@/components/testing/TestingDashboard';
 
 import NotFound from '@/pages/NotFound';
 
@@ -75,12 +75,20 @@ const AppRoutes: React.FC = () => {
       <Route path="/demo" element={<Demo />} />
       <Route path="/contact" element={<Contact />} />
 
-      {/* Testing Page - Protected Route */}
+      {/* Testing Pages - Protected Routes */}
       <Route 
         path="/testing" 
         element={
           <ProtectedRoute>
             <Testing />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/app/testing" 
+        element={
+          <ProtectedRoute>
+            <TestingDashboard />
           </ProtectedRoute>
         } 
       />
