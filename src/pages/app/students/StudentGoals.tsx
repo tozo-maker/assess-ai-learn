@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PageShell from '@/components/ui/page-shell';
 import { CheckCircle, Plus, Lightbulb, Trophy } from 'lucide-react';
@@ -19,12 +19,26 @@ import { useGoalAchievements } from '@/hooks/useGoalAchievements';
 
 const StudentGoals = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isGoalDialogOpen, setIsGoalDialogOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<GoalWithMilestones | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [insightGoalData, setInsightGoalData] = useState<string | null>(null);
+
+  // Handle insight data from navigation state
+  useEffect(() => {
+    if (location.state?.fromInsight && location.state?.insightText) {
+      setInsightGoalData(location.state.insightText);
+      if (location.state?.autoOpenDialog) {
+        setIsGoalDialogOpen(true);
+      }
+      // Clear the state to prevent reopening on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Use the achievement hook
   const {
@@ -60,6 +74,7 @@ const StudentGoals = () => {
       queryClient.invalidateQueries({ queryKey: ['student-goals', id] });
       setIsGoalDialogOpen(false);
       setEditingGoal(null);
+      setInsightGoalData(null);
       refetchAchievements();
       toast({
         title: 'Goal created successfully',
@@ -82,6 +97,7 @@ const StudentGoals = () => {
       queryClient.invalidateQueries({ queryKey: ['student-goals', id] });
       setIsGoalDialogOpen(false);
       setEditingGoal(null);
+      setInsightGoalData(null);
       refetchAchievements();
       toast({
         title: 'Goal updated successfully',
@@ -153,6 +169,7 @@ const StudentGoals = () => {
 
   const handleEditGoal = (goal: GoalWithMilestones) => {
     setEditingGoal(goal);
+    setInsightGoalData(null); // Clear insight data when editing existing goal
     setIsGoalDialogOpen(true);
   };
 
@@ -173,6 +190,36 @@ const StudentGoals = () => {
       goalId, 
       data: { progress_percentage: progress } 
     });
+  };
+
+  const handleNewGoal = () => {
+    setEditingGoal(null);
+    setInsightGoalData(null);
+    setIsGoalDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsGoalDialogOpen(false);
+    setEditingGoal(null);
+    setInsightGoalData(null);
+  };
+
+  // Prepare initial data for goal form
+  const getInitialGoalData = () => {
+    if (editingGoal) {
+      return editingGoal;
+    }
+    
+    if (insightGoalData) {
+      return {
+        title: `Goal based on insight`,
+        description: insightGoalData,
+        status: 'active' as const,
+        progress_percentage: 0
+      };
+    }
+
+    return undefined;
   };
 
   if (!student) {
@@ -227,7 +274,7 @@ const StudentGoals = () => {
             </Button>
             <Dialog open={isGoalDialogOpen} onOpenChange={setIsGoalDialogOpen}>
               <DialogTrigger asChild>
-                <Button onClick={() => setEditingGoal(null)}>
+                <Button onClick={handleNewGoal}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Goal
                 </Button>
@@ -235,18 +282,39 @@ const StudentGoals = () => {
               <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle>
-                    {editingGoal ? 'Edit Goal' : 'Create New Goal'}
+                    {editingGoal ? 'Edit Goal' : insightGoalData ? 'Create Goal from Insight' : 'Create New Goal'}
                   </DialogTitle>
                 </DialogHeader>
                 <GoalForm
                   onSubmit={editingGoal ? handleUpdateGoal : handleCreateGoal}
-                  initialData={editingGoal || undefined}
+                  initialData={getInitialGoalData()}
                   isLoading={createGoalMutation.isPending || updateGoalMutation.isPending}
                 />
               </DialogContent>
             </Dialog>
           </div>
         </div>
+
+        {/* Show insight notification if coming from insights */}
+        {insightGoalData && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Lightbulb className="h-5 w-5 text-blue-600 mt-0.5" />
+              <div>
+                <h4 className="font-medium text-blue-900">Creating goal from insight</h4>
+                <p className="text-sm text-blue-700 mt-1">{insightGoalData}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setInsightGoalData(null)}
+                  className="mt-2"
+                >
+                  Clear insight data
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showAnalytics && (
           <GoalAnalyticsDashboard goals={goals} />

@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Filter } from 'lucide-react';
@@ -48,6 +48,7 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
   onInsightsUpdated
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [generatingAnalysis, setGeneratingAnalysis] = useState(false);
   const [selectedAssessments, setSelectedAssessments] = useState<string[]>([]);
   const [showAssessmentSelection, setShowAssessmentSelection] = useState(false);
@@ -205,9 +206,27 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
   };
 
   const handleCreateGoal = (item: string) => {
+    if (!studentId) {
+      toast({
+        title: "Error",
+        description: "Student ID is required to create a goal.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Navigate to goals page with the insight data
+    navigate(`/app/students/${studentId}/goals`, {
+      state: {
+        fromInsight: true,
+        insightText: item,
+        autoOpenDialog: true
+      }
+    });
+
     toast({
-      title: "Goal Creation",
-      description: "Redirecting to create a goal based on this insight...",
+      title: "Redirecting to Goals",
+      description: "Opening goal creation form with insight data...",
     });
   };
 

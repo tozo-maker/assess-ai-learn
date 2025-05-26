@@ -8,8 +8,8 @@ import {
   AlertCircle, 
   Target,
   TrendingUp,
-  MoreHorizontal,
-  Calendar,
+  ChevronDown,
+  ChevronUp,
   BookOpen
 } from 'lucide-react';
 
@@ -31,6 +31,7 @@ const InteractiveInsightCard: React.FC<InteractiveInsightCardProps> = ({
   onCreateGoal
 }) => {
   const [addressedItems, setAddressedItems] = useState<Set<string>>(new Set());
+  const [showMore, setShowMore] = useState(false);
 
   const getIcon = () => {
     switch (type) {
@@ -69,7 +70,13 @@ const InteractiveInsightCard: React.FC<InteractiveInsightCardProps> = ({
     onMarkAsAddressed?.(item);
   };
 
+  const handleShowMore = () => {
+    setShowMore(!showMore);
+  };
+
   if (items.length === 0) return null;
+
+  const visibleItems = showMore ? items : items.slice(0, 5);
 
   return (
     <Card className={`${className} ${getTypeColor()}`}>
@@ -84,7 +91,7 @@ const InteractiveInsightCard: React.FC<InteractiveInsightCardProps> = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {items.slice(0, 5).map((item, index) => (
+          {visibleItems.map((item, index) => (
             <div 
               key={index} 
               className={`p-3 rounded-lg border transition-all duration-200 ${
@@ -103,6 +110,7 @@ const InteractiveInsightCard: React.FC<InteractiveInsightCardProps> = ({
                         variant="ghost"
                         onClick={() => handleMarkAsAddressed(item)}
                         className="h-6 w-6 p-0"
+                        title="Mark as addressed"
                       >
                         <CheckCircle2 className={`h-3 w-3 ${
                           addressedItems.has(item) ? 'text-green-600' : 'text-gray-400'
@@ -113,6 +121,7 @@ const InteractiveInsightCard: React.FC<InteractiveInsightCardProps> = ({
                         variant="ghost"
                         onClick={() => onCreateGoal?.(item)}
                         className="h-6 w-6 p-0"
+                        title="Create goal from this recommendation"
                       >
                         <Target className="h-3 w-3 text-blue-500" />
                       </Button>
@@ -124,8 +133,20 @@ const InteractiveInsightCard: React.FC<InteractiveInsightCardProps> = ({
                       variant="ghost"
                       onClick={() => onCreateGoal?.(item)}
                       className="h-6 w-6 p-0"
+                      title="Create goal for this growth area"
                     >
                       <BookOpen className="h-3 w-3 text-orange-500" />
+                    </Button>
+                  )}
+                  {type === 'strength' && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onCreateGoal?.(item)}
+                      className="h-6 w-6 p-0"
+                      title="Create goal to build on this strength"
+                    >
+                      <Target className="h-3 w-3 text-green-500" />
                     </Button>
                   )}
                 </div>
@@ -133,9 +154,23 @@ const InteractiveInsightCard: React.FC<InteractiveInsightCardProps> = ({
             </div>
           ))}
           {items.length > 5 && (
-            <Button variant="ghost" size="sm" className="w-full">
-              <MoreHorizontal className="h-4 w-4 mr-2" />
-              Show {items.length - 5} more
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="w-full"
+              onClick={handleShowMore}
+            >
+              {showMore ? (
+                <>
+                  <ChevronUp className="h-4 w-4 mr-2" />
+                  Show Less
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4 mr-2" />
+                  Show {items.length - 5} More
+                </>
+              )}
             </Button>
           )}
         </div>
