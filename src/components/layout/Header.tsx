@@ -49,11 +49,11 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
   ];
 
   const appNavItems: NavItem[] = [
-    { name: 'Dashboard', href: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
-    { name: 'Students', href: '/students', icon: <User className="h-4 w-4 mr-2" /> },
-    { name: 'Assessments', href: '/assessments', icon: <BookOpen className="h-4 w-4 mr-2" /> },
-    { name: 'Insights', href: '/insights/class', icon: <LineChart className="h-4 w-4 mr-2" /> },
-    { name: 'Reports', href: '/reports/progress', icon: <FileText className="h-4 w-4 mr-2" /> },
+    { name: 'Dashboard', href: '/app/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
+    { name: 'Students', href: '/app/students', icon: <User className="h-4 w-4 mr-2" /> },
+    { name: 'Assessments', href: '/app/assessments', icon: <BookOpen className="h-4 w-4 mr-2" /> },
+    { name: 'Insights', href: '/app/insights/class', icon: <LineChart className="h-4 w-4 mr-2" /> },
+    { name: 'Reports', href: '/app/reports/progress', icon: <FileText className="h-4 w-4 mr-2" /> },
   ];
 
   const handleSignOut = async () => {
@@ -66,7 +66,7 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center space-x-2">
+          <Link to={isAuthenticated ? "/app/dashboard" : "/"} className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">L</span>
             </div>
@@ -98,7 +98,7 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <Link to="/settings/profile">
+                <Link to="/app/settings/profile">
                   <Button variant="ghost" size="sm">
                     <Settings className="h-4 w-4" />
                   </Button>
@@ -115,13 +115,13 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
-                      <Link to="/settings/profile" className="flex items-center">
+                      <Link to="/app/settings/profile" className="flex items-center">
                         <User className="h-4 w-4 mr-2" />
                         Profile
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/settings/profile" className="flex items-center">
+                      <Link to="/app/settings/profile" className="flex items-center">
                         <Settings className="h-4 w-4 mr-2" />
                         Settings
                       </Link>

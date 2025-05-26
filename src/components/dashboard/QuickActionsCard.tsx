@@ -10,28 +10,28 @@ const QuickActionsCard: React.FC = () => {
     {
       title: "Add Assessment",
       description: "Upload or enter new assessment data",
-      href: "/assessments/add",
+      href: "/app/assessments/add",
       icon: <FileText className="h-5 w-5" />,
       color: "bg-blue-600 hover:bg-blue-700"
     },
     {
       title: "Add Student",
       description: "Register a new student to your class",
-      href: "/students/add",
+      href: "/app/students/add",
       icon: <Users className="h-5 w-5" />,
       color: "bg-green-600 hover:bg-green-700"
     },
     {
       title: "View Insights",
       description: "See latest AI analysis and recommendations",
-      href: "/insights/class",
+      href: "/app/insights/class",
       icon: <Lightbulb className="h-5 w-5" />,
       color: "bg-purple-600 hover:bg-purple-700"
     },
     {
       title: "Class Analytics",
       description: "Comprehensive class performance analysis",
-      href: "/insights/class",
+      href: "/app/insights/class",
       icon: <BarChart3 className="h-5 w-5" />,
       color: "bg-orange-600 hover:bg-orange-700"
     }

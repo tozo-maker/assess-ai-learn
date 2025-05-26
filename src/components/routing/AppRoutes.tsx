@@ -334,6 +334,24 @@ const AppRoutes: React.FC = () => {
       <Route path="/assessments/:id" element={<AssessmentRedirect />} />
       <Route path="/assessments/:id/analysis" element={<AssessmentAnalysisRedirect />} />
       <Route path="/assessments/:id/responses" element={<AssessmentResponsesRedirect />} />
+      
+      {/* Insights legacy routes */}
+      <Route path="/insights/class" element={<Navigate to="/app/insights/class" replace />} />
+      <Route path="/insights/individual" element={<Navigate to="/app/insights/individual" replace />} />
+      <Route path="/insights/skills" element={<Navigate to="/app/insights/skills" replace />} />
+      <Route path="/insights/recommendations" element={<Navigate to="/app/insights/recommendations" replace />} />
+      
+      {/* Reports legacy routes */}
+      <Route path="/reports/progress" element={<Navigate to="/app/reports/progress" replace />} />
+      <Route path="/reports/parent" element={<Navigate to="/app/reports/parent" replace />} />
+      <Route path="/reports/admin" element={<Navigate to="/app/reports/admin" replace />} />
+      <Route path="/reports/export" element={<Navigate to="/app/reports/export" replace />} />
+      
+      {/* Settings legacy routes */}
+      <Route path="/settings/profile" element={<Navigate to="/app/settings/profile" replace />} />
+      <Route path="/settings/subjects" element={<Navigate to="/app/settings/subjects" replace />} />
+      <Route path="/settings/notifications" element={<Navigate to="/app/settings/notifications" replace />} />
+      <Route path="/settings/integrations" element={<Navigate to="/app/settings/integrations" replace />} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

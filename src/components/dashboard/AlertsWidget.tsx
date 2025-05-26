@@ -77,7 +77,7 @@ const AlertsWidget: React.FC<AlertsWidgetProps> = ({ alerts }) => {
           ))}
           {alerts.length > 3 && (
             <Button variant="outline" className="w-full" asChild>
-              <Link to="/insights/recommendations">View All Alerts</Link>
+              <Link to="/app/insights/recommendations">View All Alerts</Link>
             </Button>
           )}
         </div>
