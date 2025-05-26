@@ -1,44 +1,78 @@
 
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
 import AppLayout from '@/components/layout/AppLayout';
-import { Skeleton } from '@/components/ui/skeleton';
 import AlertsWidget from '@/components/dashboard/AlertsWidget';
 import DashboardStats from '@/components/dashboard/DashboardStats';
 import QuickActionsCard from '@/components/dashboard/QuickActionsCard';
 import RecentActivitiesList from '@/components/dashboard/RecentActivitiesList';
 import PerformanceSection from '@/components/dashboard/PerformanceSection';
-import { studentService } from '@/services/student-service';
-import { assessmentService } from '@/services/assessment-service';
-import { communicationsService } from '@/services/communications-service';
-import { authService } from '@/services/auth-service';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
+import LoadingState from '@/components/common/LoadingState';
+import ErrorState from '@/components/common/ErrorState';
+import { 
+  useStudents, 
+  useAssessments, 
+  useCommunications, 
+  useTeacherProfile, 
+  useStudentMetrics 
+} from '@/hooks/queries/useOptimizedQueries';
 
 const Dashboard = () => {
-  // Fetch real data from services
-  const { data: students = [], isLoading: studentsLoading } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents,
-  });
+  const {
+    data: students = [],
+    isLoading: studentsLoading,
+    error: studentsError,
+    refetch: refetchStudents
+  } = useStudents();
 
-  const { data: assessments = [], isLoading: assessmentsLoading } = useQuery({
-    queryKey: ['assessments'],
-    queryFn: assessmentService.getAssessments,
-  });
+  const {
+    data: assessments = [],
+    isLoading: assessmentsLoading,
+    error: assessmentsError,
+    refetch: refetchAssessments
+  } = useAssessments();
 
-  const { data: communications = [], isLoading: communicationsLoading } = useQuery({
-    queryKey: ['communications'],
-    queryFn: communicationsService.getCommunications,
-  });
+  const {
+    data: communications = [],
+    isLoading: communicationsLoading,
+    error: communicationsError,
+    refetch: refetchCommunications
+  } = useCommunications();
 
-  const { data: teacherProfile } = useQuery({
-    queryKey: ['teacher-profile'],
-    queryFn: authService.getProfile,
-  });
+  const { data: teacherProfile } = useTeacherProfile();
+  const { data: studentMetrics } = useStudentMetrics();
 
-  const { data: studentMetrics } = useQuery({
-    queryKey: ['student-metrics'],
-    queryFn: studentService.getStudentMetrics,
-  });
+  // Handle loading state
+  const isLoading = studentsLoading || assessmentsLoading || communicationsLoading;
+  
+  // Handle error state
+  const hasError = studentsError || assessmentsError || communicationsError;
+  const handleRetry = () => {
+    if (studentsError) refetchStudents();
+    if (assessmentsError) refetchAssessments();
+    if (communicationsError) refetchCommunications();
+  };
+
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <LoadingState type="skeleton" message="Loading your dashboard..." />
+      </AppLayout>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <AppLayout>
+        <ErrorState
+          error={studentsError || assessmentsError || communicationsError}
+          onRetry={handleRetry}
+          title="Failed to load dashboard"
+          description="There was an error loading your dashboard data. Please try again."
+        />
+      </AppLayout>
+    );
+  }
 
   // Calculate real statistics
   const totalStudents = students.length;
@@ -100,69 +134,65 @@ const Dashboard = () => {
   const teacherName = teacherProfile?.full_name || "Teacher";
   const firstName = teacherName.split(' ')[0];
 
-  if (studentsLoading || assessmentsLoading || communicationsLoading) {
-    return (
-      <AppLayout>
-        <div className="space-y-8">
-          <div>
-            <Skeleton className="h-9 w-96 mb-2" />
-            <Skeleton className="h-6 w-64" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-32 w-full" />
-            ))}
-          </div>
-        </div>
-      </AppLayout>
-    );
-  }
-
   return (
     <AppLayout>
-      <div className="space-y-8">
-        {/* Welcome Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Welcome back, {firstName}! 👋</h1>
-          <p className="text-gray-600 mt-2">Here's what's happening with your students today.</p>
-        </div>
+      <ErrorBoundary>
+        <div className="space-y-8">
+          {/* Welcome Header */}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Welcome back, {firstName}! 👋</h1>
+            <p className="text-gray-600 mt-2">Here's what's happening with your students today.</p>
+          </div>
 
-        {/* Stats Cards */}
-        <DashboardStats
-          totalStudents={totalStudents}
-          totalAssessments={totalAssessments}
-          aiInsights={aiInsights}
-          recentAssessments={recentAssessments}
-          newStudentsThisMonth={newStudentsThisMonth}
-          todaysInsights={todaysInsights}
-          studentMetrics={studentMetrics}
-        />
-
-        {/* Performance Widgets Row */}
-        <PerformanceSection 
-          assessments={assessments}
-          studentMetrics={studentMetrics}
-        />
-
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Recent Activity */}
-          <div className="lg:col-span-2">
-            <RecentActivitiesList
+          {/* Stats Cards */}
+          <ErrorBoundary fallback={<ErrorState title="Stats unavailable" />}>
+            <DashboardStats
+              totalStudents={totalStudents}
+              totalAssessments={totalAssessments}
+              aiInsights={aiInsights}
               recentAssessments={recentAssessments}
+              newStudentsThisMonth={newStudentsThisMonth}
               todaysInsights={todaysInsights}
               studentMetrics={studentMetrics}
             />
-          </div>
+          </ErrorBoundary>
 
-          {/* Quick Actions and Alerts */}
-          <div className="space-y-6">
-            <QuickActionsCard />
-            
-            {/* Priority Alerts */}
-            {alerts.length > 0 && <AlertsWidget alerts={alerts} />}
+          {/* Performance Widgets Row */}
+          <ErrorBoundary fallback={<ErrorState title="Performance data unavailable" />}>
+            <PerformanceSection 
+              assessments={assessments}
+              studentMetrics={studentMetrics}
+            />
+          </ErrorBoundary>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Recent Activity */}
+            <div className="lg:col-span-2">
+              <ErrorBoundary fallback={<ErrorState title="Activity feed unavailable" />}>
+                <RecentActivitiesList
+                  recentAssessments={recentAssessments}
+                  todaysInsights={todaysInsights}
+                  studentMetrics={studentMetrics}
+                />
+              </ErrorBoundary>
+            </div>
+
+            {/* Quick Actions and Alerts */}
+            <div className="space-y-6">
+              <ErrorBoundary>
+                <QuickActionsCard />
+              </ErrorBoundary>
+              
+              {/* Priority Alerts */}
+              {alerts.length > 0 && (
+                <ErrorBoundary fallback={<ErrorState title="Alerts unavailable" />}>
+                  <AlertsWidget alerts={alerts} />
+                </ErrorBoundary>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </ErrorBoundary>
     </AppLayout>
   );
 };

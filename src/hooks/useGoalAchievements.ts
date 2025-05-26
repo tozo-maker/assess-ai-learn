@@ -11,16 +11,21 @@ interface UseGoalAchievementsReturn {
   handleCelebrate: (achievement: GoalAchievement) => void;
   handleCloseCelebration: () => void;
   refetchAchievements: () => void;
+  isLoading: boolean;
+  error: Error | null;
 }
 
 export const useGoalAchievements = (studentId: string): UseGoalAchievementsReturn => {
   const [celebratingAchievement, setCelebratingAchievement] = useState<GoalAchievement | null>(null);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
-  const { data: achievements = [], refetch } = useQuery({
+  const { data: achievements = [], refetch, isLoading, error } = useQuery({
     queryKey: ['goal-achievements', studentId],
     queryFn: () => goalAchievementsService.getRecentAchievements(studentId),
-    enabled: !!studentId
+    enabled: !!studentId,
+    staleTime: 2 * 60 * 1000, // 2 minutes for achievements
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
+    retry: 1,
   });
 
   const visibleAchievements = achievements.filter(
@@ -32,7 +37,7 @@ export const useGoalAchievements = (studentId: string): UseGoalAchievementsRetur
       await goalAchievementsService.dismissAchievement(achievementId);
       setDismissedIds(prev => new Set([...prev, achievementId]));
     } catch (error) {
-      // Error handling - could add toast notification here
+      console.error('Failed to dismiss achievement:', error);
     }
   };
 
@@ -68,6 +73,8 @@ export const useGoalAchievements = (studentId: string): UseGoalAchievementsRetur
     handleDismissAchievement,
     handleCelebrate,
     handleCloseCelebration,
-    refetchAchievements: refetch
+    refetchAchievements: refetch,
+    isLoading,
+    error,
   };
 };
