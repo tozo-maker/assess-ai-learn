@@ -1,9 +1,11 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { 
   TestTube, 
@@ -14,7 +16,12 @@ import {
   Clock,
   RefreshCw,
   PlayCircle,
-  Users
+  Users,
+  FileText,
+  Shield,
+  AlertCircle,
+  Settings,
+  Info
 } from 'lucide-react';
 import { testingHelpers, TestingReport } from '@/utils/testing-helpers';
 import { enhancedTestingHelpers, EnhancedTestingReport } from '@/utils/enhanced-testing-helpers';
@@ -264,11 +271,11 @@ const TestingDashboard = () => {
               <div key={category} className="border rounded-lg p-4">
                 <h3 className="font-medium text-lg mb-3 flex items-center space-x-2">
                   {category === 'Authentication' && <Shield className="h-5 w-5 text-blue-600" />}
-                  {category === 'CRUD' && <Edit className="h-5 w-5 text-green-600" />}
-                  {category === 'Search/Filter' && <Search className="h-5 w-5 text-purple-600" />}
+                  {category === 'CRUD' && <Database className="h-5 w-5 text-green-600" />}
+                  {category === 'Search/Filter' && <TestTube className="h-5 w-5 text-purple-600" />}
                   {category === 'RLS' && <Shield className="h-5 w-5 text-red-600" />}
                   {category === 'Data Integrity' && <Database className="h-5 w-5 text-orange-600" />}
-                  {category === 'Performance' && <BarChart className="h-5 w-5 text-yellow-600" />}
+                  {category === 'Performance' && <TestTube className="h-5 w-5 text-yellow-600" />}
                   {category === 'Summary' && <CheckCircle className="h-5 w-5 text-gray-600" />}
                   <span>{category}</span>
                 </h3>
@@ -309,23 +316,6 @@ const TestingDashboard = () => {
         </CardContent>
       </Card>
     );
-  };
-
-  const formatDuration = (duration?: number) => {
-    if (!duration) return '';
-    return `${duration}ms`;
-  };
-
-  const getResultsByCategory = (results: TestingReportDisplay[]) => {
-    const categories = [...new Set(results.map(r => r.category).filter(Boolean))];
-    return categories.map(category => ({
-      name: category,
-      results: results.filter(r => r.category === category),
-      successRate: Math.round(
-        (results.filter(r => r.category === category && r.success).length / 
-         results.filter(r => r.category === category).length) * 100
-      )
-    }));
   };
 
   return (
@@ -440,15 +430,15 @@ const TestingDashboard = () => {
                   <p className="text-sm font-medium">Claude Analysis</p>
                 </div>
                 <div className="space-y-2">
-                  <Target className="h-8 w-8 text-green-600 mx-auto" />
+                  <TestTube className="h-8 w-8 text-green-600 mx-auto" />
                   <p className="text-sm font-medium">AI Goal Suggestions</p>
                 </div>
                 <div className="space-y-2">
-                  <Zap className="h-8 w-8 text-yellow-600 mx-auto" />
+                  <Settings className="h-8 w-8 text-yellow-600 mx-auto" />
                   <p className="text-sm font-medium">API Configuration</p>
                 </div>
                 <div className="space-y-2">
-                  <Network className="h-8 w-8 text-blue-600 mx-auto" />
+                  <Database className="h-8 w-8 text-blue-600 mx-auto" />
                   <p className="text-sm font-medium">Data Relations</p>
                 </div>
                 <div className="space-y-2">
@@ -532,11 +522,11 @@ const TestingDashboard = () => {
                   <p className="text-sm font-medium">Authentication</p>
                 </div>
                 <div className="space-y-2">
-                  <Edit className="h-8 w-8 text-green-600 mx-auto" />
+                  <Database className="h-8 w-8 text-green-600 mx-auto" />
                   <p className="text-sm font-medium">CRUD Operations</p>
                 </div>
                 <div className="space-y-2">
-                  <Search className="h-8 w-8 text-purple-600 mx-auto" />
+                  <TestTube className="h-8 w-8 text-purple-600 mx-auto" />
                   <p className="text-sm font-medium">Search & Filter</p>
                 </div>
                 <div className="space-y-2">
@@ -548,7 +538,7 @@ const TestingDashboard = () => {
                   <p className="text-sm font-medium">Data Integrity</p>
                 </div>
                 <div className="space-y-2">
-                  <BarChart className="h-8 w-8 text-yellow-600 mx-auto" />
+                  <TestTube className="h-8 w-8 text-yellow-600 mx-auto" />
                   <p className="text-sm font-medium">Performance</p>
                 </div>
               </div>

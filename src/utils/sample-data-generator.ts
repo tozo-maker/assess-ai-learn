@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface SampleDataConfig {
@@ -62,18 +61,43 @@ export const sampleDataGenerator = {
   async clearExistingData(teacherId: string): Promise<void> {
     console.log('🧹 Clearing existing data...');
     
+    // Get student IDs for this teacher first
+    const { data: students } = await supabase
+      .from('students')
+      .select('id')
+      .eq('teacher_id', teacherId);
+    
+    const studentIds = students?.map(s => s.id) || [];
+    
+    // Get assessment IDs for this teacher
+    const { data: assessments } = await supabase
+      .from('assessments')
+      .select('id')
+      .eq('teacher_id', teacherId);
+    
+    const assessmentIds = assessments?.map(a => a.id) || [];
+    
+    // Get goal IDs for this teacher
+    const { data: goals } = await supabase
+      .from('goals')
+      .select('id')
+      .eq('teacher_id', teacherId);
+    
+    const goalIds = goals?.map(g => g.id) || [];
+    
     // Delete in reverse dependency order
-    await supabase.from('assessment_analysis').delete().eq('student_id', 'in', 
-      `(SELECT id FROM students WHERE teacher_id = '${teacherId}')`);
+    if (studentIds.length > 0) {
+      await supabase.from('assessment_analysis').delete().in('student_id', studentIds);
+    }
     
-    await supabase.from('student_responses').delete().eq('assessment_id', 'in',
-      `(SELECT id FROM assessments WHERE teacher_id = '${teacherId}')`);
+    if (assessmentIds.length > 0) {
+      await supabase.from('student_responses').delete().in('assessment_id', assessmentIds);
+      await supabase.from('assessment_items').delete().in('assessment_id', assessmentIds);
+    }
     
-    await supabase.from('assessment_items').delete().eq('assessment_id', 'in',
-      `(SELECT id FROM assessments WHERE teacher_id = '${teacherId}')`);
-    
-    await supabase.from('goal_milestones').delete().eq('goal_id', 'in',
-      `(SELECT id FROM goals WHERE teacher_id = '${teacherId}')`);
+    if (goalIds.length > 0) {
+      await supabase.from('goal_milestones').delete().in('goal_id', goalIds);
+    }
     
     await supabase.from('goals').delete().eq('teacher_id', teacherId);
     await supabase.from('parent_communications').delete().eq('teacher_id', teacherId);

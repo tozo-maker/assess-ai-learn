@@ -112,7 +112,7 @@ const SampleDataGenerator = () => {
               <Checkbox 
                 id="clearExisting" 
                 checked={clearExisting} 
-                onCheckedChange={setClearExisting}
+                onCheckedChange={(checked) => setClearExisting(checked === true)}
               />
               <label htmlFor="clearExisting" className="text-sm font-medium">
                 Clear existing data before generating new data
@@ -123,7 +123,7 @@ const SampleDataGenerator = () => {
               <Checkbox 
                 id="generateAnalysis" 
                 checked={generateAnalysis} 
-                onCheckedChange={setGenerateAnalysis}
+                onCheckedChange={(checked) => setGenerateAnalysis(checked === true)}
               />
               <label htmlFor="generateAnalysis" className="text-sm font-medium">
                 Generate AI analysis and insights data
