@@ -1,35 +1,31 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 import { 
-  Play, 
+  TestTube, 
+  Database, 
+  Brain, 
   CheckCircle, 
   XCircle, 
-  Clock, 
-  Users, 
-  FileText, 
-  Database,
-  AlertCircle,
-  Brain,
-  Target,
-  Zap,
-  Network,
-  Info,
-  Search,
-  Shield,
-  Settings,
-  BarChart,
-  Edit,
-  Filter
+  Clock,
+  RefreshCw,
+  PlayCircle,
+  Users
 } from 'lucide-react';
 import { testingHelpers, TestingReport } from '@/utils/testing-helpers';
 import { enhancedTestingHelpers, EnhancedTestingReport } from '@/utils/enhanced-testing-helpers';
-import { useToast } from '@/hooks/use-toast';
+import SampleDataGenerator from './SampleDataGenerator';
 
-const TestingDashboard: React.FC = () => {
+interface TestingReportDisplay extends TestingReport {
+  category?: string;
+  duration?: number;
+}
+
+const TestingDashboard = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [phase1Results, setPhase1Results] = useState<TestingReport[]>([]);
   const [phase2Results, setPhase2Results] = useState<TestingReport[]>([]);
@@ -315,35 +311,57 @@ const TestingDashboard: React.FC = () => {
     );
   };
 
+  const formatDuration = (duration?: number) => {
+    if (!duration) return '';
+    return `${duration}ms`;
+  };
+
+  const getResultsByCategory = (results: TestingReportDisplay[]) => {
+    const categories = [...new Set(results.map(r => r.category).filter(Boolean))];
+    return categories.map(category => ({
+      name: category,
+      results: results.filter(r => r.category === category),
+      successRate: Math.round(
+        (results.filter(r => r.category === category && r.success).length / 
+         results.filter(r => r.category === category).length) * 100
+      )
+    }));
+  };
+
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold text-gray-900">
-          LearnSpark AI Platform Testing
-        </h1>
-        <p className="text-lg text-gray-600">
-          Comprehensive validation using Anthropic Claude AI integration
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">LearnSpark AI Testing Suite</h1>
+        <p className="text-gray-600 mt-2">
+          Comprehensive testing and sample data generation for the educational platform
         </p>
       </div>
 
-      <Tabs value={activePhase} onValueChange={(value) => setActivePhase(value as 'phase1' | 'phase2' | 'phase3')}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="phase1">
-            Phase 1: Foundation
-            {isPhase1Complete() && <CheckCircle className="h-4 w-4 ml-2 text-green-600" />}
+      <Tabs defaultValue="sample-data" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="sample-data" className="flex items-center">
+            <Users className="h-4 w-4 mr-2" />
+            Sample Data
           </TabsTrigger>
-          <TabsTrigger value="phase2">
-            Phase 2: AI Integration
-            {!isPhase1Complete() && <AlertCircle className="h-4 w-4 ml-2 text-yellow-600" />}
+          <TabsTrigger value="foundation" className="flex items-center">
+            <Database className="h-4 w-4 mr-2" />
+            Foundation Tests
           </TabsTrigger>
-          <TabsTrigger value="phase3">
-            Phase 3: Comprehensive
-            {phase3Results.length > 0 && phase3Results.filter(r => r.success).length === phase3Results.length && 
-              <CheckCircle className="h-4 w-4 ml-2 text-green-600" />}
+          <TabsTrigger value="ai-integration" className="flex items-center">
+            <Brain className="h-4 w-4 mr-2" />
+            AI Integration
+          </TabsTrigger>
+          <TabsTrigger value="enhanced" className="flex items-center">
+            <TestTube className="h-4 w-4 mr-2" />
+            Enhanced Tests
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="phase1" className="space-y-6">
+        <TabsContent value="sample-data" className="space-y-6">
+          <SampleDataGenerator />
+        </TabsContent>
+
+        <TabsContent value="foundation" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -392,7 +410,7 @@ const TestingDashboard: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <Play className="h-5 w-5" />
+                      <PlayCircle className="h-5 w-5" />
                       <span>Start Foundation Tests</span>
                     </>
                   )}
@@ -404,7 +422,7 @@ const TestingDashboard: React.FC = () => {
           {renderTestResults(phase1Results)}
         </TabsContent>
 
-        <TabsContent value="phase2" className="space-y-6">
+        <TabsContent value="ai-integration" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -496,7 +514,7 @@ const TestingDashboard: React.FC = () => {
           {renderTestResults(phase2Results)}
         </TabsContent>
 
-        <TabsContent value="phase3" className="space-y-6">
+        <TabsContent value="enhanced" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
