@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Assessment, 
@@ -173,19 +174,27 @@ export const assessmentService = {
 
   async generateAssessmentAnalysis(assessmentId: string, studentId: string) {
     try {
-      // Call the Supabase Edge Function to generate AI analysis
+      console.log('Generating assessment analysis for:', { assessmentId, studentId });
+      
+      // Call the Supabase Edge Function with correct parameter names
       const { data, error } = await supabase.functions.invoke('analyze-student-assessment', {
         body: {
-          assessmentId,
-          studentId
+          assessment_id: assessmentId,  // Use underscore format
+          student_id: studentId         // Use underscore format
         }
       });
 
       if (error) {
         console.error('Error calling analysis function:', error);
-        throw error;
+        throw new Error(`Analysis function error: ${error.message || 'Unknown error'}`);
       }
 
+      if (!data || !data.success) {
+        console.error('Analysis function returned failure:', data);
+        throw new Error(data?.message || 'Analysis generation failed');
+      }
+
+      console.log('Analysis generated successfully:', data);
       return data;
     } catch (error) {
       console.error('Error generating assessment analysis:', error);

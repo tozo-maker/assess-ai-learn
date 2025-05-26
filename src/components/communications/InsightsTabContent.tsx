@@ -58,25 +58,47 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
   const [showAssessmentSelection, setShowAssessmentSelection] = useState(false);
 
   // Find assessments that don't have AI analysis yet
-  const assessmentsWithoutAnalysis = assessments.filter(assessment => 
-    !insights.some(insight => insight.assessments?.id === assessment.id)
-  );
+  const assessmentsWithoutAnalysis = assessments.filter(assessment => {
+    if (!assessment || !assessment.id) {
+      console.warn('Invalid assessment found:', assessment);
+      return false;
+    }
+    
+    return !insights.some(insight => {
+      if (!insight.assessments) return false;
+      return insight.assessments.id === assessment.id;
+    });
+  });
+
+  console.log('Assessments without analysis:', assessmentsWithoutAnalysis);
+  console.log('All assessments:', assessments);
+  console.log('All insights:', insights);
 
   const handleGenerateAnalysis = async (assessmentIds: string[]) => {
-    if (!studentId || assessmentIds.length === 0) return;
+    if (!studentId || assessmentIds.length === 0) {
+      toast({
+        title: "Error",
+        description: "Missing student ID or no assessments selected.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setGeneratingAnalysis(true);
     let successCount = 0;
     let failureCount = 0;
+    const errors: string[] = [];
 
     try {
       for (const assessmentId of assessmentIds) {
         try {
+          console.log(`Generating analysis for assessment ${assessmentId} and student ${studentId}`);
           await assessmentService.generateAssessmentAnalysis(assessmentId, studentId);
           successCount++;
         } catch (error) {
           console.error(`Failed to generate analysis for assessment ${assessmentId}:`, error);
           failureCount++;
+          errors.push(`Assessment ${assessmentId}: ${error.message || 'Unknown error'}`);
         }
       }
 
@@ -88,20 +110,24 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
         
         // Refresh the insights data
         if (onInsightsUpdated) {
-          onInsightsUpdated();
+          setTimeout(() => {
+            onInsightsUpdated();
+          }, 1000); // Small delay to allow backend processing
         }
       } else {
         toast({
           title: "Analysis Failed",
-          description: "Failed to generate AI analysis. Please try again.",
+          description: failureCount > 0 && errors.length > 0 
+            ? `All ${failureCount} attempts failed. First error: ${errors[0]}`
+            : "Failed to generate AI analysis. Please try again.",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Error generating analysis:', error);
+      console.error('Error in analysis generation process:', error);
       toast({
         title: "Error",
-        description: "An error occurred while generating analysis.",
+        description: "An unexpected error occurred while generating analysis.",
         variant: "destructive",
       });
     } finally {
@@ -112,11 +138,13 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
   };
 
   const handleGenerateAll = () => {
-    const allAssessmentIds = assessmentsWithoutAnalysis.map(a => a.id);
+    const allAssessmentIds = assessmentsWithoutAnalysis.map(a => a.id).filter(Boolean);
+    console.log('Generating analysis for all assessments:', allAssessmentIds);
     handleGenerateAnalysis(allAssessmentIds);
   };
 
   const handleGenerateSelected = () => {
+    console.log('Generating analysis for selected assessments:', selectedAssessments);
     handleGenerateAnalysis(selectedAssessments);
   };
 
