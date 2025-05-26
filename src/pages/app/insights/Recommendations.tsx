@@ -7,6 +7,40 @@ import { Badge } from '@/components/ui/badge';
 import { Lightbulb, Users, BookOpen, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
+// Type definitions for the data structures
+interface Student {
+  first_name: string;
+  last_name: string;
+  grade_level: string;
+}
+
+interface Assessment {
+  title: string;
+  subject: string;
+}
+
+interface AnalysisData {
+  students: Student;
+  assessments: Assessment;
+  recommendations: string[];
+}
+
+interface RecommendationCount {
+  text: string;
+  subjects: Set<string>;
+  count: number;
+}
+
+interface StudentRecommendationData {
+  student: Student;
+  recommendations: Array<{
+    recommendation: string;
+    subject: string;
+    assessment: string;
+  }>;
+  subjects: Set<string>;
+}
+
 const Recommendations = () => {
   const { data: analysisData, isLoading } = useQuery({
     queryKey: ['assessment-analysis-recommendations'],
@@ -27,7 +61,7 @@ const Recommendations = () => {
       }
 
       console.log('Fetched analysis data:', data?.length || 0, 'records');
-      return data;
+      return data as AnalysisData[];
     }
   });
 
@@ -71,7 +105,7 @@ const Recommendations = () => {
   }
 
   // Group recommendations by student
-  const studentRecommendations = analysisData.reduce((acc, analysis) => {
+  const studentRecommendations: Record<string, StudentRecommendationData> = analysisData.reduce((acc, analysis) => {
     const studentKey = `${analysis.students.first_name} ${analysis.students.last_name}`;
     if (!acc[studentKey]) {
       acc[studentKey] = {
@@ -91,7 +125,7 @@ const Recommendations = () => {
     
     acc[studentKey].subjects.add(analysis.assessments.subject);
     return acc;
-  }, {});
+  }, {} as Record<string, StudentRecommendationData>);
 
   // Collect all unique recommendations for general insights
   const allRecommendations = analysisData.flatMap(analysis => 
@@ -103,7 +137,7 @@ const Recommendations = () => {
   );
 
   // Count frequency of similar recommendations
-  const recommendationCounts = allRecommendations.reduce((acc, rec) => {
+  const recommendationCounts: Record<string, RecommendationCount> = allRecommendations.reduce((acc, rec) => {
     const key = rec.text.toLowerCase();
     if (!acc[key]) {
       acc[key] = {
@@ -115,7 +149,7 @@ const Recommendations = () => {
     acc[key].subjects.add(rec.subject);
     acc[key].count += 1;
     return acc;
-  }, {});
+  }, {} as Record<string, RecommendationCount>);
 
   const topRecommendations = Object.values(recommendationCounts)
     .sort((a, b) => b.count - a.count)
