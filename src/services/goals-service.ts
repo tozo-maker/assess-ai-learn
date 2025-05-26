@@ -59,6 +59,36 @@ export const goalsService = {
     if (error) throw error;
   },
 
+  // Smart Progress Calculation
+  async updateGoalProgress(goalId: string, progress: number): Promise<Goal> {
+    const { data: goal, error } = await supabase
+      .from('goals')
+      .update({ 
+        progress_percentage: Math.round(progress),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', goalId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return goal as Goal;
+  },
+
+  async calculateMilestoneProgress(goalId: string): Promise<number> {
+    const { data: milestones, error } = await supabase
+      .from('goal_milestones')
+      .select('id, completed_at')
+      .eq('goal_id', goalId);
+
+    if (error) throw error;
+    
+    if (!milestones || milestones.length === 0) return 0;
+    
+    const completedCount = milestones.filter(m => m.completed_at).length;
+    return (completedCount / milestones.length) * 100;
+  },
+
   // AI Goal Suggestions
   async generateAIGoalSuggestions(studentId: string): Promise<string[]> {
     try {
@@ -81,7 +111,7 @@ export const goalsService = {
   getFallbackGoalSuggestions(): string[] {
     return [
       "Improve reading comprehension through daily guided reading practice",
-      "Develop mathematical problem-solving skills with multi-step word problems",
+      "Develop mathematical problem-solving skills with multi-step word problems", 
       "Enhance writing fluency through structured journal writing exercises",
       "Build critical thinking skills through analytical discussions",
       "Strengthen study skills and organization techniques"
@@ -100,6 +130,11 @@ export const goalsService = {
       .single();
 
     if (error) throw error;
+    
+    // Update goal progress based on milestones
+    const newProgress = await this.calculateMilestoneProgress(goalId);
+    await this.updateGoalProgress(goalId, newProgress);
+    
     return data as GoalMilestone;
   },
 
@@ -116,11 +151,43 @@ export const goalsService = {
   },
 
   async deleteMilestone(milestoneId: string): Promise<void> {
+    // Get goal_id before deleting
+    const { data: milestone } = await supabase
+      .from('goal_milestones')
+      .select('goal_id')
+      .eq('id', milestoneId)
+      .single();
+
     const { error } = await supabase
       .from('goal_milestones')
       .delete()
       .eq('id', milestoneId);
 
     if (error) throw error;
+    
+    // Update goal progress after deletion
+    if (milestone) {
+      const newProgress = await this.calculateMilestoneProgress(milestone.goal_id);
+      await this.updateGoalProgress(milestone.goal_id, newProgress);
+    }
+  },
+
+  async toggleMilestoneCompletion(milestoneId: string, completed: boolean): Promise<GoalMilestone> {
+    const { data, error } = await supabase
+      .from('goal_milestones')
+      .update({
+        completed_at: completed ? new Date().toISOString() : null
+      })
+      .eq('id', milestoneId)
+      .select('*, goal_id')
+      .single();
+
+    if (error) throw error;
+    
+    // Update goal progress based on milestone completion
+    const newProgress = await this.calculateMilestoneProgress(data.goal_id);
+    await this.updateGoalProgress(data.goal_id, newProgress);
+    
+    return data as GoalMilestone;
   }
 };

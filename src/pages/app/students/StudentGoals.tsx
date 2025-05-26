@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PageShell from '@/components/ui/page-shell';
@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import GoalForm from '@/components/goals/GoalForm';
-import GoalsList from '@/components/goals/GoalsList';
+import EnhancedGoalsList from '@/components/goals/EnhancedGoalsList';
 import { goalsService } from '@/services/goals-service';
 import { studentService } from '@/services/student-service';
 import { GoalFormData, GoalWithMilestones } from '@/types/goals';
@@ -82,6 +82,49 @@ const StudentGoals = () => {
         title: 'Goal deleted',
         description: 'The learning goal has been removed.'
       });
+    }
+  });
+
+  const addMilestoneMutation = useMutation({
+    mutationFn: ({ goalId, milestone }: { goalId: string; milestone: any }) =>
+      goalsService.addMilestone(goalId, milestone),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['student-goals', id] });
+      toast({
+        title: 'Milestone added',
+        description: 'A new milestone has been added to the goal.'
+      });
+    }
+  });
+
+  const updateMilestoneMutation = useMutation({
+    mutationFn: ({ milestoneId, updates }: { milestoneId: string; updates: any }) =>
+      goalsService.updateMilestone(milestoneId, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['student-goals', id] });
+      toast({
+        title: 'Milestone updated',
+        description: 'The milestone has been updated.'
+      });
+    }
+  });
+
+  const deleteMilestoneMutation = useMutation({
+    mutationFn: goalsService.deleteMilestone,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['student-goals', id] });
+      toast({
+        title: 'Milestone deleted',
+        description: 'The milestone has been removed.'
+      });
+    }
+  });
+
+  const toggleMilestoneMutation = useMutation({
+    mutationFn: ({ milestoneId, completed }: { milestoneId: string; completed: boolean }) =>
+      goalsService.toggleMilestoneCompletion(milestoneId, completed),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['student-goals', id] });
     }
   });
 
@@ -186,11 +229,20 @@ const StudentGoals = () => {
           </Card>
         )}
 
-        <GoalsList
+        <EnhancedGoalsList
           goals={goals}
           onEditGoal={handleEditGoal}
           onDeleteGoal={handleDeleteGoal}
           onUpdateProgress={handleUpdateProgress}
+          onAddMilestone={(goalId, milestone) => addMilestoneMutation.mutate({ goalId, milestone })}
+          onEditMilestone={(milestoneId, updates) => updateMilestoneMutation.mutate({ milestoneId, updates })}
+          onDeleteMilestone={(milestoneId) => {
+            if (confirm('Are you sure you want to delete this milestone?')) {
+              deleteMilestoneMutation.mutate(milestoneId);
+            }
+          }}
+          onToggleMilestone={(milestoneId, completed) => toggleMilestoneMutation.mutate({ milestoneId, completed })}
+          isLoading={isLoading}
         />
       </div>
     </PageShell>
