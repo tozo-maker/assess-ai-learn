@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +12,9 @@ import {
   CheckCircle2,
   Calendar,
   Sparkles,
-  Loader2
+  Loader2,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { assessmentService } from '@/services/assessment-service';
@@ -55,6 +58,7 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
   const [generatingAnalysis, setGeneratingAnalysis] = useState(false);
   const [selectedAssessments, setSelectedAssessments] = useState<string[]>([]);
   const [showAssessmentSelection, setShowAssessmentSelection] = useState(false);
+  const [showAllSummaries, setShowAllSummaries] = useState(false);
 
   // Find assessments that don't have AI analysis yet with improved filtering
   const assessmentsWithoutAnalysis = assessments.filter(assessment => {
@@ -75,6 +79,28 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
   console.log('Insights tab - Total assessments:', assessments.length);
   console.log('Insights tab - Assessments without analysis:', assessmentsWithoutAnalysis.length);
   console.log('Insights tab - Current insights:', insights.length);
+
+  // Create aggregated summary data
+  const getAggregatedSummary = () => {
+    if (insights.length === 0) return null;
+
+    const assessmentTitles = insights
+      .filter(insight => insight.assessments)
+      .map(insight => `${insight.assessments!.title} (${insight.assessments!.subject})`)
+      .join(', ');
+
+    const latestSummary = insights[0]?.overall_summary;
+    const assessmentCount = insights.length;
+
+    return {
+      summary: latestSummary,
+      basedOn: assessmentTitles,
+      assessmentCount,
+      hasMultiple: assessmentCount > 1
+    };
+  };
+
+  const aggregatedSummary = getAggregatedSummary();
 
   const handleGenerateAnalysis = async (assessmentIds: string[]) => {
     if (!studentId || assessmentIds.length === 0) {
@@ -299,19 +325,57 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
         </Card>
       )}
 
-      {/* Latest Overall Summary */}
-      {insights[0]?.overall_summary && (
+      {/* Comprehensive Assessment Summary */}
+      {aggregatedSummary && (
         <Card className="bg-blue-50 border-blue-200">
           <CardHeader>
             <CardTitle className="text-blue-900 flex items-center gap-2">
               <Brain className="h-5 w-5" />
-              Latest Assessment Summary
+              {aggregatedSummary.hasMultiple ? 'Comprehensive Learning Analysis' : 'Latest Assessment Summary'}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-blue-800">{insights[0].overall_summary}</p>
-            <div className="text-sm text-blue-600 mt-2">
-              Based on: {insights[0].assessments?.title} ({insights[0].assessments?.subject})
+            <p className="text-blue-800 mb-3">{aggregatedSummary.summary}</p>
+            <div className="text-sm text-blue-600">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="font-medium">
+                  Based on {aggregatedSummary.assessmentCount} assessment{aggregatedSummary.assessmentCount > 1 ? 's' : ''}:
+                </span>
+                {aggregatedSummary.hasMultiple && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAllSummaries(!showAllSummaries)}
+                    className="h-6 px-2 text-blue-600 hover:text-blue-700"
+                  >
+                    {showAllSummaries ? (
+                      <>Hide Details <ChevronUp className="h-3 w-3 ml-1" /></>
+                    ) : (
+                      <>Show Details <ChevronDown className="h-3 w-3 ml-1" /></>
+                    )}
+                  </Button>
+                )}
+              </div>
+              
+              {!showAllSummaries ? (
+                <p className="text-blue-600">{aggregatedSummary.basedOn}</p>
+              ) : (
+                <div className="space-y-2">
+                  {insights.map((insight, index) => (
+                    <div key={insight.id} className="p-2 bg-blue-100 rounded border-l-2 border-blue-400">
+                      <div className="font-medium text-blue-800">
+                        {insight.assessments?.title} ({insight.assessments?.subject})
+                      </div>
+                      {insight.overall_summary && (
+                        <p className="text-sm text-blue-700 mt-1">{insight.overall_summary}</p>
+                      )}
+                      <div className="text-xs text-blue-600 mt-1">
+                        {new Date(insight.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
