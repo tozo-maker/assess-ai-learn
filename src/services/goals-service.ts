@@ -160,6 +160,29 @@ export const goalsService = {
     }
   },
 
+  // Enhanced AI Goal Suggestions with metadata
+  async generateEnhancedGoalSuggestions(studentId: string): Promise<string[]> {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-goal-suggestions', {
+        body: { 
+          student_id: studentId,
+          enhanced: true,
+          include_metadata: true
+        }
+      });
+
+      if (error) {
+        console.error('Error generating enhanced goal suggestions:', error);
+        return this.getFallbackGoalSuggestions();
+      }
+
+      return data?.suggestions || this.getFallbackGoalSuggestions();
+    } catch (error) {
+      console.error('Error calling enhanced goal suggestions function:', error);
+      return this.getFallbackGoalSuggestions();
+    }
+  },
+
   getFallbackGoalSuggestions(): string[] {
     return [
       "Improve reading comprehension through daily guided reading practice",

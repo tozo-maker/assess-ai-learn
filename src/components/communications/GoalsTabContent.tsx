@@ -1,15 +1,11 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Plus, Lightbulb, Trophy, ChevronDown, ChevronUp, Clock } from 'lucide-react';
+import { Plus, Trophy, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { GoalWithMilestones, GoalFormData } from '@/types/goals';
-import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { goalsService } from '@/services/goals-service';
 import { useGoalAchievements } from '@/hooks/useGoalAchievements';
@@ -18,6 +14,7 @@ import EnhancedGoalsList from '@/components/goals/EnhancedGoalsList';
 import GoalAnalyticsDashboard from '@/components/goals/GoalAnalyticsDashboard';
 import GoalAchievementNotification from '@/components/goals/GoalAchievementNotification';
 import GoalCelebration from '@/components/goals/GoalCelebration';
+import EnhancedAISuggestions from '@/components/goals/EnhancedAISuggestions';
 
 interface GoalsTabContentProps {
   goals: GoalWithMilestones[];
@@ -25,19 +22,12 @@ interface GoalsTabContentProps {
   studentName?: string;
 }
 
-const statusColors = {
-  active: 'bg-blue-100 text-blue-800',
-  completed: 'bg-green-100 text-green-800',
-  paused: 'bg-yellow-100 text-yellow-800',
-  cancelled: 'bg-red-100 text-red-800'
-};
-
 const GoalsTabContent: React.FC<GoalsTabContentProps> = ({ goals: initialGoals, studentId, studentName }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isGoalDialogOpen, setIsGoalDialogOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<GoalWithMilestones | null>(null);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const [showAnalytics, setShowAnalytics] = useState(false);
 
   // Use the achievement hook
@@ -56,12 +46,6 @@ const GoalsTabContent: React.FC<GoalsTabContentProps> = ({ goals: initialGoals, 
     queryFn: () => goalsService.getStudentGoals(studentId),
     enabled: !!studentId,
     initialData: initialGoals
-  });
-
-  const { data: aiSuggestions = [] } = useQuery({
-    queryKey: ['goal-suggestions', studentId],
-    queryFn: () => goalsService.generateAIGoalSuggestions(studentId),
-    enabled: showSuggestions && !!studentId
   });
 
   const createGoalMutation = useMutation({
@@ -193,8 +177,12 @@ const GoalsTabContent: React.FC<GoalsTabContentProps> = ({ goals: initialGoals, 
     return goal.progress_percentage || 0;
   };
 
+  const handleGoalCreatedFromSuggestion = () => {
+    refetchAchievements();
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Achievement Notifications */}
       {achievements.length > 0 && (
         <div className="space-y-2">
@@ -213,7 +201,7 @@ const GoalsTabContent: React.FC<GoalsTabContentProps> = ({ goals: initialGoals, 
       )}
 
       {/* Header with Actions */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start">
         <div>
           <h3 className="text-lg font-semibold">Learning Goals</h3>
           <p className="text-sm text-gray-600">
@@ -228,14 +216,6 @@ const GoalsTabContent: React.FC<GoalsTabContentProps> = ({ goals: initialGoals, 
           >
             <Trophy className="h-4 w-4 mr-2" />
             Analytics
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowSuggestions(!showSuggestions)}
-          >
-            <Lightbulb className="h-4 w-4 mr-2" />
-            AI Suggestions
           </Button>
           <Dialog open={isGoalDialogOpen} onOpenChange={setIsGoalDialogOpen}>
             <DialogTrigger asChild>
@@ -269,34 +249,28 @@ const GoalsTabContent: React.FC<GoalsTabContentProps> = ({ goals: initialGoals, 
         </Collapsible>
       )}
 
-      {/* AI Suggestions */}
-      {showSuggestions && (
-        <Collapsible open={showSuggestions} onOpenChange={setShowSuggestions}>
-          <CollapsibleContent>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Lightbulb className="h-5 w-5 mr-2" />
-                  AI-Generated Goal Suggestions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {aiSuggestions.length > 0 ? (
-                  <div className="space-y-2">
-                    {aiSuggestions.map((suggestion, index) => (
-                      <div key={index} className="p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm">{suggestion}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500">No AI suggestions available yet. Add some assessment data to get personalized recommendations.</p>
-                )}
-              </CardContent>
-            </Card>
-          </CollapsibleContent>
-        </Collapsible>
-      )}
+      {/* Enhanced AI Suggestions */}
+      <Collapsible open={showSuggestions} onOpenChange={setShowSuggestions}>
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="ghost"
+            className="w-full justify-between p-0 h-auto font-normal hover:bg-transparent"
+          >
+            <span className="text-base font-medium">AI Goal Suggestions</span>
+            {showSuggestions ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-4">
+          <EnhancedAISuggestions
+            studentId={studentId}
+            onGoalCreated={handleGoalCreatedFromSuggestion}
+          />
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Goals List */}
       {goals.length > 0 ? (
@@ -320,7 +294,7 @@ const GoalsTabContent: React.FC<GoalsTabContentProps> = ({ goals: initialGoals, 
           <CardContent className="py-8 text-center text-muted-foreground">
             <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <p>No learning goals have been set yet.</p>
-            <p className="text-sm mt-1">Click "Add Goal" to create personalized learning objectives.</p>
+            <p className="text-sm mt-1">Click "Add Goal" or use AI suggestions to create personalized learning objectives.</p>
           </CardContent>
         </Card>
       )}
