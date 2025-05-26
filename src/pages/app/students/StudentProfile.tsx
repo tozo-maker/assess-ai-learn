@@ -76,9 +76,11 @@ import {
 } from 'lucide-react';
 import { studentService } from '@/services/student-service';
 import { assessmentService } from '@/services/assessment-service';
+import { goalsService } from '@/services/goals-service';
 import { studentFormSchema, StudentFormValues } from '@/lib/validations/student';
 import { gradeLevelOptions, PerformanceLevel } from '@/types/student';
 import { supabase } from '@/integrations/supabase/client';
+import GoalsTabContent from '@/components/communications/GoalsTabContent';
 
 const StudentProfile = () => {
   const params = useParams<{ id: string }>();
@@ -110,6 +112,16 @@ const StudentProfile = () => {
       console.log('StudentProfile: Fetching student with ID:', studentId);
       return studentService.getStudentById(studentId);
     },
+    enabled: !!studentId,
+  });
+
+  // Fetch student goals
+  const {
+    data: studentGoals = [],
+    isLoading: goalsLoading,
+  } = useQuery({
+    queryKey: ['student-goals', studentId],
+    queryFn: () => goalsService.getStudentGoals(studentId),
     enabled: !!studentId,
   });
 
@@ -383,6 +395,15 @@ const StudentProfile = () => {
   
   const actions = (
     <>
+      <Button 
+        variant="outline" 
+        onClick={() => navigate(`/app/students/${studentId}/goals`)}
+        className="flex items-center space-x-2"
+      >
+        <Target className="h-4 w-4" />
+        <span>Manage Goals</span>
+      </Button>
+      
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogTrigger asChild>
           <Button variant="outline" className="flex items-center space-x-2">
@@ -621,9 +642,9 @@ const StudentProfile = () => {
           </CardContent>
         </Card>
 
-        {/* Tabs for Student Details, Assessments, and Insights */}
+        {/* Tabs for Student Details, Assessments, Insights, and Goals */}
         <Tabs defaultValue="details">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="details" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               <span>Details</span>
@@ -635,6 +656,10 @@ const StudentProfile = () => {
             <TabsTrigger value="insights" className="flex items-center gap-2">
               <Brain className="h-4 w-4" />
               <span>Insights</span>
+            </TabsTrigger>
+            <TabsTrigger value="goals" className="flex items-center gap-2">
+              <Target className="h-4 w-4" />
+              <span>Goals</span>
             </TabsTrigger>
           </TabsList>
 
@@ -934,6 +959,39 @@ const StudentProfile = () => {
                       View Assessments
                     </Button>
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Goals Tab - New addition */}
+          <TabsContent value="goals">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-blue-600" />
+                    Learning Goals
+                  </span>
+                  <Button 
+                    onClick={() => navigate(`/app/students/${studentId}/goals`)}
+                    size="sm"
+                  >
+                    Manage All Goals
+                  </Button>
+                </CardTitle>
+                <CardDescription>
+                  Track progress toward personalized learning objectives for {student.first_name}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {goalsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p>Loading goals...</p>
+                  </div>
+                ) : (
+                  <GoalsTabContent goals={studentGoals} />
                 )}
               </CardContent>
             </Card>
