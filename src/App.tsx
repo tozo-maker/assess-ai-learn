@@ -319,21 +319,10 @@ const App = () => (
               } 
             />
 
-            {/* Legacy routes - redirect to /app prefix */}
+            {/* Simple legacy routes - redirect to /app prefix */}
             <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
             <Route path="/students" element={<Navigate to="/app/students" replace />} />
-            <Route path="/students/add" element={<Navigate to="/app/students/add" replace />} />
-            <Route path="/students/import" element={<Navigate to="/app/students/import" replace />} />
-            <Route path="/students/:id" element={<Navigate to="/app/students/:id" replace />} />
-            <Route path="/students/:id/assessments" element={<Navigate to="/app/students/:id/assessments" replace />} />
-            <Route path="/students/:id/insights" element={<Navigate to="/app/students/:id/insights" replace />} />
-            <Route path="/students/:id/goals" element={<Navigate to="/app/students/:id/goals" replace />} />
             <Route path="/assessments" element={<Navigate to="/app/assessments" replace />} />
-            <Route path="/assessments/add" element={<Navigate to="/app/assessments/add" replace />} />
-            <Route path="/assessments/batch" element={<Navigate to="/app/assessments/batch" replace />} />
-            <Route path="/assessments/:id" element={<Navigate to="/app/assessments/:id" replace />} />
-            <Route path="/assessments/:id/analysis" element={<Navigate to="/app/assessments/:id/analysis" replace />} />
-            <Route path="/assessments/:id/responses" element={<Navigate to="/app/assessments/:id/responses" replace />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

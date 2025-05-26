@@ -16,9 +16,14 @@ const AssessmentDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
+  console.log('AssessmentDetails: Assessment ID from params:', id);
+
   const { data: assessment, isLoading } = useQuery({
     queryKey: ['assessment', id],
-    queryFn: () => assessmentService.getAssessmentById(id as string),
+    queryFn: () => {
+      console.log('AssessmentDetails: Fetching assessment with ID:', id);
+      return assessmentService.getAssessmentById(id as string);
+    },
     enabled: !!id,
   });
 
@@ -91,15 +96,15 @@ const AssessmentDetails: React.FC = () => {
                 </CardDescription>
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
-                <Button variant="outline" onClick={() => navigate(`/assessments/edit/${assessment.id}`)}>
+                <Button variant="outline" onClick={() => navigate(`/app/assessments/edit/${assessment.id}`)}>
                   <Edit className="mr-2 h-4 w-4" />
                   Edit
                 </Button>
-                <Button onClick={() => navigate(`/assessments/${assessment.id}/responses`)}>
+                <Button onClick={() => navigate(`/app/assessments/${assessment.id}/responses`)}>
                   <Users className="mr-2 h-4 w-4" />
                   Add Responses
                 </Button>
-                <Button variant="secondary" onClick={() => navigate(`/assessments/${assessment.id}/analysis`)}>
+                <Button variant="secondary" onClick={() => navigate(`/app/assessments/${assessment.id}/analysis`)}>
                   <BarChart2 className="mr-2 h-4 w-4" />
                   View Analysis
                 </Button>
