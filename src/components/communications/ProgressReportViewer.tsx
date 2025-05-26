@@ -14,6 +14,22 @@ interface ProgressReportViewerProps {
 }
 
 const ProgressReportViewer: React.FC<ProgressReportViewerProps> = ({ reportData }) => {
+  // Transform ai_insights data to match InsightsTabContent expected format
+  const transformedInsights = [{
+    id: 'progress-report-insights',
+    overall_summary: `Performance insights for ${reportData.student.first_name} ${reportData.student.last_name}`,
+    strengths: reportData.ai_insights.strengths,
+    growth_areas: reportData.ai_insights.growth_areas,
+    recommendations: reportData.ai_insights.recommendations,
+    patterns_observed: [],
+    created_at: new Date().toISOString(),
+    assessments: {
+      title: 'Progress Report Analysis',
+      subject: 'Multiple Subjects',
+      assessment_date: new Date().toISOString().split('T')[0]
+    }
+  }];
+
   return (
     <div className="space-y-6 print:py-10">
       {/* Header Section */}
@@ -42,7 +58,11 @@ const ProgressReportViewer: React.FC<ProgressReportViewerProps> = ({ reportData 
 
         {/* Insights Tab */}
         <TabsContent value="insights" className="space-y-6">
-          <InsightsTabContent aiInsights={reportData.ai_insights} />
+          <InsightsTabContent 
+            insights={transformedInsights}
+            isLoading={false}
+            onViewAssessments={() => {}}
+          />
         </TabsContent>
 
         {/* Goals Tab */}
