@@ -219,7 +219,7 @@ const Dashboard = () => {
           </div>
 
           {/* Stats Cards */}
-          <ErrorBoundary fallback={<ErrorState title="Stats unavailable" />}>
+          <ErrorBoundary>
             <div className="animate-fade-in">
               <DashboardStats
                 totalStudents={totalStudents}
@@ -234,14 +234,14 @@ const Dashboard = () => {
           </ErrorBoundary>
 
           {/* Analytics Dashboard */}
-          <ErrorBoundary fallback={<ErrorState title="Analytics unavailable" />}>
+          <ErrorBoundary>
             <div className="animate-fade-in">
               <AnalyticsDashboard data={analyticsData} />
             </div>
           </ErrorBoundary>
 
           {/* Enhanced Performance Widgets */}
-          <ErrorBoundary fallback={<ErrorState title="Performance data unavailable" />}>
+          <ErrorBoundary>
             <div className="grid lg:grid-cols-3 gap-6 animate-fade-in">
               <EnhancedPerformanceWidget
                 data={mathPerformanceData}
@@ -268,7 +268,7 @@ const Dashboard = () => {
             {/* Main Content Area */}
             <div className="lg:col-span-8 space-y-6">
               {/* Recent Activity */}
-              <ErrorBoundary fallback={<ErrorState title="Activity feed unavailable" />}>
+              <ErrorBoundary>
                 <div className="animate-fade-in">
                   <RecentActivitiesList
                     recentAssessments={recentAssessments}
@@ -279,7 +279,7 @@ const Dashboard = () => {
               </ErrorBoundary>
 
               {/* Student Insights */}
-              <ErrorBoundary fallback={<ErrorState title="Student insights unavailable" />}>
+              <ErrorBoundary>
                 <div className="animate-fade-in">
                   <StudentInsightsCard insights={studentInsights} />
                 </div>
@@ -296,7 +296,7 @@ const Dashboard = () => {
               </ErrorBoundary>
               
               {/* AI Recommendations */}
-              <ErrorBoundary fallback={<ErrorState title="Recommendations unavailable" />}>
+              <ErrorBoundary>
                 <div className="animate-fade-in">
                   <AIRecommendationsWidget recommendations={aiRecommendations} />
                 </div>
@@ -304,7 +304,7 @@ const Dashboard = () => {
 
               {/* Priority Alerts */}
               {alerts.length > 0 && (
-                <ErrorBoundary fallback={<ErrorState title="Alerts unavailable" />}>
+                <ErrorBoundary>
                   <div className="animate-fade-in">
                     <AlertsWidget alerts={alerts} />
                   </div>
