@@ -69,7 +69,15 @@ const CreateCategoryDialog: React.FC<CreateCategoryDialogProps> = ({
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await skillsService.createSkillCategory(values);
+      // Ensure all required fields are present
+      const categoryData = {
+        name: values.name,
+        description: values.description || '',
+        subject: values.subject,
+        grade_levels: values.grade_levels,
+      };
+      
+      await skillsService.createSkillCategory(categoryData);
       toast({
         title: "Success",
         description: "Category created successfully.",

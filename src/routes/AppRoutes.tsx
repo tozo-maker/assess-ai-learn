@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -29,7 +30,7 @@ const AppRoutes = () => {
           <Route path="/reports" element={<ProgressReports />} />
           <Route path="/settings" element={<ProfileSettings />} />
           <Route path="/testing" element={<Testing />} />
-          <Route path="/app/skills" element={<SkillsManagement />} />
+          <Route path="/skills" element={<SkillsManagement />} />
         </Routes>
       </AppLayout>
     </ProtectedRoute>

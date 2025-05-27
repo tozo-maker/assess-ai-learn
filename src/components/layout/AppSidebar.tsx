@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Sheet,
@@ -15,8 +16,8 @@ import {
   Users,
   FileText,
   BarChart3,
-  BarChart,
   Target,
+  type LucideIcon,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,7 +25,7 @@ import { useAuth } from "@/contexts/AuthContext";
 interface NavItem {
   title: string;
   url: string;
-  icon: React.LucideIcon;
+  icon: LucideIcon;
   items?: Omit<NavItem, "icon">[];
 }
 
@@ -32,7 +33,7 @@ const AppSidebar = () => {
   const location = useLocation();
   const { user } = useAuth();
 
-  const navigationItems = [
+  const navigationItems: NavItem[] = [
     {
       title: "Dashboard",
       url: "/app",
@@ -49,7 +50,7 @@ const AppSidebar = () => {
       icon: FileText,
     },
     {
-      title: "Skills", // Add this new item
+      title: "Skills",
       url: "/app/skills",
       icon: Target,
     },
@@ -143,11 +144,11 @@ export const AppMobileSidebar = () => {
   interface NavItem {
     title: string;
     url: string;
-    icon: React.LucideIcon;
+    icon: LucideIcon;
     items?: Omit<NavItem, "icon">[];
   }
 
-  const navigationItems = [
+  const navigationItems: NavItem[] = [
     {
       title: "Dashboard",
       url: "/app",
@@ -164,7 +165,7 @@ export const AppMobileSidebar = () => {
       icon: FileText,
     },
     {
-      title: "Skills", // Add this new item
+      title: "Skills",
       url: "/app/skills",
       icon: Target,
     },

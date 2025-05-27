@@ -69,7 +69,18 @@ const CreateSkillDialog: React.FC<CreateSkillDialogProps> = ({
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await skillsService.createSkill(values);
+      // Ensure all required fields are present
+      const skillData = {
+        name: values.name,
+        description: values.description || '',
+        category_id: values.category_id,
+        grade_level: values.grade_level,
+        subject: values.subject,
+        curriculum_standard: values.curriculum_standard || '',
+        difficulty_level: values.difficulty_level,
+      };
+      
+      await skillsService.createSkill(skillData);
       toast({
         title: "Success",
         description: "Skill created successfully.",

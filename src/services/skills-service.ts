@@ -58,6 +58,16 @@ export interface AssessmentSkillMapping {
   created_at: string;
 }
 
+type MasteryLevel = 'Beginning' | 'Developing' | 'Proficient' | 'Advanced';
+
+function validateMasteryLevel(level: string): MasteryLevel {
+  const validLevels: MasteryLevel[] = ['Beginning', 'Developing', 'Proficient', 'Advanced'];
+  if (validLevels.includes(level as MasteryLevel)) {
+    return level as MasteryLevel;
+  }
+  return 'Beginning'; // Default fallback
+}
+
 export const skillsService = {
   // Skill Categories
   async getSkillCategories(): Promise<SkillCategory[]> {
@@ -156,7 +166,12 @@ export const skillsService = {
       .order('updated_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    
+    // Type-safe transformation with mastery level validation
+    return (data || []).map(item => ({
+      ...item,
+      current_mastery_level: validateMasteryLevel(item.current_mastery_level),
+    })) as StudentSkill[];
   },
 
   async getClassSkillsSummary(teacherId: string): Promise<any[]> {
@@ -180,7 +195,7 @@ export const skillsService = {
     assessmentId?: string
   ): Promise<SkillMasteryHistory> {
     // Calculate mastery level based on score
-    let masteryLevel: 'Beginning' | 'Developing' | 'Proficient' | 'Advanced';
+    let masteryLevel: MasteryLevel;
     if (score >= 90) masteryLevel = 'Advanced';
     else if (score >= 80) masteryLevel = 'Proficient';
     else if (score >= 65) masteryLevel = 'Developing';
@@ -199,7 +214,12 @@ export const skillsService = {
       .single();
 
     if (error) throw error;
-    return data;
+    
+    // Type-safe transformation
+    return {
+      ...data,
+      mastery_level: validateMasteryLevel(data.mastery_level),
+    } as SkillMasteryHistory;
   },
 
   async getSkillMasteryHistory(studentId: string, skillId?: string): Promise<SkillMasteryHistory[]> {
@@ -215,7 +235,12 @@ export const skillsService = {
 
     const { data, error } = await query;
     if (error) throw error;
-    return data || [];
+    
+    // Type-safe transformation with mastery level validation
+    return (data || []).map(item => ({
+      ...item,
+      mastery_level: validateMasteryLevel(item.mastery_level),
+    })) as SkillMasteryHistory[];
   },
 
   // Assessment Skill Mapping
