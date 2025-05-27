@@ -106,33 +106,115 @@ function App() {
               <Route path="/app" element={
                 <ProtectedRoute>
                   <AppLayout>
-                    <Routes>
-                      <Route index element={<Dashboard />} />
-                      
-                      {/* Students */}
-                      <Route path="students" element={<Students />} />
-                      <Route path="students/add" element={<AddStudent />} />
-                      <Route path="students/import" element={<ImportStudents />} />
-                      <Route path="students/:id" element={<StudentProfile />} />
-                      <Route path="students/:id/insights" element={<StudentInsights />} />
-                      
-                      {/* Assessments */}
-                      <Route path="assessments" element={<Assessments />} />
-                      <Route path="assessments/add" element={<AddAssessment />} />
-                      <Route path="assessments/:id" element={<AssessmentDetails />} />
-                      <Route path="assessments/:id/responses" element={<AddStudentResponses />} />
-                      
-                      {/* Insights */}
-                      <Route path="insights/class" element={<ClassInsights />} />
-                      <Route path="insights/skills" element={<SkillsInsights />} />
-                      <Route path="insights/comparative" element={<ComparativeAnalytics />} />
-                      
-                      {/* Reports */}
-                      <Route path="reports" element={<ProgressReports />} />
-                      
-                      {/* Settings */}
-                      <Route path="settings" element={<ProfileSettings />} />
-                    </Routes>
+                    <Dashboard />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              
+              {/* Students Routes */}
+              <Route path="/app/students" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <Students />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/students/add" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <AddStudent />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/students/import" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <ImportStudents />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/students/:id" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <StudentProfile />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/students/:id/insights" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <StudentInsights />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              
+              {/* Assessments Routes */}
+              <Route path="/app/assessments" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <Assessments />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/assessments/add" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <AddAssessment />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/assessments/:id" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <AssessmentDetails />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/assessments/:id/responses" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <AddStudentResponses />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              
+              {/* Insights Routes */}
+              <Route path="/app/insights/class" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <ClassInsights />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/insights/skills" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <SkillsInsights />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/app/insights/comparative" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <ComparativeAnalytics />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              
+              {/* Reports Routes */}
+              <Route path="/app/reports" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <ProgressReports />
+                  </AppLayout>
+                </ProtectedRoute>
+              } />
+              
+              {/* Settings Routes */}
+              <Route path="/app/settings" element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <ProfileSettings />
                   </AppLayout>
                 </ProtectedRoute>
               } />
