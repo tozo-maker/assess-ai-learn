@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,6 +23,7 @@ import ExportReports from '@/pages/app/reports/ExportReports';
 import ProgressReports from '@/pages/app/communications/ProgressReports';
 import SettingsProfilePage from '@/pages/app/settings/ProfileSettings';
 import ProductionAudit from '@/pages/app/audit/ProductionAudit';
+import ImportStudentsPage from '@/pages/app/students/ImportStudents';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -116,6 +116,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <AddStudentPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/app/students/import"
+        element={
+          <ProtectedRoute>
+            <ImportStudentsPage />
           </ProtectedRoute>
         }
       />

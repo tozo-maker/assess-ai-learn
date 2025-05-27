@@ -2,110 +2,35 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { AuthState, TeacherProfile, SignUpData, SignInData } from '@/types/auth';
+import { authService } from '@/services/auth-service';
+import { TeacherProfile } from '@/types/auth';
 
-interface AuthContextType extends AuthState {
-  signUp: (data: SignUpData) => Promise<{ error: any }>;
-  signIn: (data: SignInData) => Promise<{ error: any }>;
+interface AuthContextType {
+  user: User | null;
+  profile: TeacherProfile | null;
+  session: Session | null;
+  isLoading: boolean;
+  signUp: (data: any) => Promise<any>;
+  signIn: (data: any) => Promise<any>;
   signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
-  updateProfile: (profile: Partial<TeacherProfile>) => Promise<void>;
-  updatePassword: (password: string) => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
+  updateProfile: (data: Partial<TeacherProfile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('teacher_profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
-      setProfile(data);
-    } catch (error: any) {
-      console.error('Error fetching user profile:', error);
-      setError('Failed to load user profile');
-    }
-  };
-
-  const refreshProfile = async () => {
-    if (user) {
-      await fetchUserProfile(user.id);
-    }
-  };
-
-  const updateProfile = async (profileData: Partial<TeacherProfile>) => {
-    if (!user) throw new Error('No authenticated user');
-    
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const { error } = await supabase
-        .from('teacher_profiles')
-        .update(profileData)
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      // Refresh the profile to get updated data
-      await fetchUserProfile(user.id);
-    } catch (error: any) {
-      setError(error.message);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updatePassword = async (password: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
-    } catch (error: any) {
-      setError(error.message);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const resetPassword = async (email: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      setError(error.message);
-      throw error;
-    } finally {
-      setIsLoading(false);
+      const profileData = await authService.getProfile();
+      setProfile(profileData);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      setProfile(null);
     }
   };
 
@@ -113,16 +38,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
-        
+        console.log('Auth state changed:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
-        setError(null);
-
-        // Fetch profile after session is established
+        
         if (session?.user) {
+          // Defer profile fetching to avoid blocking auth state changes
           setTimeout(() => {
-            fetchUserProfile(session.user.id);
+            fetchProfile(session.user.id);
           }, 0);
         } else {
           setProfile(null);
@@ -133,17 +56,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Error getting session:', error);
-        setError('Failed to restore session');
-      }
-      
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchUserProfile(session.user.id);
+        setTimeout(() => {
+          fetchProfile(session.user.id);
+        }, 0);
       }
       
       setIsLoading(false);
@@ -152,93 +72,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (data: SignUpData) => {
+  const signUp = async (data: any) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      setError(null);
-      
-      const { email, password, ...profileData } = data;
-      
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: profileData.full_name,
-            school: profileData.school,
-            grade_levels: profileData.grade_levels.join(','),
-            subjects: profileData.subjects.join(','),
-            years_experience: profileData.years_experience
-          }
-        }
-      });
-
-      if (error) throw error;
-      
-      return { error: null };
-    } catch (error: any) {
-      setError(error.message);
-      return { error };
+      const result = await authService.signUp(data);
+      return result;
+    } catch (error) {
+      console.error('Signup error:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signIn = async (data: SignInData) => {
+  const signIn = async (data: any) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      setError(null);
-      
-      const { email, password } = data;
-      
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-      
-      return { error: null };
-    } catch (error: any) {
-      setError(error.message);
-      return { error };
+      const result = await authService.signIn(data);
+      return result;
+    } catch (error) {
+      console.error('Signin error:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
   const signOut = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
+      await authService.signOut();
       setUser(null);
-      setSession(null);
       setProfile(null);
-      setError(null);
-    } catch (error: any) {
-      setError(error.message);
-      console.error('Error signing out:', error);
+      setSession(null);
+    } catch (error) {
+      console.error('Signout error:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const value: AuthContextType = {
+  const updateProfile = async (data: Partial<TeacherProfile>) => {
+    try {
+      const updatedProfile = await authService.updateProfile(data);
+      setProfile(updatedProfile);
+    } catch (error) {
+      console.error('Profile update error:', error);
+      throw error;
+    }
+  };
+
+  const value = {
     user,
-    session,
     profile,
+    session,
     isLoading,
-    error,
     signUp,
     signIn,
     signOut,
-    refreshProfile,
     updateProfile,
-    updatePassword,
-    resetPassword
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
