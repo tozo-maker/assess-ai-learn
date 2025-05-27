@@ -4,32 +4,32 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Landing and Auth Pages
-import LandingPage from '@/pages/LandingPage';
+import LandingPage from '@/pages/Index';
 import LoginPage from '@/pages/auth/Login';
 import SignupPage from '@/pages/auth/Signup';
 
 // App Pages
 import Dashboard from '@/pages/app/Dashboard';
-import StudentsPage from '@/pages/app/Students';
+import StudentsPage from '@/pages/app/students/Students';
 import AddStudentPage from '@/pages/app/students/AddStudent';
-import StudentDetailsPage from '@/pages/app/students/StudentDetails';
-import AssessmentsPage from '@/pages/app/Assessments';
+import StudentDetailsPage from '@/pages/app/students/StudentProfile';
+import AssessmentsPage from '@/pages/app/assessments/Assessments';
 import AddAssessmentPage from '@/pages/app/assessments/AddAssessment';
 import AssessmentDetailsPage from '@/pages/app/assessments/AssessmentDetails';
-import ResponsesPage from '@/pages/app/assessments/Responses';
+import ResponsesPage from '@/pages/app/assessments/AddStudentResponses';
 import ClassInsightsPage from '@/pages/app/insights/ClassInsights';
-import StudentInsightsPage from '@/pages/app/insights/StudentInsights';
+import StudentInsightsPage from '@/pages/app/insights/IndividualInsights';
 import ProgressReportsPage from '@/pages/app/reports/ProgressReports';
 import ExportReports from '@/pages/app/reports/ExportReports';
 import ProgressReports from '@/pages/app/communications/ProgressReports';
-import SettingsProfilePage from '@/pages/app/settings/Profile';
+import SettingsProfilePage from '@/pages/app/settings/ProfileSettings';
 import ProductionAudit from '@/pages/app/audit/ProductionAudit';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -46,9 +46,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 // Public Route Component (redirects to dashboard if authenticated)
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
