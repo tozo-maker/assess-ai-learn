@@ -42,19 +42,37 @@ export const exportsService = {
     }
   },
 
-  async downloadExport(exportId: string): Promise<string> {
-    const { data, error } = await supabase
-      .from('data_exports')
-      .select('file_url')
-      .eq('id', exportId)
-      .single();
-
-    if (error) throw error;
-    
-    if (!data.file_url) {
+  async downloadExport(exportItem: DataExport): Promise<void> {
+    if (!exportItem.file_url) {
       throw new Error('Export file not ready');
     }
 
-    return data.file_url;
+    try {
+      // Create download link for data URL
+      const link = document.createElement('a');
+      link.href = exportItem.file_url;
+      
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `${exportItem.export_type}_${timestamp}.csv`;
+      link.download = filename;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error downloading export:', error);
+      throw error;
+    }
+  },
+
+  async deleteExport(exportId: string): Promise<void> {
+    const { error } = await supabase
+      .from('data_exports')
+      .delete()
+      .eq('id', exportId);
+
+    if (error) throw error;
   }
 };

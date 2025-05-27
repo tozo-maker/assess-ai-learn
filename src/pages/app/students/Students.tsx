@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import PageShell from '@/components/ui/page-shell';
@@ -40,6 +39,7 @@ import {
 import { studentService } from '@/services/student-service';
 import { StudentWithPerformance, gradeLevelOptions, performanceLevelOptions } from '@/types/student';
 import { useToast } from '@/hooks/use-toast';
+import ExportButton from '@/components/exports/ExportButton';
 
 const Students = () => {
   const navigate = useNavigate();
@@ -183,6 +183,11 @@ const Students = () => {
 
   const actions = (
     <>
+      <ExportButton
+        exportType="student_data"
+        buttonText="Export Students"
+        variant="outline"
+      />
       <Link to="/students/import">
         <Button variant="outline" className="flex items-center space-x-2">
           <Upload className="h-4 w-4" />

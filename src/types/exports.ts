@@ -2,7 +2,7 @@
 export interface DataExport {
   id: string;
   teacher_id: string;
-  export_type: 'student_data' | 'assessment_results' | 'progress_reports' | 'class_summary';
+  export_type: 'student_data' | 'assessment_results' | 'progress_reports' | 'class_summary' | 'analytics_data';
   export_format: 'csv' | 'pdf';
   filters?: Record<string, any>;
   file_url?: string;
@@ -12,7 +12,7 @@ export interface DataExport {
 }
 
 export interface ExportRequestData {
-  export_type: 'student_data' | 'assessment_results' | 'progress_reports' | 'class_summary';
+  export_type: 'student_data' | 'assessment_results' | 'progress_reports' | 'class_summary' | 'analytics_data';
   export_format: 'csv' | 'pdf';
   filters?: {
     student_ids?: string[];
@@ -22,5 +22,15 @@ export interface ExportRequestData {
       start: string;
       end: string;
     };
+  };
+}
+
+export interface ExportFilters {
+  student_ids?: string[];
+  grade_level?: string;
+  subject?: string;
+  date_range?: {
+    start: string;
+    end: string;
   };
 }
