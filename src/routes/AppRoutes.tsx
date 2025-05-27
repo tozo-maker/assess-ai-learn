@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -13,6 +12,7 @@ import ClassInsights from '@/pages/app/insights/ClassInsights';
 import ProgressReports from '@/pages/app/reports/ProgressReports';
 import ProfileSettings from '@/pages/app/settings/ProfileSettings';
 import Testing from '@/pages/app/Testing';
+import SkillsManagement from '@/pages/app/skills/SkillsManagement';
 
 const AppRoutes = () => {
   return (
@@ -29,6 +29,7 @@ const AppRoutes = () => {
           <Route path="/reports" element={<ProgressReports />} />
           <Route path="/settings" element={<ProfileSettings />} />
           <Route path="/testing" element={<Testing />} />
+          <Route path="/app/skills" element={<SkillsManagement />} />
         </Routes>
       </AppLayout>
     </ProtectedRoute>

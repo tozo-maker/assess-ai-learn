@@ -1,99 +1,258 @@
-
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileText, 
-  BarChart3, 
-  Target, 
-  FileOutput, 
+import React from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import {
+  Home,
+  Menu,
   Settings,
-  Zap, // Changed from TestTube to Zap for enhanced testing
-  LogOut,
-  GraduationCap
-} from 'lucide-react';
+  Users,
+  FileText,
+  BarChart3,
+  BarChart,
+  Target,
+} from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface NavItem {
+  title: string;
+  url: string;
+  icon: React.LucideIcon;
+  items?: Omit<NavItem, "icon">[];
+}
 
 const AppSidebar = () => {
   const location = useLocation();
-  const { signOut, profile } = useAuth();
+  const { user } = useAuth();
 
-  const navigation = [
-    { name: 'Dashboard', href: '/app', icon: LayoutDashboard },
-    { name: 'Students', href: '/app/students', icon: Users },
-    { name: 'Assessments', href: '/app/assessments', icon: FileText },
-    { name: 'Insights', href: '/app/insights', icon: BarChart3 },
-    { name: 'Goals', href: '/app/goals', icon: Target },
-    { name: 'Reports', href: '/app/reports', icon: FileOutput },
-    { name: 'Advanced Testing', href: '/app/testing', icon: Zap }, // Updated name and icon
-    { name: 'Settings', href: '/app/settings', icon: Settings },
+  const navigationItems = [
+    {
+      title: "Dashboard",
+      url: "/app",
+      icon: Home,
+    },
+    {
+      title: "Students",
+      url: "/app/students",
+      icon: Users,
+    },
+    {
+      title: "Assessments",
+      url: "/app/assessments", 
+      icon: FileText,
+    },
+    {
+      title: "Skills", // Add this new item
+      url: "/app/skills",
+      icon: Target,
+    },
+    {
+      title: "Insights",
+      url: "/app/insights",
+      icon: BarChart3,
+      items: [
+        {
+          title: "Class Insights", 
+          url: "/app/insights/class"
+        },
+        {
+          title: "Individual Analysis",
+          url: "/app/insights/individual"
+        },
+        {
+          title: "Skills Mastery",
+          url: "/app/insights/skills"
+        },
+        {
+          title: "Recommendations",
+          url: "/app/insights/recommendations"
+        }
+      ]
+    },
+    {
+      title: "Settings",
+      url: "/app/settings",
+      icon: Settings,
+    },
   ];
 
-  return (
-    <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
-      {/* Logo */}
-      <div className="flex h-16 shrink-0 items-center px-4 border-b border-gray-200">
-        <Link to="/app" className="flex items-center space-x-2">
-          <GraduationCap className="h-8 w-8 text-blue-600" />
-          <span className="text-xl font-bold text-gray-900">LearnSpark AI</span>
-        </Link>
-      </div>
+  const renderNavItem = (item: NavItem) => {
+    const isActive = location.pathname === item.url;
+    const isSubItem = !!item.items;
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-4">
-        {navigation.map((item) => {
-          const isActive = location.pathname === item.href || 
-            (item.href !== '/app' && location.pathname.startsWith(item.href));
-          
-          return (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={cn(
-                'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
-                isActive
-                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              )}
-            >
-              <item.icon className="mr-3 h-5 w-5" />
-              {item.name}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* User section */}
-      <div className="border-t border-gray-200 p-4">
-        <div className="flex items-center space-x-3 mb-3">
-          <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-            <span className="text-sm font-medium text-blue-700">
-              {profile?.full_name?.charAt(0) || 'T'}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {profile?.full_name || 'Teacher'}
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              {profile?.school || 'School'}
-            </p>
-          </div>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={signOut}
-          className="w-full justify-start text-gray-600 hover:text-gray-900"
+    return (
+      <li key={item.title}>
+        <NavLink
+          to={item.url}
+          className={`flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 ${
+            isActive ? "bg-gray-100 font-medium" : ""
+          }`}
         >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign out
-        </Button>
+          <item.icon className="h-4 w-4" />
+          <span>{item.title}</span>
+        </NavLink>
+        {isSubItem && item.items && (
+          <ul className="ml-4">
+            {item.items.map((subItem) => (
+              <li key={subItem.title}>
+                <NavLink
+                  to={subItem.url}
+                  className={`flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 ${
+                    location.pathname === subItem.url
+                      ? "bg-gray-100 font-medium"
+                      : ""
+                  }`}
+                >
+                  <span>{subItem.title}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        )}
+      </li>
+    );
+  };
+
+  return (
+    <div className="border-r h-full w-60 flex-shrink-0 hidden md:block">
+      <div className="p-4">
+        <h1 className="text-2xl font-bold">LearnSpark AI</h1>
+        <p className="text-sm text-gray-500">
+          Welcome, {user?.email || "Teacher"}!
+        </p>
       </div>
+      <Separator />
+      <nav className="mt-4">
+        <ul>{navigationItems.map(renderNavItem)}</ul>
+      </nav>
     </div>
+  );
+};
+
+export const AppMobileSidebar = () => {
+  const location = useLocation();
+  const { user } = useAuth();
+
+  interface NavItem {
+    title: string;
+    url: string;
+    icon: React.LucideIcon;
+    items?: Omit<NavItem, "icon">[];
+  }
+
+  const navigationItems = [
+    {
+      title: "Dashboard",
+      url: "/app",
+      icon: Home,
+    },
+    {
+      title: "Students",
+      url: "/app/students",
+      icon: Users,
+    },
+    {
+      title: "Assessments",
+      url: "/app/assessments",
+      icon: FileText,
+    },
+    {
+      title: "Skills", // Add this new item
+      url: "/app/skills",
+      icon: Target,
+    },
+    {
+      title: "Insights",
+      url: "/app/insights",
+      icon: BarChart3,
+      items: [
+        {
+          title: "Class Insights",
+          url: "/app/insights/class",
+        },
+        {
+          title: "Individual Analysis",
+          url: "/app/insights/individual",
+        },
+        {
+          title: "Skills Mastery",
+          url: "/app/insights/skills",
+        },
+        {
+          title: "Recommendations",
+          url: "/app/insights/recommendations",
+        },
+      ],
+    },
+    {
+      title: "Settings",
+      url: "/app/settings",
+      icon: Settings,
+    },
+  ];
+
+  const renderNavItem = (item: NavItem) => {
+    const isActive = location.pathname === item.url;
+    const isSubItem = !!item.items;
+
+    return (
+      <li key={item.title}>
+        <NavLink
+          to={item.url}
+          className={`flex items-center space-x-2 p-3 rounded-md hover:bg-gray-100 ${
+            isActive ? "bg-gray-100 font-medium" : ""
+          }`}
+        >
+          <item.icon className="h-5 w-5" />
+          <span>{item.title}</span>
+        </NavLink>
+        {isSubItem && item.items && (
+          <ul className="ml-4">
+            {item.items.map((subItem) => (
+              <li key={subItem.title}>
+                <NavLink
+                  to={subItem.url}
+                  className={`flex items-center space-x-2 p-3 rounded-md hover:bg-gray-100 ${
+                    location.pathname === subItem.url
+                      ? "bg-gray-100 font-medium"
+                      : ""
+                  }`}
+                >
+                  <span>{subItem.title}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        )}
+      </li>
+    );
+  };
+
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Menu className="md:hidden" />
+      </SheetTrigger>
+      <SheetContent className="w-full sm:w-[280px] p-0">
+        <SheetHeader className="pl-5 pt-5">
+          <SheetTitle>LearnSpark AI</SheetTitle>
+          <SheetDescription>
+            Welcome, {user?.email || "Teacher"}!
+          </SheetDescription>
+        </SheetHeader>
+        <Separator />
+        <nav className="mt-4">
+          <ul className="p-5">{navigationItems.map(renderNavItem)}</ul>
+        </nav>
+      </SheetContent>
+    </Sheet>
   );
 };
 

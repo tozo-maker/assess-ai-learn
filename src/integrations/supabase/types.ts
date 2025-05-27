@@ -113,6 +113,55 @@ export type Database = {
           },
         ]
       }
+      assessment_skill_mapping: {
+        Row: {
+          assessment_id: string
+          assessment_item_id: string | null
+          created_at: string
+          id: string
+          skill_id: string
+          weight: number | null
+        }
+        Insert: {
+          assessment_id: string
+          assessment_item_id?: string | null
+          created_at?: string
+          id?: string
+          skill_id: string
+          weight?: number | null
+        }
+        Update: {
+          assessment_id?: string
+          assessment_item_id?: string | null
+          created_at?: string
+          id?: string
+          skill_id?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_skill_mapping_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_skill_mapping_assessment_item_id_fkey"
+            columns: ["assessment_item_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_skill_mapping_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assessments: {
         Row: {
           assessment_date: string | null
@@ -406,6 +455,174 @@ export type Database = {
           },
         ]
       }
+      skill_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          grade_levels: string[] | null
+          id: string
+          name: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          grade_levels?: string[] | null
+          id?: string
+          name: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          grade_levels?: string[] | null
+          id?: string
+          name?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      skill_mastery_history: {
+        Row: {
+          assessment_id: string | null
+          created_at: string
+          date_recorded: string
+          id: string
+          mastery_level: string
+          score: number
+          skill_id: string
+          student_id: string
+        }
+        Insert: {
+          assessment_id?: string | null
+          created_at?: string
+          date_recorded?: string
+          id?: string
+          mastery_level: string
+          score: number
+          skill_id: string
+          student_id: string
+        }
+        Update: {
+          assessment_id?: string | null
+          created_at?: string
+          date_recorded?: string
+          id?: string
+          mastery_level?: string
+          score?: number
+          skill_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_mastery_history_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_mastery_history_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_mastery_history_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skill_prerequisites: {
+        Row: {
+          created_at: string
+          id: string
+          prerequisite_skill_id: string
+          skill_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          prerequisite_skill_id: string
+          skill_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          prerequisite_skill_id?: string
+          skill_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_prerequisites_prerequisite_skill_id_fkey"
+            columns: ["prerequisite_skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_prerequisites_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skills: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          curriculum_standard: string | null
+          description: string | null
+          difficulty_level: number | null
+          grade_level: string
+          id: string
+          name: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          curriculum_standard?: string | null
+          description?: string | null
+          difficulty_level?: number | null
+          grade_level: string
+          id?: string
+          name: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          curriculum_standard?: string | null
+          description?: string | null
+          difficulty_level?: number | null
+          grade_level?: string
+          id?: string
+          name?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skills_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "skill_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_performance: {
         Row: {
           assessment_count: number
@@ -508,6 +725,57 @@ export type Database = {
           },
         ]
       }
+      student_skills: {
+        Row: {
+          assessment_count: number | null
+          created_at: string
+          current_mastery_level: string | null
+          id: string
+          last_assessed_at: string | null
+          mastery_score: number | null
+          skill_id: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          assessment_count?: number | null
+          created_at?: string
+          current_mastery_level?: string | null
+          id?: string
+          last_assessed_at?: string | null
+          mastery_score?: number | null
+          skill_id: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          assessment_count?: number | null
+          created_at?: string
+          current_mastery_level?: string | null
+          id?: string
+          last_assessed_at?: string | null
+          mastery_score?: number | null
+          skill_id?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_skills_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           avatar_url: string | null
@@ -591,7 +859,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_mastery_level: {
+        Args: { score: number }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
