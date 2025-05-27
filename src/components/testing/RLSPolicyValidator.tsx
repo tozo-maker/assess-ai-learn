@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,13 +32,6 @@ interface RLSTest {
   details?: any;
 }
 
-// Define the RLS function result type
-interface RLSFunctionResult {
-  table_name: string;
-  rls_enabled: boolean;
-  policy_count: number;
-}
-
 const RLSPolicyValidator = () => {
   const [tableInfo, setTableInfo] = useState<TableInfo[]>([]);
   const [rlsTests, setRLSTests] = useState<RLSTest[]>([]);
@@ -49,83 +43,63 @@ const RLSPolicyValidator = () => {
     try {
       console.log('Checking database structure...');
       
-      // Try the RLS testing function with proper typing
-      const { data: rlsData, error: rlsError } = await supabase.rpc('test_rls_policies') as {
-        data: RLSFunctionResult[] | null;
-        error: any;
-      };
+      // Manual check for existing tables - test by trying to query each table
+      const knownTables = [
+        'students', 
+        'assessments', 
+        'assessment_items', 
+        'student_responses', 
+        'assessment_analysis', 
+        'goals', 
+        'goal_milestones', 
+        'goal_progress_history',
+        'goal_achievements', 
+        'parent_communications', 
+        'student_performance', 
+        'data_exports'
+      ];
       
-      if (rlsError) {
-        console.log('RLS function not available, checking manually...');
-        
-        // Manual check for existing tables - test by trying to query each table
-        const knownTables = [
-          'students', 
-          'assessments', 
-          'assessment_items', 
-          'student_responses', 
-          'assessment_analysis', 
-          'goals', 
-          'goal_milestones', 
-          'goal_progress_history',
-          'goal_achievements', 
-          'parent_communications', 
-          'student_performance', 
-          'data_exports'
-        ];
-        
-        const tableInfos: TableInfo[] = [];
-        
-        for (const tableName of knownTables) {
-          try {
-            // Try to query the table to see if it exists and check RLS
-            const { error } = await supabase
-              .from(tableName as any)
-              .select('id')
-              .limit(0);
+      const tableInfos: TableInfo[] = [];
+      
+      for (const tableName of knownTables) {
+        try {
+          // Try to query the table to see if it exists and check RLS
+          const { error } = await supabase
+            .from(tableName as any)
+            .select('id')
+            .limit(0);
+          
+          if (error) {
+            // If we get a permission error, RLS is likely working
+            const rlsWorking = error.message.includes('row-level security') || 
+                              error.message.includes('permission denied');
             
-            if (error) {
-              // If we get a permission error, RLS is likely working
-              const rlsWorking = error.message.includes('row-level security') || 
-                                error.message.includes('permission denied');
-              
-              tableInfos.push({
-                table_name: tableName,
-                rls_enabled: rlsWorking,
-                policy_count: rlsWorking ? 1 : 0, // Estimate
-                exists: true
-              });
-            } else {
-              // Table exists and we can query it
-              tableInfos.push({
-                table_name: tableName,
-                rls_enabled: false, // If we can query without restrictions, RLS might not be working
-                policy_count: 0,
-                exists: true
-              });
-            }
-          } catch (e) {
             tableInfos.push({
               table_name: tableName,
-              rls_enabled: false,
+              rls_enabled: rlsWorking,
+              policy_count: rlsWorking ? 1 : 0, // Estimate
+              exists: true
+            });
+          } else {
+            // Table exists and we can query it
+            tableInfos.push({
+              table_name: tableName,
+              rls_enabled: false, // If we can query without restrictions, RLS might not be working
               policy_count: 0,
-              exists: false
+              exists: true
             });
           }
-        }
-        
-        setTableInfo(tableInfos);
-      } else {
-        // RLS function worked, use its data
-        if (rlsData && Array.isArray(rlsData)) {
-          setTableInfo(rlsData.map((row: RLSFunctionResult) => ({
-            table_name: row.table_name,
-            rls_enabled: row.rls_enabled,
-            policy_count: Number(row.policy_count),
-            exists: true
-          })));
+        } catch (e) {
+          tableInfos.push({
+            table_name: tableName,
+            rls_enabled: false,
+            policy_count: 0,
+            exists: false
+          });
         }
       }
+      
+      setTableInfo(tableInfos);
     } catch (error: any) {
       console.error('Database structure check failed:', error);
       toast({
