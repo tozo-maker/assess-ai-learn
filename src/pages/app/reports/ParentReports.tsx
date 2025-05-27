@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PageShell from '@/components/ui/page-shell';
@@ -14,6 +13,7 @@ import ProgressReportViewer from '@/components/communications/ProgressReportView
 import { studentService } from '@/services/student-service';
 import { communicationsService } from '@/services/communications-service';
 import { CommunicationFormData } from '@/types/communications';
+import BulkEmailDialog from '@/components/communications/BulkEmailDialog';
 
 const ParentReports = () => {
   const { toast } = useToast();
@@ -22,6 +22,7 @@ const ParentReports = () => {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showCommunicationDialog, setShowCommunicationDialog] = useState(false);
   const [reportData, setReportData] = useState(null);
+  const [showBulkEmailDialog, setShowBulkEmailDialog] = useState(false);
 
   const { data: students = [] } = useQuery({
     queryKey: ['students'],
@@ -258,6 +259,32 @@ const ParentReports = () => {
             {reportData && <ProgressReportViewer reportData={reportData} />}
           </DialogContent>
         </Dialog>
+
+        {/* Add Bulk Email Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Class Communications</CardTitle>
+            <p className="text-sm text-gray-600">
+              Send announcements and updates to multiple parents at once
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => setShowBulkEmailDialog(true)}
+              className="w-full"
+            >
+              <Mail className="h-4 w-4 mr-2" />
+              Send Bulk Email to Parents
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Add Bulk Email Dialog */}
+        <BulkEmailDialog
+          open={showBulkEmailDialog}
+          onOpenChange={setShowBulkEmailDialog}
+          students={students}
+        />
       </div>
     </PageShell>
   );

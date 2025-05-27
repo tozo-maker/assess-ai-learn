@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ParentCommunication, CommunicationFormData, ProgressReportData } from '@/types/communications';
 import { pdfService, PDFGenerationOptions } from './pdf-service';
+import { emailService } from './email-service';
 
 export const communicationsService = {
   async getCommunications(): Promise<ParentCommunication[]> {
@@ -82,14 +83,101 @@ export const communicationsService = {
 
   async sendCommunication(communicationId: string): Promise<void> {
     try {
-      const { error } = await supabase.functions.invoke('send-parent-communication', {
-        body: { communication_id: communicationId }
-      });
-
-      if (error) throw error;
+      const result = await emailService.sendCommunicationEmail(communicationId);
+      if (!result.success) {
+        throw new Error('Failed to send email communication');
+      }
     } catch (error) {
       console.error('Error sending communication:', error);
       throw error;
     }
+  },
+
+  async sendProgressReportEmail(studentId: string, reportData?: ProgressReportData): Promise<void> {
+    try {
+      let data = reportData;
+      if (!data) {
+        data = await this.generateProgressReport(studentId);
+      }
+
+      // Create communication record
+      const communication = await this.createCommunication({
+        student_id: studentId,
+        communication_type: 'progress_report',
+        subject: `Progress Report for ${data.student.first_name} ${data.student.last_name}`,
+        content: this.formatProgressReportContent(data),
+        parent_email: ''
+      });
+
+      // Send email
+      await this.sendCommunication(communication.id);
+    } catch (error) {
+      console.error('Error sending progress report email:', error);
+      throw error;
+    }
+  },
+
+  async sendBulkProgressReports(studentIds: string[]): Promise<void> {
+    try {
+      const results = [];
+      for (const studentId of studentIds) {
+        try {
+          await this.sendProgressReportEmail(studentId);
+          results.push({ studentId, success: true });
+        } catch (error) {
+          console.error(`Failed to send progress report for student ${studentId}:`, error);
+          results.push({ studentId, success: false, error: error.message });
+        }
+      }
+      
+      return results;
+    } catch (error) {
+      console.error('Error sending bulk progress reports:', error);
+      throw error;
+    }
+  },
+
+  async sendAchievementNotification(studentId: string, achievement: string): Promise<void> {
+    try {
+      await emailService.sendAchievementNotification(studentId, achievement);
+    } catch (error) {
+      console.error('Error sending achievement notification:', error);
+      throw error;
+    }
+  },
+
+  async sendConcernAlert(studentId: string, concern: string): Promise<void> {
+    try {
+      await emailService.sendConcernAlert(studentId, concern);
+    } catch (error) {
+      console.error('Error sending concern alert:', error);
+      throw error;
+    }
+  },
+
+  private formatProgressReportContent(reportData: ProgressReportData): string {
+    const { student, performance, recent_assessments, goals, ai_insights } = reportData;
+    
+    return `
+      <h2>Progress Summary</h2>
+      <p><strong>Overall Performance:</strong> ${performance.performance_level}</p>
+      <p><strong>Average Score:</strong> ${performance.average_score}%</p>
+      <p><strong>Assessments Completed:</strong> ${performance.assessment_count}</p>
+      
+      <h3>Recent Assessment Results</h3>
+      ${recent_assessments.map(assessment => `
+        <p>• ${assessment.title}: ${assessment.score}% (${assessment.date})</p>
+      `).join('')}
+      
+      <h3>Learning Goals Progress</h3>
+      ${goals.map(goal => `
+        <p>• ${goal.title}: ${goal.progress_percentage}% complete</p>
+      `).join('')}
+      
+      <h3>Teacher Insights</h3>
+      <p><strong>Strengths:</strong> ${ai_insights.strengths.join(', ')}</p>
+      <p><strong>Growth Areas:</strong> ${ai_insights.growth_areas.join(', ')}</p>
+      <p><strong>Recommendations:</strong> ${ai_insights.recommendations.join(', ')}</p>
+    `;
   }
 };
