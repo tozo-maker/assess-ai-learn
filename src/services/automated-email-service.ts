@@ -30,22 +30,23 @@ export interface EmailSchedule {
 
 export const automatedEmailService = {
   async getAutomationSettings(teacherId: string): Promise<AutomationSettings | null> {
-    const { data, error } = await supabase
-      .from('email_automation_settings')
-      .select('*')
-      .eq('teacher_id', teacherId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') throw error;
-    return data;
+    // For now, return mock settings since the table doesn't exist yet
+    return {
+      weekly_progress: false,
+      achievement_notifications: true,
+      concern_alerts: true,
+      send_day: 'friday',
+      send_time: '15:00',
+      quiet_hours_start: '20:00',
+      quiet_hours_end: '08:00',
+      digest_mode: false,
+      teacher_id: teacherId
+    };
   },
 
   async updateAutomationSettings(settings: Partial<AutomationSettings> & { teacher_id: string }): Promise<void> {
-    const { error } = await supabase
-      .from('email_automation_settings')
-      .upsert(settings, { onConflict: 'teacher_id' });
-
-    if (error) throw error;
+    // For now, just log the settings since the table doesn't exist yet
+    console.log('Updating automation settings:', settings);
   },
 
   async scheduleWeeklyProgressEmails(teacherId: string): Promise<void> {
@@ -187,40 +188,28 @@ export const automatedEmailService = {
   },
 
   async scheduleEmail(emailData: Omit<EmailSchedule, 'id' | 'created_at'>): Promise<void> {
-    const { error } = await supabase
-      .from('email_schedule')
-      .insert(emailData);
-
-    if (error) throw error;
+    // For now, just log the email data since the table doesn't exist yet
+    console.log('Scheduling email:', emailData);
   },
 
   async getPendingEmails(teacherId: string): Promise<EmailSchedule[]> {
-    const { data, error } = await supabase
-      .from('email_schedule')
-      .select('*')
-      .eq('teacher_id', teacherId)
-      .eq('status', 'pending')
-      .lte('scheduled_for', new Date().toISOString());
-
-    if (error) throw error;
-    return data || [];
+    // For now, return empty array since the table doesn't exist yet
+    return [];
   },
 
   async markEmailsAsSent(emailIds: string[]): Promise<void> {
-    const { error } = await supabase
-      .from('email_schedule')
-      .update({ status: 'sent' })
-      .in('id', emailIds);
-
-    if (error) throw error;
+    // For now, just log the email IDs since the table doesn't exist yet
+    console.log('Marking emails as sent:', emailIds);
   },
 
-  private async generateProgressSummary(studentId: string) {
-    const [assessments, goals, performance] = await Promise.all([
+  async generateProgressSummary(studentId: string) {
+    const [assessments, goals] = await Promise.all([
       assessmentService.getStudentResponses('recent', studentId),
-      goalsService.getStudentGoals(studentId),
-      studentService.getStudentPerformance(studentId)
+      goalsService.getStudentGoals(studentId)
     ]);
+
+    const student = await studentService.getStudentById(studentId);
+    const performance = student?.performance;
 
     return {
       recent_assessments: assessments.slice(0, 5),
@@ -231,7 +220,7 @@ export const automatedEmailService = {
     };
   },
 
-  private getNextSendDate(day: string, time: string): string {
+  getNextSendDate(day: string, time: string): string {
     const now = new Date();
     const targetDay = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(day.toLowerCase());
     
@@ -245,7 +234,7 @@ export const automatedEmailService = {
     return targetDate.toISOString();
   },
 
-  private isQuietHours(settings: AutomationSettings): boolean {
+  isQuietHours(settings: AutomationSettings): boolean {
     const now = new Date();
     const currentTime = now.getHours() * 60 + now.getMinutes();
     
@@ -262,7 +251,7 @@ export const automatedEmailService = {
     }
   },
 
-  private getNextSendTime(settings: AutomationSettings): string {
+  getNextSendTime(settings: AutomationSettings): string {
     const now = new Date();
     const [endHour, endMin] = settings.quiet_hours_end.split(':').map(Number);
     
@@ -276,7 +265,7 @@ export const automatedEmailService = {
     return nextSend.toISOString();
   },
 
-  private groupEmailsByStudent(emails: EmailSchedule[]): Record<string, EmailSchedule[]> {
+  groupEmailsByStudent(emails: EmailSchedule[]): Record<string, EmailSchedule[]> {
     return emails.reduce((acc, email) => {
       if (!email.student_id) return acc;
       if (!acc[email.student_id]) acc[email.student_id] = [];
@@ -285,7 +274,7 @@ export const automatedEmailService = {
     }, {} as Record<string, EmailSchedule[]>);
   },
 
-  private createDigestContent(emails: EmailSchedule[]): any {
+  createDigestContent(emails: EmailSchedule[]): any {
     return {
       achievements: emails.filter(e => e.email_type === 'achievement').map(e => e.content_data),
       concerns: emails.filter(e => e.email_type === 'concern').map(e => e.content_data),
@@ -293,12 +282,12 @@ export const automatedEmailService = {
     };
   },
 
-  private identifyImprovements(assessments: any[]): string[] {
+  identifyImprovements(assessments: any[]): string[] {
     // Logic to identify improvements from recent assessments
     return ['Improved reading comprehension scores', 'Better participation in class'];
   },
 
-  private identifyConcerns(performance: any): string[] {
+  identifyConcerns(performance: any): string[] {
     // Logic to identify concerns from performance data
     return performance?.needs_attention ? ['Below grade level in math'] : [];
   }
