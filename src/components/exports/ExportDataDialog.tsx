@@ -15,7 +15,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DateRangeFilter } from '@/components/exports/DateRangeFilter';
+import DateRangeFilter from '@/components/exports/DateRangeFilter';
 import { ExportRequestData } from '@/types/exports';
 
 interface ExportDataDialogProps {
@@ -32,7 +32,8 @@ const ExportDataDialog: React.FC<ExportDataDialogProps> = ({
   const [open, setOpen] = useState(false);
   const [exportType, setExportType] = useState<'student_data' | 'assessment_results' | 'progress_reports' | 'class_summary' | 'analytics_data'>('student_data');
   const [includeArchived, setIncludeArchived] = useState(false);
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const { toast } = useToast();
 
@@ -62,8 +63,8 @@ const ExportDataDialog: React.FC<ExportDataDialogProps> = ({
   const handleExport = () => {
     const filters: Record<string, any> = {};
     
-    if (dateRange.from) filters.start_date = dateRange.from.toISOString();
-    if (dateRange.to) filters.end_date = dateRange.to.toISOString();
+    if (startDate) filters.start_date = new Date(startDate).toISOString();
+    if (endDate) filters.end_date = new Date(endDate).toISOString();
     if (selectedFields.length > 0) filters.fields = selectedFields;
     if (includeArchived) filters.include_archived = true;
 
@@ -146,8 +147,10 @@ const ExportDataDialog: React.FC<ExportDataDialogProps> = ({
               Date Range (Optional)
             </Label>
             <DateRangeFilter
-              dateRange={dateRange}
-              onDateRangeChange={setDateRange}
+              startDate={startDate}
+              endDate={endDate}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
             />
           </div>
 
@@ -217,6 +220,36 @@ const ExportDataDialog: React.FC<ExportDataDialogProps> = ({
       </DialogContent>
     </Dialog>
   );
+};
+
+const getExportDescription = (type: string) => {
+  switch (type) {
+    case 'student_data':
+      return 'Student roster with demographics and contact information';
+    case 'assessment_results':
+      return 'Assessment scores with AI insights and analysis';
+    case 'progress_reports':
+      return 'Student progress reports and goal tracking';
+    case 'class_summary':
+      return 'Class-wide performance analytics and summaries';
+    case 'analytics_data':
+      return 'Detailed analytics data for external analysis';
+    default:
+      return '';
+  }
+};
+
+const getAvailableFields = (type: string) => {
+  switch (type) {
+    case 'student_data':
+      return ['demographics', 'contact_info', 'learning_goals', 'special_considerations'];
+    case 'assessment_results':
+      return ['scores', 'ai_insights', 'skill_mastery', 'trends'];
+    case 'progress_reports':
+      return ['goals', 'milestones', 'achievements', 'recommendations'];
+    default:
+      return [];
+  }
 };
 
 export default ExportDataDialog;
