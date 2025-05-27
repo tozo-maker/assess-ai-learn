@@ -18,6 +18,7 @@ import { studentService } from '@/services/student-service';
 import { communicationsService } from '@/services/communications-service';
 import { StudentWithPerformance } from '@/types/student';
 import { ProgressReportData } from '@/types/communications';
+import { PDFGenerationOptions } from '@/services/pdf-service';
 
 const ProgressReports = () => {
   const { toast } = useToast();
@@ -61,18 +62,48 @@ const ProgressReports = () => {
 
   // Generate PDF mutation
   const generatePDFMutation = useMutation({
-    mutationFn: communicationsService.generateProgressReportPDF,
+    mutationFn: ({ studentId, options }: { studentId: string; options?: PDFGenerationOptions }) => 
+      communicationsService.generateProgressReportPDF(studentId, options),
     onSuccess: (pdfUrl) => {
-      window.open(pdfUrl, '_blank');
+      // Auto-download the PDF
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = `progress_report_${Date.now()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
       toast({
         title: 'PDF Generated',
-        description: 'The progress report PDF has been generated successfully.'
+        description: 'The progress report PDF has been generated and downloaded successfully.'
       });
       queryClient.invalidateQueries({ queryKey: ['progress-reports'] });
     },
     onError: (error) => {
       toast({
         title: 'Error generating PDF',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
+  });
+
+  // Bulk PDF generation mutation
+  const bulkPDFMutation = useMutation({
+    mutationFn: ({ studentIds, options }: { studentIds: string[]; options?: PDFGenerationOptions }) =>
+      communicationsService.generateBulkProgressReports(studentIds, options),
+    onSuccess: (results) => {
+      const { success, failed } = results;
+      toast({
+        title: 'Bulk Generation Complete',
+        description: `Successfully generated ${success.length} reports. ${failed.length > 0 ? `${failed.length} failed.` : ''}`
+      });
+      setSelectedStudents(new Set());
+      queryClient.invalidateQueries({ queryKey: ['progress-reports'] });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error generating bulk reports',
         description: error.message,
         variant: 'destructive'
       });
@@ -114,8 +145,8 @@ const ProgressReports = () => {
     generateReportMutation.mutate(studentId);
   };
 
-  const handleGeneratePDF = (studentId: string) => {
-    generatePDFMutation.mutate(studentId);
+  const handleGeneratePDF = (studentId: string, options?: PDFGenerationOptions) => {
+    generatePDFMutation.mutate({ studentId, options });
   };
 
   const handleBulkPDFGeneration = async () => {
@@ -128,32 +159,9 @@ const ProgressReports = () => {
       return;
     }
 
-    toast({
-      title: 'Generating reports',
-      description: `Generating PDF reports for ${selectedStudents.size} students...`
+    bulkPDFMutation.mutate({ 
+      studentIds: Array.from(selectedStudents)
     });
-
-    try {
-      const promises = Array.from(selectedStudents).map(studentId =>
-        communicationsService.generateProgressReportPDF(studentId)
-      );
-      
-      await Promise.all(promises);
-      
-      toast({
-        title: 'Reports generated',
-        description: `Successfully generated ${selectedStudents.size} PDF reports.`
-      });
-      
-      setSelectedStudents(new Set());
-      queryClient.invalidateQueries({ queryKey: ['progress-reports'] });
-    } catch (error) {
-      toast({
-        title: 'Error generating reports',
-        description: 'Some reports failed to generate.',
-        variant: 'destructive'
-      });
-    }
   };
 
   const isAllSelected = filteredStudents.length > 0 && 
@@ -191,7 +199,7 @@ const ProgressReports = () => {
               gradelevels={gradelevels}
               selectedCount={selectedStudents.size}
               onBulkPDFGeneration={handleBulkPDFGeneration}
-              isGeneratingPDF={generatePDFMutation.isPending}
+              isGeneratingPDF={bulkPDFMutation.isPending}
             />
 
             {/* Bulk Selection */}

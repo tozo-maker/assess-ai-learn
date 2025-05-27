@@ -1,20 +1,22 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FileText, Download } from 'lucide-react';
+import { FileText, Download, Eye, Settings } from 'lucide-react';
 import { StudentWithPerformance } from '@/types/student';
+import PDFCustomizationDialog from './PDFCustomizationDialog';
+import { PDFGenerationOptions } from '@/services/pdf-service';
 
 interface StudentReportCardProps {
   student: StudentWithPerformance;
   isSelected: boolean;
   onSelect: (studentId: string, checked: boolean) => void;
   onGenerateReport: (studentId: string) => void;
-  onGeneratePDF: (studentId: string) => void;
-  isGeneratingReport: boolean;
-  isGeneratingPDF: boolean;
+  onGeneratePDF: (studentId: string, options?: PDFGenerationOptions) => void;
+  isGeneratingReport?: boolean;
+  isGeneratingPDF?: boolean;
 }
 
 const StudentReportCard: React.FC<StudentReportCardProps> = ({
@@ -23,69 +25,117 @@ const StudentReportCard: React.FC<StudentReportCardProps> = ({
   onSelect,
   onGenerateReport,
   onGeneratePDF,
-  isGeneratingReport,
-  isGeneratingPDF
+  isGeneratingReport = false,
+  isGeneratingPDF = false
 }) => {
+  const [showPDFDialog, setShowPDFDialog] = useState(false);
+
+  const performance = Array.isArray(student.performance) 
+    ? student.performance[0] 
+    : student.performance;
+
+  const handlePDFGeneration = (options: PDFGenerationOptions) => {
+    onGeneratePDF(student.id, options);
+    setShowPDFDialog(false);
+  };
+
+  const getPerformanceBadgeVariant = () => {
+    if (!performance) return 'secondary';
+    
+    if (performance.needs_attention) return 'destructive';
+    if (performance.average_score && performance.average_score >= 85) return 'default';
+    return 'secondary';
+  };
+
+  const getPerformanceText = () => {
+    if (!performance) return 'No data';
+    return performance.performance_level || 'Not assessed';
+  };
+
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Checkbox
-              checked={isSelected}
-              onCheckedChange={(checked) => onSelect(student.id, checked as boolean)}
-            />
-            <div>
-              <h3 className="font-medium">
-                {student.first_name} {student.last_name}
-              </h3>
-              <p className="text-sm text-gray-500">
-                Grade {student.grade_level}
-                {student.performance && !Array.isArray(student.performance) && (
-                  <>
-                    {' • '}
-                    <span className={
-                      student.performance.needs_attention 
-                        ? 'text-red-600' 
-                        : 'text-green-600'
-                    }>
-                      {student.performance.performance_level || 'No data'}
-                    </span>
-                  </>
+    <>
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={(checked) => onSelect(student.id, checked as boolean)}
+              />
+              
+              <div className="flex-1">
+                <h3 className="font-medium">
+                  {student.first_name} {student.last_name}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Grade {student.grade_level}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <div className="text-right">
+                <Badge variant={getPerformanceBadgeVariant()}>
+                  {getPerformanceText()}
+                </Badge>
+                {performance && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    {performance.assessment_count || 0} assessments
+                  </p>
                 )}
+              </div>
+
+              <div className="flex space-x-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onGenerateReport(student.id)}
+                  disabled={isGeneratingReport}
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  {isGeneratingReport ? 'Loading...' : 'Preview'}
+                </Button>
+                
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onGeneratePDF(student.id)}
+                  disabled={isGeneratingPDF}
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  {isGeneratingPDF ? 'Generating...' : 'Quick PDF'}
+                </Button>
+                
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowPDFDialog(true)}
+                  disabled={isGeneratingPDF}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {performance?.needs_attention && (
+            <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-700">
+                ⚠️ This student may need additional support
               </p>
             </div>
-            {student.performance && 
-             !Array.isArray(student.performance) && 
-             student.performance.needs_attention && (
-              <Badge variant="destructive" className="ml-2">
-                Needs Attention
-              </Badge>
-            )}
-          </div>
-          
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onGenerateReport(student.id)}
-              disabled={isGeneratingReport}
-            >
-              <FileText className="h-4 w-4 mr-1" />
-              Preview
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => onGeneratePDF(student.id)}
-              disabled={isGeneratingPDF}
-            >
-              <Download className="h-4 w-4 mr-1" />
-              {isGeneratingPDF ? 'Generating...' : 'PDF'}
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+          )}
+        </CardContent>
+      </Card>
+
+      <PDFCustomizationDialog
+        open={showPDFDialog}
+        onOpenChange={setShowPDFDialog}
+        onGenerate={handlePDFGeneration}
+        studentName={`${student.first_name} ${student.last_name}`}
+        isGenerating={isGeneratingPDF}
+      />
+    </>
   );
 };
 
