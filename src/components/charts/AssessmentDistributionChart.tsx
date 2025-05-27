@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 
 interface DistributionData {
   range: string;
@@ -14,52 +15,42 @@ interface AssessmentDistributionChartProps {
 }
 
 const AssessmentDistributionChart: React.FC<AssessmentDistributionChartProps> = ({ data, title }) => {
-  const maxCount = Math.max(...data.map(d => d.count));
+  const chartConfig: ChartConfig = {
+    count: {
+      label: 'Number of Students',
+      color: '#3b82f6',
+    },
+  };
 
-  const getBarColor = (range: string) => {
-    switch (range) {
-      case '90-100%': return 'bg-green-500';
-      case '80-89%': return 'bg-green-400';
-      case '70-79%': return 'bg-yellow-400';
-      case '60-69%': return 'bg-orange-400';
-      case '<60%': return 'bg-red-500';
-      default: return 'bg-gray-400';
-    }
+  const getBarColor = (range: string): string => {
+    if (range.includes('90-100')) return '#10b981';
+    if (range.includes('80-89')) return '#22c55e';
+    if (range.includes('70-79')) return '#eab308';
+    if (range.includes('60-69')) return '#f97316';
+    return '#ef4444';
   };
 
   return (
-    <div className="w-full">
-      <h3 className="text-lg font-semibold mb-4">{title}</h3>
-      <div className="space-y-3">
-        {data.map((item, index) => (
-          <div key={index} className="flex items-center space-x-4">
-            <div className="w-20 text-sm font-medium text-right">
-              {item.range}
-            </div>
-            <div className="flex-1 relative">
-              <div className="h-8 bg-gray-200 rounded-lg overflow-hidden">
-                <div 
-                  className={`h-full ${getBarColor(item.range)} transition-all duration-500`}
-                  style={{ width: maxCount > 0 ? `${(item.count / maxCount) * 100}%` : '0%' }}
-                ></div>
-              </div>
-              <div className="absolute inset-0 flex items-center justify-between px-3">
-                <span className="text-sm font-medium text-white mix-blend-difference">
-                  {item.count} students
-                </span>
-                <span className="text-sm font-medium text-white mix-blend-difference">
-                  {item.percentage}%
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="mt-6 text-sm text-gray-600">
-        <p>Total students represented: {data.reduce((sum, item) => sum + item.count, 0)}</p>
-      </div>
-    </div>
+    <ChartContainer config={chartConfig} className="h-64">
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="range" />
+        <YAxis />
+        <ChartTooltip
+          content={<ChartTooltipContent />}
+          labelFormatter={(label) => `Score Range: ${label}`}
+          formatter={(value, name, props) => {
+            const entry = data.find(d => d.range === props?.payload?.range);
+            return [`${value} students (${entry?.percentage || 0}%)`, 'Count'];
+          }}
+        />
+        <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={getBarColor(entry.range)} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ChartContainer>
   );
 };
 
