@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from '@/components/ui/toaster';
@@ -51,6 +51,17 @@ const queryClient = new QueryClient({
   },
 });
 
+// Wrapper component for app routes
+const AppLayoutWrapper = () => {
+  return (
+    <ProtectedRoute>
+      <AppLayout>
+        <Outlet />
+      </AppLayout>
+    </ProtectedRoute>
+  );
+};
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -90,11 +101,7 @@ function App() {
             } />
 
             {/* Protected App Routes */}
-            <Route path="/app" element={
-              <ProtectedRoute>
-                <AppLayout />
-              </ProtectedRoute>
-            }>
+            <Route path="/app" element={<AppLayoutWrapper />}>
               <Route index element={<Dashboard />} />
               
               {/* Students */}
