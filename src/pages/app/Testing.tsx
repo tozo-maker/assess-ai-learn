@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +12,8 @@ import {
   Navigation,
   TrendingUp,
   Brain,
-  Zap
+  Zap,
+  Lock
 } from 'lucide-react';
 import FunctionalityTester from '@/components/testing/FunctionalityTester';
 import DataIntegrityChecker from '@/components/testing/DataIntegrityChecker';
@@ -22,6 +24,7 @@ import PerformanceTestSuite from '@/components/testing/PerformanceTestSuite';
 import SecurityTestValidator from '@/components/testing/SecurityTestValidator';
 import BusinessLogicValidator from '@/components/testing/BusinessLogicValidator';
 import RLSPolicyValidator from '@/components/testing/RLSPolicyValidator';
+import RLSSecurityTestSuite from '@/components/testing/RLSSecurityTestSuite';
 
 const Testing = () => {
   return (
@@ -33,8 +36,12 @@ const Testing = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="comprehensive" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-9">
+      <Tabs defaultValue="rls-security" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-10">
+          <TabsTrigger value="rls-security" className="flex items-center">
+            <Lock className="h-4 w-4 mr-2" />
+            RLS Security
+          </TabsTrigger>
           <TabsTrigger value="comprehensive" className="flex items-center">
             <Zap className="h-4 w-4 mr-2" />
             Complete Suite
@@ -65,13 +72,17 @@ const Testing = () => {
           </TabsTrigger>
           <TabsTrigger value="rls" className="flex items-center">
             <Shield className="h-4 w-4 mr-2" />
-            RLS Security
+            RLS Validator
           </TabsTrigger>
           <TabsTrigger value="status" className="flex items-center">
             <Settings className="h-4 w-4 mr-2" />
             Status
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="rls-security" className="space-y-6">
+          <RLSSecurityTestSuite />
+        </TabsContent>
 
         <TabsContent value="comprehensive" className="space-y-6">
           <ComprehensiveTestSuite />
@@ -155,6 +166,14 @@ const Testing = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4">
+                  <div className="p-4 border rounded-lg">
+                    <h3 className="font-medium mb-2">RLS Security Testing (NEW)</h3>
+                    <p className="text-sm text-gray-600">
+                      Comprehensive Row Level Security testing to ensure teachers can only access their own data. 
+                      Critical for data privacy and security compliance.
+                    </p>
+                  </div>
+
                   <div className="p-4 border rounded-lg">
                     <h3 className="font-medium mb-2">Core Functionality Testing</h3>
                     <p className="text-sm text-gray-600">

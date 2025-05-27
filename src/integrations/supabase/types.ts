@@ -550,6 +550,42 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string
+          grade_levels: string[] | null
+          id: string
+          school: string | null
+          subjects: string[] | null
+          updated_at: string
+          years_experience: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name: string
+          grade_levels?: string[] | null
+          id: string
+          school?: string | null
+          subjects?: string[] | null
+          updated_at?: string
+          years_experience?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string
+          grade_levels?: string[] | null
+          id?: string
+          school?: string | null
+          subjects?: string[] | null
+          updated_at?: string
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
