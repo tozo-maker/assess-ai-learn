@@ -1,5 +1,8 @@
 
-// Shared types for Edge Functions
+export interface PDFGenerationRequest {
+  student_id: string;
+  report_data?: any;
+}
 
 export interface ProgressReportData {
   student: {
@@ -20,14 +23,7 @@ export interface ProgressReportData {
     date: string;
     subject: string;
   }>;
-  goals: Array<{
-    id: string;
-    title: string;
-    description?: string;
-    target_date?: string;
-    progress_percentage: number;
-    status: string;
-  }>;
+  goals: any[];
   ai_insights: {
     strengths: string[];
     growth_areas: string[];
@@ -35,21 +31,10 @@ export interface ProgressReportData {
   };
 }
 
-export interface PDFGenerationRequest {
+export interface CommunicationRequest {
   student_id: string;
-  template?: string;
-  include_charts?: boolean;
-  include_goals?: boolean;
-}
-
-export interface EmailRequest {
-  communication_id: string;
-}
-
-export interface GoalSuggestionsRequest {
-  student_id: string;
-}
-
-export interface DataExportRequest {
-  export_id: string;
+  communication_type: string;
+  subject: string;
+  report_data?: any;
+  parent_email?: string;
 }

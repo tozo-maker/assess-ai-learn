@@ -40,52 +40,79 @@ serve(async (req) => {
       throw new Error('Student ID is required');
     }
     
+    console.log(`Generating PDF for student: ${student_id}`);
+    
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') as string;
     const supabase = createClient(supabaseUrl, supabaseKey);
     
+    // Get authenticated user for RLS
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      throw new Error('Authentication required');
+    }
+    
     // First, get the report data using the generate-progress-report function
-    const reportResponse = await supabase.functions.invoke('generate-progress-report', {
-      body: JSON.stringify({ student_id }),
-    });
-    
-    if (reportResponse.error) {
-      throw new Error(`Error fetching report data: ${reportResponse.error.message}`);
+    try {
+      const reportResponse = await supabase.functions.invoke('generate-progress-report', {
+        body: { student_id },
+      });
+      
+      if (reportResponse.error) {
+        console.error('Error from generate-progress-report:', reportResponse.error);
+        throw new Error(`Error fetching report data: ${reportResponse.error.message}`);
+      }
+      
+      if (!reportResponse.data) {
+        throw new Error('No report data returned from generate-progress-report function');
+      }
+      
+      const reportData = reportResponse.data;
+      console.log('Successfully fetched report data');
+      
+      // Generate PDF from report data
+      const pdfUrl = await generatePDF(reportData);
+      console.log('PDF generated with URL:', pdfUrl);
+      
+      // Save the PDF URL to the communications table with proper filtering
+      const { data: communication, error: communicationError } = await supabase
+        .from('parent_communications')
+        .insert({
+          student_id,
+          teacher_id: user.id,
+          communication_type: 'progress_report',
+          subject: `Progress Report for ${reportData.student.first_name} ${reportData.student.last_name}`,
+          content: `Generated progress report on ${new Date().toLocaleDateString()}`,
+          pdf_url: pdfUrl,
+        })
+        .select()
+        .single();
+      
+      if (communicationError) {
+        console.error("Error saving communication:", communicationError);
+        // Don't throw here - PDF was generated successfully, just logging failed
+      } else {
+        console.log('Communication record saved successfully');
+      }
+      
+      // Return the PDF URL
+      return new Response(JSON.stringify({ pdf_url: pdfUrl }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+      
+    } catch (reportError) {
+      console.error('Error generating or fetching report:', reportError);
+      throw new Error(`Failed to generate report: ${reportError.message}`);
     }
-    
-    const reportData = reportResponse.data;
-    
-    // Generate PDF from report data
-    const pdfUrl = await generatePDF(reportData);
-    
-    // Save the PDF URL to the communications table
-    const { data: communication, error: communicationError } = await supabase
-      .from('parent_communications')
-      .insert({
-        student_id,
-        teacher_id: (await supabase.auth.getUser()).data.user?.id,
-        communication_type: 'progress_report',
-        subject: `Progress Report for ${reportData.student.first_name} ${reportData.student.last_name}`,
-        content: `Generated progress report on ${new Date().toLocaleDateString()}`,
-        pdf_url: pdfUrl,
-      })
-      .select()
-      .single();
-    
-    if (communicationError) {
-      console.error("Error saving communication:", communicationError);
-    }
-    
-    // Return the PDF URL
-    return new Response(JSON.stringify({ pdf_url: pdfUrl }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
     
   } catch (error) {
     console.error('Error in generate-progress-pdf function:', error);
     
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: 'Check Edge Function logs for more information'
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
