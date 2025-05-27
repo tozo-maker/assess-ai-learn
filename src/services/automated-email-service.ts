@@ -284,11 +284,13 @@ export const automatedEmailService = {
 
   identifyImprovements(assessments: any[]): string[] {
     // Logic to identify improvements from recent assessments
+    if (!Array.isArray(assessments)) return [];
     return ['Improved reading comprehension scores', 'Better participation in class'];
   },
 
   identifyConcerns(performance: any): string[] {
     // Logic to identify concerns from performance data
+    if (!performance || typeof performance !== 'object') return [];
     return performance?.needs_attention ? ['Below grade level in math'] : [];
   }
 };
