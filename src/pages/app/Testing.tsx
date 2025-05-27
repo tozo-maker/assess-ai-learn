@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +21,7 @@ import E2ETestRunner from '@/components/testing/E2ETestRunner';
 import PerformanceTestSuite from '@/components/testing/PerformanceTestSuite';
 import SecurityTestValidator from '@/components/testing/SecurityTestValidator';
 import BusinessLogicValidator from '@/components/testing/BusinessLogicValidator';
+import RLSPolicyValidator from '@/components/testing/RLSPolicyValidator';
 
 const Testing = () => {
   return (
@@ -34,7 +34,7 @@ const Testing = () => {
       </div>
 
       <Tabs defaultValue="comprehensive" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="comprehensive" className="flex items-center">
             <Zap className="h-4 w-4 mr-2" />
             Complete Suite
@@ -62,6 +62,10 @@ const Testing = () => {
           <TabsTrigger value="business" className="flex items-center">
             <Brain className="h-4 w-4 mr-2" />
             Business Logic
+          </TabsTrigger>
+          <TabsTrigger value="rls" className="flex items-center">
+            <Shield className="h-4 w-4 mr-2" />
+            RLS Security
           </TabsTrigger>
           <TabsTrigger value="status" className="flex items-center">
             <Settings className="h-4 w-4 mr-2" />
@@ -95,6 +99,10 @@ const Testing = () => {
 
         <TabsContent value="business" className="space-y-6">
           <BusinessLogicValidator />
+        </TabsContent>
+
+        <TabsContent value="rls" className="space-y-6">
+          <RLSPolicyValidator />
         </TabsContent>
 
         <TabsContent value="status" className="space-y-6">
