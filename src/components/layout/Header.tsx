@@ -11,7 +11,8 @@ import {
   ChevronDown,
   BookOpen,
   LineChart,
-  FileText
+  FileText,
+  Target
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -98,6 +99,11 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
+                <Link to="/app/audit">
+                  <Button variant="ghost" size="sm" title="Production Audit">
+                    <Target className="h-4 w-4" />
+                  </Button>
+                </Link>
                 <Link to="/app/settings/profile">
                   <Button variant="ghost" size="sm">
                     <Settings className="h-4 w-4" />
@@ -124,6 +130,13 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
                       <Link to="/app/settings/profile" className="flex items-center">
                         <Settings className="h-4 w-4 mr-2" />
                         Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/app/audit" className="flex items-center">
+                        <Target className="h-4 w-4 mr-2" />
+                        Production Audit
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -168,6 +181,17 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
                     </Link>
                   </DropdownMenuItem>
                 ))}
+                {isAuthenticated && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/app/audit" className="flex items-center">
+                        <Target className="h-4 w-4 mr-2" />
+                        Production Audit
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 {isAuthenticated ? (
                   <DropdownMenuItem 

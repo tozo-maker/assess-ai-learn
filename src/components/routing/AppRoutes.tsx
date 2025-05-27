@@ -1,368 +1,236 @@
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
 
-// Public Pages
-import Index from '@/pages/Index';
-import About from '@/pages/About';
-import Pricing from '@/pages/Pricing';
-import Demo from '@/pages/Demo';
-import Contact from '@/pages/Contact';
+// Landing and Auth Pages
+import LandingPage from '@/pages/LandingPage';
+import LoginPage from '@/pages/auth/Login';
+import SignupPage from '@/pages/auth/Signup';
 
-// Auth Pages
-import Signup from '@/pages/auth/Signup';
-import Login from '@/pages/auth/Login';
-import Onboarding from '@/pages/auth/Onboarding';
-import ForgotPassword from '@/pages/auth/ForgotPassword';
-import ResetPassword from '@/pages/auth/ResetPassword';
-
-// Main Application Pages
+// App Pages
 import Dashboard from '@/pages/app/Dashboard';
-import Students from '@/pages/app/students/Students';
-import AddStudent from '@/pages/app/students/AddStudent';
-import ImportStudents from '@/pages/app/students/ImportStudents';
-import StudentProfile from '@/pages/app/students/StudentProfile';
-import StudentAssessments from '@/pages/app/students/StudentAssessments';
-import StudentInsights from '@/pages/app/students/StudentInsights';
-import StudentGoals from '@/pages/app/students/StudentGoals';
-
-import Assessments from '@/pages/app/assessments/Assessments';
-import AddAssessment from '@/pages/app/assessments/AddAssessment';
-import BatchAssessment from '@/pages/app/assessments/BatchAssessment';
-import AssessmentDetails from '@/pages/app/assessments/AssessmentDetails';
-import AssessmentAnalysis from '@/pages/app/assessments/AssessmentAnalysis';
-import AddStudentResponses from '@/pages/app/assessments/AddStudentResponses';
-
-import ClassInsights from '@/pages/app/insights/ClassInsights';
-import IndividualInsights from '@/pages/app/insights/IndividualInsights';
-import SkillsInsights from '@/pages/app/insights/SkillsInsights';
-import Recommendations from '@/pages/app/insights/Recommendations';
-
-import ProgressReports from '@/pages/app/reports/ProgressReports';
-import ParentReports from '@/pages/app/reports/ParentReports';
-import AdminReports from '@/pages/app/reports/AdminReports';
+import StudentsPage from '@/pages/app/Students';
+import AddStudentPage from '@/pages/app/students/AddStudent';
+import StudentDetailsPage from '@/pages/app/students/StudentDetails';
+import AssessmentsPage from '@/pages/app/Assessments';
+import AddAssessmentPage from '@/pages/app/assessments/AddAssessment';
+import AssessmentDetailsPage from '@/pages/app/assessments/AssessmentDetails';
+import ResponsesPage from '@/pages/app/assessments/Responses';
+import ClassInsightsPage from '@/pages/app/insights/ClassInsights';
+import StudentInsightsPage from '@/pages/app/insights/StudentInsights';
+import ProgressReportsPage from '@/pages/app/reports/ProgressReports';
 import ExportReports from '@/pages/app/reports/ExportReports';
+import ProgressReports from '@/pages/app/communications/ProgressReports';
+import SettingsProfilePage from '@/pages/app/settings/Profile';
+import ProductionAudit from '@/pages/app/audit/ProductionAudit';
 
-import ProfileSettings from '@/pages/app/settings/ProfileSettings';
-import SubjectsSettings from '@/pages/app/settings/SubjectsSettings';
-import NotificationsSettings from '@/pages/app/settings/NotificationsSettings';
-import IntegrationsSettings from '@/pages/app/settings/IntegrationsSettings';
+// Protected Route Component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useAuth();
 
-// Testing Pages
-import Testing from '@/pages/Testing';
-import AppTesting from '@/pages/app/Testing';
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-import NotFound from '@/pages/NotFound';
+  if (!user) {
+    return <Navigate to="/auth/login" replace />;
+  }
 
-// Legacy redirects
-import {
-  StudentRedirect,
-  StudentAssessmentsRedirect,
-  StudentInsightsRedirect,
-  StudentGoalsRedirect,
-  AssessmentRedirect,
-  AssessmentAnalysisRedirect,
-  AssessmentResponsesRedirect,
-} from './LegacyRedirects';
+  return <>{children}</>;
+};
 
-const AppRoutes: React.FC = () => {
+// Public Route Component (redirects to dashboard if authenticated)
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Navigate to="/app/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public Pages */}
-      <Route path="/" element={<Index />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/pricing" element={<Pricing />} />
-      <Route path="/demo" element={<Demo />} />
-      <Route path="/contact" element={<Contact />} />
-
-      {/* Testing Pages - Protected Routes */}
-      <Route 
-        path="/testing" 
+      {/* Public Routes */}
+      <Route
+        path="/"
         element={
-          <ProtectedRoute>
-            <Testing />
-          </ProtectedRoute>
-        } 
+          <PublicRoute>
+            <LandingPage />
+          </PublicRoute>
+        }
       />
-      <Route 
-        path="/app/testing" 
+      <Route
+        path="/auth/login"
         element={
-          <ProtectedRoute>
-            <AppTesting />
-          </ProtectedRoute>
-        } 
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        }
       />
-
-      {/* Auth Pages */}
-      <Route path="/auth/signup" element={<Signup />} />
-      <Route path="/auth/login" element={<Login />} />
-      <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-      <Route path="/auth/reset-password" element={<ResetPassword />} />
-      <Route 
-        path="/auth/onboarding" 
+      <Route
+        path="/auth/signup"
         element={
-          <ProtectedRoute>
-            <Onboarding />
-          </ProtectedRoute>
-        } 
+          <PublicRoute>
+            <SignupPage />
+          </PublicRoute>
+        }
       />
 
-      {/* Main Application - Protected Routes */}
-      <Route 
-        path="/app/dashboard" 
+      {/* Protected App Routes */}
+      <Route
+        path="/app/dashboard"
         element={
           <ProtectedRoute>
             <Dashboard />
           </ProtectedRoute>
-        } 
-      />
-      
-      {/* Students - Protected Routes */}
-      <Route 
-        path="/app/students" 
-        element={
-          <ProtectedRoute>
-            <Students />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/app/students/add" 
-        element={
-          <ProtectedRoute>
-            <AddStudent />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/app/students/import" 
-        element={
-          <ProtectedRoute>
-            <ImportStudents />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/app/students/:id" 
-        element={
-          <ProtectedRoute>
-            <StudentProfile />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/app/students/:id/assessments" 
-        element={
-          <ProtectedRoute>
-            <StudentAssessments />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/app/students/:id/insights" 
-        element={
-          <ProtectedRoute>
-            <StudentInsights />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/app/students/:id/goals" 
-        element={
-          <ProtectedRoute>
-            <StudentGoals />
-          </ProtectedRoute>
-        } 
+        }
       />
 
-      {/* Assessments - Protected Routes */}
-      <Route 
-        path="/app/assessments" 
+      {/* Student Management */}
+      <Route
+        path="/app/students"
         element={
           <ProtectedRoute>
-            <Assessments />
+            <StudentsPage />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/app/assessments/add" 
+      <Route
+        path="/app/students/add"
         element={
           <ProtectedRoute>
-            <AddAssessment />
+            <AddStudentPage />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/app/assessments/batch" 
+      <Route
+        path="/app/students/:id"
         element={
           <ProtectedRoute>
-            <BatchAssessment />
+            <StudentDetailsPage />
           </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/app/assessments/:id" 
-        element={
-          <ProtectedRoute>
-            <AssessmentDetails />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/app/assessments/:id/analysis" 
-        element={
-          <ProtectedRoute>
-            <AssessmentAnalysis />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/app/assessments/:id/responses" 
-        element={
-          <ProtectedRoute>
-            <AddStudentResponses />
-          </ProtectedRoute>
-        } 
+        }
       />
 
-      {/* Insights - Protected Routes */}
-      <Route 
-        path="/app/insights/class" 
+      {/* Assessment Management */}
+      <Route
+        path="/app/assessments"
         element={
           <ProtectedRoute>
-            <ClassInsights />
+            <AssessmentsPage />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/app/insights/individual" 
+      <Route
+        path="/app/assessments/add"
         element={
           <ProtectedRoute>
-            <IndividualInsights />
+            <AddAssessmentPage />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/app/insights/skills" 
+      <Route
+        path="/app/assessments/:id"
         element={
           <ProtectedRoute>
-            <SkillsInsights />
+            <AssessmentDetailsPage />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/app/insights/recommendations" 
+      <Route
+        path="/app/assessments/:id/responses"
         element={
           <ProtectedRoute>
-            <Recommendations />
+            <ResponsesPage />
           </ProtectedRoute>
-        } 
+        }
       />
 
-      {/* Reports - Protected Routes */}
-      <Route 
-        path="/app/reports/progress" 
+      {/* Insights */}
+      <Route
+        path="/app/insights/class"
         element={
           <ProtectedRoute>
-            <ProgressReports />
+            <ClassInsightsPage />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/app/reports/parent" 
+      <Route
+        path="/app/insights/student/:id"
         element={
           <ProtectedRoute>
-            <ParentReports />
+            <StudentInsightsPage />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/app/reports/admin" 
+
+      {/* Reports */}
+      <Route
+        path="/app/reports/progress"
         element={
           <ProtectedRoute>
-            <AdminReports />
+            <ProgressReportsPage />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/app/reports/export" 
+      <Route
+        path="/app/reports/export"
         element={
           <ProtectedRoute>
             <ExportReports />
           </ProtectedRoute>
-        } 
+        }
       />
 
-      {/* Settings - Protected Routes */}
-      <Route 
-        path="/app/settings/profile" 
+      {/* Communications */}
+      <Route
+        path="/app/communications/progress-reports"
         element={
           <ProtectedRoute>
-            <ProfileSettings />
+            <ProgressReports />
           </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/app/settings/subjects" 
-        element={
-          <ProtectedRoute>
-            <SubjectsSettings />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/app/settings/notifications" 
-        element={
-          <ProtectedRoute>
-            <NotificationsSettings />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/app/settings/integrations" 
-        element={
-          <ProtectedRoute>
-            <IntegrationsSettings />
-          </ProtectedRoute>
-        } 
+        }
       />
 
-      {/* Legacy routes - redirect to /app prefix */}
-      <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
-      <Route path="/students" element={<Navigate to="/app/students" replace />} />
-      <Route path="/students/add" element={<Navigate to="/app/students/add" replace />} />
-      <Route path="/students/import" element={<Navigate to="/app/students/import" replace />} />
-      <Route path="/students/:id" element={<StudentRedirect />} />
-      <Route path="/students/:id/assessments" element={<StudentAssessmentsRedirect />} />
-      <Route path="/students/:id/insights" element={<StudentInsightsRedirect />} />
-      <Route path="/students/:id/goals" element={<StudentGoalsRedirect />} />
-      <Route path="/assessments" element={<Navigate to="/app/assessments" replace />} />
-      <Route path="/assessments/add" element={<Navigate to="/app/assessments/add" replace />} />
-      <Route path="/assessments/batch" element={<Navigate to="/app/assessments/batch" replace />} />
-      <Route path="/assessments/:id" element={<AssessmentRedirect />} />
-      <Route path="/assessments/:id/analysis" element={<AssessmentAnalysisRedirect />} />
-      <Route path="/assessments/:id/responses" element={<AssessmentResponsesRedirect />} />
-      
-      {/* Insights legacy routes */}
-      <Route path="/insights/class" element={<Navigate to="/app/insights/class" replace />} />
-      <Route path="/insights/individual" element={<Navigate to="/app/insights/individual" replace />} />
-      <Route path="/insights/skills" element={<Navigate to="/app/insights/skills" replace />} />
-      <Route path="/insights/recommendations" element={<Navigate to="/app/insights/recommendations" replace />} />
-      
-      {/* Reports legacy routes */}
-      <Route path="/reports/progress" element={<Navigate to="/app/reports/progress" replace />} />
-      <Route path="/reports/parent" element={<Navigate to="/app/reports/parent" replace />} />
-      <Route path="/reports/admin" element={<Navigate to="/app/reports/admin" replace />} />
-      <Route path="/reports/export" element={<Navigate to="/app/reports/export" replace />} />
-      
-      {/* Settings legacy routes */}
-      <Route path="/settings/profile" element={<Navigate to="/app/settings/profile" replace />} />
-      <Route path="/settings/subjects" element={<Navigate to="/app/settings/subjects" replace />} />
-      <Route path="/settings/notifications" element={<Navigate to="/app/settings/notifications" replace />} />
-      <Route path="/settings/integrations" element={<Navigate to="/app/settings/integrations" replace />} />
+      {/* Settings */}
+      <Route
+        path="/app/settings/profile"
+        element={
+          <ProtectedRoute>
+            <SettingsProfilePage />
+          </ProtectedRoute>
+        }
+      />
 
-      <Route path="*" element={<NotFound />} />
+      {/* Production Audit */}
+      <Route
+        path="/app/audit"
+        element={
+          <ProtectedRoute>
+            <ProductionAudit />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Fallback Routes */}
+      <Route path="/app/*" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
