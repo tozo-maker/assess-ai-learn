@@ -61,7 +61,7 @@ export const emailService = {
 
       const recipients = students
         .filter(student => student.parent_email)
-        .map(student => student.parent_email);
+        .map(student => student.parent_email as string);
 
       if (recipients.length === 0) {
         throw new Error('No valid parent email addresses found for selected students');
@@ -93,7 +93,7 @@ export const emailService = {
         .eq('id', studentId)
         .single();
 
-      if (studentError || !student.parent_email) {
+      if (studentError || !student?.parent_email) {
         throw new Error('Student not found or no parent email available');
       }
 
@@ -120,7 +120,7 @@ export const emailService = {
         .eq('id', studentId)
         .single();
 
-      if (studentError || !student.parent_email) {
+      if (studentError || !student?.parent_email) {
         throw new Error('Student not found or no parent email available');
       }
 

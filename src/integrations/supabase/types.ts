@@ -413,6 +413,7 @@ export type Database = {
           communication_type: string
           content: string
           created_at: string
+          email_status: string | null
           id: string
           parent_email: string | null
           pdf_url: string | null
@@ -425,6 +426,7 @@ export type Database = {
           communication_type: string
           content: string
           created_at?: string
+          email_status?: string | null
           id?: string
           parent_email?: string | null
           pdf_url?: string | null
@@ -437,6 +439,7 @@ export type Database = {
           communication_type?: string
           content?: string
           created_at?: string
+          email_status?: string | null
           id?: string
           parent_email?: string | null
           pdf_url?: string | null
@@ -785,6 +788,9 @@ export type Database = {
           id: string
           last_name: string
           learning_goals: string | null
+          parent_email: string | null
+          parent_name: string | null
+          parent_phone: string | null
           special_considerations: string | null
           student_id: string | null
           teacher_id: string
@@ -798,6 +804,9 @@ export type Database = {
           id?: string
           last_name: string
           learning_goals?: string | null
+          parent_email?: string | null
+          parent_name?: string | null
+          parent_phone?: string | null
           special_considerations?: string | null
           student_id?: string | null
           teacher_id: string
@@ -811,6 +820,9 @@ export type Database = {
           id?: string
           last_name?: string
           learning_goals?: string | null
+          parent_email?: string | null
+          parent_name?: string | null
+          parent_phone?: string | null
           special_considerations?: string | null
           student_id?: string | null
           teacher_id?: string

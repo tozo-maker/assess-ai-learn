@@ -102,6 +102,14 @@ const ParentReports = () => {
 
   const selectedStudentData = students.find(s => s.id === selectedStudent);
 
+  // Transform students data for BulkEmailDialog compatibility
+  const studentsForBulkEmail = students.map(student => ({
+    id: student.id,
+    first_name: student.first_name,
+    last_name: student.last_name,
+    parent_email: student.parent_email || ''
+  }));
+
   return (
     <PageShell 
       title="Parent Communication" 
@@ -283,7 +291,7 @@ const ParentReports = () => {
         <BulkEmailDialog
           open={showBulkEmailDialog}
           onOpenChange={setShowBulkEmailDialog}
-          students={students}
+          students={studentsForBulkEmail}
         />
       </div>
     </PageShell>

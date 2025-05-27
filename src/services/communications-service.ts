@@ -117,14 +117,14 @@ export const communicationsService = {
     }
   },
 
-  async sendBulkProgressReports(studentIds: string[]): Promise<void> {
+  async sendBulkProgressReports(studentIds: string[]): Promise<any[]> {
     try {
       const results = [];
       for (const studentId of studentIds) {
         try {
           await this.sendProgressReportEmail(studentId);
           results.push({ studentId, success: true });
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Failed to send progress report for student ${studentId}:`, error);
           results.push({ studentId, success: false, error: error.message });
         }
@@ -155,7 +155,7 @@ export const communicationsService = {
     }
   },
 
-  private formatProgressReportContent(reportData: ProgressReportData): string {
+  formatProgressReportContent(reportData: ProgressReportData): string {
     const { student, performance, recent_assessments, goals, ai_insights } = reportData;
     
     return `

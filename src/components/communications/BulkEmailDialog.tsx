@@ -12,10 +12,17 @@ import { emailService } from '@/services/email-service';
 import { useToast } from '@/hooks/use-toast';
 import { Mail } from 'lucide-react';
 
+interface Student {
+  id: string;
+  first_name: string;
+  last_name: string;
+  parent_email?: string;
+}
+
 interface BulkEmailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  students: Array<{ id: string; first_name: string; last_name: string; parent_email: string }>;
+  students: Student[];
 }
 
 const BulkEmailDialog: React.FC<BulkEmailDialogProps> = ({
