@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,6 +31,13 @@ interface RLSTest {
   details?: any;
 }
 
+// Define the RLS function result type
+interface RLSFunctionResult {
+  table_name: string;
+  rls_enabled: boolean;
+  policy_count: number;
+}
+
 const RLSPolicyValidator = () => {
   const [tableInfo, setTableInfo] = useState<TableInfo[]>([]);
   const [rlsTests, setRLSTests] = useState<RLSTest[]>([]);
@@ -43,8 +49,11 @@ const RLSPolicyValidator = () => {
     try {
       console.log('Checking database structure...');
       
-      // Check if the RLS testing function exists and works
-      const { data: rlsData, error: rlsError } = await supabase.rpc('test_rls_policies');
+      // Try the RLS testing function with proper typing
+      const { data: rlsData, error: rlsError } = await supabase.rpc('test_rls_policies') as {
+        data: RLSFunctionResult[] | null;
+        error: any;
+      };
       
       if (rlsError) {
         console.log('RLS function not available, checking manually...');
@@ -108,8 +117,8 @@ const RLSPolicyValidator = () => {
         setTableInfo(tableInfos);
       } else {
         // RLS function worked, use its data
-        if (rlsData) {
-          setTableInfo(rlsData.map(row => ({
+        if (rlsData && Array.isArray(rlsData)) {
+          setTableInfo(rlsData.map((row: RLSFunctionResult) => ({
             table_name: row.table_name,
             rls_enabled: row.rls_enabled,
             policy_count: Number(row.policy_count),
@@ -117,7 +126,7 @@ const RLSPolicyValidator = () => {
           })));
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Database structure check failed:', error);
       toast({
         variant: "destructive",
@@ -206,7 +215,7 @@ const RLSPolicyValidator = () => {
             });
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         updateTest(test.table, {
           status: 'error',
           message: `Test failed: ${error.message}`,
