@@ -11,8 +11,7 @@ import {
   ChevronDown,
   BookOpen,
   LineChart,
-  FileText,
-  Brain
+  FileText
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -28,6 +27,7 @@ interface HeaderProps {
   showNavigation?: boolean;
 }
 
+// Add proper type for navigation items
 interface NavItem {
   name: string;
   href: string;
@@ -42,18 +42,18 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
   const isAuthenticated = !!user;
 
   const publicNavItems: NavItem[] = [
-    { name: 'Features', href: '/features' },
+    { name: 'Features', href: '/#features' },
     { name: 'About', href: '/about' },
     { name: 'Pricing', href: '/pricing' },
-    { name: 'Contact', href: '/contact' },
+    { name: 'Demo', href: '/demo' },
   ];
 
   const appNavItems: NavItem[] = [
-    { name: 'Dashboard', href: '/app', icon: <Home className="h-4 w-4 mr-2" /> },
+    { name: 'Dashboard', href: '/app/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
     { name: 'Students', href: '/app/students', icon: <User className="h-4 w-4 mr-2" /> },
     { name: 'Assessments', href: '/app/assessments', icon: <BookOpen className="h-4 w-4 mr-2" /> },
     { name: 'Insights', href: '/app/insights/class', icon: <LineChart className="h-4 w-4 mr-2" /> },
-    { name: 'Reports', href: '/app/reports', icon: <FileText className="h-4 w-4 mr-2" /> },
+    { name: 'Reports', href: '/app/reports/progress', icon: <FileText className="h-4 w-4 mr-2" /> },
   ];
 
   const handleSignOut = async () => {
@@ -66,9 +66,9 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to={isAuthenticated ? "/app" : "/"} className="flex items-center space-x-2">
+          <Link to={isAuthenticated ? "/app/dashboard" : "/"} className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Brain className="h-5 w-5 text-white" />
+              <span className="text-white font-bold text-lg">L</span>
             </div>
             <span className="text-xl font-bold text-gray-900">LearnSpark AI</span>
           </Link>
@@ -98,7 +98,7 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <Link to="/app/settings">
+                <Link to="/app/settings/profile">
                   <Button variant="ghost" size="sm">
                     <Settings className="h-4 w-4" />
                   </Button>
@@ -115,13 +115,13 @@ const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
-                      <Link to="/app/settings" className="flex items-center">
+                      <Link to="/app/settings/profile" className="flex items-center">
                         <User className="h-4 w-4 mr-2" />
                         Profile
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/app/settings" className="flex items-center">
+                      <Link to="/app/settings/profile" className="flex items-center">
                         <Settings className="h-4 w-4 mr-2" />
                         Settings
                       </Link>

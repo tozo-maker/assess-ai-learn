@@ -5,9 +5,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from '@/components/ui/toaster';
 
-// Auth Context
-import { AuthProvider } from '@/contexts/AuthContext';
-
 // Auth and Layout
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import PublicLayout from '@/components/layout/PublicLayout';
@@ -21,10 +18,6 @@ import Pricing from '@/pages/Pricing';
 import Features from '@/pages/Features';
 import Auth from '@/pages/Auth';
 
-// Auth Pages
-import Signup from '@/pages/auth/Signup';
-import Login from '@/pages/auth/Login';
-
 // App Pages
 import Dashboard from '@/pages/app/Dashboard';
 import Students from '@/pages/app/students/Students';
@@ -35,12 +28,19 @@ import ImportStudents from '@/pages/app/students/ImportStudents';
 import Assessments from '@/pages/app/assessments/Assessments';
 import AddAssessment from '@/pages/app/assessments/AddAssessment';
 import AssessmentDetails from '@/pages/app/assessments/AssessmentDetails';
-import AddStudentResponses from '@/pages/app/assessments/AddStudentResponses';
+import StudentResponses from '@/pages/app/assessments/StudentResponses';
+import Goals from '@/pages/app/goals/Goals';
+import AddGoal from '@/pages/app/goals/AddGoal';
+import GoalDetails from '@/pages/app/goals/GoalDetails';
 import ClassInsights from '@/pages/app/insights/ClassInsights';
 import SkillsInsights from '@/pages/app/insights/SkillsInsights';
 import ComparativeAnalytics from '@/pages/app/insights/ComparativeAnalytics';
-import ProgressReports from '@/pages/app/reports/ProgressReports';
-import ProfileSettings from '@/pages/app/settings/ProfileSettings';
+import Reports from '@/pages/app/reports/Reports';
+import StudentReport from '@/pages/app/reports/StudentReport';
+import ClassReport from '@/pages/app/reports/ClassReport';
+import CommunicationCenter from '@/pages/app/communication/CommunicationCenter';
+import Settings from '@/pages/app/Settings';
+import Profile from '@/pages/app/Profile';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,181 +54,95 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <div className="App">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={
-                <PublicLayout>
-                  <Home />
-                </PublicLayout>
-              } />
-              <Route path="/about" element={
-                <PublicLayout>
-                  <About />
-                </PublicLayout>
-              } />
-              <Route path="/contact" element={
-                <PublicLayout>
-                  <Contact />
-                </PublicLayout>
-              } />
-              <Route path="/pricing" element={
-                <PublicLayout>
-                  <Pricing />
-                </PublicLayout>
-              } />
-              <Route path="/features" element={
-                <PublicLayout>
-                  <Features />
-                </PublicLayout>
-              } />
-              <Route path="/auth" element={
-                <PublicLayout showNavigation={false}>
-                  <Auth />
-                </PublicLayout>
-              } />
-              
-              {/* Auth Routes */}
-              <Route path="/auth/signup" element={
-                <PublicLayout showNavigation={false}>
-                  <Signup />
-                </PublicLayout>
-              } />
-              <Route path="/auth/login" element={
-                <PublicLayout showNavigation={false}>
-                  <Login />
-                </PublicLayout>
-              } />
+      <Router>
+        <div className="App">
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={
+              <PublicLayout>
+                <Home />
+              </PublicLayout>
+            } />
+            <Route path="/about" element={
+              <PublicLayout>
+                <About />
+              </PublicLayout>
+            } />
+            <Route path="/contact" element={
+              <PublicLayout>
+                <Contact />
+              </PublicLayout>
+            } />
+            <Route path="/pricing" element={
+              <PublicLayout>
+                <Pricing />
+              </PublicLayout>
+            } />
+            <Route path="/features" element={
+              <PublicLayout>
+                <Features />
+              </PublicLayout>
+            } />
+            <Route path="/auth" element={
+              <PublicLayout showNavigation={false}>
+                <Auth />
+              </PublicLayout>
+            } />
 
-              {/* Protected App Routes */}
-              <Route path="/app" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <Dashboard />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
+            {/* Protected App Routes */}
+            <Route path="/app" element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<Dashboard />} />
               
-              {/* Students Routes */}
-              <Route path="/app/students" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <Students />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/app/students/add" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <AddStudent />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/app/students/import" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <ImportStudents />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/app/students/:id" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <StudentProfile />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/app/students/:id/insights" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <StudentInsights />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
+              {/* Students */}
+              <Route path="students" element={<Students />} />
+              <Route path="students/add" element={<AddStudent />} />
+              <Route path="students/import" element={<ImportStudents />} />
+              <Route path="students/:id" element={<StudentProfile />} />
+              <Route path="students/:id/insights" element={<StudentInsights />} />
               
-              {/* Assessments Routes */}
-              <Route path="/app/assessments" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <Assessments />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/app/assessments/add" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <AddAssessment />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/app/assessments/:id" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <AssessmentDetails />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/app/assessments/:id/responses" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <AddStudentResponses />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
+              {/* Assessments */}
+              <Route path="assessments" element={<Assessments />} />
+              <Route path="assessments/add" element={<AddAssessment />} />
+              <Route path="assessments/:id" element={<AssessmentDetails />} />
+              <Route path="assessments/:id/responses" element={<StudentResponses />} />
               
-              {/* Insights Routes */}
-              <Route path="/app/insights/class" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <ClassInsights />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/app/insights/skills" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <SkillsInsights />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/app/insights/comparative" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <ComparativeAnalytics />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
+              {/* Goals */}
+              <Route path="goals" element={<Goals />} />
+              <Route path="goals/add" element={<AddGoal />} />
+              <Route path="goals/:id" element={<GoalDetails />} />
               
-              {/* Reports Routes */}
-              <Route path="/app/reports" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <ProgressReports />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
+              {/* Insights */}
+              <Route path="insights/class" element={<ClassInsights />} />
+              <Route path="insights/skills" element={<SkillsInsights />} />
+              <Route path="insights/comparative" element={<ComparativeAnalytics />} />
               
-              {/* Settings Routes */}
-              <Route path="/app/settings" element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <ProfileSettings />
-                  </AppLayout>
-                </ProtectedRoute>
-              } />
+              {/* Reports */}
+              <Route path="reports" element={<Reports />} />
+              <Route path="reports/student/:id" element={<StudentReport />} />
+              <Route path="reports/class" element={<ClassReport />} />
+              
+              {/* Communication */}
+              <Route path="communication" element={<CommunicationCenter />} />
+              
+              {/* Settings */}
+              <Route path="settings" element={<Settings />} />
+              <Route path="profile" element={<Profile />} />
+            </Route>
 
-              {/* Redirect legacy routes */}
-              <Route path="/students/*" element={<Navigate to="/app/students" replace />} />
-              <Route path="/assessments/*" element={<Navigate to="/app/assessments" replace />} />
-              <Route path="/insights/*" element={<Navigate to="/app/insights/class" replace />} />
-              <Route path="/reports/*" element={<Navigate to="/app/reports" replace />} />
-            </Routes>
-            <Toaster />
-          </div>
-        </Router>
-      </AuthProvider>
+            {/* Redirect legacy routes */}
+            <Route path="/students/*" element={<Navigate to="/app/students" replace />} />
+            <Route path="/assessments/*" element={<Navigate to="/app/assessments" replace />} />
+            <Route path="/goals/*" element={<Navigate to="/app/goals" replace />} />
+            <Route path="/insights/*" element={<Navigate to="/app/insights/class" replace />} />
+            <Route path="/reports/*" element={<Navigate to="/app/reports" replace />} />
+          </Routes>
+          <Toaster />
+        </div>
+      </Router>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
