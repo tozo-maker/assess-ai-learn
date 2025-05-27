@@ -2,11 +2,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { AuthState, TeacherProfile } from '@/types/auth';
+import { AuthState, TeacherProfile, SignUpData, SignInData } from '@/types/auth';
 
 interface AuthContextType extends AuthState {
-  signUp: (email: string, password: string, metadata: any) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (data: SignUpData) => Promise<{ error: any }>;
+  signIn: (data: SignInData) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateProfile: (profile: Partial<TeacherProfile>) => Promise<void>;
@@ -152,16 +152,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, metadata: any) => {
+  const signUp = async (data: SignUpData) => {
     try {
       setIsLoading(true);
       setError(null);
+      
+      const { email, password, ...profileData } = data;
       
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: metadata
+          data: {
+            full_name: profileData.full_name,
+            school: profileData.school,
+            grade_levels: profileData.grade_levels.join(','),
+            subjects: profileData.subjects.join(','),
+            years_experience: profileData.years_experience
+          }
         }
       });
 
@@ -176,10 +184,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (data: SignInData) => {
     try {
       setIsLoading(true);
       setError(null);
+      
+      const { email, password } = data;
       
       const { error } = await supabase.auth.signInWithPassword({
         email,
