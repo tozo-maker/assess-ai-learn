@@ -212,8 +212,8 @@ export const automatedEmailService = {
     const performance = student?.performance;
 
     return {
-      recent_assessments: assessments.slice(0, 5),
-      goals_progress: goals,
+      recent_assessments: Array.isArray(assessments) ? assessments.slice(0, 5) : [],
+      goals_progress: Array.isArray(goals) ? goals : [],
       performance_summary: performance,
       improvements: this.identifyImprovements(assessments),
       concerns: this.identifyConcerns(performance)
@@ -266,6 +266,7 @@ export const automatedEmailService = {
   },
 
   groupEmailsByStudent(emails: EmailSchedule[]): Record<string, EmailSchedule[]> {
+    if (!Array.isArray(emails)) return {};
     return emails.reduce((acc, email) => {
       if (!email.student_id) return acc;
       if (!acc[email.student_id]) acc[email.student_id] = [];
@@ -275,6 +276,7 @@ export const automatedEmailService = {
   },
 
   createDigestContent(emails: EmailSchedule[]): any {
+    if (!Array.isArray(emails)) return { achievements: [], concerns: [], progress: [] };
     return {
       achievements: emails.filter(e => e.email_type === 'achievement').map(e => e.content_data),
       concerns: emails.filter(e => e.email_type === 'concern').map(e => e.content_data),
