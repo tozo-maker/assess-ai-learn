@@ -198,6 +198,11 @@ export const automatedEmailService = {
   },
 
   async markEmailsAsSent(emailIds: string[]): Promise<void> {
+    // Add type guard to ensure emailIds is an array
+    if (!Array.isArray(emailIds)) {
+      console.error('markEmailsAsSent: emailIds is not an array', emailIds);
+      return;
+    }
     // For now, just log the email IDs since the table doesn't exist yet
     console.log('Marking emails as sent:', emailIds);
   },
