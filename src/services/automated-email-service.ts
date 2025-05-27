@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { emailService } from './email-service';
 import { studentService } from './student-service';
@@ -57,6 +56,12 @@ export const automatedEmailService = {
       const students = await studentService.getStudents();
       const scheduledFor = this.getNextSendDate(settings.send_day, settings.send_time);
 
+      // Ensure students is an array before using for...of
+      if (!Array.isArray(students)) {
+        console.error('Students data is not an array:', students);
+        return;
+      }
+
       for (const student of students) {
         const progressData = await this.generateProgressSummary(student.id);
         
@@ -98,7 +103,7 @@ export const automatedEmailService = {
         template_data: {
           student,
           achievement,
-          next_steps: achievement.next_steps || []
+          next_steps: Array.isArray(achievement.next_steps) ? achievement.next_steps : []
         }
       };
 
@@ -143,7 +148,7 @@ export const automatedEmailService = {
         template_data: {
           student,
           concern,
-          suggested_actions: concern.suggested_actions
+          suggested_actions: Array.isArray(concern.suggested_actions) ? concern.suggested_actions : []
         }
       };
 
@@ -179,7 +184,10 @@ export const automatedEmailService = {
         };
 
         await emailService.sendEmail(emailData);
-        await this.markEmailsAsSent(emails.map(e => e.id));
+        // Ensure emails is an array before using map
+        if (Array.isArray(emails)) {
+          await this.markEmailsAsSent(emails.map(e => e.id));
+        }
       }
     } catch (error) {
       console.error('Error generating digest emails:', error);
