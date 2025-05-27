@@ -10,13 +10,16 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import PublicLayout from '@/components/layout/PublicLayout';
 import AppLayout from '@/components/layout/AppLayout';
 
-// Public Pages
-import Home from '@/pages/Home';
+// Public Pages - using existing pages
+import Index from '@/pages/Index';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import Pricing from '@/pages/Pricing';
-import Features from '@/pages/Features';
-import Auth from '@/pages/Auth';
+import Demo from '@/pages/Demo';
+
+// Auth Pages
+import Signup from '@/pages/auth/Signup';
+import Login from '@/pages/auth/Login';
 
 // App Pages
 import Dashboard from '@/pages/app/Dashboard';
@@ -28,19 +31,12 @@ import ImportStudents from '@/pages/app/students/ImportStudents';
 import Assessments from '@/pages/app/assessments/Assessments';
 import AddAssessment from '@/pages/app/assessments/AddAssessment';
 import AssessmentDetails from '@/pages/app/assessments/AssessmentDetails';
-import StudentResponses from '@/pages/app/assessments/StudentResponses';
-import Goals from '@/pages/app/goals/Goals';
-import AddGoal from '@/pages/app/goals/AddGoal';
-import GoalDetails from '@/pages/app/goals/GoalDetails';
+import AddStudentResponses from '@/pages/app/assessments/AddStudentResponses';
 import ClassInsights from '@/pages/app/insights/ClassInsights';
 import SkillsInsights from '@/pages/app/insights/SkillsInsights';
 import ComparativeAnalytics from '@/pages/app/insights/ComparativeAnalytics';
-import Reports from '@/pages/app/reports/Reports';
-import StudentReport from '@/pages/app/reports/StudentReport';
-import ClassReport from '@/pages/app/reports/ClassReport';
-import CommunicationCenter from '@/pages/app/communication/CommunicationCenter';
-import Settings from '@/pages/app/Settings';
-import Profile from '@/pages/app/Profile';
+import ProgressReports from '@/pages/app/reports/ProgressReports';
+import ProfileSettings from '@/pages/app/settings/ProfileSettings';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,7 +56,7 @@ function App() {
             {/* Public Routes */}
             <Route path="/" element={
               <PublicLayout>
-                <Home />
+                <Index />
               </PublicLayout>
             } />
             <Route path="/about" element={
@@ -78,65 +74,62 @@ function App() {
                 <Pricing />
               </PublicLayout>
             } />
-            <Route path="/features" element={
+            <Route path="/demo" element={
               <PublicLayout>
-                <Features />
+                <Demo />
               </PublicLayout>
             } />
-            <Route path="/auth" element={
+            
+            {/* Auth Routes */}
+            <Route path="/auth/signup" element={
               <PublicLayout showNavigation={false}>
-                <Auth />
+                <Signup />
+              </PublicLayout>
+            } />
+            <Route path="/auth/login" element={
+              <PublicLayout showNavigation={false}>
+                <Login />
               </PublicLayout>
             } />
 
             {/* Protected App Routes */}
             <Route path="/app" element={
               <ProtectedRoute>
-                <AppLayout />
+                <AppLayout>
+                  <Routes>
+                    <Route index element={<Dashboard />} />
+                    
+                    {/* Students */}
+                    <Route path="students" element={<Students />} />
+                    <Route path="students/add" element={<AddStudent />} />
+                    <Route path="students/import" element={<ImportStudents />} />
+                    <Route path="students/:id" element={<StudentProfile />} />
+                    <Route path="students/:id/insights" element={<StudentInsights />} />
+                    
+                    {/* Assessments */}
+                    <Route path="assessments" element={<Assessments />} />
+                    <Route path="assessments/add" element={<AddAssessment />} />
+                    <Route path="assessments/:id" element={<AssessmentDetails />} />
+                    <Route path="assessments/:id/responses" element={<AddStudentResponses />} />
+                    
+                    {/* Insights */}
+                    <Route path="insights/class" element={<ClassInsights />} />
+                    <Route path="insights/skills" element={<SkillsInsights />} />
+                    <Route path="insights/comparative" element={<ComparativeAnalytics />} />
+                    
+                    {/* Reports */}
+                    <Route path="reports" element={<ProgressReports />} />
+                    
+                    {/* Settings */}
+                    <Route path="settings" element={<ProfileSettings />} />
+                  </Routes>
+                </AppLayout>
               </ProtectedRoute>
-            }>
-              <Route index element={<Dashboard />} />
-              
-              {/* Students */}
-              <Route path="students" element={<Students />} />
-              <Route path="students/add" element={<AddStudent />} />
-              <Route path="students/import" element={<ImportStudents />} />
-              <Route path="students/:id" element={<StudentProfile />} />
-              <Route path="students/:id/insights" element={<StudentInsights />} />
-              
-              {/* Assessments */}
-              <Route path="assessments" element={<Assessments />} />
-              <Route path="assessments/add" element={<AddAssessment />} />
-              <Route path="assessments/:id" element={<AssessmentDetails />} />
-              <Route path="assessments/:id/responses" element={<StudentResponses />} />
-              
-              {/* Goals */}
-              <Route path="goals" element={<Goals />} />
-              <Route path="goals/add" element={<AddGoal />} />
-              <Route path="goals/:id" element={<GoalDetails />} />
-              
-              {/* Insights */}
-              <Route path="insights/class" element={<ClassInsights />} />
-              <Route path="insights/skills" element={<SkillsInsights />} />
-              <Route path="insights/comparative" element={<ComparativeAnalytics />} />
-              
-              {/* Reports */}
-              <Route path="reports" element={<Reports />} />
-              <Route path="reports/student/:id" element={<StudentReport />} />
-              <Route path="reports/class" element={<ClassReport />} />
-              
-              {/* Communication */}
-              <Route path="communication" element={<CommunicationCenter />} />
-              
-              {/* Settings */}
-              <Route path="settings" element={<Settings />} />
-              <Route path="profile" element={<Profile />} />
-            </Route>
+            } />
 
             {/* Redirect legacy routes */}
             <Route path="/students/*" element={<Navigate to="/app/students" replace />} />
             <Route path="/assessments/*" element={<Navigate to="/app/assessments" replace />} />
-            <Route path="/goals/*" element={<Navigate to="/app/goals" replace />} />
             <Route path="/insights/*" element={<Navigate to="/app/insights/class" replace />} />
             <Route path="/reports/*" element={<Navigate to="/app/reports" replace />} />
           </Routes>
