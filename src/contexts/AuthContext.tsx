@@ -9,6 +9,9 @@ interface AuthContextType extends AuthState {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  updateProfile: (profile: Partial<TeacherProfile>) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,6 +50,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshProfile = async () => {
     if (user) {
       await fetchUserProfile(user.id);
+    }
+  };
+
+  const updateProfile = async (profileData: Partial<TeacherProfile>) => {
+    if (!user) throw new Error('No authenticated user');
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const { error } = await supabase
+        .from('teacher_profiles')
+        .update(profileData)
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Refresh the profile to get updated data
+      await fetchUserProfile(user.id);
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -165,7 +224,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp,
     signIn,
     signOut,
-    refreshProfile
+    refreshProfile,
+    updateProfile,
+    updatePassword,
+    resetPassword
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

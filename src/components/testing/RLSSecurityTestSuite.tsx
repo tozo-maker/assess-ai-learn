@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +25,9 @@ interface SecurityTest {
   details?: any;
   severity: 'low' | 'medium' | 'high' | 'critical';
 }
+
+// Define valid table names based on the database schema
+type ValidTableName = 'teacher_profiles' | 'students' | 'assessments' | 'assessment_items' | 'student_responses' | 'assessment_analysis' | 'goals' | 'goal_milestones' | 'goal_progress_history' | 'goal_achievements' | 'parent_communications' | 'student_performance' | 'data_exports';
 
 const RLSSecurityTestSuite = () => {
   const [tests, setTests] = useState<SecurityTest[]>([]);
@@ -94,7 +96,7 @@ const RLSSecurityTestSuite = () => {
     try {
       // Try to access data - should only return user's own data or be blocked by RLS
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as ValidTableName)
         .select('*')
         .limit(10);
 

@@ -64,43 +64,19 @@ export const authService = {
     if (!user.user) return null;
     
     try {
-      // For now, create a mock profile from user metadata until teacher_profiles table is created
-      const userMetadata = user.user.user_metadata;
-      
-      if (userMetadata && userMetadata.full_name) {
-        // Handle grade_levels - it might be a string or array
-        let gradeLevels: string[] = [];
-        if (userMetadata.grade_levels) {
-          if (Array.isArray(userMetadata.grade_levels)) {
-            gradeLevels = userMetadata.grade_levels;
-          } else if (typeof userMetadata.grade_levels === 'string') {
-            gradeLevels = userMetadata.grade_levels.split(',');
-          }
-        }
+      // Try to get profile from teacher_profiles table
+      const { data: profile, error } = await supabase
+        .from('teacher_profiles')
+        .select('*')
+        .eq('id', user.user.id)
+        .single();
 
-        // Handle subjects - it might be a string or array
-        let subjects: string[] = [];
-        if (userMetadata.subjects) {
-          if (Array.isArray(userMetadata.subjects)) {
-            subjects = userMetadata.subjects;
-          } else if (typeof userMetadata.subjects === 'string') {
-            subjects = userMetadata.subjects.split(',');
-          }
-        }
-
-        return {
-          id: user.user.id,
-          full_name: userMetadata.full_name,
-          school: userMetadata.school,
-          grade_levels: gradeLevels,
-          subjects: subjects,
-          years_experience: userMetadata.years_experience,
-          created_at: user.user.created_at,
-          updated_at: user.user.updated_at || user.user.created_at
-        } as TeacherProfile;
+      if (error) {
+        console.error('Error fetching teacher profile from database:', error);
+        return null;
       }
-      
-      return null;
+
+      return profile as TeacherProfile;
     } catch (error) {
       console.error('Error fetching teacher profile:', error);
       return null;
@@ -113,39 +89,17 @@ export const authService = {
     if (!user.user) throw new Error('No authenticated user');
     
     try {
-      // Update user metadata until teacher_profiles table is created
-      const { data, error } = await supabase.auth.updateUser({
-        data: {
-          full_name: profile.full_name,
-          school: profile.school,
-          grade_levels: profile.grade_levels?.join(','),
-          subjects: profile.subjects?.join(','),
-          years_experience: profile.years_experience
-        }
-      });
+      // Update profile in teacher_profiles table
+      const { data, error } = await supabase
+        .from('teacher_profiles')
+        .update(profile)
+        .eq('id', user.user.id)
+        .select()
+        .single();
       
       if (error) throw error;
       
-      // Return updated profile
-      const updatedMetadata = data.user?.user_metadata;
-      return {
-        id: user.user.id,
-        full_name: updatedMetadata?.full_name || profile.full_name || '',
-        school: updatedMetadata?.school || profile.school,
-        grade_levels: updatedMetadata?.grade_levels ? 
-          (Array.isArray(updatedMetadata.grade_levels) ? 
-            updatedMetadata.grade_levels : 
-            updatedMetadata.grade_levels.split(',')) : 
-          profile.grade_levels || [],
-        subjects: updatedMetadata?.subjects ? 
-          (Array.isArray(updatedMetadata.subjects) ? 
-            updatedMetadata.subjects : 
-            updatedMetadata.subjects.split(',')) : 
-          profile.subjects || [],
-        years_experience: updatedMetadata?.years_experience || profile.years_experience,
-        created_at: user.user.created_at,
-        updated_at: new Date().toISOString()
-      } as TeacherProfile;
+      return data as TeacherProfile;
     } catch (error) {
       console.error('Error updating teacher profile:', error);
       throw error;
@@ -158,25 +112,19 @@ export const authService = {
     if (!user.user) throw new Error('No authenticated user');
     
     try {
-      // For now, store in user metadata until teacher_profiles table is created
-      const { data, error } = await supabase.auth.updateUser({
-        data: {
-          full_name: profile.full_name,
-          school: profile.school,
-          grade_levels: profile.grade_levels.join(','),
-          subjects: profile.subjects.join(','),
-          years_experience: profile.years_experience
-        }
-      });
+      // Create profile in teacher_profiles table
+      const { data, error } = await supabase
+        .from('teacher_profiles')
+        .insert({
+          id: user.user.id,
+          ...profile
+        })
+        .select()
+        .single();
       
       if (error) throw error;
       
-      return {
-        id: user.user.id,
-        ...profile,
-        created_at: user.user.created_at,
-        updated_at: new Date().toISOString()
-      } as TeacherProfile;
+      return data as TeacherProfile;
     } catch (error) {
       console.error('Error creating teacher profile:', error);
       throw error;
