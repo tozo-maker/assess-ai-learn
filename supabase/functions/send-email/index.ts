@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { Resend } from 'npm:resend@2.0.0';
@@ -12,7 +11,7 @@ interface EmailRequest {
   communication_id?: string;
   recipients?: string[];
   subject: string;
-  template_type: 'progress_report' | 'achievement' | 'concern_alert' | 'custom' | 'bulk_announcement';
+  template_type: 'progress_report' | 'achievement' | 'concern_alert' | 'custom' | 'bulk_announcement' | 'weekly_progress' | 'digest';
   template_data: Record<string, any>;
   sender_name?: string;
 }
@@ -155,6 +154,10 @@ function generateEmailTemplate(template_type: string, data: Record<string, any>)
       return generateConcernAlertEmail(data);
     case 'bulk_announcement':
       return generateBulkAnnouncementEmail(data);
+    case 'weekly_progress':
+      return generateWeeklyProgressEmail(data);
+    case 'digest':
+      return generateDigestEmail(data);
     case 'custom':
     default:
       return generateCustomEmail(data);
@@ -401,6 +404,169 @@ function generateCustomEmail(data: any) {
   `;
 
   const text = content.replace(/<[^>]*>/g, '');
+
+  return { html, text };
+}
+
+function generateWeeklyProgressEmail(data: any) {
+  const student = data.student || {};
+  const progress = data.progress || {};
+  const recent_assessments = data.recent_assessments || [];
+  const improvements = data.improvements || [];
+  const concerns = data.concerns || [];
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .header { background-color: #2563eb; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border-radius: 8px; }
+        .achievements { background-color: #f0fdf4; border-left: 4px solid #16a34a; }
+        .concerns { background-color: #fef2f2; border-left: 4px solid #dc2626; }
+        .assessments { background-color: #f8fafc; border-left: 4px solid #3b82f6; }
+        .footer { background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+        ul { margin: 10px 0; padding-left: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>Weekly Progress Report</h1>
+        <h2>${student.first_name} ${student.last_name}</h2>
+      </div>
+      <div class="content">
+        ${improvements.length > 0 ? `
+          <div class="section achievements">
+            <h3>🎉 Improvements This Week</h3>
+            <ul>
+              ${improvements.map(improvement => `<li>${improvement}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+        
+        ${recent_assessments.length > 0 ? `
+          <div class="section assessments">
+            <h3>📊 Recent Assessments</h3>
+            ${recent_assessments.map(assessment => `
+              <p>• <strong>${assessment.title}:</strong> ${assessment.score}% (${new Date(assessment.date).toLocaleDateString()})</p>
+            `).join('')}
+          </div>
+        ` : ''}
+        
+        ${concerns.length > 0 ? `
+          <div class="section concerns">
+            <h3>⚠️ Areas for Attention</h3>
+            <ul>
+              ${concerns.map(concern => `<li>${concern}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+        
+        <div class="section">
+          <h3>📈 Overall Performance</h3>
+          <p><strong>Current Average:</strong> ${progress.average_score || 'N/A'}%</p>
+          <p><strong>Assessments Completed:</strong> ${progress.assessment_count || 0}</p>
+        </div>
+      </div>
+      <div class="footer">
+        <p>This weekly progress report was sent automatically from LearnSpark AI.</p>
+        <p>If you have questions, please contact your teacher directly.</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const text = `
+    Weekly Progress Report for ${student.first_name} ${student.last_name}
+    
+    ${improvements.length > 0 ? `Improvements This Week:\n${improvements.map(i => `• ${i}`).join('\n')}\n\n` : ''}
+    ${recent_assessments.length > 0 ? `Recent Assessments:\n${recent_assessments.map(a => `• ${a.title}: ${a.score}%`).join('\n')}\n\n` : ''}
+    ${concerns.length > 0 ? `Areas for Attention:\n${concerns.map(c => `• ${c}`).join('\n')}\n\n` : ''}
+    
+    Overall Performance:
+    Current Average: ${progress.average_score || 'N/A'}%
+    Assessments Completed: ${progress.assessment_count || 0}
+    
+    This weekly progress report was sent automatically from LearnSpark AI.
+  `;
+
+  return { html, text };
+}
+
+function generateDigestEmail(data: any) {
+  const student = data.student || {};
+  const digest = data.digest || {};
+  const achievements = digest.achievements || [];
+  const concerns = digest.concerns || [];
+  const progress = digest.progress || [];
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .header { background-color: #7c3aed; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border-radius: 8px; }
+        .achievements { background-color: #f0fdf4; border-left: 4px solid #16a34a; }
+        .concerns { background-color: #fef2f2; border-left: 4px solid #dc2626; }
+        .progress { background-color: #f8fafc; border-left: 4px solid #3b82f6; }
+        .footer { background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>Weekly Digest</h1>
+        <h2>${student.first_name} ${student.last_name}</h2>
+      </div>
+      <div class="content">
+        ${achievements.length > 0 ? `
+          <div class="section achievements">
+            <h3>🎉 Achievements</h3>
+            ${achievements.map(achievement => `
+              <p><strong>${achievement.title}:</strong> ${achievement.description}</p>
+            `).join('')}
+          </div>
+        ` : ''}
+        
+        ${progress.length > 0 ? `
+          <div class="section progress">
+            <h3>📊 Progress Updates</h3>
+            ${progress.map(p => `
+              <p>Weekly progress summary available</p>
+            `).join('')}
+          </div>
+        ` : ''}
+        
+        ${concerns.length > 0 ? `
+          <div class="section concerns">
+            <h3>⚠️ Concerns</h3>
+            ${concerns.map(concern => `
+              <p><strong>${concern.title}:</strong> ${concern.description}</p>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+      <div class="footer">
+        <p>This digest contains all updates from this week for ${student.first_name}.</p>
+        <p>Individual notifications have been combined to reduce email volume.</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const text = `
+    Weekly Digest for ${student.first_name} ${student.last_name}
+    
+    ${achievements.length > 0 ? `Achievements:\n${achievements.map(a => `• ${a.title}: ${a.description}`).join('\n')}\n\n` : ''}
+    ${progress.length > 0 ? 'Progress Updates:\nWeekly progress summary available\n\n' : ''}
+    ${concerns.length > 0 ? `Concerns:\n${concerns.map(c => `• ${c.title}: ${c.description}`).join('\n')}\n\n` : ''}
+    
+    This digest contains all updates from this week.
+  `;
 
   return { html, text };
 }

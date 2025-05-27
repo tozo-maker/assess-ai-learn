@@ -14,6 +14,8 @@ import { studentService } from '@/services/student-service';
 import { communicationsService } from '@/services/communications-service';
 import { CommunicationFormData } from '@/types/communications';
 import BulkEmailDialog from '@/components/communications/BulkEmailDialog';
+import EmailAutomationSettings from '@/components/communications/EmailAutomationSettings';
+import { useAutomatedEmails } from '@/hooks/useAutomatedEmails';
 
 const ParentReports = () => {
   const { toast } = useToast();
@@ -71,6 +73,8 @@ const ParentReports = () => {
       });
     }
   });
+
+  const { sendAchievementNotification, sendConcernAlert, scheduleWeeklyEmails } = useAutomatedEmails();
 
   const handleGenerateReport = () => {
     if (!selectedStudent) {
@@ -267,6 +271,85 @@ const ParentReports = () => {
             {reportData && <ProgressReportViewer reportData={reportData} />}
           </DialogContent>
         </Dialog>
+
+        {/* Add Email Automation Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Email Automation</CardTitle>
+            <p className="text-sm text-gray-600">
+              Set up automated progress updates, achievement notifications, and concern alerts
+            </p>
+          </CardHeader>
+          <CardContent>
+            <EmailAutomationSettings teacherId="current-teacher-id" />
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions for Testing */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <p className="text-sm text-gray-600">
+              Test automated email features
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  if (selectedStudent) {
+                    sendAchievementNotification({
+                      studentId: selectedStudent,
+                      achievement: {
+                        type: 'high_score',
+                        title: 'Excellent Math Assessment',
+                        description: 'Scored 95% on latest math assessment',
+                        score: 95,
+                        next_steps: ['Continue practicing advanced problems', 'Consider enrichment activities']
+                      }
+                    });
+                  }
+                }}
+                disabled={!selectedStudent}
+              >
+                Send Test Achievement
+              </Button>
+              
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  if (selectedStudent) {
+                    sendConcernAlert({
+                      studentId: selectedStudent,
+                      concern: {
+                        type: 'low_performance',
+                        title: 'Reading Comprehension Support Needed',
+                        description: 'Recent assessments show difficulty with reading comprehension',
+                        suggested_actions: [
+                          'Schedule parent-teacher conference',
+                          'Consider additional reading practice at home',
+                          'Explore tutoring options'
+                        ],
+                        urgency: 'medium'
+                      }
+                    });
+                  }
+                }}
+                disabled={!selectedStudent}
+              >
+                Send Test Concern
+              </Button>
+              
+              <Button 
+                variant="outline"
+                onClick={() => scheduleWeeklyEmails('current-teacher-id')}
+              >
+                Schedule Weekly Emails
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Add Bulk Email Card */}
         <Card>
