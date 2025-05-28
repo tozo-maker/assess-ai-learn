@@ -25,6 +25,12 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      
+      {/* Default /app route redirects to dashboard */}
+      <Route
+        path="/app"
+        element={<Navigate to="/app/dashboard" replace />}
+      />
 
       {/* Student Management Routes */}
       {StudentRoutes()}
@@ -41,8 +47,10 @@ const AppRoutes = () => {
       {/* Settings & Audit Routes */}
       {SettingsRoutes()}
 
-      {/* Fallback Routes */}
+      {/* More specific fallback for unmatched /app routes */}
       <Route path="/app/*" element={<Navigate to="/app/dashboard" replace />} />
+      
+      {/* Global fallback for non-app routes */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

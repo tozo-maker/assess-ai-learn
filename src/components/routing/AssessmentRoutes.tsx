@@ -19,6 +19,7 @@ export const AssessmentRoutes = () => (
         </ProtectedRoute>
       }
     />
+    {/* Static routes BEFORE dynamic routes */}
     <Route
       path="/app/assessments/add"
       element={
@@ -28,18 +29,19 @@ export const AssessmentRoutes = () => (
       }
     />
     <Route
+      path="/app/assessments/batch"
+      element={
+        <ProtectedRoute>
+          <BatchAssessment />
+        </ProtectedRoute>
+      }
+    />
+    {/* Dynamic routes AFTER static routes */}
+    <Route
       path="/app/assessments/:id/edit"
       element={
         <ProtectedRoute>
           <EditAssessmentPage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/app/assessments/:id"
-      element={
-        <ProtectedRoute>
-          <AssessmentDetailsPage />
         </ProtectedRoute>
       }
     />
@@ -52,10 +54,10 @@ export const AssessmentRoutes = () => (
       }
     />
     <Route
-      path="/app/assessments/batch"
+      path="/app/assessments/:id"
       element={
         <ProtectedRoute>
-          <BatchAssessment />
+          <AssessmentDetailsPage />
         </ProtectedRoute>
       }
     />

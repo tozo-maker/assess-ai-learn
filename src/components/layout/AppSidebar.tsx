@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Sheet,
@@ -36,7 +35,7 @@ const AppSidebar = () => {
   const navigationItems: NavItem[] = [
     {
       title: "Dashboard",
-      url: "/app",
+      url: "/app/dashboard",
       icon: Home,
     },
     {
@@ -56,7 +55,7 @@ const AppSidebar = () => {
     },
     {
       title: "Insights",
-      url: "/app/insights",
+      url: "/app/insights/class",
       icon: BarChart3,
       items: [
         {
@@ -79,7 +78,7 @@ const AppSidebar = () => {
     },
     {
       title: "Settings",
-      url: "/app/settings",
+      url: "/app/settings/profile",
       icon: Settings,
     },
   ];
@@ -151,7 +150,7 @@ export const AppMobileSidebar = () => {
   const navigationItems: NavItem[] = [
     {
       title: "Dashboard",
-      url: "/app",
+      url: "/app/dashboard",
       icon: Home,
     },
     {
@@ -171,7 +170,7 @@ export const AppMobileSidebar = () => {
     },
     {
       title: "Insights",
-      url: "/app/insights",
+      url: "/app/insights/class",
       icon: BarChart3,
       items: [
         {
@@ -194,7 +193,7 @@ export const AppMobileSidebar = () => {
     },
     {
       title: "Settings",
-      url: "/app/settings",
+      url: "/app/settings/profile",
       icon: Settings,
     },
   ];
