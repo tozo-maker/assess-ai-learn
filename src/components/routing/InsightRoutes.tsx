@@ -6,7 +6,7 @@ import StudentInsightsPage from '@/pages/app/insights/IndividualInsights';
 import { ProtectedRoute } from './RouteGuards';
 
 export const InsightRoutes = () => (
-  <>
+  <React.Fragment>
     <Route
       path="/app/insights/class"
       element={
@@ -23,5 +23,5 @@ export const InsightRoutes = () => (
         </ProtectedRoute>
       }
     />
-  </>
+  </React.Fragment>
 );

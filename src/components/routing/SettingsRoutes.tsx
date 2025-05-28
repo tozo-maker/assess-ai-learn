@@ -6,7 +6,7 @@ import ProductionAudit from '@/pages/app/audit/ProductionAudit';
 import { ProtectedRoute } from './RouteGuards';
 
 export const SettingsRoutes = () => (
-  <>
+  <React.Fragment>
     <Route
       path="/app/settings/profile"
       element={
@@ -23,5 +23,5 @@ export const SettingsRoutes = () => (
         </ProtectedRoute>
       }
     />
-  </>
+  </React.Fragment>
 );

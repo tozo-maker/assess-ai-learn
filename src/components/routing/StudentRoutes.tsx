@@ -9,7 +9,7 @@ import ImportStudentsPage from '@/pages/app/students/ImportStudents';
 import { ProtectedRoute } from './RouteGuards';
 
 export const StudentRoutes = () => (
-  <>
+  <React.Fragment>
     <Route
       path="/app/students"
       element={
@@ -50,5 +50,5 @@ export const StudentRoutes = () => (
         </ProtectedRoute>
       }
     />
-  </>
+  </React.Fragment>
 );

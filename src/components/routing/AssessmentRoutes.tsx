@@ -10,7 +10,7 @@ import BatchAssessment from '@/pages/app/assessments/BatchAssessment';
 import { ProtectedRoute } from './RouteGuards';
 
 export const AssessmentRoutes = () => (
-  <>
+  <React.Fragment>
     <Route
       path="/app/assessments"
       element={
@@ -59,5 +59,5 @@ export const AssessmentRoutes = () => (
         </ProtectedRoute>
       }
     />
-  </>
+  </React.Fragment>
 );

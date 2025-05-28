@@ -7,7 +7,7 @@ import ProgressReports from '@/pages/app/communications/ProgressReports';
 import { ProtectedRoute } from './RouteGuards';
 
 export const ReportsRoutes = () => (
-  <>
+  <React.Fragment>
     <Route
       path="/app/reports/progress"
       element={
@@ -32,5 +32,5 @@ export const ReportsRoutes = () => (
         </ProtectedRoute>
       }
     />
-  </>
+  </React.Fragment>
 );
