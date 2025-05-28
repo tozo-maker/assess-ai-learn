@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { aiOptimizationService } from '@/services/ai-optimization-service';
 import { 
   Assessment, 
   AssessmentFormData,
@@ -72,6 +73,42 @@ export const assessmentService = {
       .eq('id', id);
 
     if (error) throw error;
+  },
+
+  async duplicateAssessment(id: string, newTitle?: string): Promise<Assessment> {
+    const originalAssessment = await this.getAssessmentById(id);
+    const originalItems = await this.getAssessmentItems(id);
+
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) throw new Error("User not authenticated");
+
+    const duplicatedAssessment = await this.createAssessment({
+      title: newTitle || `${originalAssessment.title} (Copy)`,
+      description: originalAssessment.description,
+      subject: originalAssessment.subject,
+      grade_level: originalAssessment.grade_level,
+      assessment_type: originalAssessment.assessment_type,
+      standards_covered: originalAssessment.standards_covered,
+      max_score: originalAssessment.max_score,
+      assessment_date: undefined,
+      is_draft: true,
+      teacher_id: authData.user.id
+    });
+
+    if (originalItems.length > 0) {
+      const duplicatedItems = originalItems.map(item => ({
+        question_text: item.question_text,
+        item_number: item.item_number,
+        knowledge_type: item.knowledge_type,
+        difficulty_level: item.difficulty_level,
+        standard_reference: item.standard_reference,
+        max_score: item.max_score
+      }));
+
+      await this.createAssessmentItems(duplicatedItems, duplicatedAssessment.id);
+    }
+
+    return duplicatedAssessment;
   },
 
   // Assessment Items CRUD
@@ -163,42 +200,111 @@ export const assessmentService = {
   },
 
   async triggerAnalysis(assessmentId: string, studentId: string): Promise<{ success: boolean, message: string }> {
-    // Always use the main analyze-student-assessment function (now using Anthropic)
-    const { data, error } = await supabase.functions.invoke('analyze-student-assessment', {
-      body: { assessment_id: assessmentId, student_id: studentId }
-    });
+    try {
+      const result = await aiOptimizationService.optimizedAICall(
+        'analyze-student-assessment',
+        { assessment_id: assessmentId, student_id: studentId },
+        { priority: 'high', useCache: true, ttl: 10 * 60 * 1000 } // 10 minutes cache
+      );
+      return result;
+    } catch (error) {
+      console.error('Error triggering analysis:', error);
+      throw error;
+    }
+  },
 
-    if (error) throw error;
-    return data;
+  async batchTriggerAnalysis(
+    requests: Array<{ assessmentId: string; studentId: string }>,
+    onProgress?: (completed: number, total: number) => void
+  ): Promise<Array<{ success: boolean; message: string }>> {
+    const batchParams = requests.map(({ assessmentId, studentId }) => ({
+      assessment_id: assessmentId,
+      student_id: studentId
+    }));
+
+    try {
+      const results = await aiOptimizationService.batchAICall(
+        'analyze-student-assessment',
+        batchParams,
+        { 
+          priority: 'normal',
+          useCache: true,
+          batchSize: 3, // Smaller batches for analysis
+          onProgress
+        }
+      );
+      return results;
+    } catch (error) {
+      console.error('Error in batch analysis:', error);
+      throw error;
+    }
   },
 
   async generateAssessmentAnalysis(assessmentId: string, studentId: string) {
     try {
       console.log('Generating assessment analysis for:', { assessmentId, studentId });
       
-      // Call the Supabase Edge Function with correct parameter names
-      const { data, error } = await supabase.functions.invoke('analyze-student-assessment', {
-        body: {
-          assessment_id: assessmentId,  // Use underscore format
-          student_id: studentId         // Use underscore format
-        }
-      });
+      const result = await aiOptimizationService.optimizedAICall(
+        'analyze-student-assessment',
+        { assessment_id: assessmentId, student_id: studentId },
+        { priority: 'high', useCache: true, retries: 3 }
+      );
 
-      if (error) {
-        console.error('Error calling analysis function:', error);
-        throw new Error(`Analysis function error: ${error.message || 'Unknown error'}`);
+      if (!result || !result.success) {
+        throw new Error(result?.message || 'Analysis generation failed');
       }
 
-      if (!data || !data.success) {
-        console.error('Analysis function returned failure:', data);
-        throw new Error(data?.message || 'Analysis generation failed');
-      }
-
-      console.log('Analysis generated successfully:', data);
-      return data;
+      console.log('Analysis generated successfully:', result);
+      return result;
     } catch (error) {
       console.error('Error generating assessment analysis:', error);
       throw error;
     }
+  },
+
+  // Performance and Analytics
+  async getAssessmentStats(assessmentId: string): Promise<{
+    totalResponses: number;
+    averageScore: number;
+    completionRate: number;
+    analysisStatus: { completed: number; pending: number; failed: number };
+  }> {
+    const [responses, analysis] = await Promise.all([
+      this.getStudentResponses(assessmentId),
+      supabase
+        .from('assessment_analysis')
+        .select('id')
+        .eq('assessment_id', assessmentId)
+    ]);
+
+    const totalResponses = responses.length;
+    const averageScore = responses.length > 0 
+      ? responses.reduce((sum, r) => sum + r.score, 0) / responses.length 
+      : 0;
+
+    return {
+      totalResponses,
+      averageScore,
+      completionRate: totalResponses > 0 ? 100 : 0, // Would need total enrolled students
+      analysisStatus: {
+        completed: analysis.data?.length || 0,
+        pending: Math.max(0, totalResponses - (analysis.data?.length || 0)),
+        failed: 0 // Would need to track this separately
+      }
+    };
+  },
+
+  // Cache management
+  clearAnalysisCache(assessmentId?: string): void {
+    if (assessmentId) {
+      aiOptimizationService.clearCache(`analyze-student-assessment_${assessmentId}`);
+    } else {
+      aiOptimizationService.clearCache('analyze-student-assessment');
+    }
+  },
+
+  // Performance monitoring
+  async getPerformanceStats() {
+    return await aiOptimizationService.monitorPerformance();
   }
 };

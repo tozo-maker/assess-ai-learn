@@ -15,10 +15,13 @@ import Dashboard from '@/pages/app/Dashboard';
 import StudentsPage from '@/pages/app/students/Students';
 import AddStudentPage from '@/pages/app/students/AddStudent';
 import StudentDetailsPage from '@/pages/app/students/StudentProfile';
+import StudentAssessments from '@/pages/app/students/StudentAssessments';
 import AssessmentsPage from '@/pages/app/assessments/Assessments';
 import AddAssessmentPage from '@/pages/app/assessments/AddAssessment';
+import EditAssessmentPage from '@/pages/app/assessments/EditAssessment';
 import AssessmentDetailsPage from '@/pages/app/assessments/AssessmentDetails';
 import ResponsesPage from '@/pages/app/assessments/AddStudentResponses';
+import BatchAssessment from '@/pages/app/assessments/BatchAssessment';
 import ClassInsightsPage from '@/pages/app/insights/ClassInsights';
 import StudentInsightsPage from '@/pages/app/insights/IndividualInsights';
 import ProgressReportsPage from '@/pages/app/reports/ProgressReports';
@@ -154,6 +157,14 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/app/students/:id/assessments"
+        element={
+          <ProtectedRoute>
+            <StudentAssessments />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Assessment Management */}
       <Route
@@ -173,6 +184,14 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/app/assessments/:id/edit"
+        element={
+          <ProtectedRoute>
+            <EditAssessmentPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/app/assessments/:id"
         element={
           <ProtectedRoute>
@@ -185,6 +204,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <ResponsesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/app/assessments/batch"
+        element={
+          <ProtectedRoute>
+            <BatchAssessment />
           </ProtectedRoute>
         }
       />
