@@ -94,6 +94,9 @@ const AppSidebar = () => {
           className={`flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 ${
             isActive ? "bg-gray-100 font-medium" : ""
           }`}
+          onClick={(e) => {
+            console.log(`Navigating to: ${item.url}`);
+          }}
         >
           <item.icon className="h-4 w-4" />
           <span>{item.title}</span>
@@ -209,6 +212,9 @@ export const AppMobileSidebar = () => {
           className={`flex items-center space-x-2 p-3 rounded-md hover:bg-gray-100 ${
             isActive ? "bg-gray-100 font-medium" : ""
           }`}
+          onClick={(e) => {
+            console.log(`Mobile navigating to: ${item.url}`);
+          }}
         >
           <item.icon className="h-5 w-5" />
           <span>{item.title}</span>
@@ -222,7 +228,6 @@ export const AppMobileSidebar = () => {
                   className={`flex items-center space-x-2 p-3 rounded-md hover:bg-gray-100 ${
                     location.pathname === subItem.url
                       ? "bg-gray-100 font-medium"
-                      : ""
                   }`}
                 >
                   <span>{subItem.title}</span>

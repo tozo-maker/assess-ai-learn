@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Dashboard from '@/pages/app/Dashboard';
 import { ProtectedRoute } from './RouteGuards';
 import { PublicRoutes } from './PublicRoutes';
@@ -11,6 +11,13 @@ import { ReportsRoutes } from './ReportsRoutes';
 import { SettingsRoutes } from './SettingsRoutes';
 
 const AppRoutes = () => {
+  const location = useLocation();
+  
+  // Debug logging
+  React.useEffect(() => {
+    console.log('Current route:', location.pathname);
+  }, [location.pathname]);
+
   return (
     <Routes>
       {/* Public Routes */}
