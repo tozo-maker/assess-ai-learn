@@ -14,7 +14,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <PublicRoutes />
+      {PublicRoutes()}
 
       {/* Protected Dashboard Route */}
       <Route
@@ -27,19 +27,19 @@ const AppRoutes = () => {
       />
 
       {/* Student Management Routes */}
-      <StudentRoutes />
+      {StudentRoutes()}
 
       {/* Assessment Management Routes */}
-      <AssessmentRoutes />
+      {AssessmentRoutes()}
 
       {/* Insights Routes */}
-      <InsightRoutes />
+      {InsightRoutes()}
 
       {/* Reports & Communications Routes */}
-      <ReportsRoutes />
+      {ReportsRoutes()}
 
       {/* Settings & Audit Routes */}
-      <SettingsRoutes />
+      {SettingsRoutes()}
 
       {/* Fallback Routes */}
       <Route path="/app/*" element={<Navigate to="/app/dashboard" replace />} />
