@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Sheet,
@@ -228,6 +229,7 @@ export const AppMobileSidebar = () => {
                   className={`flex items-center space-x-2 p-3 rounded-md hover:bg-gray-100 ${
                     location.pathname === subItem.url
                       ? "bg-gray-100 font-medium"
+                      : ""
                   }`}
                 >
                   <span>{subItem.title}</span>
