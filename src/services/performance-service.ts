@@ -66,6 +66,84 @@ class PerformanceService {
       data
     };
   }
+
+  // Add the missing updateStudentPerformance method
+  async updateStudentPerformance(studentId: string): Promise<void> {
+    try {
+      // Get all student responses for this student
+      const { data: responses, error: responsesError } = await supabase
+        .from('student_responses')
+        .select(`
+          score,
+          assessment_item_id,
+          assessment_items!inner(max_score)
+        `)
+        .eq('student_id', studentId);
+
+      if (responsesError) throw responsesError;
+
+      if (!responses || responses.length === 0) {
+        // No responses yet, create a default performance record
+        await supabase
+          .from('student_performance')
+          .upsert({
+            student_id: studentId,
+            average_score: null,
+            performance_level: null,
+            assessment_count: 0,
+            needs_attention: false,
+            last_assessment_date: null
+          });
+        return;
+      }
+
+      // Calculate performance metrics
+      let totalPossibleScore = 0;
+      let totalActualScore = 0;
+      
+      responses.forEach(response => {
+        const maxScore = (response as any).assessment_items.max_score;
+        totalPossibleScore += maxScore;
+        totalActualScore += response.score;
+      });
+
+      const averageScore = totalPossibleScore > 0 ? (totalActualScore / totalPossibleScore) * 100 : 0;
+      
+      // Determine performance level
+      let performanceLevel = 'Beginning';
+      if (averageScore >= 90) performanceLevel = 'Advanced';
+      else if (averageScore >= 80) performanceLevel = 'Proficient';
+      else if (averageScore >= 65) performanceLevel = 'Developing';
+
+      // Determine if needs attention (below 65% average)
+      const needsAttention = averageScore < 65;
+
+      // Get the most recent assessment date
+      const { data: lastAssessment } = await supabase
+        .from('student_responses')
+        .select('created_at')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      // Update or insert performance record
+      await supabase
+        .from('student_performance')
+        .upsert({
+          student_id: studentId,
+          average_score: Math.round(averageScore * 100) / 100, // Round to 2 decimal places
+          performance_level: performanceLevel,
+          assessment_count: responses.length,
+          needs_attention: needsAttention,
+          last_assessment_date: lastAssessment?.created_at || null
+        });
+
+    } catch (error) {
+      console.error('Error updating student performance:', error);
+      throw error;
+    }
+  }
 }
 
 export const performanceService = new PerformanceService();
