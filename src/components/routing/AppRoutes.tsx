@@ -15,7 +15,8 @@ const AppRoutes = () => {
   
   // Debug logging
   React.useEffect(() => {
-    console.log('Current route:', location.pathname);
+    console.log('AppRoutes - Current route:', location.pathname);
+    console.log('AppRoutes - Full location object:', location);
   }, [location.pathname]);
 
   return (

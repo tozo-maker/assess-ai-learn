@@ -96,7 +96,9 @@ const AppSidebar = () => {
             isActive ? "bg-gray-100 font-medium" : ""
           }`}
           onClick={(e) => {
-            console.log(`Navigating to: ${item.url}`);
+            console.log(`Desktop navigating to: ${item.url}`);
+            console.log('Current location:', location.pathname);
+            console.log('NavLink event:', e);
           }}
         >
           <item.icon className="h-4 w-4" />
@@ -215,6 +217,8 @@ export const AppMobileSidebar = () => {
           }`}
           onClick={(e) => {
             console.log(`Mobile navigating to: ${item.url}`);
+            console.log('Current location:', location.pathname);
+            console.log('Mobile NavLink event:', e);
           }}
         >
           <item.icon className="h-5 w-5" />
