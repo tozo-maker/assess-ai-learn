@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, Settings, User, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import NotificationWidget from '@/components/notifications/NotificationWidget';
+import { AppMobileSidebar } from './AppSidebar';
 
 const Header = () => {
   const { user, profile, signOut } = useAuth();
@@ -38,8 +39,14 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4">
-        {/* Logo and brand */}
+        {/* Mobile menu trigger and Logo */}
         <div className="flex items-center space-x-2">
+          {/* Mobile sidebar trigger */}
+          <div className="md:hidden">
+            <AppMobileSidebar />
+          </div>
+          
+          {/* Logo and brand */}
           <Link to="/app/dashboard" className="flex items-center space-x-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
               <GraduationCap className="h-5 w-5 text-white" />

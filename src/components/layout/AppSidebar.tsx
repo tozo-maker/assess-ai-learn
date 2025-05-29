@@ -9,6 +9,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import {
   Home,
   Menu,
@@ -17,6 +18,7 @@ import {
   FileText,
   BarChart3,
   Target,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
@@ -31,7 +33,7 @@ interface NavItem {
 
 const AppSidebar = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   const navigationItems: NavItem[] = [
     {
@@ -86,34 +88,29 @@ const AppSidebar = () => {
 
   const renderNavItem = (item: NavItem) => {
     const isActive = location.pathname === item.url;
-    const isSubItem = !!item.items;
+    const hasSubItems = !!item.items;
 
     return (
       <li key={item.title}>
         <NavLink
           to={item.url}
-          className={`flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 ${
-            isActive ? "bg-gray-100 font-medium" : ""
+          className={`flex items-center space-x-3 p-3 rounded-md hover:bg-gray-100 transition-colors ${
+            isActive ? "bg-blue-50 text-blue-600 font-medium border-r-2 border-blue-600" : "text-gray-700"
           }`}
-          onClick={(e) => {
-            console.log(`Desktop navigating to: ${item.url}`);
-            console.log('Current location:', location.pathname);
-            console.log('NavLink event:', e);
-          }}
         >
-          <item.icon className="h-4 w-4" />
+          <item.icon className="h-5 w-5" />
           <span>{item.title}</span>
         </NavLink>
-        {isSubItem && item.items && (
-          <ul className="ml-4">
+        {hasSubItems && item.items && (
+          <ul className="ml-8 mt-2 space-y-1">
             {item.items.map((subItem) => (
               <li key={subItem.title}>
                 <NavLink
                   to={subItem.url}
-                  className={`flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 ${
+                  className={`flex items-center p-2 rounded-md text-sm hover:bg-gray-100 transition-colors ${
                     location.pathname === subItem.url
-                      ? "bg-gray-100 font-medium"
-                      : ""
+                      ? "bg-blue-50 text-blue-600 font-medium"
+                      : "text-gray-600"
                   }`}
                 >
                   <span>{subItem.title}</span>
@@ -127,16 +124,25 @@ const AppSidebar = () => {
   };
 
   return (
-    <div className="border-r h-full w-60 flex-shrink-0 hidden md:block">
-      <div className="p-4">
-        <h1 className="text-2xl font-bold">LearnSpark AI</h1>
-        <p className="text-sm text-gray-500">
-          Welcome, {user?.email || "Teacher"}!
-        </p>
+    <div className="border-r bg-white h-screen w-64 flex-shrink-0 hidden md:block">
+      {/* Sidebar Header */}
+      <div className="p-6 border-b">
+        <div className="flex items-center space-x-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
+            <GraduationCap className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">LearnSpark AI</h1>
+            <p className="text-sm text-gray-500">
+              {profile?.full_name || user?.email || "Teacher"}
+            </p>
+          </div>
+        </div>
       </div>
-      <Separator />
-      <nav className="mt-4">
-        <ul>{navigationItems.map(renderNavItem)}</ul>
+
+      {/* Navigation */}
+      <nav className="p-4">
+        <ul className="space-y-2">{navigationItems.map(renderNavItem)}</ul>
       </nav>
     </div>
   );
@@ -144,14 +150,7 @@ const AppSidebar = () => {
 
 export const AppMobileSidebar = () => {
   const location = useLocation();
-  const { user } = useAuth();
-
-  interface NavItem {
-    title: string;
-    url: string;
-    icon: LucideIcon;
-    items?: Omit<NavItem, "icon">[];
-  }
+  const { user, profile } = useAuth();
 
   const navigationItems: NavItem[] = [
     {
@@ -206,34 +205,29 @@ export const AppMobileSidebar = () => {
 
   const renderNavItem = (item: NavItem) => {
     const isActive = location.pathname === item.url;
-    const isSubItem = !!item.items;
+    const hasSubItems = !!item.items;
 
     return (
       <li key={item.title}>
         <NavLink
           to={item.url}
-          className={`flex items-center space-x-2 p-3 rounded-md hover:bg-gray-100 ${
-            isActive ? "bg-gray-100 font-medium" : ""
+          className={`flex items-center space-x-3 p-3 rounded-md hover:bg-gray-100 transition-colors ${
+            isActive ? "bg-blue-50 text-blue-600 font-medium" : "text-gray-700"
           }`}
-          onClick={(e) => {
-            console.log(`Mobile navigating to: ${item.url}`);
-            console.log('Current location:', location.pathname);
-            console.log('Mobile NavLink event:', e);
-          }}
         >
           <item.icon className="h-5 w-5" />
           <span>{item.title}</span>
         </NavLink>
-        {isSubItem && item.items && (
-          <ul className="ml-4">
+        {hasSubItems && item.items && (
+          <ul className="ml-8 mt-2 space-y-1">
             {item.items.map((subItem) => (
               <li key={subItem.title}>
                 <NavLink
                   to={subItem.url}
-                  className={`flex items-center space-x-2 p-3 rounded-md hover:bg-gray-100 ${
+                  className={`flex items-center p-2 rounded-md text-sm hover:bg-gray-100 transition-colors ${
                     location.pathname === subItem.url
-                      ? "bg-gray-100 font-medium"
-                      : ""
+                      ? "bg-blue-50 text-blue-600 font-medium"
+                      : "text-gray-600"
                   }`}
                 >
                   <span>{subItem.title}</span>
@@ -249,18 +243,27 @@ export const AppMobileSidebar = () => {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Menu className="md:hidden" />
+        <Button variant="ghost" size="icon" className="h-9 w-9">
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle navigation menu</span>
+        </Button>
       </SheetTrigger>
-      <SheetContent className="w-full sm:w-[280px] p-0">
-        <SheetHeader className="pl-5 pt-5">
-          <SheetTitle>LearnSpark AI</SheetTitle>
-          <SheetDescription>
-            Welcome, {user?.email || "Teacher"}!
-          </SheetDescription>
+      <SheetContent side="left" className="w-[280px] p-0">
+        <SheetHeader className="p-6 border-b">
+          <div className="flex items-center space-x-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
+              <GraduationCap className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <SheetTitle className="text-lg">LearnSpark AI</SheetTitle>
+              <SheetDescription className="text-sm">
+                {profile?.full_name || user?.email || "Teacher"}
+              </SheetDescription>
+            </div>
+          </div>
         </SheetHeader>
-        <Separator />
-        <nav className="mt-4">
-          <ul className="p-5">{navigationItems.map(renderNavItem)}</ul>
+        <nav className="p-4">
+          <ul className="space-y-2">{navigationItems.map(renderNavItem)}</ul>
         </nav>
       </SheetContent>
     </Sheet>
