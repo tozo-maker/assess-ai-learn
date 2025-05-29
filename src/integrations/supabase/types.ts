@@ -246,6 +246,81 @@ export type Database = {
         }
         Relationships: []
       }
+      email_automations: {
+        Row: {
+          created_at: string
+          email_template_id: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          teacher_id: string
+          trigger_conditions: Json | null
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email_template_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          teacher_id: string
+          trigger_conditions?: Json | null
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email_template_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          teacher_id?: string
+          trigger_conditions?: Json | null
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_default: boolean | null
+          name: string
+          subject: string
+          teacher_id: string
+          template_type: string
+          updated_at: string
+          variables: Json | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name: string
+          subject: string
+          teacher_id: string
+          template_type: string
+          updated_at?: string
+          variables?: Json | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          subject?: string
+          teacher_id?: string
+          template_type?: string
+          updated_at?: string
+          variables?: Json | null
+        }
+        Relationships: []
+      }
       goal_achievements: {
         Row: {
           achievement_data: Json | null
@@ -407,6 +482,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          metadata: Json | null
+          student_id: string | null
+          teacher_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          metadata?: Json | null
+          student_id?: string | null
+          teacher_id: string
+          title: string
+          type: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          metadata?: Json | null
+          student_id?: string | null
+          teacher_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
       }
       parent_communications: {
         Row: {
@@ -827,6 +941,39 @@ export type Database = {
           student_id?: string | null
           teacher_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      system_performance_logs: {
+        Row: {
+          created_at: string
+          endpoint: string
+          error_message: string | null
+          id: string
+          method: string
+          response_time_ms: number
+          status_code: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          method: string
+          response_time_ms: number
+          status_code: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          method?: string
+          response_time_ms?: number
+          status_code?: number
+          user_id?: string | null
         }
         Relationships: []
       }

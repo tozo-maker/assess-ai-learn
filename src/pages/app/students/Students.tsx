@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import PageShell from '@/components/ui/page-shell';
@@ -41,6 +40,8 @@ import { studentService } from '@/services/student-service';
 import { StudentWithPerformance, gradeLevelOptions, performanceLevelOptions } from '@/types/student';
 import { useToast } from '@/hooks/use-toast';
 import ExportButton from '@/components/exports/ExportButton';
+import EnhancedStudentList from '@/components/students/EnhancedStudentList';
+import { withPerformanceTracking } from '@/services/performance-service';
 
 const Students = () => {
   const navigate = useNavigate();
@@ -51,7 +52,19 @@ const Students = () => {
   const [attentionFilter, setAttentionFilter] = useState<boolean | undefined>(undefined);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
-  const selectAllRef = useRef<HTMLButtonElement>(null);
+  
+  // Enhanced fetch with performance tracking
+  const fetchStudentsWithTracking = withPerformanceTracking(
+    studentService.getStudents,
+    '/api/students',
+    'GET'
+  );
+  
+  const fetchMetricsWithTracking = withPerformanceTracking(
+    studentService.getStudentMetrics,
+    '/api/student-metrics',
+    'GET'
+  );
   
   // Fetch students data
   const { 
@@ -61,7 +74,8 @@ const Students = () => {
     refetch: refetchStudents
   } = useQuery({
     queryKey: ['students'],
-    queryFn: () => studentService.getStudents(),
+    queryFn: fetchStudentsWithTracking,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
   
   // Fetch metrics data
@@ -71,7 +85,8 @@ const Students = () => {
     error: metricsError
   } = useQuery({
     queryKey: ['studentMetrics'],
-    queryFn: () => studentService.getStudentMetrics(),
+    queryFn: fetchMetricsWithTracking,
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
 
   // Handle bulk selection
@@ -399,115 +414,15 @@ const Students = () => {
           </Card>
         </div>
 
-        {/* Students List */}
-        <Card>
-          <CardContent className="p-0">
-            {isStudentsLoading ? (
-              <div className="p-6 space-y-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-48" />
-                      <Skeleton className="h-3 w-32" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : students && students.length > 0 ? (
-              <div>
-                {/* Header with Select All */}
-                <div className="p-4 border-b bg-gray-50">
-                  <div className="flex items-center space-x-4">
-                    <Checkbox
-                      ref={selectAllRef}
-                      checked={isAllSelected}
-                      onCheckedChange={handleSelectAll}
-                    />
-                    <span className="text-sm font-medium text-gray-600">
-                      Select All Students
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Students List */}
-                <div className="divide-y">
-                  {students.map((student) => (
-                    <div 
-                      key={student.id} 
-                      className="p-6 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <Checkbox
-                            checked={selectedStudents.includes(student.id)}
-                            onCheckedChange={(checked) => handleSelectStudent(student.id, checked as boolean)}
-                          />
-                          <div 
-                            className="flex items-center space-x-4 cursor-pointer flex-1"
-                            onClick={() => handleStudentClick(student.id)}
-                          >
-                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                              <span className="font-medium text-blue-600">
-                                {student.first_name[0]}{student.last_name[0]}
-                              </span>
-                            </div>
-                            <div>
-                              <h3 className="font-medium text-gray-900">
-                                {student.first_name} {student.last_name}
-                              </h3>
-                              <p className="text-sm text-gray-600">{student.grade_level} Grade</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-6">
-                          <div className="text-right">
-                            <p className="text-sm text-gray-600">Last Assessment</p>
-                            <p className="text-sm font-medium">
-                              {getPerformanceProperty(student, 'last_assessment_date', null) 
-                                ? new Date(getPerformanceProperty(student, 'last_assessment_date', '')).toLocaleDateString()
-                                : "No assessments yet"}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm text-gray-600">Performance</p>
-                            <div className="flex items-center space-x-2">
-                              <span className={`text-sm font-medium ${
-                                getPerformanceProperty<string | null>(student, 'performance_level', null) === 'Above Average' ? 'text-green-600' :
-                                getPerformanceProperty<string | null>(student, 'performance_level', null) === 'Below Average' ? 'text-red-600' :
-                                getPerformanceProperty<string | null>(student, 'performance_level', null) === 'Average' ? 'text-yellow-600' :
-                                'text-gray-500'
-                              }`}>
-                                {getPerformanceProperty(student, 'performance_level', "Not assessed")}
-                              </span>
-                              {getPerformanceProperty(student, 'needs_attention', false) && (
-                                <AlertCircle className="h-4 w-4 text-red-500" />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="p-8 text-center">
-                <div className="mx-auto w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                  <Users className="h-6 w-6 text-blue-600" />
-                </div>
-                <h3 className="text-lg font-medium mb-1">No students found</h3>
-                <p className="text-gray-500 mb-4">Get started by adding your first student</p>
-                <Button 
-                  onClick={() => navigate('/app/students/add')}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  Add Student
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Enhanced Students List */}
+        <EnhancedStudentList
+          students={students || []}
+          selectedStudents={selectedStudents}
+          onSelectStudent={handleSelectStudent}
+          onSelectAll={handleSelectAll}
+          onStudentClick={handleStudentClick}
+          isLoading={isStudentsLoading}
+        />
       </div>
     </PageShell>
   );

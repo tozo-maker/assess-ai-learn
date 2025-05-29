@@ -1,223 +1,106 @@
 
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
-  Menu, 
-  User, 
-  Home, 
-  Settings, 
-  LogOut,
-  ChevronDown,
-  BookOpen,
-  LineChart,
-  FileText,
-  Target
-} from 'lucide-react';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { LogOut, Settings, User, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import NotificationWidget from '@/components/notifications/NotificationWidget';
 
-interface HeaderProps {
-  isAuthenticated?: boolean;
-  showNavigation?: boolean;
-}
-
-// Add proper type for navigation items
-interface NavItem {
-  name: string;
-  href: string;
-  icon?: React.ReactNode;
-}
-
-const Header: React.FC<HeaderProps> = ({ showNavigation = false }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
+const Header = () => {
   const { user, profile, signOut } = useAuth();
-  
-  const isAuthenticated = !!user;
-
-  const publicNavItems: NavItem[] = [
-    { name: 'Features', href: '/#features' },
-    { name: 'About', href: '/about' },
-    { name: 'Pricing', href: '/pricing' },
-    { name: 'Demo', href: '/demo' },
-  ];
-
-  const appNavItems: NavItem[] = [
-    { name: 'Dashboard', href: '/app/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
-    { name: 'Students', href: '/app/students', icon: <User className="h-4 w-4 mr-2" /> },
-    { name: 'Assessments', href: '/app/assessments', icon: <BookOpen className="h-4 w-4 mr-2" /> },
-    { name: 'Insights', href: '/app/insights/class', icon: <LineChart className="h-4 w-4 mr-2" /> },
-    { name: 'Reports', href: '/app/reports/progress', icon: <FileText className="h-4 w-4 mr-2" /> },
-  ];
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link to={isAuthenticated ? "/app/dashboard" : "/"} className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">L</span>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4">
+        {/* Logo and brand */}
+        <div className="flex items-center space-x-2">
+          <Link to="/app/dashboard" className="flex items-center space-x-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
+              <GraduationCap className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900">LearnSpark AI</span>
+            <span className="hidden font-bold sm:inline-block">LearnSpark AI</span>
           </Link>
+        </div>
 
-          {/* Navigation */}
-          {showNavigation && (
-            <nav className="hidden md:flex space-x-8">
-              {(isAuthenticated ? appNavItems : publicNavItems).map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`text-sm font-medium transition-colors hover:text-blue-600 flex items-center ${
-                    location.pathname === item.href || 
-                    (item.href !== '/' && location.pathname.startsWith(item.href))
-                      ? 'text-blue-600' 
-                      : 'text-gray-700'
-                  }`}
-                >
-                  {isAuthenticated && item.icon}
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
-          )}
+        {/* Right side - Notifications and User menu */}
+        <div className="flex items-center space-x-4">
+          {/* Notification Widget */}
+          <NotificationWidget />
 
-          {/* Right side */}
-          <div className="flex items-center space-x-4">
-            {isAuthenticated ? (
-              <>
-                <Link to="/app/audit">
-                  <Button variant="ghost" size="sm" title="Production Audit">
-                    <Target className="h-4 w-4" />
-                  </Button>
+          {/* User menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || 'User'} />
+                  <AvatarFallback>
+                    {profile?.full_name ? getInitials(profile.full_name) : <User className="h-4 w-4" />}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {profile?.full_name || 'Teacher'}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user?.email}
+                  </p>
+                  {profile?.school && (
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {profile.school}
+                    </p>
+                  )}
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/app/settings/profile" className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile Settings</span>
                 </Link>
-                <Link to="/app/settings/profile">
-                  <Button variant="ghost" size="sm">
-                    <Settings className="h-4 w-4" />
-                  </Button>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/app/settings/notifications" className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Preferences</span>
                 </Link>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                      <User className="h-4 w-4" />
-                      <span className="hidden sm:inline">
-                        {profile?.full_name?.split(' ')[0] || 'Teacher'}
-                      </span>
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link to="/app/settings/profile" className="flex items-center">
-                        <User className="h-4 w-4 mr-2" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/app/settings/profile" className="flex items-center">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/app/audit" className="flex items-center">
-                        <Target className="h-4 w-4 mr-2" />
-                        Production Audit
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={handleSignOut}
-                      className="flex items-center text-red-600 cursor-pointer"
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            ) : (
-              <div className="flex items-center space-x-3">
-                <Link to="/auth/login">
-                  <Button variant="ghost" size="sm">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link to="/auth/signup">
-                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
-            )}
-
-            {/* Mobile menu button */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="md:hidden">
-                  <Menu className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {(isAuthenticated ? appNavItems : publicNavItems).map((item) => (
-                  <DropdownMenuItem key={item.name} asChild>
-                    <Link to={item.href} className="flex items-center">
-                      {isAuthenticated && item.icon}
-                      {item.name}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-                {isAuthenticated && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/app/audit" className="flex items-center">
-                        <Target className="h-4 w-4 mr-2" />
-                        Production Audit
-                      </Link>
-                    </DropdownMenuItem>
-                  </>
-                )}
-                <DropdownMenuSeparator />
-                {isAuthenticated ? (
-                  <DropdownMenuItem 
-                    onClick={handleSignOut}
-                    className="flex items-center text-red-600 cursor-pointer"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
-                ) : (
-                  <>
-                    <DropdownMenuItem asChild>
-                      <Link to="/auth/login" className="flex items-center">
-                        Sign In
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/auth/signup" className="flex items-center">
-                        Get Started
-                      </Link>
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Sign Out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
