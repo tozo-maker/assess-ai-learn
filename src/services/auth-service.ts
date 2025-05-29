@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SignInData, SignUpData, TeacherProfile } from '@/types/auth';
 
@@ -64,16 +63,36 @@ export const authService = {
     if (!user.user) return null;
     
     try {
-      // Try to get profile from teacher_profiles table
+      // Use maybeSingle() to handle cases where no profile exists
       const { data: profile, error } = await supabase
         .from('teacher_profiles')
         .select('*')
         .eq('id', user.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching teacher profile from database:', error);
         return null;
+      }
+
+      // If no profile exists, try to create one from user metadata
+      if (!profile && user.user.user_metadata) {
+        console.log('No profile found, attempting to create from user metadata...');
+        const metadata = user.user.user_metadata;
+        
+        try {
+          const newProfile = await this.createProfile({
+            full_name: metadata.full_name || '',
+            school: metadata.school || '',
+            grade_levels: metadata.grade_levels ? metadata.grade_levels.split(',') : [],
+            subjects: metadata.subjects ? metadata.subjects.split(',') : [],
+            years_experience: metadata.years_experience ? parseInt(metadata.years_experience) : undefined
+          });
+          return newProfile;
+        } catch (createError) {
+          console.error('Failed to create profile from metadata:', createError);
+          return null;
+        }
       }
 
       return profile as TeacherProfile;

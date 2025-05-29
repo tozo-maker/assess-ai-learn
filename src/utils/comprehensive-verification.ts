@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { testingHelpers } from './testing-helpers';
 import { enhancedTestingHelpers } from './enhanced-testing-helpers';
@@ -110,19 +109,22 @@ export class ComprehensiveVerification {
         return;
       }
       
-      // Test profile access
+      // Test profile access with improved error handling
       const { data: profile, error: profileError } = await supabase
         .from('teacher_profiles')
         .select('*')
         .eq('id', currentUser.user.id)
-        .single();
+        .maybeSingle();
       
       if (profileError) {
         this.addResult('User Registration', 'Profile Access', 'fail', 
           `Profile access failed: ${profileError.message}`);
+      } else if (!profile) {
+        this.addResult('User Registration', 'Profile Access', 'warning', 
+          'No profile found for current user - profile creation may be needed');
       } else {
         this.addResult('User Registration', 'Profile Access', 'pass', 
-          'User profile accessible', undefined, { profileExists: !!profile });
+          'User profile accessible', undefined, { profileExists: true });
       }
       
       // Test dashboard access
@@ -428,11 +430,11 @@ export class ComprehensiveVerification {
           `Email history accessible - ${emailCount} communications found`);
       }
       
-      // Test 2: Email templates
+      // Test 2: Email templates - Fixed verification logic
       const { data: templates, error: templateError } = await supabase
         .from('email_templates')
-        .select('*')
-        .limit(3);
+        .select('id, name, template_type')
+        .limit(10);
       
       if (templateError) {
         this.addResult('Email System', 'Email Templates', 'fail', 
