@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -36,7 +35,8 @@ const Login = () => {
   // If user is already logged in, redirect to dashboard
   React.useEffect(() => {
     if (user) {
-      const from = (location.state as any)?.from || '/dashboard';
+      const from = (location.state as any)?.from || '/app/dashboard';
+      console.log('Login: User already logged in, redirecting to:', from);
       navigate(from, { replace: true });
     }
   }, [user, navigate, location]);
@@ -52,6 +52,7 @@ const Login = () => {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
+      console.log('Login: Attempting to sign in user');
       await signIn({
         email: data.email,
         password: data.password,
@@ -59,9 +60,11 @@ const Login = () => {
       });
       
       // After successful login, navigate to the intended page or dashboard
-      const from = (location.state as any)?.from || '/dashboard';
+      const from = (location.state as any)?.from || '/app/dashboard';
+      console.log('Login: Sign in successful, redirecting to:', from);
       navigate(from, { replace: true });
     } catch (error) {
+      console.error('Login: Sign in failed:', error);
       // Error is handled by the auth context
     }
   };
