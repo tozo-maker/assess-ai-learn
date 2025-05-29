@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import PageShell from '@/components/ui/page-shell';
@@ -34,7 +35,6 @@ import {
   TrendingUp, 
   AlertCircle,
   Trash2,
-  MoreVertical
 } from 'lucide-react';
 import { studentService } from '@/services/student-service';
 import { StudentWithPerformance, gradeLevelOptions, performanceLevelOptions } from '@/types/student';
@@ -52,6 +52,7 @@ const Students = () => {
   const [attentionFilter, setAttentionFilter] = useState<boolean | undefined>(undefined);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const selectAllRef = useRef<HTMLButtonElement>(null);
   
   // Enhanced fetch with performance tracking
   const fetchStudentsWithTracking = withPerformanceTracking(
@@ -225,23 +226,6 @@ const Students = () => {
       </Link>
     </>
   );
-
-  // Helper function to safely access performance properties
-  const getPerformanceProperty = <T extends any>(
-    student: StudentWithPerformance,
-    property: string, 
-    defaultValue: T
-  ): T => {
-    if (!student.performance) {
-      return defaultValue;
-    }
-    
-    if (Array.isArray(student.performance)) {
-      return defaultValue;
-    }
-    
-    return (student.performance as any)[property] ?? defaultValue;
-  };
 
   const isAllSelected = students && selectedStudents.length === students.length && students.length > 0;
 

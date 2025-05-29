@@ -35,7 +35,11 @@ class NotificationService {
       .single();
 
     if (error) throw error;
-    return result;
+    
+    return {
+      ...result,
+      metadata: result.metadata as Record<string, any> || {}
+    };
   }
 
   async getNotifications(limit: number = 50): Promise<Notification[]> {
@@ -46,7 +50,11 @@ class NotificationService {
       .limit(limit);
 
     if (error) throw error;
-    return data || [];
+    
+    return (data || []).map(notification => ({
+      ...notification,
+      metadata: notification.metadata as Record<string, any> || {}
+    }));
   }
 
   async getUnreadCount(): Promise<number> {

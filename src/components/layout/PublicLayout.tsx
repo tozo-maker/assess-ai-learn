@@ -10,7 +10,7 @@ interface PublicLayoutProps {
 const PublicLayout: React.FC<PublicLayoutProps> = ({ children, showNavigation = true }) => {
   return (
     <div className="min-h-screen bg-white">
-      <Header isAuthenticated={false} showNavigation={showNavigation} />
+      <Header />
       {children}
     </div>
   );

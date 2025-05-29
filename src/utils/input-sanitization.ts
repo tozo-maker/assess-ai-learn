@@ -108,7 +108,7 @@ export class InputSanitizer {
 
   // Comprehensive form data sanitization
   static sanitizeFormData<T extends Record<string, any>>(data: T): T {
-    const sanitized = { ...data };
+    const sanitized = { ...data } as T;
     
     Object.keys(sanitized).forEach(key => {
       const value = sanitized[key];
@@ -117,26 +117,26 @@ export class InputSanitizer {
         switch (key) {
           case 'email':
           case 'parent_email':
-            sanitized[key] = this.sanitizeEmail(value);
+            (sanitized as any)[key] = this.sanitizeEmail(value);
             break;
           case 'phone':
           case 'parent_phone':
-            sanitized[key] = this.sanitizePhone(value);
+            (sanitized as any)[key] = this.sanitizePhone(value);
             break;
           case 'first_name':
           case 'last_name':
           case 'parent_name':
-            sanitized[key] = this.sanitizeName(value);
+            (sanitized as any)[key] = this.sanitizeName(value);
             break;
           case 'grade_level':
-            sanitized[key] = this.sanitizeGradeLevel(value);
+            (sanitized as any)[key] = this.sanitizeGradeLevel(value);
             break;
           case 'subject':
-            sanitized[key] = this.sanitizeSubject(value);
+            (sanitized as any)[key] = this.sanitizeSubject(value);
             break;
           default:
             // Default text sanitization
-            sanitized[key] = this.sanitizeText(value);
+            (sanitized as any)[key] = this.sanitizeText(value);
         }
       }
     });
