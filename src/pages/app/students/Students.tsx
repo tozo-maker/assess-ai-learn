@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import PageShell from '@/components/ui/page-shell';
@@ -88,6 +89,13 @@ const Students = () => {
     } else {
       setSelectedStudents(prev => prev.filter(id => id !== studentId));
     }
+  };
+
+  // Handle student navigation
+  const handleStudentClick = (studentId: string) => {
+    console.log('Students: Navigating to student details:', studentId);
+    console.log('Students: Using navigation path:', `/app/students/${studentId}`);
+    navigate(`/app/students/${studentId}`);
   };
 
   // Handle bulk delete
@@ -188,13 +196,13 @@ const Students = () => {
         buttonText="Export Students"
         variant="outline"
       />
-      <Link to="/students/import">
+      <Link to="/app/students/import">
         <Button variant="outline" className="flex items-center space-x-2">
           <Upload className="h-4 w-4" />
           <span>Import Students</span>
         </Button>
       </Link>
-      <Link to="/students/add">
+      <Link to="/app/students/add">
         <Button className="bg-blue-600 hover:bg-blue-700 flex items-center space-x-2">
           <Plus className="h-4 w-4" />
           <span>Add Student</span>
@@ -437,7 +445,7 @@ const Students = () => {
                           />
                           <div 
                             className="flex items-center space-x-4 cursor-pointer flex-1"
-                            onClick={() => navigate(`/students/${student.id}`)}
+                            onClick={() => handleStudentClick(student.id)}
                           >
                             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                               <span className="font-medium text-blue-600">
@@ -491,7 +499,7 @@ const Students = () => {
                 <h3 className="text-lg font-medium mb-1">No students found</h3>
                 <p className="text-gray-500 mb-4">Get started by adding your first student</p>
                 <Button 
-                  onClick={() => navigate('/students/add')}
+                  onClick={() => navigate('/app/students/add')}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   Add Student
