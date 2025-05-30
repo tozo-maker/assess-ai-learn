@@ -36,6 +36,27 @@ class PerformanceMonitoringService {
     // Setup performance monitoring
     this.setupPerformanceObserver();
     this.setupErrorMonitoring();
+    this.initializeAdvancedMonitoring();
+  }
+
+  private initializeAdvancedMonitoring() {
+    // Initialize enhanced error tracking
+    import('@/services/enhanced-error-tracking').then(({ enhancedErrorTracking }) => {
+      console.log('Enhanced error tracking initialized');
+    });
+
+    // Initialize structured logging
+    import('@/services/structured-logging').then(({ structuredLogger }) => {
+      structuredLogger.info('Performance monitoring service initialized', {
+        batchSize: this.batchSize,
+        flushInterval: this.flushInterval
+      });
+    });
+
+    // Initialize advanced caching
+    import('@/services/advanced-caching-service').then(({ advancedCaching }) => {
+      console.log('Advanced caching service initialized');
+    });
   }
 
   private setupPerformanceObserver() {
@@ -175,6 +196,16 @@ class PerformanceMonitoringService {
   private triggerAlert(alert: PerformanceAlert) {
     console.warn('Performance Alert:', alert);
     
+    // Enhanced alert handling with structured logging
+    import('@/services/structured-logging').then(({ structuredLogger }) => {
+      structuredLogger.warn('Performance alert triggered', {
+        alertType: alert.type,
+        threshold: alert.threshold,
+        currentValue: alert.current_value,
+        message: alert.message
+      });
+    });
+
     // In production, this would send alerts to monitoring service
     // For now, we'll just log and could show user notifications
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -306,6 +337,38 @@ class PerformanceMonitoringService {
       };
     }
     return null;
+  }
+
+  // Real-time alerts configuration
+  configureAlerts(newThresholds: Partial<typeof this.alertThresholds>) {
+    this.alertThresholds = { ...this.alertThresholds, ...newThresholds };
+    
+    import('@/services/structured-logging').then(({ structuredLogger }) => {
+      structuredLogger.info('Performance alert thresholds updated', {
+        newThresholds: this.alertThresholds
+      });
+    });
+  }
+
+  // Performance recommendations
+  getPerformanceRecommendations() {
+    const memoryUsage = this.getMemoryUsage();
+    const networkConditions = this.monitorNetworkConditions();
+    const recommendations: string[] = [];
+
+    if (memoryUsage && memoryUsage.used > 50) {
+      recommendations.push('Consider optimizing memory usage - current usage is high');
+    }
+
+    if (networkConditions && networkConditions.effectiveType === 'slow-2g') {
+      recommendations.push('Optimize for slow network conditions detected');
+    }
+
+    if (this.metrics.length > 50) {
+      recommendations.push('High metric volume detected - consider increasing batch size');
+    }
+
+    return recommendations;
   }
 }
 
