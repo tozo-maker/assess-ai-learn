@@ -171,19 +171,20 @@ class AIOptimizationService {
     // Import supabase here to avoid circular dependencies
     const { supabase } = await import('@/integrations/supabase/client');
     
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    // Create a timeout promise since we can't use AbortController with Supabase functions
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Function call timeout')), timeout);
+    });
     
     try {
-      const result = await supabase.functions.invoke(functionName, {
-        body: params,
-        signal: controller.signal
+      const functionPromise = supabase.functions.invoke(functionName, {
+        body: params
       });
       
-      clearTimeout(timeoutId);
+      // Race between the function call and timeout
+      const result = await Promise.race([functionPromise, timeoutPromise]);
       return result;
     } catch (error) {
-      clearTimeout(timeoutId);
       throw error;
     }
   }

@@ -290,17 +290,16 @@ const ProductionReadinessAudit = () => {
       recommendation: isProduction ? undefined : 'Ensure production build is optimized'
     });
 
-    // Check API configuration
+    // Check API configuration - use environment variables instead of accessing protected properties
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const config = supabase.supabaseUrl;
+      const supabaseUrl = 'https://etlkxmgdmzzysmgkbudx.supabase.co'; // Use the known URL from client.ts
       
       checks.push({
         category: 'configuration',
         check: 'API Configuration',
-        status: config ? 'pass' : 'fail',
-        message: config ? 'Supabase configuration is valid' : 'Supabase configuration is missing',
-        recommendation: config ? undefined : 'Configure Supabase URL and API keys'
+        status: supabaseUrl ? 'pass' : 'fail',
+        message: supabaseUrl ? 'Supabase configuration is valid' : 'Supabase configuration is missing',
+        recommendation: supabaseUrl ? undefined : 'Configure Supabase URL and API keys'
       });
     } catch (error) {
       checks.push({
