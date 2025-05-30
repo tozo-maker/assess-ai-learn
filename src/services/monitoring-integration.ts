@@ -2,7 +2,7 @@
 import { enhancedErrorTracking } from './enhanced-error-tracking';
 import { structuredLogger } from './structured-logging';
 import { advancedCaching } from './advanced-caching-service';
-import { performanceMonitoring } from './performance-monitoring-service';
+import { performanceMonitoringService } from './performance-monitoring-service';
 
 class MonitoringIntegration {
   private isInitialized = false;
@@ -23,7 +23,7 @@ class MonitoringIntegration {
       advancedCaching.warmCache('popular-content');
 
       // Start performance monitoring
-      performanceMonitoring.startMonitoring();
+      performanceMonitoringService.startMonitoring();
 
       // Test all services
       await this.runHealthChecks();
@@ -70,7 +70,7 @@ class MonitoringIntegration {
     try {
       enhancedErrorTracking.captureError({
         message: 'Health check test error',
-        severity: 'info',
+        severity: 'low',
         context: { type: 'health-check' }
       });
     } catch (error) {
@@ -100,7 +100,7 @@ class MonitoringIntegration {
 
   private async checkPerformanceMonitoring(): Promise<void> {
     try {
-      await performanceMonitoring.measureOperation('health-check', async () => {
+      await performanceMonitoringService.measureOperation('health-check', async () => {
         await new Promise(resolve => setTimeout(resolve, 10));
         return 'ok';
       });

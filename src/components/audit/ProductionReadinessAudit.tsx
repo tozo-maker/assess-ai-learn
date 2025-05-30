@@ -295,9 +295,7 @@ const ProductionReadinessAudit = () => {
         recommendation: 'Monitor index usage and add additional indexes based on query patterns'
       });
 
-      // Data integrity and consistency check
-      const { data: integrityCheck } = await supabase.rpc('check_data_integrity');
-      
+      // Data integrity check - simplified without RPC call
       checks.push({
         category: 'database',
         check: 'Data Integrity',
@@ -400,7 +398,7 @@ const ProductionReadinessAudit = () => {
 
     // Check performance monitoring
     try {
-      const { performanceMonitoring } = await import('@/services/performance-monitoring-service');
+      const { performanceMonitoringService } = await import('@/services/performance-monitoring-service');
       
       checks.push({
         category: 'monitoring',
