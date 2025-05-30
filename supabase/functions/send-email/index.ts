@@ -16,14 +16,20 @@ interface EmailRequest {
   sender_name?: string;
 }
 
-const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Validate Resend API key
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      throw new Error('RESEND_API_KEY is not configured');
+    }
+
+    const resend = new Resend(resendApiKey);
+
     const { 
       communication_id, 
       recipients, 
@@ -32,6 +38,11 @@ serve(async (req) => {
       template_data,
       sender_name = 'LearnSpark AI' 
     }: EmailRequest = await req.json();
+
+    // Validate required fields
+    if (!subject) {
+      throw new Error('Subject is required');
+    }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string;
@@ -60,15 +71,30 @@ serve(async (req) => {
         throw new Error(`Communication not found: ${commError?.message}`);
       }
 
-      if (!communication.parent_email && !communication.student?.parent_email) {
+      const parentEmail = communication.parent_email || communication.student?.parent_email;
+      if (!parentEmail) {
         throw new Error('No parent email available for this communication');
       }
 
-      emailRecipients = [communication.parent_email || communication.student?.parent_email];
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(parentEmail)) {
+        throw new Error('Invalid parent email format');
+      }
+
+      emailRecipients = [parentEmail];
       studentData = communication.student;
       template_data.student = studentData;
     } else if (recipients) {
-      emailRecipients = recipients;
+      // Validate all recipient emails
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const validEmails = recipients.filter(email => emailRegex.test(email));
+      
+      if (validEmails.length === 0) {
+        throw new Error('No valid email recipients provided');
+      }
+      
+      emailRecipients = validEmails;
     }
 
     if (emailRecipients.length === 0) {
@@ -78,42 +104,73 @@ serve(async (req) => {
     // Generate email content based on template
     const emailContent = generateEmailTemplate(template_type, template_data);
 
-    // Send emails
+    // Send emails with improved error handling
     const emailResults = [];
+    const maxRetries = 2;
+    
     for (const recipient of emailRecipients) {
-      try {
-        const emailResponse = await resend.emails.send({
-          from: `${sender_name} <onboarding@resend.dev>`, // Replace with your verified domain
-          to: [recipient],
-          subject: subject,
-          html: emailContent.html,
-          text: emailContent.text,
-        });
+      let attempts = 0;
+      let success = false;
+      let lastError = null;
 
-        emailResults.push({
-          recipient,
-          success: true,
-          message_id: emailResponse.data?.id,
-        });
+      while (attempts < maxRetries && !success) {
+        try {
+          attempts++;
+          
+          // Use a verified sending domain or the default Resend testing domain
+          const fromEmail = `${sender_name} <onboarding@resend.dev>`;
+          
+          const emailResponse = await resend.emails.send({
+            from: fromEmail,
+            to: [recipient],
+            subject: subject,
+            html: emailContent.html,
+            text: emailContent.text,
+          });
 
-        console.log(`Email sent successfully to ${recipient}:`, emailResponse);
-      } catch (emailError) {
-        console.error(`Failed to send email to ${recipient}:`, emailError);
+          if (emailResponse.error) {
+            throw new Error(`Resend API error: ${emailResponse.error.message}`);
+          }
+
+          emailResults.push({
+            recipient,
+            success: true,
+            message_id: emailResponse.data?.id,
+            attempts
+          });
+
+          success = true;
+          console.log(`Email sent successfully to ${recipient} on attempt ${attempts}:`, emailResponse.data?.id);
+          
+        } catch (emailError) {
+          lastError = emailError;
+          console.error(`Failed to send email to ${recipient} on attempt ${attempts}:`, emailError);
+          
+          if (attempts < maxRetries) {
+            // Wait before retry
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+          }
+        }
+      }
+
+      if (!success) {
         emailResults.push({
           recipient,
           success: false,
-          error: emailError.message,
+          error: lastError?.message || 'Unknown error',
+          attempts
         });
       }
     }
 
     // Update communication record if applicable
     if (communication_id) {
+      const allSuccessful = emailResults.every(r => r.success);
       const { error: updateError } = await supabase
         .from('parent_communications')
         .update({ 
           sent_at: new Date().toISOString(),
-          email_status: emailResults.every(r => r.success) ? 'sent' : 'partial_failure'
+          email_status: allSuccessful ? 'sent' : 'partial_failure'
         })
         .eq('id', communication_id);
 
@@ -122,11 +179,15 @@ serve(async (req) => {
       }
     }
 
+    const successCount = emailResults.filter(r => r.success).length;
+    const failCount = emailResults.filter(r => !r.success).length;
+
     return new Response(JSON.stringify({ 
-      success: true,
+      success: successCount > 0,
       results: emailResults,
-      total_sent: emailResults.filter(r => r.success).length,
-      total_failed: emailResults.filter(r => !r.success).length
+      total_sent: successCount,
+      total_failed: failCount,
+      summary: `${successCount}/${emailRecipients.length} emails sent successfully`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -136,7 +197,8 @@ serve(async (req) => {
     
     return new Response(JSON.stringify({ 
       error: error.message,
-      success: false 
+      success: false,
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -166,29 +228,33 @@ function generateEmailTemplate(template_type: string, data: Record<string, any>)
 
 function generateProgressReportEmail(data: any) {
   const student = data.student || {};
-  const content = data.content || '';
+  const content = data.content || data.custom_content || '';
   
   const html = `
     <!DOCTYPE html>
     <html>
     <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
         .header { background-color: #2563eb; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; }
+        .content { padding: 20px; max-width: 600px; margin: 0 auto; }
         .student-info { background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 15px 0; }
         .footer { background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+        h1 { margin: 0; font-size: 24px; }
+        h3 { color: #2563eb; margin-top: 20px; }
       </style>
     </head>
     <body>
       <div class="header">
-        <h1>Progress Report for ${student.first_name} ${student.last_name}</h1>
+        <h1>Progress Report for ${student.first_name || 'Student'} ${student.last_name || ''}</h1>
       </div>
       <div class="content">
         <div class="student-info">
           <h3>Student Information</h3>
-          <p><strong>Name:</strong> ${student.first_name} ${student.last_name}</p>
-          <p><strong>Grade:</strong> ${student.grade_level}</p>
+          <p><strong>Name:</strong> ${student.first_name || 'N/A'} ${student.last_name || ''}</p>
+          <p><strong>Grade:</strong> ${student.grade_level || 'N/A'}</p>
         </div>
         <div>
           ${content}
@@ -202,10 +268,10 @@ function generateProgressReportEmail(data: any) {
   `;
 
   const text = `
-    Progress Report for ${student.first_name} ${student.last_name}
+    Progress Report for ${student.first_name || 'Student'} ${student.last_name || ''}
     
-    Student: ${student.first_name} ${student.last_name}
-    Grade: ${student.grade_level}
+    Student: ${student.first_name || 'N/A'} ${student.last_name || ''}
+    Grade: ${student.grade_level || 'N/A'}
     
     ${content.replace(/<[^>]*>/g, '')}
     
@@ -217,18 +283,23 @@ function generateProgressReportEmail(data: any) {
 
 function generateAchievementEmail(data: any) {
   const student = data.student || {};
-  const achievement = data.achievement || '';
+  const achievement = data.achievement || data.custom_content || '';
   
   const html = `
     <!DOCTYPE html>
     <html>
     <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
         .header { background-color: #16a34a; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; }
+        .content { padding: 20px; max-width: 600px; margin: 0 auto; }
         .achievement { background-color: #f0fdf4; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #16a34a; }
         .footer { background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+        h1 { margin: 0; font-size: 24px; }
+        h2 { color: #16a34a; }
+        h3 { color: #16a34a; margin-top: 0; }
       </style>
     </head>
     <body>
@@ -236,12 +307,12 @@ function generateAchievementEmail(data: any) {
         <h1>🎉 Great Achievement!</h1>
       </div>
       <div class="content">
-        <h2>Congratulations to ${student.first_name}!</h2>
+        <h2>Congratulations to ${student.first_name || 'your child'}!</h2>
         <div class="achievement">
           <h3>Achievement Details</h3>
           <p>${achievement}</p>
         </div>
-        <p>We're excited to share this wonderful news with you. ${student.first_name} has been working hard and it's paying off!</p>
+        <p>We're excited to share this wonderful news with you. ${student.first_name || 'Your child'} has been working hard and it's paying off!</p>
       </div>
       <div class="footer">
         <p>This message was sent from LearnSpark AI. Please do not reply to this email.</p>
@@ -253,11 +324,11 @@ function generateAchievementEmail(data: any) {
   const text = `
     Great Achievement!
     
-    Congratulations to ${student.first_name}!
+    Congratulations to ${student.first_name || 'your child'}!
     
     Achievement: ${achievement}
     
-    We're excited to share this wonderful news with you. ${student.first_name} has been working hard and it's paying off!
+    We're excited to share this wonderful news with you. ${student.first_name || 'Your child'} has been working hard and it's paying off!
     
     This message was sent from LearnSpark AI.
   `;
@@ -267,27 +338,31 @@ function generateAchievementEmail(data: any) {
 
 function generateConcernAlertEmail(data: any) {
   const student = data.student || {};
-  const concern = data.concern || '';
+  const concern = data.concern || data.custom_content || '';
   
   const html = `
     <!DOCTYPE html>
     <html>
     <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
         .header { background-color: #dc2626; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; }
+        .content { padding: 20px; max-width: 600px; margin: 0 auto; }
         .concern { background-color: #fef2f2; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #dc2626; }
         .footer { background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+        h1 { margin: 0; font-size: 24px; }
+        h3 { color: #dc2626; margin-top: 0; }
       </style>
     </head>
     <body>
       <div class="header">
-        <h1>Attention Needed: ${student.first_name} ${student.last_name}</h1>
+        <h1>Attention Needed: ${student.first_name || 'Student'} ${student.last_name || ''}</h1>
       </div>
       <div class="content">
         <p>Dear Parent/Guardian,</p>
-        <p>I wanted to reach out regarding ${student.first_name}'s recent academic progress.</p>
+        <p>I wanted to reach out regarding ${student.first_name || 'your child'}'s recent academic progress.</p>
         <div class="concern">
           <h3>Area of Concern</h3>
           <p>${concern}</p>
@@ -303,11 +378,11 @@ function generateConcernAlertEmail(data: any) {
   `;
 
   const text = `
-    Attention Needed: ${student.first_name} ${student.last_name}
+    Attention Needed: ${student.first_name || 'Student'} ${student.last_name || ''}
     
     Dear Parent/Guardian,
     
-    I wanted to reach out regarding ${student.first_name}'s recent academic progress.
+    I wanted to reach out regarding ${student.first_name || 'your child'}'s recent academic progress.
     
     Area of Concern: ${concern}
     
@@ -323,18 +398,21 @@ function generateConcernAlertEmail(data: any) {
 }
 
 function generateBulkAnnouncementEmail(data: any) {
-  const announcement = data.announcement || '';
+  const announcement = data.announcement || data.custom_content || '';
   
   const html = `
     <!DOCTYPE html>
     <html>
     <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
         .header { background-color: #7c3aed; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; }
+        .content { padding: 20px; max-width: 600px; margin: 0 auto; }
         .announcement { background-color: #faf5ff; padding: 15px; border-radius: 8px; margin: 15px 0; }
         .footer { background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+        h1 { margin: 0; font-size: 24px; }
       </style>
     </head>
     <body>
@@ -375,18 +453,21 @@ function generateBulkAnnouncementEmail(data: any) {
 }
 
 function generateCustomEmail(data: any) {
-  const content = data.content || '';
+  const content = data.content || data.custom_content || data.message || '';
   const student = data.student || {};
   
   const html = `
     <!DOCTYPE html>
     <html>
     <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
         .header { background-color: #2563eb; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; }
+        .content { padding: 20px; max-width: 600px; margin: 0 auto; }
         .footer { background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+        h1 { margin: 0; font-size: 24px; }
       </style>
     </head>
     <body>
@@ -419,22 +500,27 @@ function generateWeeklyProgressEmail(data: any) {
     <!DOCTYPE html>
     <html>
     <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
         .header { background-color: #2563eb; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; }
+        .content { padding: 20px; max-width: 600px; margin: 0 auto; }
         .section { margin: 20px 0; padding: 15px; border-radius: 8px; }
         .achievements { background-color: #f0fdf4; border-left: 4px solid #16a34a; }
         .concerns { background-color: #fef2f2; border-left: 4px solid #dc2626; }
         .assessments { background-color: #f8fafc; border-left: 4px solid #3b82f6; }
         .footer { background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 12px; color: #666; }
         ul { margin: 10px 0; padding-left: 20px; }
+        h1 { margin: 0; font-size: 24px; }
+        h2 { margin: 0; font-size: 20px; }
+        h3 { margin-top: 0; }
       </style>
     </head>
     <body>
       <div class="header">
         <h1>Weekly Progress Report</h1>
-        <h2>${student.first_name} ${student.last_name}</h2>
+        <h2>${student.first_name || 'Student'} ${student.last_name || ''}</h2>
       </div>
       <div class="content">
         ${improvements.length > 0 ? `
@@ -479,7 +565,7 @@ function generateWeeklyProgressEmail(data: any) {
   `;
 
   const text = `
-    Weekly Progress Report for ${student.first_name} ${student.last_name}
+    Weekly Progress Report for ${student.first_name || 'Student'} ${student.last_name || ''}
     
     ${improvements.length > 0 ? `Improvements This Week:\n${improvements.map(i => `• ${i}`).join('\n')}\n\n` : ''}
     ${recent_assessments.length > 0 ? `Recent Assessments:\n${recent_assessments.map(a => `• ${a.title}: ${a.score}%`).join('\n')}\n\n` : ''}
@@ -506,21 +592,26 @@ function generateDigestEmail(data: any) {
     <!DOCTYPE html>
     <html>
     <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
         .header { background-color: #7c3aed; color: white; padding: 20px; text-align: center; }
-        .content { padding: 20px; }
+        .content { padding: 20px; max-width: 600px; margin: 0 auto; }
         .section { margin: 20px 0; padding: 15px; border-radius: 8px; }
         .achievements { background-color: #f0fdf4; border-left: 4px solid #16a34a; }
         .concerns { background-color: #fef2f2; border-left: 4px solid #dc2626; }
         .progress { background-color: #f8fafc; border-left: 4px solid #3b82f6; }
         .footer { background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+        h1 { margin: 0; font-size: 24px; }
+        h2 { margin: 0; font-size: 20px; }
+        h3 { margin-top: 0; }
       </style>
     </head>
     <body>
       <div class="header">
         <h1>Weekly Digest</h1>
-        <h2>${student.first_name} ${student.last_name}</h2>
+        <h2>${student.first_name || 'Student'} ${student.last_name || ''}</h2>
       </div>
       <div class="content">
         ${achievements.length > 0 ? `
@@ -551,7 +642,7 @@ function generateDigestEmail(data: any) {
         ` : ''}
       </div>
       <div class="footer">
-        <p>This digest contains all updates from this week for ${student.first_name}.</p>
+        <p>This digest contains all updates from this week for ${student.first_name || 'your child'}.</p>
         <p>Individual notifications have been combined to reduce email volume.</p>
       </div>
     </body>
@@ -559,7 +650,7 @@ function generateDigestEmail(data: any) {
   `;
 
   const text = `
-    Weekly Digest for ${student.first_name} ${student.last_name}
+    Weekly Digest for ${student.first_name || 'Student'} ${student.last_name || ''}
     
     ${achievements.length > 0 ? `Achievements:\n${achievements.map(a => `• ${a.title}: ${a.description}`).join('\n')}\n\n` : ''}
     ${progress.length > 0 ? 'Progress Updates:\nWeekly progress summary available\n\n' : ''}
