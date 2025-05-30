@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,7 +52,7 @@ const VerificationRunner: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      pass: 'success' as const,
+      pass: 'default' as const,
       fail: 'destructive' as const,
       warning: 'secondary' as const,
       info: 'outline' as const
