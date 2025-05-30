@@ -186,7 +186,10 @@ class AdvancedCachingService {
     
     window.fetch = async (...args) => {
       const [resource, config] = args;
-      const url = typeof resource === 'string' ? resource : resource.url;
+      // Fix: Properly extract URL from either Request or string/URL
+      const url = typeof resource === 'string' ? resource : 
+                  resource instanceof Request ? resource.url : 
+                  resource.toString();
       
       // Only cache GET requests to API endpoints
       if (config?.method !== 'GET' && !config?.method) {
