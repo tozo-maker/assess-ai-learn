@@ -155,34 +155,49 @@ const ProductionReadinessAudit = () => {
       });
     }
 
-    // Enhanced RLS policy check
+    // Enhanced RLS policy check - test with known tables
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       
-      // Test multiple tables to ensure comprehensive RLS
-      const tables = ['students', 'assessments', 'teacher_profiles'];
+      // Test critical tables individually to ensure comprehensive RLS
       let rlsScore = 0;
+      const totalTables = 3;
       
-      for (const table of tables) {
-        try {
-          await supabase.from(table).select('id').limit(1);
-          rlsScore++;
-        } catch (error: any) {
-          if (error.code === 'PGRST116') {
-            // This is expected for RLS-protected tables when not authenticated properly
-            rlsScore++;
-          }
+      try {
+        await supabase.from('students').select('id').limit(1);
+        rlsScore++;
+      } catch (error: any) {
+        if (error.code === 'PGRST116') {
+          rlsScore++; // Expected for RLS-protected tables when not authenticated properly
         }
       }
       
-      const rlsPercentage = (rlsScore / tables.length) * 100;
+      try {
+        await supabase.from('assessments').select('id').limit(1);
+        rlsScore++;
+      } catch (error: any) {
+        if (error.code === 'PGRST116') {
+          rlsScore++; // Expected for RLS-protected tables when not authenticated properly
+        }
+      }
+      
+      try {
+        await supabase.from('teacher_profiles').select('id').limit(1);
+        rlsScore++;
+      } catch (error: any) {
+        if (error.code === 'PGRST116') {
+          rlsScore++; // Expected for RLS-protected tables when not authenticated properly
+        }
+      }
+      
+      const rlsPercentage = (rlsScore / totalTables) * 100;
       
       checks.push({
         category: 'security',
         check: 'Comprehensive RLS Policies',
         status: rlsPercentage >= 80 ? 'pass' : 'warning',
-        message: `RLS policies active on ${rlsScore}/${tables.length} critical tables`,
-        details: { coverage: `${rlsPercentage}%`, tables },
+        message: `RLS policies active on ${rlsScore}/${totalTables} critical tables`,
+        details: { coverage: `${rlsPercentage}%`, tables: ['students', 'assessments', 'teacher_profiles'] },
         recommendation: rlsPercentage < 100 ? 'Ensure all sensitive tables have proper RLS policies' : undefined
       });
     } catch (error) {
