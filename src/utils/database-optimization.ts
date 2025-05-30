@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
 interface QueryOptimizationSuggestion {
   table: string;
@@ -8,6 +9,8 @@ interface QueryOptimizationSuggestion {
   reason: string;
   priority: 'high' | 'medium' | 'low';
 }
+
+type TableName = keyof Database['public']['Tables'];
 
 export class DatabaseOptimizer {
   // Analyze query patterns and suggest optimizations
@@ -149,7 +152,7 @@ export class DatabaseOptimizer {
 
   // Analyze table sizes and suggest archiving strategies
   static async analyzeTableSizes() {
-    const tables = [
+    const tableNames: TableName[] = [
       'students',
       'student_responses', 
       'assessments',
@@ -160,22 +163,22 @@ export class DatabaseOptimizer {
 
     const analysis = [];
 
-    for (const table of tables) {
+    for (const tableName of tableNames) {
       try {
         const { data, error, count } = await supabase
-          .from(table)
+          .from(tableName)
           .select('*', { count: 'exact', head: true });
 
         if (!error) {
           analysis.push({
-            table,
+            table: tableName,
             recordCount: count || 0,
-            recommendation: this.getArchivingRecommendation(table, count || 0)
+            recommendation: this.getArchivingRecommendation(tableName, count || 0)
           });
         }
       } catch (error) {
         analysis.push({
-          table,
+          table: tableName,
           recordCount: 0,
           error: 'Could not analyze table'
         });
