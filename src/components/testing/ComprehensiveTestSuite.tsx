@@ -16,7 +16,9 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-  PlayCircle
+  PlayCircle,
+  Settings,
+  Wrench
 } from 'lucide-react';
 
 // Import individual test components
