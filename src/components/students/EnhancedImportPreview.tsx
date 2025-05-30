@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,9 +6,18 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { CheckCircle, AlertTriangle, XCircle, User } from 'lucide-react';
 
 interface PreviewStudent {
-  [key: string]: string;
+  first_name?: string;
+  last_name?: string;
+  student_id?: string;
+  grade_level?: string;
+  learning_goals?: string;
+  special_considerations?: string;
+  parent_name?: string;
+  parent_email?: string;
+  parent_phone?: string;
   preview_status?: 'valid' | 'warning' | 'error';
   preview_issues?: string[];
+  [key: string]: string | string[] | undefined;
 }
 
 interface EnhancedImportPreviewProps {

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ImportValidationResult {
@@ -10,9 +9,18 @@ export interface ImportValidationResult {
 }
 
 export interface EnhancedStudentData {
-  [key: string]: string;
+  first_name?: string;
+  last_name?: string;
+  student_id?: string;
+  grade_level?: string;
+  learning_goals?: string;
+  special_considerations?: string;
+  parent_name?: string;
+  parent_email?: string;
+  parent_phone?: string;
   preview_status?: 'valid' | 'warning' | 'error';
   preview_issues?: string[];
+  [key: string]: string | string[] | undefined;
 }
 
 export interface ImportProgress {
