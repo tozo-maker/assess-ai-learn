@@ -1,6 +1,7 @@
+
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, FileText, AlertCircle, CheckCircle, Users, Download } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle, Users, Download, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,11 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { studentService } from '@/services/student-service';
 import { supabase } from '@/integrations/supabase/client';
 import PageShell from '@/components/ui/page-shell';
 import ColumnMappingDialog from '@/components/students/ColumnMappingDialog';
 import ImportOptionsDialog, { ImportOptions } from '@/components/students/ImportOptionsDialog';
+import EnhancedImportPreview from '@/components/students/EnhancedImportPreview';
+import { enhancedImportService, ImportValidationResult, ImportProgress } from '@/services/enhanced-import-service';
 
 interface ImportResult {
   success: number;
@@ -22,30 +24,23 @@ interface ImportResult {
   total: number;
 }
 
-interface ParsedStudent {
-  [key: string]: string;
-}
-
 const ImportStudents = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [progress, setProgress] = useState(0);
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
-  const [parsedData, setParsedData] = useState<ParsedStudent[]>([]);
+  const [parsedData, setParsedData] = useState<any[]>([]);
   const [showColumnMapping, setShowColumnMapping] = useState(false);
   const [showImportOptions, setShowImportOptions] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
-  const [duplicateCount, setDuplicateCount] = useState(0);
+  const [validationResult, setValidationResult] = useState<ImportValidationResult | null>(null);
+  const [importProgress, setImportProgress] = useState<ImportProgress | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       if (selectedFile.type !== 'text/csv' && !selectedFile.name.endsWith('.csv')) {
@@ -56,24 +51,37 @@ const ImportStudents = () => {
         });
         return;
       }
+      
       setFile(selectedFile);
       setImportResult(null);
-      parseCSVHeaders(selectedFile);
+      setShowPreview(false);
+      await parseCSVFile(selectedFile);
     }
   }, [toast]);
 
-  const parseCSVHeaders = async (file: File) => {
+  const parseCSVFile = async (file: File) => {
     try {
       const csvText = await file.text();
-      const lines = csvText.trim().split('\n');
-      if (lines.length === 0) return;
-
-      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+      const { headers, data, errors } = enhancedImportService.parseEnhancedCSV(csvText);
+      
+      if (errors.length > 0) {
+        toast({
+          title: "CSV parsing issues",
+          description: `Found ${errors.length} issues: ${errors[0]}`,
+          variant: "destructive"
+        });
+      }
+      
       setCsvHeaders(headers);
-
-      // Parse all data for preview
-      const data = parseCSVData(csvText);
       setParsedData(data);
+      
+      if (headers.length === 0 || data.length === 0) {
+        toast({
+          title: "Empty CSV file",
+          description: "The CSV file appears to be empty or invalid",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       toast({
         title: "Error reading file",
@@ -83,178 +91,57 @@ const ImportStudents = () => {
     }
   };
 
-  const parseCSVData = (csvText: string): ParsedStudent[] => {
-    const lines = csvText.trim().split('\n');
-    if (lines.length < 2) return [];
-
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    const data = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-      const row: ParsedStudent = {};
-      headers.forEach((header, index) => {
-        row[header] = values[index] || '';
-      });
-      data.push(row);
-    }
-
-    return data;
-  };
-
-  const checkForDuplicates = async (mappedData: any[]): Promise<number> => {
-    try {
-      const { data: existingStudents } = await supabase
-        .from('students')
-        .select('first_name, last_name, student_id');
-
-      if (!existingStudents) return 0;
-
-      let duplicates = 0;
-      mappedData.forEach(student => {
-        const isDuplicate = existingStudents.some(existing => 
-          (existing.first_name?.toLowerCase() === student.first_name?.toLowerCase() &&
-           existing.last_name?.toLowerCase() === student.last_name?.toLowerCase()) ||
-          (student.student_id && existing.student_id === student.student_id)
-        );
-        if (isDuplicate) duplicates++;
-      });
-
-      return duplicates;
-    } catch (error) {
-      console.error('Error checking duplicates:', error);
-      return 0;
-    }
-  };
-
   const handleColumnMappingConfirm = async (mapping: Record<string, string>) => {
     setColumnMapping(mapping);
     setShowColumnMapping(false);
 
-    // Map the data according to the column mapping
-    const mappedData = parsedData.map(row => {
-      const mappedRow: any = {};
-      Object.entries(mapping).forEach(([fieldKey, csvHeader]) => {
-        if (csvHeader !== 'skip') {
-          mappedRow[fieldKey] = row[csvHeader] || '';
-        }
-      });
-      return mappedRow;
-    });
+    // Validate the mapped data
+    const validation = await enhancedImportService.validateImportData(parsedData, mapping);
+    setValidationResult(validation);
+    setShowPreview(true);
+  };
 
-    // Check for duplicates
-    const duplicates = await checkForDuplicates(mappedData);
-    setDuplicateCount(duplicates);
+  const handlePreviewContinue = () => {
+    setShowPreview(false);
     setShowImportOptions(true);
   };
 
   const handleImportOptionsConfirm = async (options: ImportOptions) => {
     setShowImportOptions(false);
-    await performImport(options);
+    await performEnhancedImport(options);
   };
 
-  const performImport = async (options: ImportOptions) => {
-    if (!file || !parsedData.length) return;
+  const performEnhancedImport = async (options: ImportOptions) => {
+    if (!validationResult) return;
 
     setIsImporting(true);
     setProgress(0);
+    setImportProgress({ current: 0, total: validationResult.students.length, status: 'processing', message: 'Starting import...' });
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error("User not authenticated");
-      }
-
-      // Map the data according to column mapping
-      const mappedData = parsedData.map(row => {
-        const mappedRow: any = {};
-        Object.entries(columnMapping).forEach(([fieldKey, csvHeader]) => {
-          if (csvHeader !== 'skip') {
-            mappedRow[fieldKey] = row[csvHeader] || '';
+      const results = await enhancedImportService.performBulkImport(
+        validationResult.students,
+        {
+          duplicateHandling: options.duplicateHandling,
+          batchSize: 25,
+          onProgress: (progress) => {
+            setImportProgress(progress);
+            const percentage = (progress.current / progress.total) * 100;
+            setProgress(Math.min(percentage, 95));
           }
-        });
-        return mappedRow;
-      });
-
-      const results: ImportResult = {
-        success: 0,
-        updated: 0,
-        skipped: 0,
-        errors: [],
-        total: mappedData.length
-      };
-
-      // Get existing students if handling duplicates
-      let existingStudents: any[] = [];
-      if (options.duplicateHandling !== 'create_new') {
-        const { data } = await supabase
-          .from('students')
-          .select('*');
-        existingStudents = data || [];
-      }
-
-      for (let i = 0; i < mappedData.length; i++) {
-        const studentData = mappedData[i];
-        setProgress(((i + 1) / mappedData.length) * 100);
-
-        try {
-          // Validate email if option is enabled
-          if (options.validateEmails && studentData.parent_email && 
-              !validateEmail(studentData.parent_email)) {
-            results.errors.push(`Row ${i + 2}: Invalid email format: ${studentData.parent_email}`);
-            continue;
-          }
-
-          // Check for duplicates
-          const existingStudent = existingStudents.find(existing => 
-            (existing.first_name?.toLowerCase() === studentData.first_name?.toLowerCase() &&
-             existing.last_name?.toLowerCase() === studentData.last_name?.toLowerCase()) ||
-            (studentData.student_id && existing.student_id === studentData.student_id)
-          );
-
-          if (existingStudent && options.duplicateHandling === 'skip') {
-            results.skipped++;
-            continue;
-          }
-
-          // Prepare student object
-          const student = {
-            first_name: studentData.first_name || '',
-            last_name: studentData.last_name || '',
-            student_id: studentData.student_id || '',
-            grade_level: studentData.grade_level || '1st',
-            learning_goals: studentData.learning_goals || '',
-            special_considerations: studentData.special_considerations || '',
-            parent_name: studentData.parent_name || '',
-            parent_email: studentData.parent_email || '',
-            parent_phone: studentData.parent_phone || '',
-            teacher_id: user.id
-          };
-
-          // Validate required fields
-          if (!student.first_name || !student.last_name) {
-            results.errors.push(`Row ${i + 2}: Missing first name or last name`);
-            continue;
-          }
-
-          if (existingStudent && options.duplicateHandling === 'update') {
-            await studentService.updateStudent(existingStudent.id, student);
-            results.updated++;
-          } else {
-            await studentService.createStudent(student);
-            results.success++;
-          }
-        } catch (error) {
-          results.errors.push(`Row ${i + 2}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
-      }
+      );
 
-      setImportResult(results);
+      setProgress(100);
+      setImportResult({
+        ...results,
+        total: validationResult.students.length
+      });
 
       if (results.success > 0 || results.updated > 0) {
         toast({
-          title: "Import completed",
-          description: `Successfully imported ${results.success} students, updated ${results.updated}`,
+          title: "Import completed successfully",
+          description: `${results.success} students created, ${results.updated} updated`,
         });
       }
 
@@ -274,6 +161,7 @@ const ImportStudents = () => {
       });
     } finally {
       setIsImporting(false);
+      setImportProgress(null);
     }
   };
 
@@ -316,13 +204,14 @@ Mike,Johnson,12347,3rd,Writing skills,None,Sue Johnson,sue.johnson@email.com,555
 
   return (
     <PageShell 
-      title="Import Students" 
-      description="Upload a CSV file to add multiple students at once"
+      title="Enhanced Student Import" 
+      description="Upload a CSV file with validation and preview capabilities"
       icon={<Upload className="h-6 w-6 text-blue-600" />}
       link="/app/students"
       linkText="Back to Students"
     >
       <div className="space-y-6">
+        {/* Requirements Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -333,17 +222,17 @@ Mike,Johnson,12347,3rd,Writing skills,None,Sue Johnson,sue.johnson@email.com,555
           <CardContent className="space-y-4">
             <div className="bg-blue-50 p-4 rounded-lg">
               <h4 className="font-medium mb-2">Supported Columns:</h4>
-              <ul className="text-sm space-y-1">
-                <li>• <strong>first_name</strong> - Student's first name (required)</li>
-                <li>• <strong>last_name</strong> - Student's last name (required)</li>
-                <li>• <strong>grade_level</strong> - Grade level (K, 1st, 2nd, etc.)</li>
-                <li>• <strong>student_id</strong> - Unique student identifier</li>
-                <li>• <strong>learning_goals</strong> - Learning objectives</li>
-                <li>• <strong>special_considerations</strong> - Special needs or notes</li>
-                <li>• <strong>parent_name</strong> - Parent or guardian name</li>
-                <li>• <strong>parent_email</strong> - Parent email address</li>
-                <li>• <strong>parent_phone</strong> - Parent phone number</li>
-              </ul>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>• <strong>first_name</strong> - Student's first name (required)</div>
+                <div>• <strong>last_name</strong> - Student's last name (required)</div>
+                <div>• <strong>grade_level</strong> - Grade level (K, 1st, 2nd, etc.)</div>
+                <div>• <strong>student_id</strong> - Unique student identifier</div>
+                <div>• <strong>learning_goals</strong> - Learning objectives</div>
+                <div>• <strong>special_considerations</strong> - Special needs or notes</div>
+                <div>• <strong>parent_name</strong> - Parent or guardian name</div>
+                <div>• <strong>parent_email</strong> - Parent email address</div>
+                <div>• <strong>parent_phone</strong> - Parent phone number</div>
+              </div>
             </div>
             
             <Button variant="outline" onClick={downloadSampleCSV}>
@@ -353,6 +242,7 @@ Mike,Johnson,12347,3rd,Writing skills,None,Sue Johnson,sue.johnson@email.com,555
           </CardContent>
         </Card>
 
+        {/* Upload Card */}
         <Card>
           <CardHeader>
             <CardTitle>Upload CSV File</CardTitle>
@@ -380,10 +270,14 @@ Mike,Johnson,12347,3rd,Writing skills,None,Sue Johnson,sue.johnson@email.com,555
               </Alert>
             )}
 
-            {isImporting && (
+            {/* Progress Display */}
+            {isImporting && importProgress && (
               <div className="space-y-2">
                 <Progress value={progress} />
-                <p className="text-sm text-gray-600">Importing students... {Math.round(progress)}%</p>
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>{importProgress.message}</span>
+                  <span>{importProgress.current}/{importProgress.total}</span>
+                </div>
               </div>
             )}
 
@@ -417,6 +311,31 @@ Mike,Johnson,12347,3rd,Writing skills,None,Sue Johnson,sue.johnson@email.com,555
           </CardContent>
         </Card>
 
+        {/* Preview Display */}
+        {showPreview && validationResult && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center">
+                  <Eye className="h-5 w-5 mr-2" />
+                  Import Preview
+                </span>
+                <Button onClick={handlePreviewContinue}>
+                  Continue with Import
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EnhancedImportPreview
+                students={validationResult.students}
+                mapping={columnMapping}
+                validationResults={validationResult}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Import Results */}
         {importResult && (
           <Card>
             <CardHeader>
@@ -453,11 +372,16 @@ Mike,Johnson,12347,3rd,Writing skills,None,Sue Johnson,sue.johnson@email.com,555
                 <div>
                   <h4 className="font-medium mb-2 text-red-700">Import Errors:</h4>
                   <div className="bg-red-50 p-3 rounded-lg max-h-40 overflow-y-auto">
-                    {importResult.errors.map((error, index) => (
-                      <div key={index} className="text-sm text-red-700">
+                    {importResult.errors.slice(0, 10).map((error, index) => (
+                      <div key={index} className="text-sm text-red-700 mb-1">
                         {error}
                       </div>
                     ))}
+                    {importResult.errors.length > 10 && (
+                      <div className="text-sm text-red-600 font-medium">
+                        +{importResult.errors.length - 10} more errors...
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -486,7 +410,7 @@ Mike,Johnson,12347,3rd,Writing skills,None,Sue Johnson,sue.johnson@email.com,555
         open={showImportOptions}
         onOpenChange={setShowImportOptions}
         onOptionsConfirm={handleImportOptionsConfirm}
-        duplicateCount={duplicateCount}
+        duplicateCount={validationResult?.warnings || 0}
       />
     </PageShell>
   );

@@ -4,8 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw, Lightbulb, Filter } from 'lucide-react';
+import { RefreshCw, Lightbulb, Filter, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { optimizedAIService } from '@/services/optimized-ai-service';
 import { goalsService } from '@/services/goals-service';
 import AISuggestionCard, { AISuggestion } from './AISuggestionCard';
 import { GoalFormData } from '@/types/goals';
@@ -24,12 +25,14 @@ const EnhancedAISuggestions: React.FC<EnhancedAISuggestionsProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
   const [dismissedSuggestions, setDismissedSuggestions] = useState<string[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  // Fetch AI suggestions
+  // Enhanced AI suggestions with context
   const { data: rawSuggestions = [], isLoading, refetch } = useQuery({
     queryKey: ['enhanced-goal-suggestions', studentId],
-    queryFn: () => goalsService.generateEnhancedGoalSuggestions(studentId),
-    enabled: !!studentId
+    queryFn: () => optimizedAIService.generateContextAwareGoals(studentId),
+    enabled: !!studentId,
+    staleTime: 2 * 60 * 1000 // 2 minutes
   });
 
   // Create goal mutation
@@ -56,12 +59,12 @@ const EnhancedAISuggestions: React.FC<EnhancedAISuggestionsProps> = ({
   const enhancedSuggestions: AISuggestion[] = rawSuggestions.map((suggestion: string, index: number) => ({
     id: `suggestion-${index}`,
     title: suggestion,
-    description: `AI-generated learning objective based on student performance analysis`,
+    description: `AI-generated learning objective based on comprehensive performance analysis`,
     category: inferCategory(suggestion),
     difficulty: inferDifficulty(suggestion),
     estimatedWeeks: inferTimeframe(suggestion),
     priority: inferPriority(suggestion),
-    reasoning: `This goal was suggested based on analysis of recent assessment performance and identified learning gaps.`,
+    reasoning: `This goal was suggested based on analysis of recent assessment performance, learning patterns, and identified growth opportunities.`,
     suggestedMilestones: generateMilestones(suggestion)
   }));
 
@@ -81,7 +84,6 @@ const EnhancedAISuggestions: React.FC<EnhancedAISuggestionsProps> = ({
       priority: suggestion.priority,
       status: 'active',
       progress_percentage: 0,
-      // Set target date based on estimated weeks
       target_date: suggestion.estimatedWeeks ? 
         new Date(Date.now() + suggestion.estimatedWeeks * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : 
         undefined
@@ -94,17 +96,67 @@ const EnhancedAISuggestions: React.FC<EnhancedAISuggestionsProps> = ({
     setDismissedSuggestions(prev => [...prev, suggestionId]);
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
+    setIsGenerating(true);
     setDismissedSuggestions([]);
-    refetch();
+    
+    try {
+      await refetch();
+      toast({
+        title: 'Suggestions refreshed',
+        description: 'Generated new AI-powered goal suggestions based on latest performance data.'
+      });
+    } catch (error) {
+      toast({
+        title: 'Error refreshing suggestions',
+        description: 'Unable to generate new suggestions. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
-  if (isLoading) {
+  const handleQuickGenerate = async () => {
+    setIsGenerating(true);
+    
+    try {
+      // Use high priority for immediate generation
+      const quickSuggestions = await optimizedAIService.generateGoalSuggestions({
+        studentId,
+        count: 3,
+        difficulty: difficultyFilter !== 'all' ? difficultyFilter : undefined
+      });
+
+      // Update the query cache
+      queryClient.setQueryData(['enhanced-goal-suggestions', studentId], quickSuggestions);
+      
+      toast({
+        title: 'Quick suggestions generated',
+        description: 'Generated focused suggestions for immediate use.'
+      });
+    } catch (error) {
+      toast({
+        title: 'Generation failed',
+        description: 'Unable to generate quick suggestions. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  if (isLoading || isGenerating) {
     return (
       <Card>
         <CardContent className="py-8 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Generating AI suggestions...</p>
+          <p className="text-gray-600">
+            {isGenerating ? 'Generating enhanced AI suggestions...' : 'Loading AI suggestions...'}
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Analyzing performance data and learning patterns
+          </p>
         </CardContent>
       </Card>
     );
@@ -116,16 +168,22 @@ const EnhancedAISuggestions: React.FC<EnhancedAISuggestionsProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center">
             <Lightbulb className="h-5 w-5 mr-2 text-blue-600" />
-            AI-Generated Goal Suggestions
+            Enhanced AI Goal Suggestions
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleQuickGenerate} disabled={isGenerating}>
+              <Zap className="h-4 w-4 mr-2" />
+              Quick Generate
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isGenerating}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
-        {/* Filters */}
+        {/* Enhanced Filters */}
         <div className="flex gap-4 mb-6">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-gray-500" />
@@ -140,6 +198,7 @@ const EnhancedAISuggestions: React.FC<EnhancedAISuggestionsProps> = ({
                 <SelectItem value="Writing">Writing</SelectItem>
                 <SelectItem value="Science">Science</SelectItem>
                 <SelectItem value="Study Skills">Study Skills</SelectItem>
+                <SelectItem value="General">General</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -155,6 +214,23 @@ const EnhancedAISuggestions: React.FC<EnhancedAISuggestionsProps> = ({
             </SelectContent>
           </Select>
         </div>
+
+        {/* AI Performance Indicator */}
+        {filteredSuggestions.length > 0 && (
+          <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-800">
+                  AI Analysis Complete
+                </span>
+              </div>
+              <span className="text-xs text-blue-600">
+                {filteredSuggestions.length} personalized suggestions
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Suggestions */}
         {filteredSuggestions.length > 0 ? (
@@ -172,8 +248,19 @@ const EnhancedAISuggestions: React.FC<EnhancedAISuggestionsProps> = ({
         ) : (
           <div className="text-center py-8 text-gray-500">
             <Lightbulb className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p>No AI suggestions available at this time.</p>
-            <p className="text-sm mt-1">Add some assessment data to get personalized recommendations.</p>
+            <p>No AI suggestions available with current filters.</p>
+            <p className="text-sm mt-1">Try adjusting filters or refreshing suggestions.</p>
+            <div className="mt-4 space-x-2">
+              <Button variant="outline" onClick={() => {
+                setCategoryFilter('all');
+                setDifficultyFilter('all');
+              }}>
+                Clear Filters
+              </Button>
+              <Button onClick={handleRefresh}>
+                Generate New Suggestions
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
