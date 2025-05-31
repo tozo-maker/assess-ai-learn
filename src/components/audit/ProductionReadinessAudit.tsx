@@ -155,8 +155,13 @@ const ProductionReadinessAudit = () => {
       });
     }
 
-    // Enhanced environment security check
-    const isProduction = import.meta.env.PROD || window.location.hostname !== 'localhost';
+    // Enhanced environment security check - fix environment detection
+    const isProduction = (import.meta.env.PROD === true || 
+                         import.meta.env.MODE === 'production' || 
+                         (window.location.hostname !== 'localhost' && 
+                          window.location.hostname !== '127.0.0.1' && 
+                          !window.location.hostname.includes('lovable.app')));
+    
     checks.push({
       category: 'security',
       check: 'Environment Security',
@@ -165,7 +170,8 @@ const ProductionReadinessAudit = () => {
       details: { 
         isProd: import.meta.env.PROD,
         hostname: window.location.hostname,
-        mode: import.meta.env.MODE
+        mode: import.meta.env.MODE,
+        detectedEnv: isProduction ? 'production' : 'development'
       },
       recommendation: isProduction ? undefined : 'Ensure production environment variables are properly secured'
     });
@@ -180,13 +186,13 @@ const ProductionReadinessAudit = () => {
       recommendation: isHTTPS ? undefined : 'Configure HTTPS for all production traffic'
     });
 
-    // Enhanced RLS policy check
+    // Enhanced RLS policy check - fix the table name issue
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       
       let rlsScore = 0;
       const totalTables = 3;
-      const testedTables = ['students', 'assessments', 'teacher_profiles'];
+      const testedTables = ['students', 'assessments', 'teacher_profiles'] as const;
       
       for (const tableName of testedTables) {
         try {
@@ -260,16 +266,16 @@ const ProductionReadinessAudit = () => {
       
       if (responseTime < 100) {
         performanceStatus = 'pass';
-        performanceMessage = `Excellent query performance: ${responseTime}ms`;
+        performanceMessage = `Excellent database query response time: ${responseTime}ms`;
       } else if (responseTime < 500) {
         performanceStatus = 'pass';
-        performanceMessage = `Good query performance: ${responseTime}ms`;
+        performanceMessage = `Good database query response time: ${responseTime}ms`;
       } else if (responseTime < 1000) {
         performanceStatus = 'warning';
-        performanceMessage = `Acceptable query performance: ${responseTime}ms`;
+        performanceMessage = `Acceptable database query response time: ${responseTime}ms`;
       } else {
         performanceStatus = 'fail';
-        performanceMessage = `Poor query performance: ${responseTime}ms`;
+        performanceMessage = `Poor database query response time: ${responseTime}ms`;
       }
       
       checks.push({
@@ -327,35 +333,40 @@ const ProductionReadinessAudit = () => {
   const runEnhancedMonitoringAudit = async (category: AuditCategory) => {
     const checks: AuditResult[] = [];
     
-    // Check for enhanced error tracking with proper service detection
+    // Check for enhanced error tracking with improved service detection
     let errorTrackingStatus: 'pass' | 'warning' | 'fail' = 'warning';
     let errorTrackingMessage = 'Basic error tracking available';
     let errorTrackingDetails: any = { features: ['Global error handlers', 'Console logging'] };
     
     try {
-      // Check if enhanced error tracking is available in global scope
-      if (window && (window as any).enhancedErrorTracking) {
+      // Check if enhanced services are available globally (set by monitoring-integration)
+      if (typeof window !== 'undefined' && (window as any).enhancedErrorTracking) {
         errorTrackingStatus = 'pass';
         errorTrackingMessage = 'Enhanced error tracking service is active';
         errorTrackingDetails = {
           features: ['Global error handlers', 'Network error tracking', 'Error batching', 'Local fallback'],
-          integration: 'Supabase + localStorage'
+          integration: 'Supabase + localStorage',
+          globallyAvailable: true
         };
       } else {
-        // Try to import and check the service
-        const { enhancedErrorTracking } = await import('@/services/enhanced-error-tracking');
-        if (enhancedErrorTracking) {
-          errorTrackingStatus = 'pass';
-          errorTrackingMessage = 'Enhanced error tracking service is active';
-          errorTrackingDetails = {
-            features: ['Global error handlers', 'Network error tracking', 'Error batching', 'Local fallback'],
-            integration: 'Supabase + localStorage'
-          };
+        // Try to import the service directly
+        try {
+          const { enhancedErrorTracking } = await import('@/services/enhanced-error-tracking');
+          if (enhancedErrorTracking && typeof enhancedErrorTracking.captureError === 'function') {
+            errorTrackingStatus = 'pass';
+            errorTrackingMessage = 'Enhanced error tracking service is operational';
+            errorTrackingDetails = {
+              features: ['Global error handlers', 'Network error tracking', 'Error batching', 'Local fallback'],
+              integration: 'Supabase + localStorage',
+              importedSuccessfully: true
+            };
+          }
+        } catch (importError) {
+          console.warn('Could not import enhanced error tracking:', importError);
         }
       }
     } catch (error) {
-      errorTrackingMessage = 'Basic error tracking available';
-      errorTrackingDetails.recommendation = 'Implement comprehensive error tracking with Sentry or similar service';
+      console.warn('Error tracking service check failed:', error);
     }
     
     checks.push({
@@ -381,26 +392,42 @@ const ProductionReadinessAudit = () => {
       recommendation: hasPerformanceAPI ? 'Implement performance metrics collection and alerting' : 'Implement performance monitoring service'
     });
 
-    // Check for structured logging with service detection
+    // Check for structured logging with improved service detection
     let loggingStatus: 'pass' | 'warning' | 'fail' = 'warning';
     let loggingMessage = 'Basic console logging detected';
     let loggingDetails: any = { levels: ['log', 'warn', 'error'] };
     
     try {
-      // Try to import and verify structured logging
-      const { structuredLogger } = await import('@/services/structured-logging');
-      if (structuredLogger && typeof structuredLogger.info === 'function') {
+      // Check if structured logger is available globally
+      if (typeof window !== 'undefined' && (window as any).structuredLogger) {
         loggingStatus = 'pass';
         loggingMessage = 'Structured logging service is operational';
         loggingDetails = {
           levels: ['DEBUG', 'INFO', 'WARN', 'ERROR'],
           features: ['Performance measurement', 'Context tracking', 'Batch processing'],
-          storage: 'Supabase + localStorage fallback'
+          storage: 'Supabase + localStorage fallback',
+          globallyAvailable: true
         };
+      } else {
+        // Try to import the service directly
+        try {
+          const { structuredLogger } = await import('@/services/structured-logging');
+          if (structuredLogger && typeof structuredLogger.info === 'function') {
+            loggingStatus = 'pass';
+            loggingMessage = 'Structured logging service is operational';
+            loggingDetails = {
+              levels: ['DEBUG', 'INFO', 'WARN', 'ERROR'],
+              features: ['Performance measurement', 'Context tracking', 'Batch processing'],
+              storage: 'Supabase + localStorage fallback',
+              importedSuccessfully: true
+            };
+          }
+        } catch (importError) {
+          console.warn('Could not import structured logger:', importError);
+        }
       }
     } catch (error) {
-      loggingMessage = 'Basic console logging detected';
-      loggingDetails.recommendation = 'Implement structured logging with different log levels and remote log aggregation';
+      console.warn('Structured logging service check failed:', error);
     }
     
     checks.push({
@@ -476,8 +503,12 @@ const ProductionReadinessAudit = () => {
   const runEnhancedConfigurationAudit = async (category: AuditCategory) => {
     const checks: AuditResult[] = [];
     
-    // Enhanced build environment check
-    const isProduction = import.meta.env.PROD || window.location.hostname !== 'localhost';
+    // Enhanced build environment check - fix environment detection
+    const isProduction = (import.meta.env.PROD === true || 
+                         import.meta.env.MODE === 'production' || 
+                         (window.location.hostname !== 'localhost' && 
+                          window.location.hostname !== '127.0.0.1' && 
+                          !window.location.hostname.includes('lovable.app')));
     const buildMode = import.meta.env.MODE || 'development';
     
     checks.push({
@@ -488,7 +519,8 @@ const ProductionReadinessAudit = () => {
       details: {
         mode: buildMode,
         isProd: import.meta.env.PROD,
-        hostname: window.location.hostname
+        hostname: window.location.hostname,
+        detectedEnv: isProduction ? 'production' : 'development'
       },
       recommendation: isProduction ? undefined : 'Ensure production build optimizations are enabled'
     });
@@ -547,21 +579,41 @@ const ProductionReadinessAudit = () => {
       recommendation: isOptimized ? 'Consider implementing image optimization and CDN' : 'Enable code splitting, tree shaking, and asset optimization'
     });
 
-    // Enhanced caching strategy check with proper service detection
+    // Enhanced caching strategy check with improved service detection
     let cachingStatus: 'pass' | 'warning' | 'fail' = 'warning';
     let cachingMessage = 'Caching strategy needs implementation';
     const cachingDetails: any = { layers: [] };
     
     try {
-      // Check for advanced caching service
-      const { advancedCaching } = await import('@/services/advanced-caching-service');
-      if (advancedCaching && typeof advancedCaching.get === 'function') {
+      // Check if advanced caching is available globally
+      if (typeof window !== 'undefined' && (window as any).advancedCaching) {
         cachingStatus = 'pass';
         cachingMessage = 'Advanced multi-tier caching system is active';
         cachingDetails.layers = ['Advanced memory cache', 'Browser storage cache'];
         cachingDetails.features = ['LRU eviction', 'TTL-based expiration', 'Dependency invalidation'];
+        cachingDetails.globallyAvailable = true;
+      } else {
+        // Try to import the service directly
+        try {
+          const { advancedCaching } = await import('@/services/advanced-caching-service');
+          if (advancedCaching && typeof advancedCaching.get === 'function') {
+            cachingStatus = 'pass';
+            cachingMessage = 'Advanced multi-tier caching system is active';
+            cachingDetails.layers = ['Advanced memory cache', 'Browser storage cache'];
+            cachingDetails.features = ['LRU eviction', 'TTL-based expiration', 'Dependency invalidation'];
+            cachingDetails.importedSuccessfully = true;
+          }
+        } catch (importError) {
+          console.warn('Could not import advanced caching:', importError);
+          // Fall back to basic caching check
+          if (localStorage && sessionStorage) {
+            cachingDetails.layers.push('Browser storage available');
+            cachingMessage = 'Basic browser caching available';
+          }
+        }
       }
     } catch (error) {
+      console.warn('Caching service check failed:', error);
       // Advanced caching not available, check for basic caching
       if (localStorage && sessionStorage) {
         cachingDetails.layers.push('Browser storage available');
