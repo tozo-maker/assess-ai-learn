@@ -1,273 +1,136 @@
 
 import React from "react";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import {
-  Home,
-  Menu,
-  Settings,
+  LayoutDashboard,
   Users,
   FileText,
+  Lightbulb,
   BarChart3,
+  Settings,
+  Mail,
   Target,
-  GraduationCap,
-  type LucideIcon,
+  Palette,
+  BookOpen,
+  TestTube
 } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { Link, useLocation } from "react-router-dom";
 
-interface NavItem {
-  title: string;
-  url: string;
-  icon: LucideIcon;
-  items?: Omit<NavItem, "icon">[];
+const navigationItems = [
+  {
+    title: "Dashboard",
+    url: "/app/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Students",
+    url: "/app/students",
+    icon: Users,
+  },
+  {
+    title: "Assessments",
+    url: "/app/assessments",
+    icon: FileText,
+  },
+  {
+    title: "Insights",
+    url: "/app/insights/class",
+    icon: Lightbulb,
+  },
+  {
+    title: "Goals",
+    url: "/app/students",
+    icon: Target,
+  },
+  {
+    title: "Reports",
+    url: "/app/reports/progress",
+    icon: BarChart3,
+  },
+  {
+    title: "Communications",
+    url: "/app/communications/progress-reports",
+    icon: Mail,
+  },
+  {
+    title: "Skills",
+    url: "/app/skills",
+    icon: BookOpen,
+  },
+  {
+    title: "Design System",
+    url: "/app/design-system",
+    icon: Palette,
+  },
+  {
+    title: "Testing",
+    url: "/app/testing",
+    icon: TestTube,
+  },
+  {
+    title: "Settings",
+    url: "/app/settings/profile",
+    icon: Settings,
+  },
+];
+
+export default function AppSidebar() {
+  const location = useLocation();
+  const isMobile = useIsMobile();
+
+  return (
+    <SidebarProvider>
+      <Sidebar variant="inset" className="border-r border-gray-200">
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" asChild>
+                <Link to="/app/dashboard">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                    <LayoutDashboard className="size-4" />
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">LearnSpark AI</span>
+                    <span className="truncate text-xs">Educational Analytics</span>
+                  </div>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarMenu>
+            {navigationItems.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton 
+                  asChild
+                  isActive={location.pathname === item.url || 
+                    (item.url !== '/app/dashboard' && location.pathname.startsWith(item.url))}
+                >
+                  <Link to={item.url}>
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarContent>
+        <SidebarRail />
+      </Sidebar>
+    </SidebarProvider>
+  );
 }
-
-const AppSidebar = () => {
-  const location = useLocation();
-  const { user, profile } = useAuth();
-
-  const navigationItems: NavItem[] = [
-    {
-      title: "Dashboard",
-      url: "/app/dashboard",
-      icon: Home,
-    },
-    {
-      title: "Students",
-      url: "/app/students",
-      icon: Users,
-    },
-    {
-      title: "Assessments",
-      url: "/app/assessments", 
-      icon: FileText,
-    },
-    {
-      title: "Skills",
-      url: "/app/skills",
-      icon: Target,
-    },
-    {
-      title: "Insights",
-      url: "/app/insights/class",
-      icon: BarChart3,
-      items: [
-        {
-          title: "Class Insights", 
-          url: "/app/insights/class"
-        },
-        {
-          title: "Individual Analysis",
-          url: "/app/insights/individual"
-        },
-        {
-          title: "Skills Mastery",
-          url: "/app/insights/skills"
-        },
-        {
-          title: "Recommendations",
-          url: "/app/insights/recommendations"
-        }
-      ]
-    },
-    {
-      title: "Settings",
-      url: "/app/settings/profile",
-      icon: Settings,
-    },
-  ];
-
-  const renderNavItem = (item: NavItem) => {
-    const isActive = location.pathname === item.url;
-    const hasSubItems = !!item.items;
-
-    return (
-      <li key={item.title}>
-        <NavLink
-          to={item.url}
-          className={`flex items-center space-x-3 p-3 rounded-md hover:bg-gray-100 transition-colors ${
-            isActive ? "bg-blue-50 text-blue-600 font-medium border-r-2 border-blue-600" : "text-gray-700"
-          }`}
-        >
-          <item.icon className="h-5 w-5" />
-          <span>{item.title}</span>
-        </NavLink>
-        {hasSubItems && item.items && (
-          <ul className="ml-8 mt-2 space-y-1">
-            {item.items.map((subItem) => (
-              <li key={subItem.title}>
-                <NavLink
-                  to={subItem.url}
-                  className={`flex items-center p-2 rounded-md text-sm hover:bg-gray-100 transition-colors ${
-                    location.pathname === subItem.url
-                      ? "bg-blue-50 text-blue-600 font-medium"
-                      : "text-gray-600"
-                  }`}
-                >
-                  <span>{subItem.title}</span>
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        )}
-      </li>
-    );
-  };
-
-  return (
-    <div className="border-r bg-white h-screen w-64 flex-shrink-0 hidden md:block">
-      {/* Sidebar Header */}
-      <div className="p-6 border-b">
-        <div className="flex items-center space-x-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
-            <GraduationCap className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">LearnSpark AI</h1>
-            <p className="text-sm text-gray-500">
-              {profile?.full_name || user?.email || "Teacher"}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="p-4">
-        <ul className="space-y-2">{navigationItems.map(renderNavItem)}</ul>
-      </nav>
-    </div>
-  );
-};
-
-export const AppMobileSidebar = () => {
-  const location = useLocation();
-  const { user, profile } = useAuth();
-
-  const navigationItems: NavItem[] = [
-    {
-      title: "Dashboard",
-      url: "/app/dashboard",
-      icon: Home,
-    },
-    {
-      title: "Students",
-      url: "/app/students",
-      icon: Users,
-    },
-    {
-      title: "Assessments",
-      url: "/app/assessments",
-      icon: FileText,
-    },
-    {
-      title: "Skills",
-      url: "/app/skills",
-      icon: Target,
-    },
-    {
-      title: "Insights",
-      url: "/app/insights/class",
-      icon: BarChart3,
-      items: [
-        {
-          title: "Class Insights",
-          url: "/app/insights/class",
-        },
-        {
-          title: "Individual Analysis",
-          url: "/app/insights/individual",
-        },
-        {
-          title: "Skills Mastery",
-          url: "/app/insights/skills",
-        },
-        {
-          title: "Recommendations",
-          url: "/app/insights/recommendations",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "/app/settings/profile",
-      icon: Settings,
-    },
-  ];
-
-  const renderNavItem = (item: NavItem) => {
-    const isActive = location.pathname === item.url;
-    const hasSubItems = !!item.items;
-
-    return (
-      <li key={item.title}>
-        <NavLink
-          to={item.url}
-          className={`flex items-center space-x-3 p-3 rounded-md hover:bg-gray-100 transition-colors ${
-            isActive ? "bg-blue-50 text-blue-600 font-medium" : "text-gray-700"
-          }`}
-        >
-          <item.icon className="h-5 w-5" />
-          <span>{item.title}</span>
-        </NavLink>
-        {hasSubItems && item.items && (
-          <ul className="ml-8 mt-2 space-y-1">
-            {item.items.map((subItem) => (
-              <li key={subItem.title}>
-                <NavLink
-                  to={subItem.url}
-                  className={`flex items-center p-2 rounded-md text-sm hover:bg-gray-100 transition-colors ${
-                    location.pathname === subItem.url
-                      ? "bg-blue-50 text-blue-600 font-medium"
-                      : "text-gray-600"
-                  }`}
-                >
-                  <span>{subItem.title}</span>
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        )}
-      </li>
-    );
-  };
-
-  return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9">
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle navigation menu</span>
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="w-[280px] p-0">
-        <SheetHeader className="p-6 border-b">
-          <div className="flex items-center space-x-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-              <GraduationCap className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <SheetTitle className="text-lg">LearnSpark AI</SheetTitle>
-              <SheetDescription className="text-sm">
-                {profile?.full_name || user?.email || "Teacher"}
-              </SheetDescription>
-            </div>
-          </div>
-        </SheetHeader>
-        <nav className="p-4">
-          <ul className="space-y-2">{navigationItems.map(renderNavItem)}</ul>
-        </nav>
-      </SheetContent>
-    </Sheet>
-  );
-};
-
-export default AppSidebar;

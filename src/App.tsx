@@ -1,42 +1,38 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import AppRoutes from "@/components/routing/AppRoutes";
-import ErrorBoundary from "@/components/common/ErrorBoundary";
+import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/sonner';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { DesignSystemProvider } from '@/contexts/DesignSystemContext';
+import AppRoutes from '@/components/routing/AppRoutes';
+import './App.css';
 
-// Configure React Query with optimized defaults
+// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-    mutations: {
       retry: 1,
     },
   },
 });
 
-const App = () => (
-  <ErrorBoundary>
+function App() {
+  return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
+      <DesignSystemProvider>
+        <AuthProvider>
           <BrowserRouter>
-            <AppRoutes />
+            <div className="App">
+              <AppRoutes />
+              <Toaster />
+            </div>
           </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
+        </AuthProvider>
+      </DesignSystemProvider>
     </QueryClientProvider>
-  </ErrorBoundary>
-);
+  );
+}
 
 export default App;
