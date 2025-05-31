@@ -1,572 +1,448 @@
 
 import React, { useState } from 'react';
-import PageShell from '@/components/ui/page-shell';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { PageShell } from '@/components/ui/page-shell';
+import { Palette, Type, Layout, Square, MousePointer, Smartphone } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+// Import redesigned components
+import { ButtonRedesigned } from '@/components/ui/button-redesigned';
 import { 
-  Palette, 
-  Type, 
-  Layout, 
-  Zap, 
-  CheckCircle, 
-  AlertTriangle, 
-  XCircle, 
-  Info,
-  Copy,
-  Eye,
-  Settings
-} from 'lucide-react';
+  CardRedesigned, 
+  CardHeaderRedesigned, 
+  CardContentRedesigned, 
+  CardFooterRedesigned,
+  CardTitleRedesigned,
+  CardDescriptionRedesigned
+} from '@/components/ui/card-redesigned';
+import { 
+  InputRedesigned, 
+  LabelRedesigned, 
+  TextareaRedesigned, 
+  FormFieldRedesigned 
+} from '@/components/ui/form-redesigned';
+import { 
+  PageTitle, 
+  SectionHeader, 
+  SubsectionHeader, 
+  BodyText, 
+  HelpText, 
+  CaptionText 
+} from '@/components/ui/typography';
+import { 
+  PageContainer, 
+  Section, 
+  ContentGrid, 
+  GridItem, 
+  Spacer, 
+  FlexContainer 
+} from '@/components/ui/layout-redesigned';
 
 const DesignSystem = () => {
-  const [copiedToken, setCopiedToken] = useState<string | null>(null);
-
-  const copyToClipboard = (text: string, tokenName: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedToken(tokenName);
-    setTimeout(() => setCopiedToken(null), 2000);
-  };
-
-  const designTokens = {
-    spacing: [
-      { name: 'xs', value: '4px', class: 'space-xs', usage: 'Tight spacing, form elements' },
-      { name: 'sm', value: '8px', class: 'space-sm', usage: 'Small gaps, button padding' },
-      { name: 'md', value: '16px', class: 'space-md', usage: 'Default spacing, card padding' },
-      { name: 'lg', value: '24px', class: 'space-lg', usage: 'Section spacing, margins' },
-      { name: 'xl', value: '32px', class: 'space-xl', usage: 'Large sections, page margins' },
-      { name: '2xl', value: '48px', class: 'space-2xl', usage: 'Major sections' },
-      { name: '3xl', value: '64px', class: 'space-3xl', usage: 'Page-level spacing' },
-    ],
-    typography: [
-      { name: 'Display Large', size: '48px', lineHeight: '56px', weight: 'Bold', class: 'text-display-lg', usage: 'Hero headings' },
-      { name: 'Display Medium', size: '36px', lineHeight: '40px', weight: 'Bold', class: 'text-display-md', usage: 'Page titles' },
-      { name: 'Display Small', size: '30px', lineHeight: '36px', weight: 'Bold', class: 'text-display-sm', usage: 'Section titles' },
-      { name: 'Heading Large', size: '24px', lineHeight: '32px', weight: 'Semibold', class: 'text-heading-lg', usage: 'Card headers' },
-      { name: 'Heading Medium', size: '20px', lineHeight: '28px', weight: 'Medium', class: 'text-heading-md', usage: 'Subsections' },
-      { name: 'Heading Small', size: '18px', lineHeight: '28px', weight: 'Medium', class: 'text-heading-sm', usage: 'Form sections' },
-      { name: 'Body Large', size: '16px', lineHeight: '24px', weight: 'Normal', class: 'text-body-lg', usage: 'Main content' },
-      { name: 'Body Medium', size: '14px', lineHeight: '20px', weight: 'Normal', class: 'text-body-md', usage: 'Secondary content' },
-      { name: 'Body Small', size: '12px', lineHeight: '16px', weight: 'Normal', class: 'text-body-sm', usage: 'Captions, labels' },
-    ],
-    colors: [
-      { name: 'Primary', hex: '#2563eb', usage: 'Main brand color, primary actions', light: '#dbeafe' },
-      { name: 'Success', hex: '#10b981', usage: 'Success states, positive feedback', light: '#d1fae5' },
-      { name: 'Warning', hex: '#f59e0b', usage: 'Warning states, caution', light: '#fef3c7' },
-      { name: 'Danger', hex: '#ef4444', usage: 'Error states, destructive actions', light: '#fee2e2' },
-      { name: 'Info', hex: '#3b82f6', usage: 'Information, neutral actions', light: '#dbeafe' },
-      { name: 'Neutral', hex: '#6b7280', usage: 'Secondary actions, borders', light: '#f3f4f6' },
-    ]
-  };
+  const [inputValue, setInputValue] = useState('');
+  const [hasError, setHasError] = useState(false);
 
   return (
     <PageShell
       title="Design System"
-      description="LearnSpark AI comprehensive design system and component library"
+      description="LearnSpark AI Design System & Component Library"
       icon={<Palette className="h-6 w-6 text-blue-600" />}
     >
-      <Tabs defaultValue="tokens" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="tokens">Design Tokens</TabsTrigger>
-          <TabsTrigger value="components">Components</TabsTrigger>
-          <TabsTrigger value="layouts">Layouts</TabsTrigger>
-          <TabsTrigger value="patterns">Patterns</TabsTrigger>
-          <TabsTrigger value="guidelines">Guidelines</TabsTrigger>
-        </TabsList>
+      <PageContainer>
+        <Tabs defaultValue="foundations" className="space-y-8">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="foundations">Foundations</TabsTrigger>
+            <TabsTrigger value="typography">Typography</TabsTrigger>
+            <TabsTrigger value="buttons">Buttons</TabsTrigger>
+            <TabsTrigger value="forms">Forms</TabsTrigger>
+            <TabsTrigger value="cards">Cards</TabsTrigger>
+            <TabsTrigger value="layouts">Layouts</TabsTrigger>
+          </TabsList>
 
-        {/* Design Tokens */}
-        <TabsContent value="tokens" className="space-y-8">
-          {/* Colors */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="h-5 w-5" />
-                Color System
-              </CardTitle>
-              <CardDescription>
-                Semantic color palette for consistent UI states and branding
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {designTokens.colors.map((color) => (
-                  <div key={color.name} className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-12 h-12 rounded-lg border border-gray-200"
-                        style={{ backgroundColor: color.hex }}
-                      />
-                      <div 
-                        className="w-8 h-8 rounded border border-gray-200"
-                        style={{ backgroundColor: color.light }}
-                      />
-                    </div>
-                    <div>
-                      <div className="font-medium">{color.name}</div>
-                      <div className="text-sm text-gray-600 font-mono">{color.hex}</div>
-                      <div className="text-xs text-gray-500 mt-1">{color.usage}</div>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyToClipboard(`var(--color-${color.name.toLowerCase()})`, color.name)}
-                      className="w-full"
-                    >
-                      <Copy className="h-3 w-3 mr-1" />
-                      {copiedToken === color.name ? 'Copied!' : 'Copy CSS Variable'}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Typography */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Type className="h-5 w-5" />
-                Typography Scale
-              </CardTitle>
-              <CardDescription>
-                Consistent typography hierarchy for clear information architecture
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {designTokens.typography.map((type) => (
-                  <div key={type.name} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <div className={type.class}>
-                        {type.name} - The quick brown fox
-                      </div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        {type.size} / {type.lineHeight} • {type.weight} • {type.usage}
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(type.class, type.name)}
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Spacing */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Layout className="h-5 w-5" />
-                Spacing Scale
-              </CardTitle>
-              <CardDescription>
-                Consistent spacing system for layouts and components
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {designTokens.spacing.map((space) => (
-                  <div key={space.name} className="flex items-center gap-4 p-3 border rounded">
-                    <div className="w-16 text-sm font-medium">{space.name}</div>
-                    <div 
-                      className="bg-blue-200 h-4"
-                      style={{ width: space.value }}
-                    />
-                    <div className="font-mono text-sm">{space.value}</div>
-                    <div className="text-sm text-gray-600 flex-1">{space.usage}</div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(`var(--${space.class})`, space.name)}
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Components */}
-        <TabsContent value="components" className="space-y-8">
-          {/* Buttons */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Button Variants</CardTitle>
-              <CardDescription>
-                Consistent button styles for different actions and contexts
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          {/* Foundations Tab */}
+          <TabsContent value="foundations" className="space-y-8">
+            <Section>
+              <SectionHeader>Color Palette</SectionHeader>
+              
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-heading-sm mb-3">Primary Actions</h4>
-                  <div className="flex flex-wrap gap-3">
-                    <Button variant="default">Primary Button</Button>
-                    <Button variant="default" size="sm">Small Primary</Button>
-                    <Button variant="default" size="lg">Large Primary</Button>
-                    <Button variant="default" disabled>Disabled</Button>
-                  </div>
+                  <SubsectionHeader>Primary Colors</SubsectionHeader>
+                  <ContentGrid cols={4}>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-[#2563eb] rounded-lg"></div>
+                      <div className="text-center">
+                        <BodyText className="font-medium">Primary</BodyText>
+                        <CaptionText>#2563eb</CaptionText>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-[#1d4ed8] rounded-lg"></div>
+                      <div className="text-center">
+                        <BodyText className="font-medium">Primary Hover</BodyText>
+                        <CaptionText>#1d4ed8</CaptionText>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-[#dbeafe] rounded-lg border"></div>
+                      <div className="text-center">
+                        <BodyText className="font-medium">Primary Light</BodyText>
+                        <CaptionText>#dbeafe</CaptionText>
+                      </div>
+                    </div>
+                  </ContentGrid>
                 </div>
+
                 <div>
-                  <h4 className="text-heading-sm mb-3">Secondary Actions</h4>
-                  <div className="flex flex-wrap gap-3">
-                    <Button variant="secondary">Secondary</Button>
-                    <Button variant="outline">Outline</Button>
-                    <Button variant="ghost">Ghost</Button>
-                    <Button variant="link">Link</Button>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-heading-sm mb-3">Semantic Actions</h4>
-                  <div className="flex flex-wrap gap-3">
-                    <Button variant="destructive">Delete</Button>
-                    <Button className="bg-semantic-success hover:bg-semantic-success-hover">
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Success
-                    </Button>
-                    <Button className="bg-semantic-warning hover:bg-semantic-warning-hover">
-                      <AlertTriangle className="h-4 w-4 mr-2" />
-                      Warning
-                    </Button>
-                    <Button className="bg-semantic-info hover:bg-semantic-info-hover">
-                      <Info className="h-4 w-4 mr-2" />
-                      Info
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Cards */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Card Patterns</CardTitle>
-              <CardDescription>
-                Standard card layouts for different content types
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Standard Card */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-heading-md">Standard Card</CardTitle>
-                    <CardDescription>Basic card with header and content</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-body-md">This is the standard card layout with proper spacing and typography.</p>
-                  </CardContent>
-                </Card>
-
-                {/* Stat Card */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-heading-sm text-gray-600">Total Students</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-display-md font-bold text-semantic-primary">142</div>
-                    <p className="text-body-sm text-semantic-success mt-1">+12% from last month</p>
-                  </CardContent>
-                </Card>
-
-                {/* Action Card */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-heading-md flex items-center gap-2">
-                      <Settings className="h-5 w-5" />
-                      Quick Setup
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-body-md">Complete your profile setup</p>
-                    <Button size="sm" className="w-full">Get Started</Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Forms */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Form Components</CardTitle>
-              <CardDescription>
-                Consistent form patterns with proper spacing and validation
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="max-w-md space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" type="email" placeholder="teacher@school.edu" />
-                  <p className="text-help">We'll use this for important notifications</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" placeholder="Enter your full name" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Account Type</Label>
-                  <div className="flex gap-2">
-                    <Badge variant="default">Teacher</Badge>
-                    <Badge variant="secondary">Administrator</Badge>
-                    <Badge variant="outline">Student</Badge>
-                  </div>
+                  <SubsectionHeader>Semantic Colors</SubsectionHeader>
+                  <ContentGrid cols={4}>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-[#10b981] rounded-lg"></div>
+                      <div className="text-center">
+                        <BodyText className="font-medium">Success</BodyText>
+                        <CaptionText>#10b981</CaptionText>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-[#f59e0b] rounded-lg"></div>
+                      <div className="text-center">
+                        <BodyText className="font-medium">Warning</BodyText>
+                        <CaptionText>#f59e0b</CaptionText>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-[#ef4444] rounded-lg"></div>
+                      <div className="text-center">
+                        <BodyText className="font-medium">Danger</BodyText>
+                        <CaptionText>#ef4444</CaptionText>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-16 bg-[#6b7280] rounded-lg"></div>
+                      <div className="text-center">
+                        <BodyText className="font-medium">Neutral</BodyText>
+                        <CaptionText>#6b7280</CaptionText>
+                      </div>
+                    </div>
+                  </ContentGrid>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </Section>
 
-          {/* Status Indicators */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Status Indicators</CardTitle>
-              <CardDescription>
-                Consistent visual feedback for different states
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+            <Section>
+              <SectionHeader>Spacing Scale</SectionHeader>
               <div className="space-y-4">
-                <div className="flex flex-wrap gap-3">
-                  <Badge className="bg-semantic-success">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Completed
-                  </Badge>
-                  <Badge className="bg-semantic-warning">
-                    <AlertTriangle className="h-3 w-3 mr-1" />
-                    In Progress
-                  </Badge>
-                  <Badge className="bg-semantic-danger">
-                    <XCircle className="h-3 w-3 mr-1" />
-                    Failed
-                  </Badge>
-                  <Badge className="bg-semantic-info">
-                    <Info className="h-3 w-3 mr-1" />
-                    Pending
-                  </Badge>
+                {[
+                  { name: 'xs', size: '4px', class: 'w-1' },
+                  { name: 'sm', size: '8px', class: 'w-2' },
+                  { name: 'md', size: '16px', class: 'w-4' },
+                  { name: 'lg', size: '24px', class: 'w-6' },
+                  { name: 'xl', size: '32px', class: 'w-8' },
+                  { name: '2xl', size: '48px', class: 'w-12' },
+                  { name: '3xl', size: '64px', class: 'w-16' },
+                ].map((space) => (
+                  <FlexContainer key={space.name} align="center" gap="md">
+                    <div className={`${space.class} h-4 bg-blue-500 rounded`}></div>
+                    <BodyText className="font-medium w-16">{space.name}</BodyText>
+                    <CaptionText>{space.size}</CaptionText>
+                  </FlexContainer>
+                ))}
+              </div>
+            </Section>
+          </TabsContent>
+
+          {/* Typography Tab */}
+          <TabsContent value="typography" className="space-y-8">
+            <Section>
+              <SectionHeader>Typography Hierarchy</SectionHeader>
+              <div className="space-y-6">
+                <div>
+                  <PageTitle>Page Title (text-3xl font-bold)</PageTitle>
+                  <CaptionText>Used for main page headings</CaptionText>
                 </div>
-                <div className="space-y-2">
-                  <div className="p-3 bg-semantic-success-light border border-semantic-success rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-semantic-success" />
-                      <span className="font-medium text-semantic-success">Success Message</span>
-                    </div>
-                    <p className="text-sm mt-1">Your changes have been saved successfully.</p>
-                  </div>
-                  <div className="p-3 bg-semantic-danger-light border border-semantic-danger rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <XCircle className="h-4 w-4 text-semantic-danger" />
-                      <span className="font-medium text-semantic-danger">Error Message</span>
-                    </div>
-                    <p className="text-sm mt-1">There was an error processing your request.</p>
-                  </div>
+                <div>
+                  <SectionHeader>Section Header (text-2xl font-semibold)</SectionHeader>
+                  <CaptionText>Used for major section divisions</CaptionText>
+                </div>
+                <div>
+                  <SubsectionHeader>Subsection Header (text-xl font-medium)</SubsectionHeader>
+                  <CaptionText>Used for subsection headings</CaptionText>
+                </div>
+                <div>
+                  <BodyText>Body Text (text-base) - This is the standard text used for content, descriptions, and general reading material throughout the application.</BodyText>
+                  <CaptionText>Standard content text</CaptionText>
+                </div>
+                <div>
+                  <HelpText>Help Text (text-sm text-gray-500) - Used for supplementary information and guidance.</HelpText>
+                  <CaptionText>Secondary information</CaptionText>
+                </div>
+                <div>
+                  <CaptionText>Caption Text (text-xs text-gray-400) - Used for labels, timestamps, and minor details.</CaptionText>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </Section>
+          </TabsContent>
 
-        {/* Layout Patterns */}
-        <TabsContent value="layouts" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Standard Layout Patterns</CardTitle>
-              <CardDescription>
-                Consistent layout structures used throughout the application
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h4 className="text-heading-sm mb-3">Page Header Pattern</h4>
-                <div className="p-4 border rounded-lg bg-gray-50">
-                  <div className="page-header">
-                    <h1 className="page-title">Page Title</h1>
-                    <p className="page-description">
-                      This is the standard page description that explains what the user can do on this page.
-                    </p>
-                  </div>
+          {/* Buttons Tab */}
+          <TabsContent value="buttons" className="space-y-8">
+            <Section>
+              <SectionHeader>Button Variants</SectionHeader>
+              <div className="space-y-6">
+                <div>
+                  <SubsectionHeader>Primary Buttons</SubsectionHeader>
+                  <FlexContainer gap="md">
+                    <ButtonRedesigned variant="primary" size="sm">Small Primary</ButtonRedesigned>
+                    <ButtonRedesigned variant="primary" size="md">Medium Primary</ButtonRedesigned>
+                    <ButtonRedesigned variant="primary" size="lg">Large Primary</ButtonRedesigned>
+                  </FlexContainer>
+                </div>
+                
+                <div>
+                  <SubsectionHeader>Secondary Buttons</SubsectionHeader>
+                  <FlexContainer gap="md">
+                    <ButtonRedesigned variant="secondary" size="sm">Small Secondary</ButtonRedesigned>
+                    <ButtonRedesigned variant="secondary" size="md">Medium Secondary</ButtonRedesigned>
+                    <ButtonRedesigned variant="secondary" size="lg">Large Secondary</ButtonRedesigned>
+                  </FlexContainer>
+                </div>
+
+                <div>
+                  <SubsectionHeader>Ghost Buttons</SubsectionHeader>
+                  <FlexContainer gap="md">
+                    <ButtonRedesigned variant="ghost" size="sm">Small Ghost</ButtonRedesigned>
+                    <ButtonRedesigned variant="ghost" size="md">Medium Ghost</ButtonRedesigned>
+                    <ButtonRedesigned variant="ghost" size="lg">Large Ghost</ButtonRedesigned>
+                  </FlexContainer>
+                </div>
+
+                <div>
+                  <SubsectionHeader>Danger Buttons</SubsectionHeader>
+                  <FlexContainer gap="md">
+                    <ButtonRedesigned variant="danger" size="sm">Small Danger</ButtonRedesigned>
+                    <ButtonRedesigned variant="danger" size="md">Medium Danger</ButtonRedesigned>
+                    <ButtonRedesigned variant="danger" size="lg">Large Danger</ButtonRedesigned>
+                  </FlexContainer>
+                </div>
+
+                <div>
+                  <SubsectionHeader>Disabled States</SubsectionHeader>
+                  <FlexContainer gap="md">
+                    <ButtonRedesigned variant="primary" disabled>Disabled Primary</ButtonRedesigned>
+                    <ButtonRedesigned variant="secondary" disabled>Disabled Secondary</ButtonRedesigned>
+                    <ButtonRedesigned variant="ghost" disabled>Disabled Ghost</ButtonRedesigned>
+                    <ButtonRedesigned variant="danger" disabled>Disabled Danger</ButtonRedesigned>
+                  </FlexContainer>
                 </div>
               </div>
+            </Section>
+          </TabsContent>
 
-              <div>
-                <h4 className="text-heading-sm mb-3">Dashboard Grid</h4>
-                <div className="p-4 border rounded-lg bg-gray-50">
-                  <div className="grid-dashboard">
-                    <div className="lg:col-span-2">
-                      <div className="h-32 bg-white border rounded-lg flex items-center justify-center">
-                        Main Content Area
+          {/* Forms Tab */}
+          <TabsContent value="forms" className="space-y-8">
+            <Section>
+              <SectionHeader>Form Components</SectionHeader>
+              <ContentGrid cols={2}>
+                <div>
+                  <SubsectionHeader>Standard Form Fields</SubsectionHeader>
+                  <div className="space-y-4">
+                    <FormFieldRedesigned label="Email Address" required>
+                      <InputRedesigned
+                        type="email"
+                        placeholder="teacher@school.edu"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        helpText="We'll use this for login and communications"
+                      />
+                    </FormFieldRedesigned>
+
+                    <FormFieldRedesigned label="Password">
+                      <InputRedesigned
+                        type="password"
+                        placeholder="Enter your password"
+                      />
+                    </FormFieldRedesigned>
+
+                    <FormFieldRedesigned label="Message">
+                      <TextareaRedesigned
+                        placeholder="Enter your message here..."
+                        helpText="Maximum 500 characters"
+                      />
+                    </FormFieldRedesigned>
+                  </div>
+                </div>
+
+                <div>
+                  <SubsectionHeader>Error States</SubsectionHeader>
+                  <div className="space-y-4">
+                    <FormFieldRedesigned label="Email Address" required>
+                      <InputRedesigned
+                        type="email"
+                        placeholder="teacher@school.edu"
+                        error={true}
+                        helpText="Please enter a valid email address"
+                      />
+                    </FormFieldRedesigned>
+
+                    <FormFieldRedesigned label="Required Field" required>
+                      <InputRedesigned
+                        type="text"
+                        placeholder="This field is required"
+                        error={true}
+                        helpText="This field cannot be empty"
+                      />
+                    </FormFieldRedesigned>
+
+                    <FormFieldRedesigned label="Comments">
+                      <TextareaRedesigned
+                        placeholder="Add your comments..."
+                        error={true}
+                        helpText="Comments must be at least 10 characters long"
+                      />
+                    </FormFieldRedesigned>
+                  </div>
+                </div>
+              </ContentGrid>
+            </Section>
+          </TabsContent>
+
+          {/* Cards Tab */}
+          <TabsContent value="cards" className="space-y-8">
+            <Section>
+              <SectionHeader>Card Components</SectionHeader>
+              <ContentGrid cols={2}>
+                <CardRedesigned>
+                  <CardHeaderRedesigned>
+                    <CardTitleRedesigned>Student Performance Overview</CardTitleRedesigned>
+                    <CardDescriptionRedesigned>
+                      Track individual student progress and achievements
+                    </CardDescriptionRedesigned>
+                  </CardHeaderRedesigned>
+                  <CardContentRedesigned>
+                    <BodyText>
+                      This card demonstrates the standard layout with a header containing a title and description,
+                      followed by the main content area with proper spacing and typography.
+                    </BodyText>
+                    <Spacer size="md" />
+                    <HelpText>
+                      Cards automatically include hover effects with subtle shadow increases to provide
+                      visual feedback during user interaction.
+                    </HelpText>
+                  </CardContentRedesigned>
+                  <CardFooterRedesigned>
+                    <FlexContainer justify="end" gap="sm">
+                      <ButtonRedesigned variant="secondary" size="sm">View Details</ButtonRedesigned>
+                      <ButtonRedesigned variant="primary" size="sm">Edit</ButtonRedesigned>
+                    </FlexContainer>
+                  </CardFooterRedesigned>
+                </CardRedesigned>
+
+                <CardRedesigned>
+                  <CardHeaderRedesigned>
+                    <CardTitleRedesigned>Quick Actions</CardTitleRedesigned>
+                  </CardHeaderRedesigned>
+                  <CardContentRedesigned>
+                    <div className="space-y-3">
+                      <ButtonRedesigned variant="primary" className="w-full">Add New Student</ButtonRedesigned>
+                      <ButtonRedesigned variant="secondary" className="w-full">Import Class Roster</ButtonRedesigned>
+                      <ButtonRedesigned variant="secondary" className="w-full">Create Assessment</ButtonRedesigned>
+                      <ButtonRedesigned variant="ghost" className="w-full">View Reports</ButtonRedesigned>
+                    </div>
+                  </CardContentRedesigned>
+                </CardRedesigned>
+              </ContentGrid>
+            </Section>
+          </TabsContent>
+
+          {/* Layouts Tab */}
+          <TabsContent value="layouts" className="space-y-8">
+            <Section>
+              <SectionHeader>Layout Patterns</SectionHeader>
+              
+              <div className="space-y-8">
+                <div>
+                  <SubsectionHeader>Content Grids</SubsectionHeader>
+                  <div className="space-y-4">
+                    <BodyText>2-Column Grid:</BodyText>
+                    <ContentGrid cols={2}>
+                      <div className="h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <CaptionText>Column 1</CaptionText>
                       </div>
-                    </div>
-                    <div>
-                      <div className="h-32 bg-white border rounded-lg flex items-center justify-center">
-                        Sidebar Content
+                      <div className="h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <CaptionText>Column 2</CaptionText>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                    </ContentGrid>
 
-              <div>
-                <h4 className="text-heading-sm mb-3">Card Grid</h4>
-                <div className="p-4 border rounded-lg bg-gray-50">
-                  <div className="grid-cards">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="h-24 bg-white border rounded-lg flex items-center justify-center">
-                        Card {i}
+                    <BodyText>3-Column Grid:</BodyText>
+                    <ContentGrid cols={3}>
+                      <div className="h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <CaptionText>Column 1</CaptionText>
                       </div>
-                    ))}
+                      <div className="h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <CaptionText>Column 2</CaptionText>
+                      </div>
+                      <div className="h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <CaptionText>Column 3</CaptionText>
+                      </div>
+                    </ContentGrid>
+
+                    <BodyText>4-Column Grid:</BodyText>
+                    <ContentGrid cols={4}>
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                          <CaptionText>Column {i}</CaptionText>
+                        </div>
+                      ))}
+                    </ContentGrid>
+                  </div>
+                </div>
+
+                <div>
+                  <SubsectionHeader>Flex Containers</SubsectionHeader>
+                  <div className="space-y-4">
+                    <BodyText>Horizontal Layout with Center Alignment:</BodyText>
+                    <FlexContainer align="center" justify="between" className="p-4 bg-gray-50 rounded-lg">
+                      <BodyText>Left Content</BodyText>
+                      <ButtonRedesigned variant="secondary" size="sm">Action</ButtonRedesigned>
+                      <BodyText>Right Content</BodyText>
+                    </FlexContainer>
+
+                    <BodyText>Vertical Layout:</BodyText>
+                    <FlexContainer direction="col" gap="md" className="p-4 bg-gray-50 rounded-lg">
+                      <BodyText>Item 1</BodyText>
+                      <BodyText>Item 2</BodyText>
+                      <BodyText>Item 3</BodyText>
+                    </FlexContainer>
+                  </div>
+                </div>
+
+                <div>
+                  <SubsectionHeader>Spacing Controls</SubsectionHeader>
+                  <div className="space-y-2">
+                    <FlexContainer gap="xs" className="p-4 bg-gray-50 rounded-lg">
+                      <div className="w-8 h-8 bg-blue-200 rounded"></div>
+                      <BodyText>Extra Small Gap (xs)</BodyText>
+                    </FlexContainer>
+                    <FlexContainer gap="sm" className="p-4 bg-gray-50 rounded-lg">
+                      <div className="w-8 h-8 bg-blue-200 rounded"></div>
+                      <BodyText>Small Gap (sm)</BodyText>
+                    </FlexContainer>
+                    <FlexContainer gap="md" className="p-4 bg-gray-50 rounded-lg">
+                      <div className="w-8 h-8 bg-blue-200 rounded"></div>
+                      <BodyText>Medium Gap (md)</BodyText>
+                    </FlexContainer>
+                    <FlexContainer gap="lg" className="p-4 bg-gray-50 rounded-lg">
+                      <div className="w-8 h-8 bg-blue-200 rounded"></div>
+                      <BodyText>Large Gap (lg)</BodyText>
+                    </FlexContainer>
+                    <FlexContainer gap="xl" className="p-4 bg-gray-50 rounded-lg">
+                      <div className="w-8 h-8 bg-blue-200 rounded"></div>
+                      <BodyText>Extra Large Gap (xl)</BodyText>
+                    </FlexContainer>
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Interaction Patterns */}
-        <TabsContent value="patterns" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Interaction Patterns</CardTitle>
-              <CardDescription>
-                Consistent interaction behaviors and animations
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h4 className="text-heading-sm mb-3">Hover States</h4>
-                <div className="flex gap-4">
-                  <Button className="transition-standard hover:scale-105">Hover Scale</Button>
-                  <div className="p-3 border rounded cursor-pointer transition-standard hover:shadow-md">
-                    Hover Shadow
-                  </div>
-                  <div className="p-3 border rounded cursor-pointer transition-standard hover:bg-blue-50">
-                    Hover Background
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-heading-sm mb-3">Loading States</h4>
-                <div className="flex gap-4">
-                  <Button disabled>
-                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Loading...
-                  </Button>
-                  <div className="p-3 border rounded animate-pulse bg-gray-100">
-                    Skeleton Loading
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-heading-sm mb-3">Animation Examples</h4>
-                <div className="space-y-2">
-                  <div className="p-3 border rounded animate-fade-in">Fade In Animation</div>
-                  <div className="p-3 border rounded animate-scale-in">Scale In Animation</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Guidelines */}
-        <TabsContent value="guidelines" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Design Guidelines</CardTitle>
-              <CardDescription>
-                Best practices for using the LearnSpark AI design system
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h4 className="text-heading-sm mb-3">Visual Hierarchy</h4>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Element</TableHead>
-                      <TableHead>Typography</TableHead>
-                      <TableHead>Usage</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>Page Titles</TableCell>
-                      <TableCell>text-display-sm, font-bold</TableCell>
-                      <TableCell>Primary page headings</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Section Headers</TableCell>
-                      <TableCell>text-heading-lg, font-semibold</TableCell>
-                      <TableCell>Major page sections</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Subsections</TableCell>
-                      <TableCell>text-heading-md, font-medium</TableCell>
-                      <TableCell>Content subsections</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Body Text</TableCell>
-                      <TableCell>text-body-lg</TableCell>
-                      <TableCell>Main content</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Help Text</TableCell>
-                      <TableCell>text-help</TableCell>
-                      <TableCell>Descriptions, hints</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-
-              <div>
-                <h4 className="text-heading-sm mb-3">Spacing Guidelines</h4>
-                <ul className="space-y-2 text-body-md">
-                  <li>• Use consistent spacing scale (xs to 3xl)</li>
-                  <li>• Maintain vertical rhythm with line-height</li>
-                  <li>• Apply content-spacing classes for consistent flow</li>
-                  <li>• Use space-lg (24px) for most section spacing</li>
-                  <li>• Use space-md (16px) for component internal spacing</li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="text-heading-sm mb-3">Color Usage</h4>
-                <ul className="space-y-2 text-body-md">
-                  <li>• Use semantic colors for consistent meaning</li>
-                  <li>• Primary blue for main actions and branding</li>
-                  <li>• Success green for positive feedback</li>
-                  <li>• Warning amber for caution states</li>
-                  <li>• Danger red for errors and destructive actions</li>
-                  <li>• Info blue for neutral information</li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="text-heading-sm mb-3">Accessibility</h4>
-                <ul className="space-y-2 text-body-md">
-                  <li>• Maintain WCAG 2.1 AA contrast ratios</li>
-                  <li>• Use focus-ring class for keyboard navigation</li>
-                  <li>• Include proper ARIA labels and roles</li>
-                  <li>• Ensure minimum touch target size of 44px</li>
-                  <li>• Test with screen readers</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </Section>
+          </TabsContent>
+        </Tabs>
+      </PageContainer>
     </PageShell>
   );
 };
