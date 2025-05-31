@@ -22,8 +22,16 @@ class MonitoringIntegration {
       // Warm up critical caches
       advancedCaching.warmCache('popular-content');
 
-      // Start performance monitoring - using available methods
+      // Start performance monitoring
       console.log('Performance monitoring service initialized');
+
+      // Expose services globally for audit detection
+      if (typeof window !== 'undefined') {
+        (window as any).enhancedErrorTracking = enhancedErrorTracking;
+        (window as any).structuredLogger = structuredLogger;
+        (window as any).advancedCaching = advancedCaching;
+        (window as any).performanceMonitoringService = performanceMonitoringService;
+      }
 
       // Test all services
       await this.runHealthChecks();
@@ -100,7 +108,6 @@ class MonitoringIntegration {
 
   private async checkPerformanceMonitoring(): Promise<void> {
     try {
-      // Use the available logMetric method instead of measureOperation
       performanceMonitoringService.logMetric({
         endpoint: 'health-check',
         method: 'GET',
