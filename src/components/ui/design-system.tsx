@@ -38,4 +38,6 @@ export {
 // Re-export original components for backward compatibility
 export { Button } from './button';
 export { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from './card';
-export { Input, Label, Textarea } from './form';
+export { Input } from './input';
+export { Label } from './label';
+export { Textarea } from './textarea';

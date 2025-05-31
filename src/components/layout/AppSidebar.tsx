@@ -15,6 +15,12 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import {
   LayoutDashboard,
   Users,
   FileText,
@@ -25,7 +31,8 @@ import {
   Target,
   Palette,
   BookOpen,
-  TestTube
+  TestTube,
+  Menu
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -132,5 +139,47 @@ export default function AppSidebar() {
         <SidebarRail />
       </Sidebar>
     </SidebarProvider>
+  );
+}
+
+// Mobile sidebar component for Header.tsx
+export function AppMobileSidebar() {
+  const location = useLocation();
+
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="sm" className="md:hidden">
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle navigation menu</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-64">
+        <nav className="space-y-1">
+          <div className="flex items-center space-x-2 px-2 py-4">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
+              <LayoutDashboard className="h-5 w-5 text-white" />
+            </div>
+            <span className="font-bold">LearnSpark AI</span>
+          </div>
+          {navigationItems.map((item) => (
+            <Link
+              key={item.title}
+              to={item.url}
+              className={cn(
+                "flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                location.pathname === item.url || 
+                (item.url !== '/app/dashboard' && location.pathname.startsWith(item.url))
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              )}
+            >
+              <item.icon className="h-4 w-4" />
+              <span>{item.title}</span>
+            </Link>
+          ))}
+        </nav>
+      </SheetContent>
+    </Sheet>
   );
 }
