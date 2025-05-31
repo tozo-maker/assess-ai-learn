@@ -1,84 +1,187 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    /* Design System Variables */
+    
+    /* Spacing Scale */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+    --space-3xl: 64px;
+    --space-4xl: 80px;
+    --space-5xl: 96px;
+    
+    /* Typography Scale */
+    --text-xs: 12px;
+    --text-sm: 14px;
+    --text-base: 16px;
+    --text-lg: 18px;
+    --text-xl: 20px;
+    --text-2xl: 24px;
+    --text-3xl: 30px;
+    --text-4xl: 36px;
+    --text-5xl: 48px;
+    
+    /* Line Heights */
+    --leading-xs: 16px;
+    --leading-sm: 20px;
+    --leading-base: 24px;
+    --leading-lg: 28px;
+    --leading-xl: 28px;
+    --leading-2xl: 32px;
+    --leading-3xl: 36px;
+    --leading-4xl: 40px;
+    --leading-5xl: 56px;
+    
+    /* Font Weights */
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+    
+    /* Border Radius */
+    --radius-xs: 2px;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+    --radius-2xl: 16px;
+    --radius-full: 9999px;
+    
+    /* Shadows */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    
+    /* Animation Durations */
+    --duration-fast: 150ms;
+    --duration-normal: 200ms;
+    --duration-slow: 300ms;
+    --duration-slower: 500ms;
+    
+    /* Semantic Colors - Light Mode */
+    --color-primary: #2563eb;
+    --color-primary-foreground: #ffffff;
+    --color-primary-hover: #1d4ed8;
+    --color-primary-light: #dbeafe;
+    
+    --color-success: #10b981;
+    --color-success-foreground: #ffffff;
+    --color-success-hover: #059669;
+    --color-success-light: #d1fae5;
+    
+    --color-warning: #f59e0b;
+    --color-warning-foreground: #ffffff;
+    --color-warning-hover: #d97706;
+    --color-warning-light: #fef3c7;
+    
+    --color-danger: #ef4444;
+    --color-danger-foreground: #ffffff;
+    --color-danger-hover: #dc2626;
+    --color-danger-light: #fee2e2;
+    
+    --color-info: #3b82f6;
+    --color-info-foreground: #ffffff;
+    --color-info-hover: #2563eb;
+    --color-info-light: #dbeafe;
+    
+    --color-neutral: #6b7280;
+    --color-neutral-foreground: #ffffff;
+    --color-neutral-hover: #4b5563;
+    --color-neutral-light: #f3f4f6;
+
+    /* Existing shadcn variables */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
-
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
+    --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
-
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
+    /* Dark mode semantic colors */
+    --color-primary: #3b82f6;
+    --color-primary-foreground: #ffffff;
+    --color-primary-hover: #2563eb;
+    --color-primary-light: #1e3a8a;
+    
+    --color-success: #10b981;
+    --color-success-foreground: #ffffff;
+    --color-success-hover: #059669;
+    --color-success-light: #064e3b;
+    
+    --color-warning: #f59e0b;
+    --color-warning-foreground: #000000;
+    --color-warning-hover: #d97706;
+    --color-warning-light: #78350f;
+    
+    --color-danger: #ef4444;
+    --color-danger-foreground: #ffffff;
+    --color-danger-hover: #dc2626;
+    --color-danger-light: #7f1d1d;
+    
+    --color-info: #3b82f6;
+    --color-info-foreground: #ffffff;
+    --color-info-hover: #2563eb;
+    --color-info-light: #1e3a8a;
+    
+    --color-neutral: #9ca3af;
+    --color-neutral-foreground: #000000;
+    --color-neutral-hover: #6b7280;
+    --color-neutral-light: #374151;
+
+    /* Existing dark mode variables */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
-
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 224.3 76.3% 48%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -97,5 +200,204 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Typography System */
+  .text-display-lg {
+    font-size: var(--text-5xl);
+    line-height: var(--leading-5xl);
+    font-weight: var(--font-bold);
+  }
+
+  .text-display-md {
+    font-size: var(--text-4xl);
+    line-height: var(--leading-4xl);
+    font-weight: var(--font-bold);
+  }
+
+  .text-display-sm {
+    font-size: var(--text-3xl);
+    line-height: var(--leading-3xl);
+    font-weight: var(--font-bold);
+  }
+
+  .text-heading-lg {
+    font-size: var(--text-2xl);
+    line-height: var(--leading-2xl);
+    font-weight: var(--font-semibold);
+  }
+
+  .text-heading-md {
+    font-size: var(--text-xl);
+    line-height: var(--leading-xl);
+    font-weight: var(--font-medium);
+  }
+
+  .text-heading-sm {
+    font-size: var(--text-lg);
+    line-height: var(--leading-lg);
+    font-weight: var(--font-medium);
+  }
+
+  .text-body-lg {
+    font-size: var(--text-base);
+    line-height: var(--leading-base);
+    font-weight: var(--font-normal);
+  }
+
+  .text-body-md {
+    font-size: var(--text-sm);
+    line-height: var(--leading-sm);
+    font-weight: var(--font-normal);
+  }
+
+  .text-body-sm {
+    font-size: var(--text-xs);
+    line-height: var(--leading-xs);
+    font-weight: var(--font-normal);
+  }
+
+  .text-help {
+    font-size: var(--text-sm);
+    line-height: var(--leading-sm);
+    color: #6b7280;
+  }
+}
+
+@layer components {
+  /* Semantic Color Utilities */
+  .bg-semantic-primary {
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
+  }
+
+  .bg-semantic-success {
+    background-color: var(--color-success);
+    color: var(--color-success-foreground);
+  }
+
+  .bg-semantic-warning {
+    background-color: var(--color-warning);
+    color: var(--color-warning-foreground);
+  }
+
+  .bg-semantic-danger {
+    background-color: var(--color-danger);
+    color: var(--color-danger-foreground);
+  }
+
+  .bg-semantic-info {
+    background-color: var(--color-info);
+    color: var(--color-info-foreground);
+  }
+
+  .bg-semantic-neutral {
+    background-color: var(--color-neutral);
+    color: var(--color-neutral-foreground);
+  }
+
+  /* Light semantic backgrounds */
+  .bg-semantic-primary-light {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+  }
+
+  .bg-semantic-success-light {
+    background-color: var(--color-success-light);
+    color: var(--color-success);
+  }
+
+  .bg-semantic-warning-light {
+    background-color: var(--color-warning-light);
+    color: var(--color-warning);
+  }
+
+  .bg-semantic-danger-light {
+    background-color: var(--color-danger-light);
+    color: var(--color-danger);
+  }
+
+  .bg-semantic-info-light {
+    background-color: var(--color-info-light);
+    color: var(--color-info);
+  }
+
+  .bg-semantic-neutral-light {
+    background-color: var(--color-neutral-light);
+    color: var(--color-neutral);
+  }
+
+  /* Standard transitions */
+  .transition-standard {
+    transition-duration: var(--duration-normal);
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .transition-fast {
+    transition-duration: var(--duration-fast);
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .transition-slow {
+    transition-duration: var(--duration-slow);
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Focus styles */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+
+  /* Standard card pattern */
+  .card-standard {
+    @apply bg-white border border-gray-200 rounded-lg shadow-sm p-6 transition-standard hover:shadow-md;
+  }
+
+  /* Standard page header */
+  .page-header {
+    @apply mb-8 pb-6 border-b border-gray-200;
+  }
+
+  .page-title {
+    @apply text-display-sm text-gray-900 mb-2;
+  }
+
+  .page-description {
+    @apply text-body-lg text-gray-600;
+  }
+
+  /* Section patterns */
+  .section-header {
+    @apply text-heading-lg text-gray-900 mb-4;
+  }
+
+  .subsection-header {
+    @apply text-heading-md text-gray-800 mb-3;
+  }
+
+  /* Grid utilities */
+  .grid-standard {
+    @apply grid gap-6;
+  }
+
+  .grid-cards {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+  }
+
+  .grid-dashboard {
+    @apply grid grid-cols-1 lg:grid-cols-3 gap-8;
+  }
+
+  /* Content spacing */
+  .content-spacing > * + * {
+    margin-top: var(--space-lg);
+  }
+
+  .content-spacing-sm > * + * {
+    margin-top: var(--space-md);
+  }
+
+  .content-spacing-lg > * + * {
+    margin-top: var(--space-xl);
   }
 }
