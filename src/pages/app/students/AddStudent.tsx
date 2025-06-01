@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus } from 'lucide-react';
 
 // Layout Components
 import AppLayout from '@/components/layout/AppLayout';
@@ -14,13 +13,10 @@ import Breadcrumbs from '@/components/navigation/Breadcrumbs';
 import {
   DSPageContainer,
   DSSection,
-  DSPageTitle,
-  DSBodyText,
   DSFlexContainer,
   DSButton,
   DSCard,
   DSCardContent,
-  DSSectionHeader,
   DSSpacer,
   DSContentGrid,
   DSFormField,
@@ -96,7 +92,7 @@ const AddStudent = () => {
         title: "Student added",
         description: "The student has been successfully added.",
       });
-      navigate('/students');
+      navigate('/app/students');
     },
     onError: (error) => {
       console.error('Error adding student:', error);
@@ -117,13 +113,13 @@ const AddStudent = () => {
       <Breadcrumbs />
       <DSSection>
         <DSPageContainer>
-          {/* Page Header */}
+          {/* Page Header - Following Design System */}
           <DSFlexContainer justify="between" align="center" className="mb-8">
             <div>
-              <DSPageTitle className="mb-2">Add Student</DSPageTitle>
-              <DSBodyText className="text-gray-600">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Add Student</h1>
+              <p className="text-base text-gray-600">
                 Add a new student to your class
-              </DSBodyText>
+              </p>
             </div>
             <DSButton 
               variant="secondary" 
@@ -137,9 +133,9 @@ const AddStudent = () => {
             <DSCardContent className="p-8">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                  {/* Basic Information Section */}
+                  {/* Basic Information Section - Following Design System */}
                   <div>
-                    <DSSectionHeader className="mb-6">Basic Information</DSSectionHeader>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-6">Basic Information</h2>
                     <DSContentGrid cols={2}>
                       <FormField
                         control={form.control}
@@ -216,9 +212,9 @@ const AddStudent = () => {
 
                   <DSSpacer size="lg" />
 
-                  {/* Learning Information Section */}
+                  {/* Learning Information Section - Following Design System */}
                   <div>
-                    <DSSectionHeader className="mb-6">Learning Information</DSSectionHeader>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-6">Learning Information</h2>
                     <div className="space-y-6">
                       <FormField
                         control={form.control}
@@ -253,7 +249,7 @@ const AddStudent = () => {
 
                   <DSSpacer size="xl" />
 
-                  {/* Form Actions */}
+                  {/* Form Actions - Following Design System */}
                   <div className="flex justify-end pt-6 border-t border-gray-200">
                     <DSFlexContainer gap="sm">
                       <DSButton

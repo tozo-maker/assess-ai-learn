@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -13,8 +12,6 @@ import Breadcrumbs from '@/components/navigation/Breadcrumbs';
 import {
   DSPageContainer,
   DSSection,
-  DSPageTitle,
-  DSBodyText,
   DSFlexContainer,
   DSButton,
   DSCard,
@@ -289,10 +286,10 @@ const StudentProfile: React.FC = () => {
           <DSPageContainer>
             <DSFlexContainer justify="between" align="center" className="mb-8">
               <div>
-                <DSPageTitle>Loading...</DSPageTitle>
-                <DSBodyText className="text-gray-600">
+                <h1 className="text-2xl font-bold text-gray-900">Loading...</h1>
+                <p className="text-base text-gray-600">
                   Loading student profile...
-                </DSBodyText>
+                </p>
               </div>
               <DSButton 
                 variant="secondary" 
@@ -313,26 +310,28 @@ const StudentProfile: React.FC = () => {
       <Breadcrumbs />
       <DSSection>
         <DSPageContainer>
-          {/* Profile Header */}
+          {/* Profile Header - Following Design System */}
           <DSFlexContainer justify="between" align="center" className="mb-8">
             <DSFlexContainer align="center" gap="lg">
-              {/* Large Avatar */}
+              {/* Large Avatar - 80px as specified */}
               <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
                 <span className="text-2xl font-bold text-blue-600">
                   {student.first_name[0]}{student.last_name[0]}
                 </span>
               </div>
               <div>
-                <DSPageTitle className="mb-1">
+                {/* Name - text-2xl font-bold as specified */}
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">
                   {student.first_name} {student.last_name}
-                </DSPageTitle>
-                <DSBodyText className="text-gray-600">
+                </h1>
+                {/* Grade/Info - text-base text-gray-600 as specified */}
+                <p className="text-base text-gray-600">
                   {student.grade_level} Grade • Student ID: {student.student_id || 'Not provided'}
-                </DSBodyText>
+                </p>
               </div>
             </DSFlexContainer>
             
-            {/* Action Toolbar */}
+            {/* Action Toolbar - Consistent Button Sizing */}
             <DSFlexContainer gap="sm">
               <DSButton 
                 variant="secondary" 
@@ -357,33 +356,33 @@ const StudentProfile: React.FC = () => {
 
           <DSSpacer size="xl" />
 
-          {/* Tab Navigation */}
+          {/* Tab Navigation - Following Design System */}
           <Tabs defaultValue="details" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 bg-gray-50 rounded-lg p-1">
+            <TabsList className="grid w-full grid-cols-4 bg-white border-b border-gray-200 rounded-none p-0 h-auto">
               <TabsTrigger 
                 value="details" 
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent hover:text-gray-700 bg-transparent"
               >
                 <User className="h-4 w-4" />
                 Details
               </TabsTrigger>
               <TabsTrigger 
                 value="assessments"
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent hover:text-gray-700 bg-transparent"
               >
                 <ListChecks className="h-4 w-4" />
                 Assessments
               </TabsTrigger>
               <TabsTrigger 
                 value="insights"
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent hover:text-gray-700 bg-transparent"
               >
                 <Brain className="h-4 w-4" />
                 Insights
               </TabsTrigger>
               <TabsTrigger 
                 value="goals"
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent hover:text-gray-700 bg-transparent"
               >
                 <BookOpenCheck className="h-4 w-4" />
                 Goals
@@ -392,20 +391,22 @@ const StudentProfile: React.FC = () => {
 
             <DSSpacer size="lg" />
 
-            {/* Tab Content with consistent card styling */}
-            <StudentProfileTabs
-              student={student}
-              studentId={studentId || ''}
-              performanceData={performanceData}
-              studentAssessmentsData={studentAssessmentsData}
-              assessmentsLoading={assessmentsLoading}
-              studentGoals={studentGoals}
-              goalsLoading={goalsLoading}
-              onEditClick={() => setIsEditDialogOpen(true)}
-              onDelete={handleDelete}
-              onViewAssessments={() => navigate(`/app/students/${studentId}/assessments`)}
-              onRefreshInsights={handleRefreshInsights}
-            />
+            {/* Tab Content with Consistent Spacing */}
+            <div className="space-y-8">
+              <StudentProfileTabs
+                student={student}
+                studentId={studentId || ''}
+                performanceData={performanceData}
+                studentAssessmentsData={studentAssessmentsData}
+                assessmentsLoading={assessmentsLoading}
+                studentGoals={studentGoals}
+                goalsLoading={goalsLoading}
+                onEditClick={() => setIsEditDialogOpen(true)}
+                onDelete={handleDelete}
+                onViewAssessments={() => navigate(`/app/students/${studentId}/assessments`)}
+                onRefreshInsights={handleRefreshInsights}
+              />
+            </div>
           </Tabs>
 
           {/* Edit Student Dialog */}
