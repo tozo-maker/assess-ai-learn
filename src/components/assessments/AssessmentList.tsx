@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FileText, Search, Filter, MoreHorizontal, Pencil, Users, BarChart2, Trash2 } from 'lucide-react';
+import { FileText, Search, Filter, MoreHorizontal, Pencil, Users, BarChart2, Trash2, Plus } from 'lucide-react';
 
 // Design System Components
 import {
