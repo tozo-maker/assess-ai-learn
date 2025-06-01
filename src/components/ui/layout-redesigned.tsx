@@ -1,14 +1,18 @@
-
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const PageContainer = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+  React.HTMLAttributes<HTMLDivElement> & {
+    fullWidth?: boolean
+  }
+>(({ className, fullWidth = false, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("max-w-7xl mx-auto px-4 sm:px-6 lg:px-8", className)}
+    className={cn(
+      fullWidth ? "w-full px-4 sm:px-6 lg:px-8" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8", 
+      className
+    )}
     {...props}
   />
 ))
@@ -16,11 +20,17 @@ PageContainer.displayName = "PageContainer"
 
 const Section = React.forwardRef<
   HTMLElement,
-  React.HTMLAttributes<HTMLElement>
->(({ className, ...props }, ref) => (
+  React.HTMLAttributes<HTMLElement> & {
+    fullWidth?: boolean
+  }
+>(({ className, fullWidth = false, ...props }, ref) => (
   <section
     ref={ref}
-    className={cn("py-12 md:py-16 lg:py-20", className)}
+    className={cn(
+      "py-12 md:py-16 lg:py-20",
+      fullWidth ? "w-full" : "",
+      className
+    )}
     {...props}
   />
 ))

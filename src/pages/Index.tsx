@@ -11,7 +11,7 @@ import LandingFooter from '@/components/landing/LandingFooter';
 const Index = () => {
   return (
     <PublicLayout>
-      <main className="min-h-screen">
+      <main className="min-h-screen w-full">
         <HeroSection />
         <FeaturesSection />
         <BenefitsSection />

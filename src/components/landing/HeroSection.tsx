@@ -13,8 +13,8 @@ import {
 
 const HeroSection = () => {
   return (
-    <DSSection className="bg-gradient-to-b from-blue-50 to-white">
-      <DSPageContainer>
+    <DSSection className="bg-gradient-to-b from-blue-50 to-white w-full" fullWidth>
+      <DSPageContainer fullWidth>
         <div className="text-center max-w-4xl mx-auto">
           <DSPageTitle className="mb-6">
             Transform Assessment Data into{' '}

@@ -37,8 +37,8 @@ const FeaturesSection = () => {
   ];
 
   return (
-    <DSSection id="features" className="bg-white">
-      <DSPageContainer>
+    <DSSection id="features" className="bg-white w-full" fullWidth>
+      <DSPageContainer fullWidth>
         <div className="text-center mb-16 max-w-3xl mx-auto">
           <DSSectionHeader className="mb-4">
             Powerful Features for Educators
