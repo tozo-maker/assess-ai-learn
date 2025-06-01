@@ -25,9 +25,9 @@ const BenefitsSection = () => {
   ];
 
   return (
-    <DSSection className="bg-gray-50 py-16 md:py-24">
+    <DSSection className="bg-gray-50">
       <DSPageContainer>
-        <DSContentGrid cols={2} className="gap-12 items-center">
+        <DSContentGrid cols={2} className="items-center">
           <div className="order-2 lg:order-1">
             <DSSectionHeader className="mb-8">
               Why Educators Choose LearnSpark AI

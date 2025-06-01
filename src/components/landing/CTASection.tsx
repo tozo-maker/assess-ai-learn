@@ -12,13 +12,13 @@ import {
 
 const CTASection = () => {
   return (
-    <DSSection className="bg-[#2563eb] py-16 md:py-24">
+    <DSSection className="bg-[#2563eb]">
       <DSPageContainer>
         <div className="text-center max-w-3xl mx-auto">
           <DSSectionHeader className="text-white mb-6">
             Ready to Transform Your Teaching?
           </DSSectionHeader>
-          <DSBodyText className="text-xl text-blue-100 mb-8">
+          <DSBodyText className="text-blue-100 mb-8">
             Join thousands of educators using AI to better understand their students
           </DSBodyText>
           <Link to="/auth/signup">

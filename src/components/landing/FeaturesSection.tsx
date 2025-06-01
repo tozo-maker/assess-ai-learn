@@ -14,8 +14,7 @@ import {
   DSCardContent,
   DSSubsectionHeader,
   DSContentGrid,
-  DSSectionHeader,
-  DSSpacer
+  DSSectionHeader
 } from '@/components/ui/design-system';
 
 const FeaturesSection = () => {
@@ -38,18 +37,18 @@ const FeaturesSection = () => {
   ];
 
   return (
-    <DSSection id="features" className="bg-white py-16 md:py-24">
+    <DSSection id="features" className="bg-white">
       <DSPageContainer>
         <div className="text-center mb-16 max-w-3xl mx-auto">
           <DSSectionHeader className="mb-4">
             Powerful Features for Educators
           </DSSectionHeader>
-          <DSBodyText className="text-xl text-gray-600">
+          <DSBodyText className="text-gray-600">
             Everything you need to turn assessment data into actionable insights
           </DSBodyText>
         </div>
         
-        <DSContentGrid cols={3} className="gap-8">
+        <DSContentGrid cols={3}>
           {features.map((feature, index) => (
             <DSCard key={index} className="p-6 text-center hover:shadow-lg transition-shadow h-full">
               <DSCardContent className="pt-6 space-y-4 h-full flex flex-col">
@@ -59,7 +58,7 @@ const FeaturesSection = () => {
                 <DSSubsectionHeader className="text-gray-900">
                   {feature.title}
                 </DSSubsectionHeader>
-                <DSBodyText className="text-gray-600 flex-grow">
+                <DSBodyText className="text-gray-600 flex-grow text-center">
                   {feature.description}
                 </DSBodyText>
               </DSCardContent>

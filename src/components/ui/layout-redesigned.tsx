@@ -20,7 +20,7 @@ const Section = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <section
     ref={ref}
-    className={cn("space-y-12", className)}
+    className={cn("py-12 md:py-16 lg:py-20", className)}
     {...props}
   />
 ))
@@ -36,8 +36,8 @@ const ContentGrid = React.forwardRef<
     1: "grid-cols-1",
     2: "grid-cols-1 md:grid-cols-2",
     3: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-    4: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
-    6: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6",
+    4: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
+    6: "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6",
     12: "grid-cols-12"
   }
 
@@ -45,7 +45,7 @@ const ContentGrid = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "grid gap-6 lg:gap-8",
+        "grid gap-6 lg:gap-8 items-stretch",
         gridCols[cols],
         className
       )}
@@ -87,13 +87,13 @@ const Spacer = React.forwardRef<
   }
 >(({ className, size = 'md', ...props }, ref) => {
   const spacerSizes = {
-    xs: "h-1",     // 4px
-    sm: "h-2",     // 8px
-    md: "h-4",     // 16px
-    lg: "h-6",     // 24px
-    xl: "h-8",     // 32px
-    '2xl': "h-12", // 48px
-    '3xl': "h-16"  // 64px
+    xs: "h-2",     // 8px
+    sm: "h-4",     // 16px
+    md: "h-8",     // 32px
+    lg: "h-12",    // 48px
+    xl: "h-16",    // 64px
+    '2xl': "h-24", // 96px
+    '3xl': "h-32"  // 128px
   }
 
   return (
@@ -141,8 +141,8 @@ const FlexContainer = React.forwardRef<
       around: "justify-around"
     },
     gap: {
-      xs: "gap-1",
-      sm: "gap-2", 
+      xs: "gap-2",
+      sm: "gap-3", 
       md: "gap-4",
       lg: "gap-6",
       xl: "gap-8"

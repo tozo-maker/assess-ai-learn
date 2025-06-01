@@ -12,7 +12,7 @@ const LandingFooter = () => {
   return (
     <footer className="bg-gray-900 text-white py-16">
       <DSPageContainer>
-        <DSContentGrid cols={4} className="gap-8 mb-12">
+        <DSContentGrid cols={4} className="mb-12">
           <div className="col-span-4 md:col-span-1">
             <DSFlexContainer align="center" gap="sm" className="mb-4">
               <div className="w-8 h-8 bg-[#2563eb] rounded-lg flex items-center justify-center">

@@ -8,7 +8,10 @@ const PageTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h1
     ref={ref}
-    className={cn("text-3xl font-bold text-gray-900", className)}
+    className={cn(
+      "text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 tracking-tight leading-tight",
+      className
+    )}
     {...props}
   />
 ))
@@ -20,7 +23,10 @@ const SectionHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h2
     ref={ref}
-    className={cn("text-2xl font-semibold text-gray-800", className)}
+    className={cn(
+      "text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-800 tracking-tight leading-tight",
+      className
+    )}
     {...props}
   />
 ))
@@ -32,7 +38,10 @@ const SubsectionHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("text-xl font-medium text-gray-700", className)}
+    className={cn(
+      "text-lg sm:text-xl lg:text-2xl font-medium text-gray-700 leading-tight",
+      className
+    )}
     {...props}
   />
 ))
@@ -44,7 +53,10 @@ const BodyText = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-base text-gray-600", className)}
+    className={cn(
+      "text-base sm:text-lg text-gray-600 leading-relaxed",
+      className
+    )}
     {...props}
   />
 ))
@@ -56,7 +68,10 @@ const HelpText = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-gray-500", className)}
+    className={cn(
+      "text-sm text-gray-500 leading-normal",
+      className
+    )}
     {...props}
   />
 ))
@@ -68,17 +83,20 @@ const CaptionText = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-xs text-gray-400", className)}
+    className={cn(
+      "text-xs text-gray-400 leading-normal",
+      className
+    )}
     {...props}
   />
 ))
 CaptionText.displayName = "CaptionText"
 
-export { 
-  PageTitle, 
-  SectionHeader, 
-  SubsectionHeader, 
-  BodyText, 
-  HelpText, 
-  CaptionText 
+export {
+  PageTitle,
+  SectionHeader,
+  SubsectionHeader,
+  BodyText,
+  HelpText,
+  CaptionText
 }

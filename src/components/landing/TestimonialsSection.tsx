@@ -24,7 +24,7 @@ const TestimonialsSection = () => {
   ];
 
   return (
-    <DSSection className="bg-white py-16 md:py-24">
+    <DSSection className="bg-white">
       <DSPageContainer>
         <div className="text-center mb-16 max-w-3xl mx-auto">
           <DSSectionHeader className="mb-4">
@@ -32,11 +32,11 @@ const TestimonialsSection = () => {
           </DSSectionHeader>
         </div>
         
-        <DSContentGrid cols={2} className="gap-8">
+        <DSContentGrid cols={2}>
           {testimonials.map((testimonial, index) => (
             <DSCard key={index} className="p-8 bg-gray-50 h-full">
               <DSCardContent className="pt-6 space-y-6 h-full flex flex-col">
-                <blockquote className="text-lg text-gray-700 flex-grow">
+                <blockquote className="text-lg text-gray-700 flex-grow leading-relaxed">
                   "{testimonial.quote}"
                 </blockquote>
                 <div>
