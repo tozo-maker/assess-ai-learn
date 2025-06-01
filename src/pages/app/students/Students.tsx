@@ -227,16 +227,16 @@ const Students = () => {
         variant="outline"
       />
       <Link to="/app/students/import">
-        <Button variant="outline" className="flex items-center space-x-2">
+        <DSButton variant="outline" className="flex items-center space-x-2">
           <Upload className="h-4 w-4" />
           <span>Import Students</span>
-        </Button>
+        </DSButton>
       </Link>
       <Link to="/app/students/add">
-        <Button className="bg-blue-600 hover:bg-blue-700 flex items-center space-x-2">
+        <DSButton className="bg-blue-600 hover:bg-blue-700 flex items-center space-x-2">
           <Plus className="h-4 w-4" />
           <span>Add Student</span>
-        </Button>
+        </DSButton>
       </Link>
     </>
   );

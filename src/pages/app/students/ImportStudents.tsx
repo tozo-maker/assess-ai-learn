@@ -337,42 +337,42 @@ Mike,Johnson,12347,3rd,Writing skills,None,Sue Johnson,sue.johnson@email.com,555
 
           {/* Preview Display */}
           {showPreview && validationResult && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+            <DSCard>
+              <DSCardHeader>
+                <DSCardTitle className="flex items-center justify-between">
                   <span className="flex items-center">
                     <Eye className="h-5 w-5 mr-2" />
                     Import Preview
                   </span>
-                  <Button onClick={handlePreviewContinue}>
+                  <DSButton onClick={handlePreviewContinue}>
                     Continue with Import
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+                  </DSButton>
+                </DSCardTitle>
+              </DSCardHeader>
+              <DSCardContent>
                 <EnhancedImportPreview
                   students={validationResult.students}
                   mapping={columnMapping}
                   validationResults={validationResult}
                 />
-              </CardContent>
-            </Card>
+              </DSCardContent>
+            </DSCard>
           )}
 
           {/* Import Results */}
           {importResult && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
+            <DSCard>
+              <DSCardHeader>
+                <DSCardTitle className="flex items-center">
                   {importResult.success + importResult.updated === importResult.total ? (
                     <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
                   ) : (
                     <AlertCircle className="h-5 w-5 mr-2 text-yellow-600" />
                   )}
                   Import Results
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                </DSCardTitle>
+              </DSCardHeader>
+              <DSCardContent className="space-y-4">
                 <div className="grid grid-cols-4 gap-4 text-center">
                   <div className="p-3 bg-green-50 rounded-lg">
                     <div className="text-2xl font-bold text-green-600">{importResult.success}</div>
@@ -412,14 +412,14 @@ Mike,Johnson,12347,3rd,Writing skills,None,Sue Johnson,sue.johnson@email.com,555
 
                 {(importResult.success > 0 || importResult.updated > 0) && (
                   <div className="flex gap-2">
-                    <Button onClick={() => navigate('/app/students')}>
+                    <DSButton onClick={() => navigate('/app/students')}>
                       <Users className="h-4 w-4 mr-2" />
                       View All Students
-                    </Button>
+                    </DSButton>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </DSCardContent>
+            </DSCard>
           )}
         </div>
 
