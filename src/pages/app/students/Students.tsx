@@ -13,6 +13,10 @@ import {
   Trash2,
 } from 'lucide-react';
 
+// Layout Components
+import AppLayout from '@/components/layout/AppLayout';
+import Breadcrumbs from '@/components/navigation/Breadcrumbs';
+
 // Design System Components
 import {
   DSPageContainer,
@@ -244,217 +248,220 @@ const Students = () => {
   const isAllSelected = students && selectedStudents.length === students.length && students.length > 0;
 
   return (
-    <DSSection>
-      <DSPageContainer>
-        {/* Page Header */}
-        <DSFlexContainer justify="between" align="center" className="mb-8">
-          <div>
-            <DSPageTitle className="mb-2">Students</DSPageTitle>
-            <DSBodyText className="text-gray-600">
-              {isStudentsLoading ? (
-                <Skeleton className="h-4 w-32" />
-              ) : (
-                `${students?.length || 0} students in your class`
-              )}
-            </DSBodyText>
-          </div>
-          <DSFlexContainer gap="sm">
-            <ExportButton
-              exportType="student_data"
-              buttonText="Export Students"
-              variant="secondary"
-            />
-            <Link to="/app/students/import">
-              <DSButton variant="secondary">
-                <Upload className="h-4 w-4 mr-2" />
-                Import CSV
-              </DSButton>
-            </Link>
-            <Link to="/app/students/add">
-              <DSButton variant="primary">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Student
-              </DSButton>
-            </Link>
+    <AppLayout>
+      <Breadcrumbs />
+      <DSSection>
+        <DSPageContainer>
+          {/* Page Header */}
+          <DSFlexContainer justify="between" align="center" className="mb-8">
+            <div>
+              <DSPageTitle className="mb-2">Students</DSPageTitle>
+              <DSBodyText className="text-gray-600">
+                {isStudentsLoading ? (
+                  <Skeleton className="h-4 w-32" />
+                ) : (
+                  `${students?.length || 0} students in your class`
+                )}
+              </DSBodyText>
+            </div>
+            <DSFlexContainer gap="sm">
+              <ExportButton
+                exportType="student_data"
+                buttonText="Export Students"
+                variant="secondary"
+              />
+              <Link to="/app/students/import">
+                <DSButton variant="secondary">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import CSV
+                </DSButton>
+              </Link>
+              <Link to="/app/students/add">
+                <DSButton variant="primary">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Student
+                </DSButton>
+              </Link>
+            </DSFlexContainer>
           </DSFlexContainer>
-        </DSFlexContainer>
 
-        {/* Filter Bar */}
-        <DSCard className="mb-6">
-          <DSCardContent className="p-4">
-            <DSContentGrid cols={4}>
-              <div className="md:col-span-2 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input 
-                  placeholder="Search students..." 
-                  className="pl-10 h-10" 
-                  value={searchQuery} 
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                />
-              </div>
-              <Select value={gradeFilter || undefined} onValueChange={(value) => setGradeFilter(value === 'all' ? undefined : value)}>
-                <SelectTrigger className="h-10">
-                  <SelectValue placeholder="Grade Level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Grades</SelectItem>
-                  {gradeLevelOptions.map((grade) => (
-                    <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <DSFlexContainer gap="sm">
-                <Select value={performanceFilter || undefined} onValueChange={(value) => setPerformanceFilter(value === 'all' ? undefined : value)}>
-                  <SelectTrigger className="flex-1 h-10">
-                    <SelectValue placeholder="Performance" />
+          {/* Filter Bar */}
+          <DSCard className="mb-6">
+            <DSCardContent className="p-4">
+              <DSContentGrid cols={4}>
+                <div className="md:col-span-2 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input 
+                    placeholder="Search students..." 
+                    className="pl-10 h-10" 
+                    value={searchQuery} 
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                </div>
+                <Select value={gradeFilter || undefined} onValueChange={(value) => setGradeFilter(value === 'all' ? undefined : value)}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Grade Level" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Performance</SelectItem>
-                    {performanceLevelOptions.map((level) => (
-                      <SelectItem key={level} value={level}>{level}</SelectItem>
+                    <SelectItem value="all">All Grades</SelectItem>
+                    {gradeLevelOptions.map((grade) => (
+                      <SelectItem key={grade} value={grade}>{grade}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <DSButton variant="secondary" size="sm" onClick={handleFilterChange}>
-                  Apply
-                </DSButton>
-              </DSFlexContainer>
-            </DSContentGrid>
-          </DSCardContent>
-        </DSCard>
-
-        {/* Bulk Actions Bar */}
-        {selectedStudents.length > 0 && (
-          <DSCard className="border-blue-200 bg-blue-50 mb-6">
-            <DSCardContent className="p-4">
-              <DSFlexContainer justify="between" align="center">
-                <DSBodyText className="font-medium text-blue-900">
-                  {selectedStudents.length} student(s) selected
-                </DSBodyText>
                 <DSFlexContainer gap="sm">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <DSButton 
-                        variant="danger" 
-                        size="sm"
-                        disabled={isDeleting}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Selected
-                      </DSButton>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Students</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete {selectedStudents.length} student(s)? 
-                          This action cannot be undone and will remove all associated data including assessments and performance records.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={handleBulkDelete}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          Delete Students
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  <DSButton 
-                    variant="secondary" 
-                    size="sm"
-                    onClick={() => setSelectedStudents([])}
-                  >
-                    Clear Selection
+                  <Select value={performanceFilter || undefined} onValueChange={(value) => setPerformanceFilter(value === 'all' ? undefined : value)}>
+                    <SelectTrigger className="flex-1 h-10">
+                      <SelectValue placeholder="Performance" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Performance</SelectItem>
+                      {performanceLevelOptions.map((level) => (
+                        <SelectItem key={level} value={level}>{level}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <DSButton variant="secondary" size="sm" onClick={handleFilterChange}>
+                    Apply
                   </DSButton>
                 </DSFlexContainer>
-              </DSFlexContainer>
+              </DSContentGrid>
             </DSCardContent>
           </DSCard>
-        )}
 
-        {/* Quick Stats */}
-        <DSContentGrid cols={4} className="mb-8">
-          <DSCard>
-            <DSCardContent className="p-6">
-              <DSFlexContainer justify="between" align="center">
-                <div>
-                  <DSBodyText className="text-sm text-gray-600 mb-1">Total Students</DSBodyText>
-                  {isMetricsLoading ? (
-                    <Skeleton className="h-8 w-20" />
-                  ) : (
-                    <div className="text-3xl font-bold text-gray-900">{metrics?.totalStudents || 0}</div>
-                  )}
-                </div>
-                <Users className="h-8 w-8 text-blue-600" />
-              </DSFlexContainer>
-            </DSCardContent>
-          </DSCard>
-          <DSCard>
-            <DSCardContent className="p-6">
-              <DSFlexContainer justify="between" align="center">
-                <div>
-                  <DSBodyText className="text-sm text-gray-600 mb-1">Need Attention</DSBodyText>
-                  {isMetricsLoading ? (
-                    <Skeleton className="h-8 w-20" />
-                  ) : (
-                    <div className="text-3xl font-bold text-red-600">
-                      {metrics?.studentsNeedingAttention || 0}
-                    </div>
-                  )}
-                </div>
-                <AlertCircle className="h-8 w-8 text-red-600" />
-              </DSFlexContainer>
-            </DSCardContent>
-          </DSCard>
-          <DSCard>
-            <DSCardContent className="p-6">
-              <DSFlexContainer justify="between" align="center">
-                <div>
-                  <DSBodyText className="text-sm text-gray-600 mb-1">Above Average</DSBodyText>
-                  {isMetricsLoading ? (
-                    <Skeleton className="h-8 w-20" />
-                  ) : (
-                    <div className="text-3xl font-bold text-green-600">
-                      {metrics?.aboveAverageCount || 0}
-                    </div>
-                  )}
-                </div>
-                <TrendingUp className="h-8 w-8 text-green-600" />
-              </DSFlexContainer>
-            </DSCardContent>
-          </DSCard>
-          <DSCard>
-            <DSCardContent className="p-6">
-              <DSFlexContainer justify="between" align="center">
-                <div>
-                  <DSBodyText className="text-sm text-gray-600 mb-1">Average Performance</DSBodyText>
-                  {isMetricsLoading ? (
-                    <Skeleton className="h-8 w-20" />
-                  ) : (
-                    <div className="text-3xl font-bold text-gray-900">{metrics?.averagePerformance || "N/A"}</div>
-                  )}
-                </div>
-                <User className="h-8 w-8 text-blue-600" />
-              </DSFlexContainer>
-            </DSCardContent>
-          </DSCard>
-        </DSContentGrid>
+          {/* Bulk Actions Bar */}
+          {selectedStudents.length > 0 && (
+            <DSCard className="border-blue-200 bg-blue-50 mb-6">
+              <DSCardContent className="p-4">
+                <DSFlexContainer justify="between" align="center">
+                  <DSBodyText className="font-medium text-blue-900">
+                    {selectedStudents.length} student(s) selected
+                  </DSBodyText>
+                  <DSFlexContainer gap="sm">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DSButton 
+                          variant="danger" 
+                          size="sm"
+                          disabled={isDeleting}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Selected
+                        </DSButton>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Students</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete {selectedStudents.length} student(s)? 
+                            This action cannot be undone and will remove all associated data including assessments and performance records.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={handleBulkDelete}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            Delete Students
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <DSButton 
+                      variant="secondary" 
+                      size="sm"
+                      onClick={() => setSelectedStudents([])}
+                    >
+                      Clear Selection
+                    </DSButton>
+                  </DSFlexContainer>
+                </DSFlexContainer>
+              </DSCardContent>
+            </DSCard>
+          )}
 
-        {/* Enhanced Students List */}
-        <EnhancedStudentList
-          students={students || []}
-          selectedStudents={selectedStudents}
-          onSelectStudent={handleSelectStudent}
-          onSelectAll={handleSelectAll}
-          onStudentClick={handleStudentClick}
-          isLoading={isStudentsLoading}
-        />
-      </DSPageContainer>
-    </DSSection>
+          {/* Quick Stats */}
+          <DSContentGrid cols={4} className="mb-8">
+            <DSCard>
+              <DSCardContent className="p-6">
+                <DSFlexContainer justify="between" align="center">
+                  <div>
+                    <DSBodyText className="text-sm text-gray-600 mb-1">Total Students</DSBodyText>
+                    {isMetricsLoading ? (
+                      <Skeleton className="h-8 w-20" />
+                    ) : (
+                      <div className="text-3xl font-bold text-gray-900">{metrics?.totalStudents || 0}</div>
+                    )}
+                  </div>
+                  <Users className="h-8 w-8 text-blue-600" />
+                </DSFlexContainer>
+              </DSCardContent>
+            </DSCard>
+            <DSCard>
+              <DSCardContent className="p-6">
+                <DSFlexContainer justify="between" align="center">
+                  <div>
+                    <DSBodyText className="text-sm text-gray-600 mb-1">Need Attention</DSBodyText>
+                    {isMetricsLoading ? (
+                      <Skeleton className="h-8 w-20" />
+                    ) : (
+                      <div className="text-3xl font-bold text-red-600">
+                        {metrics?.studentsNeedingAttention || 0}
+                      </div>
+                    )}
+                  </div>
+                  <AlertCircle className="h-8 w-8 text-red-600" />
+                </DSFlexContainer>
+              </DSCardContent>
+            </DSCard>
+            <DSCard>
+              <DSCardContent className="p-6">
+                <DSFlexContainer justify="between" align="center">
+                  <div>
+                    <DSBodyText className="text-sm text-gray-600 mb-1">Above Average</DSBodyText>
+                    {isMetricsLoading ? (
+                      <Skeleton className="h-8 w-20" />
+                    ) : (
+                      <div className="text-3xl font-bold text-green-600">
+                        {metrics?.aboveAverageCount || 0}
+                      </div>
+                    )}
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-green-600" />
+                </DSFlexContainer>
+              </DSCardContent>
+            </DSCard>
+            <DSCard>
+              <DSCardContent className="p-6">
+                <DSFlexContainer justify="between" align="center">
+                  <div>
+                    <DSBodyText className="text-sm text-gray-600 mb-1">Average Performance</DSBodyText>
+                    {isMetricsLoading ? (
+                      <Skeleton className="h-8 w-20" />
+                    ) : (
+                      <div className="text-3xl font-bold text-gray-900">{metrics?.averagePerformance || "N/A"}</div>
+                    )}
+                  </div>
+                  <User className="h-8 w-8 text-blue-600" />
+                </DSFlexContainer>
+              </DSCardContent>
+            </DSCard>
+          </DSContentGrid>
+
+          {/* Enhanced Students List */}
+          <EnhancedStudentList
+            students={students || []}
+            selectedStudents={selectedStudents}
+            onSelectStudent={handleSelectStudent}
+            onSelectAll={handleSelectAll}
+            onStudentClick={handleStudentClick}
+            isLoading={isStudentsLoading}
+          />
+        </DSPageContainer>
+      </DSSection>
+    </AppLayout>
   );
 };
 
