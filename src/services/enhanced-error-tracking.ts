@@ -1,4 +1,3 @@
-
 interface ErrorReport {
   message: string;
   stack?: string;
@@ -23,10 +22,28 @@ class EnhancedErrorTracking {
   private batchSize = 5;
   private flushInterval = 10000; // 10 seconds
   private errorCounts = new Map<string, number>();
+  private isEnabled = false; // Disable by default
 
   constructor() {
+    // Only initialize if explicitly enabled
+    if (this.isEnabled) {
+      this.initialize();
+    }
+  }
+
+  private initialize() {
     this.setupGlobalErrorHandlers();
     this.startBatchProcessor();
+    console.log('Enhanced error tracking initialized');
+  }
+
+  enable() {
+    this.isEnabled = true;
+    this.initialize();
+  }
+
+  disable() {
+    this.isEnabled = false;
   }
 
   private setupGlobalErrorHandlers() {
@@ -90,6 +107,8 @@ class EnhancedErrorTracking {
   }
 
   captureError(errorInfo: Partial<ErrorReport>) {
+    if (!this.isEnabled) return;
+
     const errorId = this.generateErrorId();
     const errorReport: ErrorReport = {
       errorId,
@@ -114,7 +133,10 @@ class EnhancedErrorTracking {
       this.flushErrors();
     }
 
-    console.error('Error captured:', errorReport);
+    // Only log critical errors to avoid spam
+    if (errorReport.severity === 'critical') {
+      console.error('Critical error captured:', errorReport);
+    }
   }
 
   private generateErrorId(): string {
@@ -127,7 +149,8 @@ class EnhancedErrorTracking {
 
   private getCurrentUserId(): string | undefined {
     try {
-      return 'current-user-id'; // This would be replaced with actual user context
+      // Get actual user from auth context
+      return undefined; // Return undefined for anonymous users
     } catch {
       return undefined;
     }
@@ -140,16 +163,24 @@ class EnhancedErrorTracking {
   }
 
   private async flushErrors() {
-    if (this.errorQueue.length === 0) return;
+    if (this.errorQueue.length === 0 || !this.isEnabled) return;
 
     const errorsToFlush = [...this.errorQueue];
     this.errorQueue = [];
 
     try {
+      // Only flush if we have valid user context
+      const validErrors = errorsToFlush.filter(error => error.userId);
+      
+      if (validErrors.length === 0) {
+        this.storeErrorsLocally(errorsToFlush);
+        return;
+      }
+
       // Try to send to Supabase
       const { supabase } = await import('@/integrations/supabase/client');
       
-      const logsToInsert = errorsToFlush.map(error => ({
+      const logsToInsert = validErrors.map(error => ({
         endpoint: 'error_tracking',
         method: 'ERROR',
         response_time_ms: 0,
@@ -163,11 +194,9 @@ class EnhancedErrorTracking {
         .insert(logsToInsert);
 
       if (error) {
-        console.warn('Failed to log errors to database:', error);
         this.storeErrorsLocally(errorsToFlush);
       }
     } catch (error) {
-      console.warn('Error tracking service failed:', error);
       this.storeErrorsLocally(errorsToFlush);
     }
   }
@@ -188,7 +217,7 @@ class EnhancedErrorTracking {
       const combined = [...existing, ...errors].slice(-50); // Keep last 50 errors
       localStorage.setItem('error_reports', JSON.stringify(combined));
     } catch (error) {
-      console.warn('Failed to store errors locally:', error);
+      // Silently fail
     }
   }
 

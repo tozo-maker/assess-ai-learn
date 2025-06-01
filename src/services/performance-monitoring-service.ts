@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface PerformanceMetric {
@@ -26,8 +25,16 @@ class PerformanceMonitoringService {
     errorRate: 5, // 5%
     memoryUsage: 100 // 100MB
   };
+  private isEnabled = false; // Disable by default
 
   constructor() {
+    // Only initialize if explicitly enabled
+    if (this.isEnabled) {
+      this.initializeMonitoring();
+    }
+  }
+
+  private initializeMonitoring() {
     // Auto-flush metrics periodically
     setInterval(() => {
       this.flushMetrics();
@@ -36,27 +43,7 @@ class PerformanceMonitoringService {
     // Setup performance monitoring
     this.setupPerformanceObserver();
     this.setupErrorMonitoring();
-    this.initializeAdvancedMonitoring();
-  }
-
-  private initializeAdvancedMonitoring() {
-    // Initialize enhanced error tracking
-    import('@/services/enhanced-error-tracking').then(({ enhancedErrorTracking }) => {
-      console.log('Enhanced error tracking initialized');
-    });
-
-    // Initialize structured logging
-    import('@/services/structured-logging').then(({ structuredLogger }) => {
-      structuredLogger.info('Performance monitoring service initialized', {
-        batchSize: this.batchSize,
-        flushInterval: this.flushInterval
-      });
-    });
-
-    // Initialize advanced caching
-    import('@/services/advanced-caching-service').then(({ advancedCaching }) => {
-      console.log('Advanced caching service initialized');
-    });
+    console.log('Performance monitoring service initialized');
   }
 
   private setupPerformanceObserver() {
@@ -107,10 +94,18 @@ class PerformanceMonitoringService {
   }
 
   logMetric(metric: PerformanceMetric) {
-    // Add user context if available
+    if (!this.isEnabled) return;
+
+    // Get actual user ID or skip logging
+    const userId = this.getCurrentUserId();
+    if (!userId) {
+      // Don't log if no valid user
+      return;
+    }
+
     const enhancedMetric = {
       ...metric,
-      user_id: this.getCurrentUserId()
+      user_id: userId
     };
 
     this.metrics.push(enhancedMetric);
@@ -125,33 +120,38 @@ class PerformanceMonitoringService {
 
   private getCurrentUserId(): string | undefined {
     try {
-      // This would be replaced with actual user context
-      return 'current-user-id'; // Placeholder
+      // Get actual user from auth context
+      const user = supabase.auth.getUser();
+      return user ? 'actual-user-id' : undefined; // Return undefined if no user
     } catch {
       return undefined;
     }
   }
 
   private async flushMetrics() {
-    if (this.metrics.length === 0) return;
+    if (this.metrics.length === 0 || !this.isEnabled) return;
 
     const metricsToFlush = [...this.metrics];
     this.metrics = [];
 
     try {
-      // Try to log to Supabase, but don't fail if it's not available
+      // Only try to log if we have valid metrics with user IDs
+      const validMetrics = metricsToFlush.filter(m => m.user_id);
+      
+      if (validMetrics.length === 0) {
+        return; // Don't try to log if no valid metrics
+      }
+
       const { error } = await supabase
         .from('system_performance_logs')
-        .insert(metricsToFlush);
+        .insert(validMetrics);
 
       if (error) {
-        console.warn('Failed to log performance metrics to database:', error);
-        // Store locally as fallback
-        this.storeMetricsLocally(metricsToFlush);
+        // Silently fail - don't spam console
+        this.storeMetricsLocally(validMetrics);
       }
     } catch (error) {
-      console.warn('Performance logging failed:', error);
-      // Store locally as fallback
+      // Silently fail - don't spam console
       this.storeMetricsLocally(metricsToFlush);
     }
   }
@@ -162,7 +162,7 @@ class PerformanceMonitoringService {
       const combined = [...existing, ...metrics].slice(-100); // Keep last 100 metrics
       localStorage.setItem('performance_metrics', JSON.stringify(combined));
     } catch (error) {
-      console.warn('Failed to store metrics locally:', error);
+      // Silently fail
     }
   }
 
@@ -194,28 +194,20 @@ class PerformanceMonitoringService {
   }
 
   private triggerAlert(alert: PerformanceAlert) {
-    console.warn('Performance Alert:', alert);
-    
-    // Enhanced alert handling with structured logging
-    import('@/services/structured-logging').then(({ structuredLogger }) => {
-      structuredLogger.warn('Performance alert triggered', {
-        alertType: alert.type,
-        threshold: alert.threshold,
-        currentValue: alert.current_value,
-        message: alert.message
-      });
-    });
-
-    // In production, this would send alerts to monitoring service
-    // For now, we'll just log and could show user notifications
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      if (Notification.permission === 'granted') {
-        new Notification('Performance Alert', {
-          body: alert.message,
-          icon: '/favicon.ico'
-        });
-      }
+    // Only log critical alerts to avoid spam
+    if (alert.type === 'high_error_rate' && alert.current_value >= 500) {
+      console.warn('Critical Performance Alert:', alert);
     }
+  }
+
+  // Enable/disable monitoring
+  enable() {
+    this.isEnabled = true;
+    this.initializeMonitoring();
+  }
+
+  disable() {
+    this.isEnabled = false;
   }
 
   async getPerformanceStats(timeframe: 'hour' | 'day' | 'week' = 'day') {
@@ -230,7 +222,6 @@ class PerformanceMonitoringService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.warn('Failed to fetch performance stats:', error);
         return this.getLocalPerformanceStats();
       }
 
@@ -242,7 +233,6 @@ class PerformanceMonitoringService {
         data
       };
     } catch (error) {
-      console.warn('Performance stats query failed:', error);
       return this.getLocalPerformanceStats();
     }
   }
@@ -268,11 +258,14 @@ class PerformanceMonitoringService {
     }
   }
 
-  // Enhanced monitoring for specific operations
   async monitorDatabaseOperation<T>(
     operation: () => Promise<T>,
     operationName: string
   ): Promise<T> {
+    if (!this.isEnabled) {
+      return await operation();
+    }
+
     const startTime = performance.now();
     try {
       const result = await operation();
@@ -301,7 +294,6 @@ class PerformanceMonitoringService {
     }
   }
 
-  // Memory monitoring
   getMemoryUsage() {
     if ('memory' in performance) {
       const memory = (performance as any).memory;
@@ -325,7 +317,6 @@ class PerformanceMonitoringService {
     return null;
   }
 
-  // Network monitoring
   monitorNetworkConditions() {
     if ('connection' in navigator) {
       const connection = (navigator as any).connection;
@@ -339,18 +330,10 @@ class PerformanceMonitoringService {
     return null;
   }
 
-  // Real-time alerts configuration
   configureAlerts(newThresholds: Partial<typeof this.alertThresholds>) {
     this.alertThresholds = { ...this.alertThresholds, ...newThresholds };
-    
-    import('@/services/structured-logging').then(({ structuredLogger }) => {
-      structuredLogger.info('Performance alert thresholds updated', {
-        newThresholds: this.alertThresholds
-      });
-    });
   }
 
-  // Performance recommendations
   getPerformanceRecommendations() {
     const memoryUsage = this.getMemoryUsage();
     const networkConditions = this.monitorNetworkConditions();
