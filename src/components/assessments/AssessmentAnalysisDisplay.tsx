@@ -2,9 +2,21 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RefreshCcw, CheckCircle, AlertCircle, Brain } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
+// Design System Components
+import {
+  DSCard,
+  DSCardHeader,
+  DSCardContent,
+  DSCardFooter,
+  DSCardTitle,
+  DSCardDescription,
+  DSButton,
+  DSFlexContainer
+} from '@/components/ui/design-system';
+
+// Original Components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { assessmentService } from '@/services/assessment-service';
 
 interface AssessmentAnalysisDisplayProps {
@@ -47,7 +59,7 @@ const AssessmentAnalysisDisplay: React.FC<AssessmentAnalysisDisplayProps> = ({ a
     return (
       <div className="flex justify-center items-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563eb] mx-auto"></div>
           <p className="mt-4">Loading analysis...</p>
         </div>
       </div>
@@ -56,34 +68,38 @@ const AssessmentAnalysisDisplay: React.FC<AssessmentAnalysisDisplayProps> = ({ a
 
   if (isError) {
     return (
-      <div className="text-center p-8 border rounded-lg bg-red-50">
-        <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
-        <h2 className="text-xl font-semibold mt-4">Error Loading Analysis</h2>
-        <p className="mt-2">Failed to load the analysis data.</p>
-        <Button onClick={() => refetch()} className="mt-4">Try Again</Button>
-      </div>
+      <DSCard className="border-red-200 bg-red-50">
+        <DSCardContent>
+          <div className="text-center py-8">
+            <AlertCircle className="h-12 w-12 text-[#ef4444] mx-auto" />
+            <h2 className="text-xl font-semibold mt-4">Error Loading Analysis</h2>
+            <p className="mt-2">Failed to load the analysis data.</p>
+            <DSButton onClick={() => refetch()} className="mt-4">Try Again</DSButton>
+          </div>
+        </DSCardContent>
+      </DSCard>
     );
   }
 
   if (!analysis) {
     return (
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
+      <div className="space-y-8">
+        <DSCard>
+          <DSCardHeader>
+            <DSCardTitle className="flex items-center">
               <Brain className="h-5 w-5 mr-2" />
               Generate AI Analysis
-            </CardTitle>
-            <CardDescription>
+            </DSCardTitle>
+            <DSCardDescription>
               No analysis found for this student's assessment. Generate an AI-powered analysis to get educational insights.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <Button 
+            </DSCardDescription>
+          </DSCardHeader>
+          <DSCardContent>
+            <DSFlexContainer gap="lg">
+              <DSButton 
                 onClick={handleGenerateAnalysis}
                 disabled={isGenerating}
-                className="bg-blue-600 hover:bg-blue-700"
+                variant="primary"
               >
                 {isGenerating ? (
                   <>
@@ -96,48 +112,48 @@ const AssessmentAnalysisDisplay: React.FC<AssessmentAnalysisDisplayProps> = ({ a
                     Generate AI Analysis
                   </>
                 )}
-              </Button>
-            </div>
+              </DSButton>
+            </DSFlexContainer>
             
             {generationError && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
-                <div className="flex items-start">
+              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md text-[#ef4444]">
+                <DSFlexContainer align="start">
                   <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
                   <p>{generationError}</p>
-                </div>
+                </DSFlexContainer>
               </div>
             )}
             
             {successMessage && (
-              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
-                <div className="flex items-start">
+              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md text-[#10b981]">
+                <DSFlexContainer align="start">
                   <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0" />
                   <p>{successMessage}</p>
-                </div>
+                </DSFlexContainer>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </DSCardContent>
+        </DSCard>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex justify-between items-start">
+    <div className="space-y-8">
+      <DSCard>
+        <DSCardHeader>
+          <DSFlexContainer justify="between" align="start">
             <div>
-              <CardTitle className="flex items-center">
+              <DSCardTitle className="flex items-center">
                 <Brain className="h-5 w-5 mr-2" />
                 AI Analysis Results
-              </CardTitle>
-              <CardDescription className="mt-1">
+              </DSCardTitle>
+              <DSCardDescription className="mt-1">
                 Educational insights generated by AI analysis
-              </CardDescription>
+              </DSCardDescription>
             </div>
-            <Button 
-              variant="outline" 
+            <DSButton 
+              variant="secondary" 
               size="sm" 
               onClick={handleGenerateAnalysis} 
               disabled={isGenerating}
@@ -153,25 +169,25 @@ const AssessmentAnalysisDisplay: React.FC<AssessmentAnalysisDisplayProps> = ({ a
                   Regenerate
                 </>
               )}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
+            </DSButton>
+          </DSFlexContainer>
+        </DSCardHeader>
+        <DSCardContent>
           {generationError && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
-              <div className="flex items-start">
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-[#ef4444]">
+              <DSFlexContainer align="start">
                 <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
                 <p>{generationError}</p>
-              </div>
+              </DSFlexContainer>
             </div>
           )}
           
           {successMessage && (
-            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
-              <div className="flex items-start">
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md text-[#10b981]">
+              <DSFlexContainer align="start">
                 <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0" />
                 <p>{successMessage}</p>
-              </div>
+              </DSFlexContainer>
             </div>
           )}
 
@@ -193,7 +209,7 @@ const AssessmentAnalysisDisplay: React.FC<AssessmentAnalysisDisplayProps> = ({ a
             <TabsContent value="strengths" className="pt-4">
               <ul className="list-disc pl-5 space-y-2">
                 {analysis.strengths.map((strength, index) => (
-                  <li key={index} className="text-green-700">{strength}</li>
+                  <li key={index} className="text-[#10b981]">{strength}</li>
                 ))}
               </ul>
             </TabsContent>
@@ -201,7 +217,7 @@ const AssessmentAnalysisDisplay: React.FC<AssessmentAnalysisDisplayProps> = ({ a
             <TabsContent value="growth" className="pt-4">
               <ul className="list-disc pl-5 space-y-2">
                 {analysis.growth_areas.map((area, index) => (
-                  <li key={index} className="text-orange-700">{area}</li>
+                  <li key={index} className="text-[#f59e0b]">{area}</li>
                 ))}
               </ul>
             </TabsContent>
@@ -222,13 +238,13 @@ const AssessmentAnalysisDisplay: React.FC<AssessmentAnalysisDisplayProps> = ({ a
               </ul>
             </TabsContent>
           </Tabs>
-        </CardContent>
-        <CardFooter className="text-sm text-gray-500 pt-2 border-t">
+        </DSCardContent>
+        <DSCardFooter className="text-sm text-gray-500 pt-2 border-t">
           Analysis generated on {new Date(analysis.created_at).toLocaleString()}
           {analysis.created_at !== analysis.updated_at && 
             ` • Updated on ${new Date(analysis.updated_at).toLocaleString()}`}
-        </CardFooter>
-      </Card>
+        </DSCardFooter>
+      </DSCard>
     </div>
   );
 };
