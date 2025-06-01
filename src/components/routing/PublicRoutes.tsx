@@ -9,7 +9,7 @@ import ResetPassword from '@/pages/auth/ResetPassword';
 import { PublicRoute } from './RouteGuards';
 
 export const PublicRoutes = () => (
-  <React.Fragment>
+  <>
     <Route
       path="/"
       element={
@@ -50,5 +50,5 @@ export const PublicRoutes = () => (
         </PublicRoute>
       }
     />
-  </React.Fragment>
+  </>
 );
