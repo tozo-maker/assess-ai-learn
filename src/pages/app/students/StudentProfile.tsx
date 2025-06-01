@@ -1,12 +1,27 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeftCircle, Edit } from 'lucide-react';
+import { Edit, User, Brain, BookOpenCheck, ListChecks } from 'lucide-react';
 import * as z from "zod";
 
-import { PageShell } from '@/components/ui/page-shell';
-import { Button } from '@/components/ui/button';
+// Design System Components
+import {
+  DSPageContainer,
+  DSSection,
+  DSPageTitle,
+  DSBodyText,
+  DSFlexContainer,
+  DSButton,
+  DSCard,
+  DSCardHeader,
+  DSCardContent,
+  DSCardTitle,
+  DSSpacer
+} from '@/components/ui/design-system';
+
+// Original Components
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { studentService } from '@/services/student-service';
 import { assessmentService } from '@/services/assessment-service';
 import { goalsService } from '@/services/goals-service';
@@ -261,69 +276,137 @@ const StudentProfile: React.FC = () => {
     }
   };
 
-  const actions = (
-    <>
-      <Button variant="ghost" onClick={() => navigate("/app/students")}>
-        <ArrowLeftCircle className="mr-2 h-4 w-4" />
-        Back to Students
-      </Button>
-      <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
-        <Edit className="mr-2 h-4 w-4" />
-        Edit Student
-      </Button>
-    </>
-  );
-
   if (!student) {
     return (
-      <PageShell 
-        title="Loading..."
-        description="Loading student profile..."
-        actions={actions}
-        link="/app/students"
-        linkText="Back to Students"
-      >
-        <div>Loading student data...</div>
-      </PageShell>
+      <DSSection>
+        <DSPageContainer>
+          <DSFlexContainer justify="between" align="center" className="mb-8">
+            <div>
+              <DSPageTitle>Loading...</DSPageTitle>
+              <DSBodyText className="text-gray-600">
+                Loading student profile...
+              </DSBodyText>
+            </div>
+            <DSButton 
+              variant="secondary" 
+              onClick={() => navigate("/app/students")}
+            >
+              Back to Students
+            </DSButton>
+          </DSFlexContainer>
+          <div>Loading student data...</div>
+        </DSPageContainer>
+      </DSSection>
     );
   }
 
   return (
-    <PageShell 
-      title={`${student.first_name} ${student.last_name}`}
-      description="View and manage student information, assessments, and insights"
-      actions={actions}
-      link="/app/students"
-      linkText="Back to Students"
-    >
-      <div className="space-y-6">
+    <DSSection>
+      <DSPageContainer>
+        {/* Profile Header */}
+        <DSFlexContainer justify="between" align="center" className="mb-8">
+          <DSFlexContainer align="center" gap="lg">
+            {/* Large Avatar */}
+            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
+              <span className="text-2xl font-bold text-blue-600">
+                {student.first_name[0]}{student.last_name[0]}
+              </span>
+            </div>
+            <div>
+              <DSPageTitle className="mb-1">
+                {student.first_name} {student.last_name}
+              </DSPageTitle>
+              <DSBodyText className="text-gray-600">
+                {student.grade_level} Grade • Student ID: {student.student_id || 'Not provided'}
+              </DSBodyText>
+            </div>
+          </DSFlexContainer>
+          
+          {/* Action Toolbar */}
+          <DSFlexContainer gap="sm">
+            <DSButton 
+              variant="secondary" 
+              onClick={() => navigate("/app/students")}
+            >
+              Back to Students
+            </DSButton>
+            <DSButton 
+              variant="primary" 
+              onClick={() => setIsEditDialogOpen(true)}
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Student
+            </DSButton>
+          </DSFlexContainer>
+        </DSFlexContainer>
+
+        <DSSpacer size="lg" />
+
         {/* Student Info Card */}
         <StudentInfoCard student={student} />
 
-        {/* Tabs for Student Details, Assessments, Insights, and Goals */}
-        <StudentProfileTabs
-          student={student}
-          studentId={studentId || ''}
-          performanceData={performanceData}
-          studentAssessmentsData={studentAssessmentsData}
-          assessmentsLoading={assessmentsLoading}
-          studentGoals={studentGoals}
-          goalsLoading={goalsLoading}
-          onEditClick={() => setIsEditDialogOpen(true)}
-          onDelete={handleDelete}
-          onViewAssessments={() => navigate(`/app/students/${studentId}/assessments`)}
-          onRefreshInsights={handleRefreshInsights}
-        />
-      </div>
+        <DSSpacer size="xl" />
 
-      {/* Edit Student Dialog */}
-      <EditStudentDialog
-        isOpen={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        student={student}
-        onSubmit={onSubmit}
-      />
-    </PageShell>
+        {/* Tab Navigation */}
+        <Tabs defaultValue="details" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-50 rounded-lg p-1">
+            <TabsTrigger 
+              value="details" 
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+            >
+              <User className="h-4 w-4" />
+              Details
+            </TabsTrigger>
+            <TabsTrigger 
+              value="assessments"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+            >
+              <ListChecks className="h-4 w-4" />
+              Assessments
+            </TabsTrigger>
+            <TabsTrigger 
+              value="insights"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+            >
+              <Brain className="h-4 w-4" />
+              Insights
+            </TabsTrigger>
+            <TabsTrigger 
+              value="goals"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600"
+            >
+              <BookOpenCheck className="h-4 w-4" />
+              Goals
+            </TabsTrigger>
+          </TabsList>
+
+          <DSSpacer size="lg" />
+
+          {/* Tab Content with consistent card styling */}
+          <StudentProfileTabs
+            student={student}
+            studentId={studentId || ''}
+            performanceData={performanceData}
+            studentAssessmentsData={studentAssessmentsData}
+            assessmentsLoading={assessmentsLoading}
+            studentGoals={studentGoals}
+            goalsLoading={goalsLoading}
+            onEditClick={() => setIsEditDialogOpen(true)}
+            onDelete={handleDelete}
+            onViewAssessments={() => navigate(`/app/students/${studentId}/assessments`)}
+            onRefreshInsights={handleRefreshInsights}
+          />
+        </Tabs>
+
+        {/* Edit Student Dialog */}
+        <EditStudentDialog
+          isOpen={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          student={student}
+          onSubmit={onSubmit}
+        />
+      </DSPageContainer>
+    </DSSection>
   );
 };
 

@@ -1,14 +1,30 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import PageShell from '@/components/ui/page-shell';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { 
+import { UserPlus } from 'lucide-react';
+
+// Design System Components
+import {
+  DSPageContainer,
+  DSSection,
+  DSPageTitle,
+  DSBodyText,
+  DSFlexContainer,
+  DSButton,
+  DSCard,
+  DSCardContent,
+  DSSectionHeader,
+  DSSpacer,
+  DSContentGrid,
+  DSFormField,
+  DSInput,
+  DSTextarea
+} from '@/components/ui/design-system';
+
+// Original Components
+import {
   Form, 
   FormControl, 
   FormField, 
@@ -16,8 +32,6 @@ import {
   FormLabel, 
   FormMessage 
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -25,7 +39,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { UserPlus } from 'lucide-react';
+
+import { useToast } from '@/hooks/use-toast';
 import { studentFormSchema, StudentFormValues } from '@/lib/validations/student';
 import { studentService } from '@/services/student-service';
 import { gradeLevelOptions, Student } from '@/types/student';
@@ -93,147 +108,169 @@ const AddStudent = () => {
   };
 
   return (
-    <PageShell
-      title="Add Student"
-      description="Add a new student to your class"
-      icon={<UserPlus className="h-6 w-6 text-blue-600" />}
-      backLink="/students"
-    >
-      <Card>
-        <CardContent className="pt-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Left Column */}
-                <div className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="first_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>First Name*</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter first name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="last_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last Name*</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter last name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="grade_level"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Grade Level*</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select grade level" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {gradeLevelOptions.map((grade) => (
-                              <SelectItem key={grade} value={grade}>
-                                {grade}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="student_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Student ID (Optional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter student ID" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+    <DSSection>
+      <DSPageContainer>
+        {/* Page Header */}
+        <DSFlexContainer justify="between" align="center" className="mb-8">
+          <div>
+            <DSPageTitle className="mb-2">Add Student</DSPageTitle>
+            <DSBodyText className="text-gray-600">
+              Add a new student to your class
+            </DSBodyText>
+          </div>
+          <DSButton 
+            variant="secondary" 
+            onClick={() => navigate('/app/students')}
+          >
+            Back to Students
+          </DSButton>
+        </DSFlexContainer>
+
+        <DSCard>
+          <DSCardContent className="p-8">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                {/* Basic Information Section */}
+                <div>
+                  <DSSectionHeader className="mb-6">Basic Information</DSSectionHeader>
+                  <DSContentGrid cols={2}>
+                    <FormField
+                      control={form.control}
+                      name="first_name"
+                      render={({ field }) => (
+                        <DSFormField label="First Name" required>
+                          <DSInput 
+                            placeholder="Enter first name" 
+                            {...field} 
+                            error={!!form.formState.errors.first_name}
+                            helpText={form.formState.errors.first_name?.message}
+                          />
+                        </DSFormField>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="last_name"
+                      render={({ field }) => (
+                        <DSFormField label="Last Name" required>
+                          <DSInput 
+                            placeholder="Enter last name" 
+                            {...field} 
+                            error={!!form.formState.errors.last_name}
+                            helpText={form.formState.errors.last_name?.message}
+                          />
+                        </DSFormField>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="grade_level"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            Grade Level <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-10">
+                                <SelectValue placeholder="Select grade level" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {gradeLevelOptions.map((grade) => (
+                                <SelectItem key={grade} value={grade}>
+                                  {grade}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="student_id"
+                      render={({ field }) => (
+                        <DSFormField label="Student ID">
+                          <DSInput 
+                            placeholder="Enter student ID" 
+                            {...field} 
+                            helpText="Optional unique identifier"
+                          />
+                        </DSFormField>
+                      )}
+                    />
+                  </DSContentGrid>
                 </div>
-                
-                {/* Right Column */}
-                <div className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="learning_goals"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Learning Goals (Optional)</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Enter any specific learning goals"
+
+                <DSSpacer size="lg" />
+
+                {/* Learning Information Section */}
+                <div>
+                  <DSSectionHeader className="mb-6">Learning Information</DSSectionHeader>
+                  <div className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="learning_goals"
+                      render={({ field }) => (
+                        <DSFormField label="Learning Goals">
+                          <DSTextarea 
+                            placeholder="Enter any specific learning goals or objectives"
                             className="min-h-32"
                             {...field}
+                            helpText="Describe what the student should focus on learning"
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="special_considerations"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Special Considerations (Optional)</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Enter any special considerations or needs"
+                        </DSFormField>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="special_considerations"
+                      render={({ field }) => (
+                        <DSFormField label="Special Considerations">
+                          <DSTextarea 
+                            placeholder="Enter any special considerations, accommodations, or notes"
                             className="min-h-32"
                             {...field}
+                            helpText="Include any learning differences, accommodations, or important notes"
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        </DSFormField>
+                      )}
+                    />
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate('/students')}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit"
-                  disabled={createStudentMutation.isPending}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {createStudentMutation.isPending ? 'Adding...' : 'Add Student'}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </PageShell>
+
+                <DSSpacer size="xl" />
+
+                {/* Form Actions */}
+                <div className="flex justify-end pt-6 border-t border-gray-200">
+                  <DSFlexContainer gap="sm">
+                    <DSButton
+                      type="button"
+                      variant="secondary"
+                      onClick={() => navigate('/app/students')}
+                    >
+                      Cancel
+                    </DSButton>
+                    <DSButton 
+                      type="submit"
+                      disabled={createStudentMutation.isPending}
+                      variant="primary"
+                    >
+                      {createStudentMutation.isPending ? 'Adding...' : 'Add Student'}
+                    </DSButton>
+                  </DSFlexContainer>
+                </div>
+              </form>
+            </Form>
+          </DSCardContent>
+        </DSCard>
+      </DSPageContainer>
+    </DSSection>
   );
 };
 

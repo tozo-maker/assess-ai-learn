@@ -1,9 +1,33 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import PageShell from '@/components/ui/page-shell';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Link, useNavigate } from 'react-router-dom';
+import { 
+  Users, 
+  Plus, 
+  Search, 
+  Upload, 
+  User, 
+  TrendingUp, 
+  AlertCircle,
+  Trash2,
+} from 'lucide-react';
+
+// Design System Components
+import {
+  DSPageContainer,
+  DSSection,
+  DSPageTitle,
+  DSBodyText,
+  DSFlexContainer,
+  DSButton,
+  DSCard,
+  DSCardContent,
+  DSSpacer,
+  DSContentGrid
+} from '@/components/ui/design-system';
+
+// Original Components
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -25,19 +49,9 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Link, useNavigate } from 'react-router-dom';
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  Upload, 
-  User, 
-  TrendingUp, 
-  AlertCircle,
-  Trash2,
-} from 'lucide-react';
+
 import { studentService } from '@/services/student-service';
-import { StudentWithPerformance, gradeLevelOptions, performanceLevelOptions } from '@/types/student';
+import { gradeLevelOptions, performanceLevelOptions } from '@/types/student';
 import { useToast } from '@/hooks/use-toast';
 import ExportButton from '@/components/exports/ExportButton';
 import EnhancedStudentList from '@/components/students/EnhancedStudentList';
@@ -230,73 +244,105 @@ const Students = () => {
   const isAllSelected = students && selectedStudents.length === students.length && students.length > 0;
 
   return (
-    <PageShell 
-      title="Students" 
-      description="Manage your students and track their progress"
-      icon={<Users className="h-6 w-6 text-blue-600" />}
-      actions={actions}
-    >
-      <div className="space-y-6">
-        {/* Search and Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-2 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input 
-              placeholder="Search students..." 
-              className="pl-10" 
-              value={searchQuery} 
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+    <DSSection>
+      <DSPageContainer>
+        {/* Page Header */}
+        <DSFlexContainer justify="between" align="center" className="mb-8">
+          <div>
+            <DSPageTitle className="mb-2">Students</DSPageTitle>
+            <DSBodyText className="text-gray-600">
+              {isStudentsLoading ? (
+                <Skeleton className="h-4 w-32" />
+              ) : (
+                `${students?.length || 0} students in your class`
+              )}
+            </DSBodyText>
+          </div>
+          <DSFlexContainer gap="sm">
+            <ExportButton
+              exportType="student_data"
+              buttonText="Export Students"
+              variant="secondary"
             />
-          </div>
-          <Select value={gradeFilter || undefined} onValueChange={(value) => setGradeFilter(value === 'all' ? undefined : value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Grade Level" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Grades</SelectItem>
-              {gradeLevelOptions.map((grade) => (
-                <SelectItem key={grade} value={grade}>{grade}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="flex space-x-2">
-            <Select value={performanceFilter || undefined} onValueChange={(value) => setPerformanceFilter(value === 'all' ? undefined : value)}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Performance" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Performance</SelectItem>
-                {performanceLevelOptions.map((level) => (
-                  <SelectItem key={level} value={level}>{level}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={handleFilterChange}>Apply</Button>
-          </div>
-        </div>
+            <Link to="/app/students/import">
+              <DSButton variant="secondary">
+                <Upload className="h-4 w-4 mr-2" />
+                Import CSV
+              </DSButton>
+            </Link>
+            <Link to="/app/students/add">
+              <DSButton variant="primary">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Student
+              </DSButton>
+            </Link>
+          </DSFlexContainer>
+        </DSFlexContainer>
+
+        {/* Filter Bar */}
+        <DSCard className="mb-6">
+          <DSCardContent className="p-4">
+            <DSContentGrid cols={4}>
+              <div className="md:col-span-2 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input 
+                  placeholder="Search students..." 
+                  className="pl-10 h-10" 
+                  value={searchQuery} 
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                />
+              </div>
+              <Select value={gradeFilter || undefined} onValueChange={(value) => setGradeFilter(value === 'all' ? undefined : value)}>
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Grade Level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Grades</SelectItem>
+                  {gradeLevelOptions.map((grade) => (
+                    <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <DSFlexContainer gap="sm">
+                <Select value={performanceFilter || undefined} onValueChange={(value) => setPerformanceFilter(value === 'all' ? undefined : value)}>
+                  <SelectTrigger className="flex-1 h-10">
+                    <SelectValue placeholder="Performance" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Performance</SelectItem>
+                    {performanceLevelOptions.map((level) => (
+                      <SelectItem key={level} value={level}>{level}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <DSButton variant="secondary" size="sm" onClick={handleFilterChange}>
+                  Apply
+                </DSButton>
+              </DSFlexContainer>
+            </DSContentGrid>
+          </DSCardContent>
+        </DSCard>
 
         {/* Bulk Actions Bar */}
         {selectedStudents.length > 0 && (
-          <Card className="border-blue-200 bg-blue-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm font-medium text-blue-900">
-                    {selectedStudents.length} student(s) selected
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
+          <DSCard className="border-blue-200 bg-blue-50 mb-6">
+            <DSCardContent className="p-4">
+              <DSFlexContainer justify="between" align="center">
+                <DSBodyText className="font-medium text-blue-900">
+                  {selectedStudents.length} student(s) selected
+                </DSBodyText>
+                <DSFlexContainer gap="sm">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="destructive" 
+                      <DSButton 
+                        variant="danger" 
                         size="sm"
                         disabled={isDeleting}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete Selected
-                      </Button>
+                      </DSButton>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
@@ -317,86 +363,86 @@ const Students = () => {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                  <Button 
-                    variant="outline" 
+                  <DSButton 
+                    variant="secondary" 
                     size="sm"
                     onClick={() => setSelectedStudents([])}
                   >
                     Clear Selection
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  </DSButton>
+                </DSFlexContainer>
+              </DSFlexContainer>
+            </DSCardContent>
+          </DSCard>
         )}
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+        <DSContentGrid cols={4} className="mb-8">
+          <DSCard>
+            <DSCardContent className="p-6">
+              <DSFlexContainer justify="between" align="center">
                 <div>
-                  <p className="text-sm text-gray-600">Total Students</p>
+                  <DSBodyText className="text-sm text-gray-600 mb-1">Total Students</DSBodyText>
                   {isMetricsLoading ? (
                     <Skeleton className="h-8 w-20" />
                   ) : (
-                    <p className="text-2xl font-bold">{metrics?.totalStudents || 0}</p>
+                    <div className="text-3xl font-bold text-gray-900">{metrics?.totalStudents || 0}</div>
                   )}
                 </div>
                 <Users className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+              </DSFlexContainer>
+            </DSCardContent>
+          </DSCard>
+          <DSCard>
+            <DSCardContent className="p-6">
+              <DSFlexContainer justify="between" align="center">
                 <div>
-                  <p className="text-sm text-gray-600">Need Attention</p>
+                  <DSBodyText className="text-sm text-gray-600 mb-1">Need Attention</DSBodyText>
                   {isMetricsLoading ? (
                     <Skeleton className="h-8 w-20" />
                   ) : (
-                    <p className="text-2xl font-bold text-red-600">
+                    <div className="text-3xl font-bold text-red-600">
                       {metrics?.studentsNeedingAttention || 0}
-                    </p>
+                    </div>
                   )}
                 </div>
                 <AlertCircle className="h-8 w-8 text-red-600" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+              </DSFlexContainer>
+            </DSCardContent>
+          </DSCard>
+          <DSCard>
+            <DSCardContent className="p-6">
+              <DSFlexContainer justify="between" align="center">
                 <div>
-                  <p className="text-sm text-gray-600">Above Average</p>
+                  <DSBodyText className="text-sm text-gray-600 mb-1">Above Average</DSBodyText>
                   {isMetricsLoading ? (
                     <Skeleton className="h-8 w-20" />
                   ) : (
-                    <p className="text-2xl font-bold text-green-600">
+                    <div className="text-3xl font-bold text-green-600">
                       {metrics?.aboveAverageCount || 0}
-                    </p>
+                    </div>
                   )}
                 </div>
                 <TrendingUp className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+              </DSFlexContainer>
+            </DSCardContent>
+          </DSCard>
+          <DSCard>
+            <DSCardContent className="p-6">
+              <DSFlexContainer justify="between" align="center">
                 <div>
-                  <p className="text-sm text-gray-600">Average Performance</p>
+                  <DSBodyText className="text-sm text-gray-600 mb-1">Average Performance</DSBodyText>
                   {isMetricsLoading ? (
                     <Skeleton className="h-8 w-20" />
                   ) : (
-                    <p className="text-2xl font-bold">{metrics?.averagePerformance || "N/A"}</p>
+                    <div className="text-3xl font-bold text-gray-900">{metrics?.averagePerformance || "N/A"}</div>
                   )}
                 </div>
                 <User className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </DSFlexContainer>
+            </DSCardContent>
+          </DSCard>
+        </DSContentGrid>
 
         {/* Enhanced Students List */}
         <EnhancedStudentList
@@ -407,8 +453,8 @@ const Students = () => {
           onStudentClick={handleStudentClick}
           isLoading={isStudentsLoading}
         />
-      </div>
-    </PageShell>
+      </DSPageContainer>
+    </DSSection>
   );
 };
 
