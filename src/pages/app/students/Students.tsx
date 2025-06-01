@@ -227,7 +227,7 @@ const Students = () => {
         variant="outline"
       />
       <Link to="/app/students/import">
-        <DSButton variant="outline" className="flex items-center space-x-2">
+        <DSButton variant="secondary" className="flex items-center space-x-2">
           <Upload className="h-4 w-4" />
           <span>Import Students</span>
         </DSButton>
