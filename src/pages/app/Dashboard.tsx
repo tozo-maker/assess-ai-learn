@@ -5,31 +5,20 @@ import Breadcrumbs from '@/components/navigation/Breadcrumbs';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import EnhancedLoadingState from '@/components/common/EnhancedLoadingState';
 import ErrorState from '@/components/common/ErrorState';
-import { 
-  useStudents, 
-  useAssessments, 
-  useCommunications, 
-  useTeacherProfile, 
-  useStudentMetrics 
-} from '@/hooks/queries/useOptimizedQueries';
+import { useDashboardData } from '@/hooks/useDashboardData';
 
-// Import redesigned components
+// Import design system components
 import { 
   DSSection,
   DSPageContainer,
   DSContentGrid,
   DSGridItem,
   DSSpacer,
-  DSFlexContainer,
   DSCard,
-  DSCardHeader,
   DSCardContent,
-  DSCardTitle,
-  DSCardDescription,
-  DSButton,
   DSSectionHeader,
   DSBodyText,
-  DSHelpText
+  DSButton
 } from '@/components/ui/design-system';
 
 // Import dashboard components
@@ -42,39 +31,17 @@ import DashboardSecondaryWidgets from '@/components/dashboard/DashboardSecondary
 
 const Dashboard = () => {
   const {
-    data: students = [],
-    isLoading: studentsLoading,
-    error: studentsError,
-    refetch: refetchStudents
-  } = useStudents();
-
-  const {
-    data: assessments = [],
-    isLoading: assessmentsLoading,
-    error: assessmentsError,
-    refetch: refetchAssessments
-  } = useAssessments();
-
-  const {
-    data: communications = [],
-    isLoading: communicationsLoading,
-    error: communicationsError,
-    refetch: refetchCommunications
-  } = useCommunications();
-
-  const { data: teacherProfile } = useTeacherProfile();
-  const { data: studentMetrics } = useStudentMetrics();
-
-  // Handle loading state
-  const isLoading = studentsLoading || assessmentsLoading || communicationsLoading;
-  
-  // Handle error state
-  const hasError = studentsError || assessmentsError || communicationsError;
-  const handleRetry = () => {
-    if (studentsError) refetchStudents();
-    if (assessmentsError) refetchAssessments();
-    if (communicationsError) refetchCommunications();
-  };
+    teacher,
+    metrics,
+    alerts,
+    students,
+    assessments,
+    communications,
+    isLoading,
+    hasError,
+    error,
+    handleRetry
+  } = useDashboardData();
 
   if (isLoading) {
     return (
@@ -90,7 +57,7 @@ const Dashboard = () => {
       <AppLayout>
         <Breadcrumbs />
         <ErrorState
-          error={studentsError || assessmentsError || communicationsError}
+          error={error}
           onRetry={handleRetry}
           title="Failed to load dashboard"
           description="There was an error loading your dashboard data. Please try again."
@@ -98,62 +65,6 @@ const Dashboard = () => {
       </AppLayout>
     );
   }
-
-  // Calculate metrics
-  const totalStudents = students?.length || 0;
-  const totalAssessments = assessments?.length || 0;
-  const aiInsights = communications?.filter(c => c.communication_type === 'ai_insight')?.length || 0;
-  
-  // Calculate recent assessments (this week)
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  const recentAssessments = assessments?.filter(a => 
-    new Date(a.created_at) >= oneWeekAgo
-  )?.length || 0;
-
-  // Generate alerts based on real data
-  const alerts = [
-    ...(studentMetrics?.studentsNeedingAttention && studentMetrics.studentsNeedingAttention > 0 ? [{
-      id: '1',
-      type: 'performance' as const,
-      title: 'Students need attention',
-      description: `${studentMetrics.studentsNeedingAttention} students requiring additional support`,
-      studentCount: studentMetrics.studentsNeedingAttention,
-      severity: 'high' as const,
-      actionUrl: '/app/students'
-    }] : []),
-    ...(totalAssessments === 0 ? [{
-      id: '2',
-      type: 'performance' as const,
-      title: 'No assessments yet',
-      description: 'Start by creating your first assessment to track student progress',
-      studentCount: totalStudents,
-      severity: 'medium' as const,
-      actionUrl: '/app/assessments/add'
-    }] : [])
-  ];
-
-  const teacherName = teacherProfile?.full_name || "Teacher";
-
-  // Prepare data for components
-  const dashboardData = {
-    teacher: {
-      name: teacherName,
-      firstName: teacherName.split(' ')[0]
-    },
-    metrics: {
-      totalStudents,
-      totalAssessments,
-      aiInsights,
-      recentAssessments,
-      averagePerformance: studentMetrics?.averagePerformance || "N/A",
-      studentsNeedingAttention: studentMetrics?.studentsNeedingAttention || 0
-    },
-    alerts,
-    students,
-    assessments,
-    communications
-  };
 
   return (
     <AppLayout>
@@ -164,7 +75,7 @@ const Dashboard = () => {
             
             {/* Welcome Section - Full Width */}
             <ErrorBoundary fallback={<ErrorState title="Welcome section unavailable" />}>
-              <DashboardWelcomeSection teacher={dashboardData.teacher} />
+              <DashboardWelcomeSection teacher={teacher} />
             </ErrorBoundary>
 
             <DSSpacer size="lg" />
@@ -181,7 +92,7 @@ const Dashboard = () => {
 
             {/* Primary Metrics - 3-Column Grid */}
             <ErrorBoundary fallback={<ErrorState title="Metrics unavailable" />}>
-              <DashboardMetricCards metrics={dashboardData.metrics} />
+              <DashboardMetricCards metrics={metrics} />
             </ErrorBoundary>
 
             <DSSpacer size="lg" />
@@ -191,9 +102,9 @@ const Dashboard = () => {
               <DSGridItem span={1}>
                 <ErrorBoundary fallback={<ErrorState title="Activity feed unavailable" />}>
                   <DashboardActivityFeed 
-                    recentAssessments={recentAssessments}
-                    totalStudents={totalStudents}
-                    studentsNeedingAttention={studentMetrics?.studentsNeedingAttention || 0}
+                    recentAssessments={metrics.recentAssessments}
+                    totalStudents={metrics.totalStudents}
+                    studentsNeedingAttention={metrics.studentsNeedingAttention}
                   />
                 </ErrorBoundary>
               </DSGridItem>
@@ -214,7 +125,7 @@ const Dashboard = () => {
               <DashboardSecondaryWidgets 
                 assessments={assessments}
                 students={students}
-                metrics={dashboardData.metrics}
+                metrics={metrics}
               />
             </ErrorBoundary>
 
