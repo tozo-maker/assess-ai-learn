@@ -25,14 +25,14 @@ const BenefitsSection = () => {
   ];
 
   return (
-    <DSSection className="bg-gray-50">
+    <DSSection className="bg-gray-50 py-16 md:py-24">
       <DSPageContainer>
         <DSContentGrid cols={2} className="gap-12 items-center">
-          <div>
-            <DSSectionHeader className="mb-6">
+          <div className="order-2 lg:order-1">
+            <DSSectionHeader className="mb-8">
               Why Educators Choose LearnSpark AI
             </DSSectionHeader>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {benefits.map((benefit, index) => (
                 <DSFlexContainer key={index} align="center" gap="sm">
                   <CheckCircle className="h-5 w-5 text-[#10b981] flex-shrink-0" />
@@ -41,24 +41,26 @@ const BenefitsSection = () => {
               ))}
             </div>
           </div>
-          <DSCard className="p-8">
-            <DSCardContent>
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                  <User className="h-8 w-8 text-[#2563eb]" />
+          <div className="order-1 lg:order-2">
+            <DSCard className="p-8">
+              <DSCardContent>
+                <div className="text-center space-y-6">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                    <User className="h-8 w-8 text-[#2563eb]" />
+                  </div>
+                  <DSSubsectionHeader className="text-gray-900">Quick Start</DSSubsectionHeader>
+                  <DSBodyText className="text-gray-600">
+                    Get started in minutes with our simple onboarding process
+                  </DSBodyText>
+                  <Link to="/auth/signup">
+                    <DSButton variant="primary" className="w-full sm:w-auto">
+                      Create Free Account
+                    </DSButton>
+                  </Link>
                 </div>
-                <DSSubsectionHeader className="text-gray-900">Quick Start</DSSubsectionHeader>
-                <DSBodyText className="text-gray-600">
-                  Get started in minutes with our simple onboarding process
-                </DSBodyText>
-                <Link to="/auth/signup">
-                  <DSButton variant="primary">
-                    Create Free Account
-                  </DSButton>
-                </Link>
-              </div>
-            </DSCardContent>
-          </DSCard>
+              </DSCardContent>
+            </DSCard>
+          </div>
         </DSContentGrid>
       </DSPageContainer>
     </DSSection>

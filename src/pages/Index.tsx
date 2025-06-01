@@ -11,12 +11,14 @@ import LandingFooter from '@/components/landing/LandingFooter';
 const Index = () => {
   return (
     <PublicLayout>
-      <HeroSection />
-      <FeaturesSection />
-      <BenefitsSection />
-      <TestimonialsSection />
-      <CTASection />
-      <LandingFooter />
+      <main>
+        <HeroSection />
+        <FeaturesSection />
+        <BenefitsSection />
+        <TestimonialsSection />
+        <CTASection />
+        <LandingFooter />
+      </main>
     </PublicLayout>
   );
 };

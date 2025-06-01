@@ -14,11 +14,10 @@ import {
 
 const HeroSection = () => {
   return (
-    <DSSection className="bg-gradient-to-b from-blue-50 to-white">
+    <DSSection className="bg-gradient-to-b from-blue-50 to-white py-16 md:py-24">
       <DSPageContainer>
-        <DSSpacer size="3xl" />
-        <div className="text-center">
-          <DSPageTitle className="text-4xl md:text-6xl mb-6">
+        <div className="text-center max-w-4xl mx-auto">
+          <DSPageTitle className="mb-6">
             Transform Assessment Data into{' '}
             <span className="text-[#2563eb]">Student Understanding</span>
           </DSPageTitle>
@@ -26,21 +25,20 @@ const HeroSection = () => {
             AI-powered insights that help teachers understand student learning patterns, 
             identify knowledge gaps, and provide personalized support that makes a difference.
           </DSBodyText>
-          <DSFlexContainer direction="row" className="flex-col sm:flex-row gap-4 justify-center">
+          <DSFlexContainer direction="row" justify="center" gap="md" className="flex-col sm:flex-row">
             <Link to="/auth/signup">
-              <DSButton variant="primary" className="text-lg px-8 py-3 h-12">
+              <DSButton variant="primary" className="text-lg px-8 py-3 h-12 w-full sm:w-auto">
                 Start Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
               </DSButton>
             </Link>
             <Link to="/demo">
-              <DSButton variant="ghost" className="text-lg px-8 py-3 h-12">
+              <DSButton variant="ghost" className="text-lg px-8 py-3 h-12 w-full sm:w-auto">
                 Watch Demo
               </DSButton>
             </Link>
           </DSFlexContainer>
         </div>
-        <DSSpacer size="3xl" />
       </DSPageContainer>
     </DSSection>
   );

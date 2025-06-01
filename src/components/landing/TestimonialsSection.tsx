@@ -6,8 +6,7 @@ import {
   DSCard,
   DSCardContent,
   DSContentGrid,
-  DSSectionHeader,
-  DSSpacer
+  DSSectionHeader
 } from '@/components/ui/design-system';
 
 const TestimonialsSection = () => {
@@ -25,9 +24,9 @@ const TestimonialsSection = () => {
   ];
 
   return (
-    <DSSection className="bg-white">
+    <DSSection className="bg-white py-16 md:py-24">
       <DSPageContainer>
-        <div className="text-center mb-16">
+        <div className="text-center mb-16 max-w-3xl mx-auto">
           <DSSectionHeader className="mb-4">
             Trusted by Educators
           </DSSectionHeader>
@@ -35,9 +34,9 @@ const TestimonialsSection = () => {
         
         <DSContentGrid cols={2} className="gap-8">
           {testimonials.map((testimonial, index) => (
-            <DSCard key={index} className="p-6 bg-gray-50">
-              <DSCardContent className="pt-6 space-y-4">
-                <blockquote className="text-lg text-gray-700">
+            <DSCard key={index} className="p-8 bg-gray-50 h-full">
+              <DSCardContent className="pt-6 space-y-6 h-full flex flex-col">
+                <blockquote className="text-lg text-gray-700 flex-grow">
                   "{testimonial.quote}"
                 </blockquote>
                 <div>
@@ -48,7 +47,6 @@ const TestimonialsSection = () => {
             </DSCard>
           ))}
         </DSContentGrid>
-        <DSSpacer size="2xl" />
       </DSPageContainer>
     </DSSection>
   );

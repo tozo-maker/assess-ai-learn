@@ -5,7 +5,6 @@ import { ArrowRight } from 'lucide-react';
 import {
   DSPageContainer,
   DSSection,
-  DSSpacer,
   DSBodyText,
   DSButton,
   DSSectionHeader
@@ -13,11 +12,10 @@ import {
 
 const CTASection = () => {
   return (
-    <DSSection className="bg-[#2563eb]">
+    <DSSection className="bg-[#2563eb] py-16 md:py-24">
       <DSPageContainer>
-        <DSSpacer size="2xl" />
-        <div className="text-center">
-          <DSSectionHeader className="text-white mb-4">
+        <div className="text-center max-w-3xl mx-auto">
+          <DSSectionHeader className="text-white mb-6">
             Ready to Transform Your Teaching?
           </DSSectionHeader>
           <DSBodyText className="text-xl text-blue-100 mb-8">
@@ -30,7 +28,6 @@ const CTASection = () => {
             </DSButton>
           </Link>
         </div>
-        <DSSpacer size="2xl" />
       </DSPageContainer>
     </DSSection>
   );
