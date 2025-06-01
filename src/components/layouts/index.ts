@@ -7,7 +7,7 @@ export { ListPageLayout } from './ListPageLayout';
 
 // Re-export existing layouts for backward compatibility
 export { default as AppLayout } from './AppLayout';
-export { default as StandardPageLayout as LegacyStandardPageLayout } from './StandardPageLayout';
+export { default as LegacyStandardPageLayout } from './StandardPageLayout';
 
 // Types
 export type { BreadcrumbItem } from './StandardPageLayout';
