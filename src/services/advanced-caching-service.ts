@@ -1,3 +1,4 @@
+
 interface CacheItem<T> {
   data: T;
   timestamp: number;
@@ -376,9 +377,8 @@ class AdvancedCachingService {
 }
 
 export const advancedCachingService = new AdvancedCachingService();
+export const advancedCaching = advancedCachingService; // Export alias for backward compatibility
 
-// Initialize cache monitoring
-advancedCachingService.monitorCacheHealth();
-
-// Warm cache on application start
-advancedCachingService.warmCache('popular-content');
+// Don't initialize cache monitoring or warming to prevent interference
+// advancedCachingService.monitorCacheHealth();
+// advancedCachingService.warmCache('popular-content');
