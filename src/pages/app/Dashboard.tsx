@@ -22,10 +22,8 @@ import {
 
 // Import redesigned components
 import { 
-  DSPageContainer,
   DSSection,
   DSContentGrid,
-  DSFlexContainer,
   DSSpacer,
   DSPageTitle,
   DSBodyText
@@ -221,127 +219,104 @@ const Dashboard = () => {
   return (
     <AppLayout>
       <ErrorBoundary>
-        <DSPageContainer>
-          <DSSection>
-            <Breadcrumbs />
-            
-            {/* Welcome Header */}
-            <div className="animate-fade-in">
-              <DSPageTitle>Welcome back, {firstName}! 👋</DSPageTitle>
-              <DSBodyText className="mt-2">Here's what's happening with your students today.</DSBodyText>
+        <DSSection>
+          <Breadcrumbs />
+          
+          {/* Welcome Header */}
+          <div>
+            <DSPageTitle>Welcome back, {firstName}! 👋</DSPageTitle>
+            <DSBodyText className="mt-2">Here's what's happening with your students today.</DSBodyText>
+          </div>
+
+          <DSSpacer size="lg" />
+
+          {/* Stats Cards */}
+          <ErrorBoundary fallback={<ErrorState title="Stats unavailable" />}>
+            <DashboardStatsRedesigned
+              totalStudents={totalStudents}
+              totalAssessments={totalAssessments}
+              aiInsights={aiInsights}
+              recentAssessments={recentAssessments}
+              newStudentsThisMonth={newStudentsThisMonth}
+              todaysInsights={todaysInsights}
+              studentMetrics={studentMetrics || { averagePerformance: "N/A" }}
+            />
+          </ErrorBoundary>
+
+          <DSSpacer size="lg" />
+
+          {/* Analytics Dashboard */}
+          <ErrorBoundary fallback={<ErrorState title="Analytics unavailable" />}>
+            <AnalyticsDashboard data={analyticsData} />
+          </ErrorBoundary>
+
+          <DSSpacer size="lg" />
+
+          {/* Enhanced Performance Widgets */}
+          <ErrorBoundary fallback={<ErrorState title="Performance data unavailable" />}>
+            <DSContentGrid cols={3}>
+              <EnhancedPerformanceWidget
+                data={mathPerformanceData}
+                title="Math Performance Trend"
+                currentScore={mathPerformanceData[mathPerformanceData.length - 1]?.average || 0}
+                trend={`Based on ${assessments.filter(a => a.subject?.toLowerCase().includes('math')).length} assessments`}
+              />
+              <EnhancedPerformanceWidget
+                data={readingPerformanceData}
+                title="Reading Performance"
+                currentScore={readingPerformanceData[readingPerformanceData.length - 1]?.average || 0}
+                trend={`Based on ${assessments.filter(a => a.subject?.toLowerCase().includes('reading')).length} assessments`}
+              />
+              <EnhancedPerformanceWidget
+                data={sciencePerformanceData}
+                title="Science Performance"
+                currentScore={sciencePerformanceData[sciencePerformanceData.length - 1]?.average || 0}
+                trend={`Based on ${assessments.filter(a => a.subject?.toLowerCase().includes('science')).length} assessments`}
+              />
+            </DSContentGrid>
+          </ErrorBoundary>
+
+          <DSSpacer size="lg" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Content Area */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Recent Activity */}
+              <ErrorBoundary fallback={<ErrorState title="Activity feed unavailable" />}>
+                <RecentActivitiesList
+                  recentAssessments={recentAssessments}
+                  todaysInsights={todaysInsights}
+                  studentMetrics={studentMetrics || { studentsNeedingAttention: 0 }}
+                />
+              </ErrorBoundary>
+
+              {/* Student Insights */}
+              <ErrorBoundary fallback={<ErrorState title="Student insights unavailable" />}>
+                <StudentInsightsCard insights={studentInsights} />
+              </ErrorBoundary>
             </div>
 
-            <DSSpacer size="lg" />
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Quick Actions */}
+              <ErrorBoundary>
+                <EnhancedQuickActionsCard />
+              </ErrorBoundary>
 
-            {/* Stats Cards */}
-            <ErrorBoundary fallback={<ErrorState title="Stats unavailable" />}>
-              <div className="animate-fade-in">
-                <DashboardStatsRedesigned
-                  totalStudents={totalStudents}
-                  totalAssessments={totalAssessments}
-                  aiInsights={aiInsights}
-                  recentAssessments={recentAssessments}
-                  newStudentsThisMonth={newStudentsThisMonth}
-                  todaysInsights={todaysInsights}
-                  studentMetrics={studentMetrics || { averagePerformance: "N/A" }}
-                />
-              </div>
-            </ErrorBoundary>
+              {/* AI Recommendations */}
+              <ErrorBoundary fallback={<ErrorState title="Recommendations unavailable" />}>
+                <AIRecommendationsWidget recommendations={aiRecommendations} />
+              </ErrorBoundary>
 
-            <DSSpacer size="lg" />
-
-            {/* Analytics Dashboard */}
-            <ErrorBoundary fallback={<ErrorState title="Analytics unavailable" />}>
-              <div className="animate-fade-in">
-                <AnalyticsDashboard data={analyticsData} />
-              </div>
-            </ErrorBoundary>
-
-            <DSSpacer size="lg" />
-
-            {/* Enhanced Performance Widgets */}
-            <ErrorBoundary fallback={<ErrorState title="Performance data unavailable" />}>
-              <DSContentGrid cols={3} className="animate-fade-in">
-                <EnhancedPerformanceWidget
-                  data={mathPerformanceData}
-                  title="Math Performance Trend"
-                  currentScore={mathPerformanceData[mathPerformanceData.length - 1]?.average || 0}
-                  trend={`Based on ${assessments.filter(a => a.subject?.toLowerCase().includes('math')).length} assessments`}
-                />
-                <EnhancedPerformanceWidget
-                  data={readingPerformanceData}
-                  title="Reading Performance"
-                  currentScore={readingPerformanceData[readingPerformanceData.length - 1]?.average || 0}
-                  trend={`Based on ${assessments.filter(a => a.subject?.toLowerCase().includes('reading')).length} assessments`}
-                />
-                <EnhancedPerformanceWidget
-                  data={sciencePerformanceData}
-                  title="Science Performance"
-                  currentScore={sciencePerformanceData[sciencePerformanceData.length - 1]?.average || 0}
-                  trend={`Based on ${assessments.filter(a => a.subject?.toLowerCase().includes('science')).length} assessments`}
-                />
-              </DSContentGrid>
-            </ErrorBoundary>
-
-            <DSSpacer size="lg" />
-
-            <DSContentGrid cols={3}>
-              {/* Main Content Area */}
-              <DSContentGrid cols={1} className="lg:col-span-2">
-                {/* Recent Activity */}
-                <ErrorBoundary fallback={<ErrorState title="Activity feed unavailable" />}>
-                  <div className="animate-fade-in">
-                    <RecentActivitiesList
-                      recentAssessments={recentAssessments}
-                      todaysInsights={todaysInsights}
-                      studentMetrics={studentMetrics || { studentsNeedingAttention: 0 }}
-                    />
-                  </div>
+              {/* Priority Alerts */}
+              {alerts.length > 0 && (
+                <ErrorBoundary fallback={<ErrorState title="Alerts unavailable" />}>
+                  <AlertsWidget alerts={alerts} />
                 </ErrorBoundary>
-
-                <DSSpacer size="lg" />
-
-                {/* Student Insights */}
-                <ErrorBoundary fallback={<ErrorState title="Student insights unavailable" />}>
-                  <div className="animate-fade-in">
-                    <StudentInsightsCard insights={studentInsights} />
-                  </div>
-                </ErrorBoundary>
-              </DSContentGrid>
-
-              {/* Sidebar */}
-              <DSContentGrid cols={1}>
-                {/* Quick Actions */}
-                <ErrorBoundary>
-                  <div className="animate-fade-in">
-                    <EnhancedQuickActionsCard />
-                  </div>
-                </ErrorBoundary>
-                
-                <DSSpacer size="lg" />
-
-                {/* AI Recommendations */}
-                <ErrorBoundary fallback={<ErrorState title="Recommendations unavailable" />}>
-                  <div className="animate-fade-in">
-                    <AIRecommendationsWidget recommendations={aiRecommendations} />
-                  </div>
-                </ErrorBoundary>
-
-                {/* Priority Alerts */}
-                {alerts.length > 0 && (
-                  <>
-                    <DSSpacer size="lg" />
-                    <ErrorBoundary fallback={<ErrorState title="Alerts unavailable" />}>
-                      <div className="animate-fade-in">
-                        <AlertsWidget alerts={alerts} />
-                      </div>
-                    </ErrorBoundary>
-                  </>
-                )}
-              </DSContentGrid>
-            </DSContentGrid>
-          </DSSection>
-        </DSPageContainer>
+              )}
+            </div>
+          </div>
+        </DSSection>
       </ErrorBoundary>
     </AppLayout>
   );

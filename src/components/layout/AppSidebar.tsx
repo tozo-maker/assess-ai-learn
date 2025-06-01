@@ -6,13 +6,10 @@ import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
-  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider,
   SidebarRail,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
   Sheet,
@@ -96,49 +93,46 @@ const navigationItems = [
 
 export default function AppSidebar() {
   const location = useLocation();
-  const isMobile = useIsMobile();
 
   return (
-    <SidebarProvider>
-      <Sidebar variant="inset" className="border-r border-gray-200">
-        <SidebarHeader>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild>
-                <Link to="/app/dashboard">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                    <LayoutDashboard className="size-4" />
-                  </div>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">LearnSpark AI</span>
-                    <span className="truncate text-xs">Educational Analytics</span>
-                  </div>
+    <Sidebar variant="inset" className="border-r border-gray-200">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <Link to="/app/dashboard">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <LayoutDashboard className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">LearnSpark AI</span>
+                  <span className="truncate text-xs">Educational Analytics</span>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarMenu>
+          {navigationItems.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton 
+                asChild
+                isActive={location.pathname === item.url || 
+                  (item.url !== '/app/dashboard' && location.pathname.startsWith(item.url))}
+              >
+                <Link to={item.url}>
+                  <item.icon />
+                  <span>{item.title}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            {navigationItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton 
-                  asChild
-                  isActive={location.pathname === item.url || 
-                    (item.url !== '/app/dashboard' && location.pathname.startsWith(item.url))}
-                >
-                  <Link to={item.url}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarRail />
-      </Sidebar>
-    </SidebarProvider>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
+      <SidebarRail />
+    </Sidebar>
   );
 }
 
