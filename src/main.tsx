@@ -4,29 +4,14 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-// Initialize monitoring integration
-import './services/monitoring-integration';
-
-// Register service worker for enhanced caching
+// Register service worker for basic caching only
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service Worker registered successfully:', registration);
-      
-      // Listen for updates
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        if (newWorker) {
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('New service worker installed, reload to activate');
-            }
-          });
-        }
-      });
+      console.log('Service Worker registered for caching');
     } catch (error) {
-      console.error('Service Worker registration failed:', error);
+      console.warn('Service Worker registration failed:', error);
     }
   });
 }

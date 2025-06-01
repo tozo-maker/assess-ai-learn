@@ -1,4 +1,3 @@
-
 interface CacheItem<T> {
   data: T;
   timestamp: number;
@@ -25,10 +24,14 @@ class AdvancedCachingService {
     sets: 0,
     evictions: 0
   };
+  private isEnabled = false; // Disable by default to prevent layout interference
 
   constructor() {
-    this.setupPeriodicCleanup();
-    this.setupBrowserCaching();
+    // Only initialize if explicitly enabled to prevent interference
+    if (this.isEnabled) {
+      this.setupPeriodicCleanup();
+      this.setupBrowserCaching();
+    }
   }
 
   // Enhanced cache with LRU eviction
@@ -372,10 +375,10 @@ class AdvancedCachingService {
   }
 }
 
-export const advancedCaching = new AdvancedCachingService();
+export const advancedCachingService = new AdvancedCachingService();
 
 // Initialize cache monitoring
-advancedCaching.monitorCacheHealth();
+advancedCachingService.monitorCacheHealth();
 
 // Warm cache on application start
-advancedCaching.warmCache('popular-content');
+advancedCachingService.warmCache('popular-content');

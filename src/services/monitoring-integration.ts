@@ -1,14 +1,31 @@
-
 import { enhancedErrorTracking } from './enhanced-error-tracking';
 import { structuredLogger } from './structured-logging';
 import { advancedCaching } from './advanced-caching-service';
 import { performanceMonitoringService } from './performance-monitoring-service';
 
+interface MonitoringConfig {
+  enablePerformanceTracking: boolean;
+  enableErrorTracking: boolean;
+  enableCaching: boolean;
+  enableResourceOptimization: boolean;
+}
+
 class MonitoringIntegration {
+  private config: MonitoringConfig = {
+    enablePerformanceTracking: false, // Disabled
+    enableErrorTracking: false,       // Disabled
+    enableCaching: false,             // Disabled
+    enableResourceOptimization: false // Disabled
+  };
+
   private isInitialized = false;
 
   async initialize() {
-    if (this.isInitialized) return;
+    // Skip initialization to prevent interference
+    if (!this.shouldInitialize()) {
+      console.log('Monitoring services disabled to prevent interference');
+      return;
+    }
 
     try {
       console.log('🚀 Initializing comprehensive monitoring system...');
@@ -130,9 +147,15 @@ class MonitoringIntegration {
       }
     };
   }
+
+  private shouldInitialize(): boolean {
+    return Object.values(this.config).some(enabled => enabled);
+  }
 }
 
-export const monitoringIntegration = new MonitoringIntegration();
+const monitoringIntegration = new MonitoringIntegration();
 
-// Auto-initialize on import
-monitoringIntegration.initialize();
+// Don't auto-initialize to prevent interference
+// monitoringIntegration.initialize();
+
+export { monitoringIntegration };
