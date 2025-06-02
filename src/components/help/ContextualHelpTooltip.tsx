@@ -149,9 +149,9 @@ const ContextualHelpTooltip: React.FC<ContextualHelpTooltipProps> = ({
               position === 'left' && "left-full top-1/2 transform -translate-y-1/2 -translate-x-1/2 border-t border-r",
               position === 'right' && "right-full top-1/2 transform -translate-y-1/2 translate-x-1/2 border-b border-l"
             )} />
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
