@@ -37,7 +37,8 @@ const Breadcrumbs: React.FC = () => {
       'class-insights': 'Class Insights',
       'individual-insights': 'Individual Insights',
       recommendations: 'Recommendations',
-      'skills-insights': 'Skills Insights'
+      'skills-insights': 'Skills Insights',
+      'progress-reports': 'Progress Reports'
     };
 
     let currentPath = '/app';
@@ -63,7 +64,7 @@ const Breadcrumbs: React.FC = () => {
   }
 
   return (
-    <nav className="flex items-center space-x-1 text-sm text-gray-600 mb-6">
+    <nav className="flex items-center space-x-1 text-sm text-gray-500 mb-6" aria-label="Breadcrumb">
       <Home className="h-4 w-4" />
       {breadcrumbs.map((breadcrumb, index) => (
         <React.Fragment key={index}>
@@ -75,7 +76,7 @@ const Breadcrumbs: React.FC = () => {
           ) : (
             <Link
               to={breadcrumb.href!}
-              className="hover:text-blue-600 transition-colors"
+              className="hover:text-primary transition-colors duration-200"
             >
               {breadcrumb.label}
             </Link>
