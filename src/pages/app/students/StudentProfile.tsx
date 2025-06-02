@@ -44,22 +44,18 @@ const StudentProfile: React.FC = () => {
   };
 
   const handleEditClick = () => {
-    // Navigate to edit student page
     navigate(`/app/students/${id}/edit`);
   };
 
   const handleDelete = () => {
-    // Handle student deletion
     console.log('Delete student:', id);
   };
 
   const handleViewAssessments = () => {
-    // Navigate to student assessments
     navigate(`/app/students/${id}/assessments`);
   };
 
   const handleRefreshInsights = () => {
-    // Refresh insights data
     console.log('Refresh insights for student:', id);
   };
 
@@ -88,7 +84,7 @@ const StudentProfile: React.FC = () => {
           <DSPageContainer>
             <Breadcrumbs />
             <DSCard>
-              <DSCardContent>
+              <DSCardContent className="p-6">
                 <div className="text-center py-8">
                   <DSPageTitle className="text-xl font-semibold text-gray-900">Student Not Found</DSPageTitle>
                   <DSBodyText className="mt-2 text-gray-600">The requested student could not be found.</DSBodyText>
@@ -110,9 +106,9 @@ const StudentProfile: React.FC = () => {
         <DSPageContainer>
           <Breadcrumbs />
           
-          {/* Page Header - Standardized */}
+          {/* Page Header - Design System Spacing and Typography */}
           <DSCard className="mb-8">
-            <DSCardHeader>
+            <DSCardHeader className="p-6">
               <DSFlexContainer justify="between" align="center" className="flex-col md:flex-row gap-4">
                 <div>
                   <DSButton variant="ghost" className="mb-4 pl-0" onClick={() => navigate('/app/students')}>

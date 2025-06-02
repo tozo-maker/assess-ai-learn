@@ -115,11 +115,11 @@ const GlobalSearch: React.FC = () => {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.length > 1 && setIsOpen(true)}
-          className="pl-10 pr-4 h-10 bg-white border-gray-300 focus:border-primary focus:ring-primary/20"
+          className="pl-10 pr-4 h-10 bg-white border-gray-300 focus:border-[#2563eb] focus:ring-[#2563eb]/20"
         />
       </div>
 
-      {/* Search Results Dropdown */}
+      {/* Search Results Dropdown - Design System Card Styling */}
       {isOpen && results.length > 0 && (
         <Card className="absolute top-full left-0 right-0 mt-2 z-50 shadow-lg border-gray-200">
           <CardContent className="p-0">
@@ -131,8 +131,8 @@ const GlobalSearch: React.FC = () => {
                     key={result.id}
                     href={result.href}
                     className={cn(
-                      "flex items-center px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0",
-                      selectedIndex === index && "bg-primary/5"
+                      "flex items-center px-4 py-3 hover:bg-gray-50 transition-colors duration-200 border-b border-gray-100 last:border-b-0",
+                      selectedIndex === index && "bg-[#2563eb]/5"
                     )}
                     onMouseEnter={() => setSelectedIndex(index)}
                   >
@@ -158,7 +158,7 @@ const GlobalSearch: React.FC = () => {
         </Card>
       )}
 
-      {/* No results */}
+      {/* No results - Design System Styling */}
       {isOpen && query.length > 1 && results.length === 0 && (
         <Card className="absolute top-full left-0 right-0 mt-2 z-50 shadow-lg border-gray-200">
           <CardContent className="p-4 text-center text-gray-500 text-sm">

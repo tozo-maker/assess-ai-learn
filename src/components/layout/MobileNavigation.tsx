@@ -40,10 +40,10 @@ const MobileNavigation: React.FC = () => {
 
   return (
     <>
-      {/* Mobile Header with Hamburger */}
+      {/* Mobile Header with Hamburger - Design System Colors */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-40 flex items-center justify-between px-4">
         <Link to="/app/dashboard" className="flex items-center space-x-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2563eb]">
             <GraduationCap className="h-5 w-5 text-white" />
           </div>
           <span className="font-bold text-lg text-gray-900">LearnSpark AI</span>
@@ -63,9 +63,9 @@ const MobileNavigation: React.FC = () => {
                   to={item.href}
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    "block py-3 px-4 rounded-lg text-base transition-colors",
+                    "block py-3 px-4 rounded-lg text-base transition-colors duration-200",
                     isActive(item.href)
-                      ? "bg-primary/10 text-primary font-medium"
+                      ? "bg-[#2563eb]/10 text-[#2563eb] font-medium"
                       : "text-gray-700 hover:bg-gray-50"
                   )}
                 >
@@ -77,7 +77,7 @@ const MobileNavigation: React.FC = () => {
         </Sheet>
       </div>
 
-      {/* Bottom Tab Bar */}
+      {/* Bottom Tab Bar - Design System Colors and 44px Touch Targets */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
         <div className="grid grid-cols-4">
           {primaryTabItems.map((item) => (
@@ -85,9 +85,9 @@ const MobileNavigation: React.FC = () => {
               key={item.href}
               to={item.href}
               className={cn(
-                "flex flex-col items-center justify-center py-2 min-h-[44px] transition-colors",
+                "flex flex-col items-center justify-center py-2 min-h-[44px] transition-colors duration-200",
                 isActive(item.href)
-                  ? "text-primary"
+                  ? "text-[#2563eb]"
                   : "text-gray-500 hover:text-gray-700"
               )}
             >

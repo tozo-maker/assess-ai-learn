@@ -65,13 +65,13 @@ const Navigation: React.FC = () => {
           className={cn(
             "flex items-center py-2 px-4 mx-2 rounded-lg text-base transition-colors duration-200",
             isActive(item.href)
-              ? "bg-primary/10 text-primary font-medium"
+              ? "bg-[#2563eb]/10 text-[#2563eb] font-medium"
               : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
           )}
         >
           <item.icon className={cn(
             "w-5 h-5 mr-3",
-            isActive(item.href) ? "text-primary" : "text-gray-400"
+            isActive(item.href) ? "text-[#2563eb]" : "text-gray-400"
           )} />
           <span>{item.title}</span>
         </Link>
@@ -87,17 +87,17 @@ const Navigation: React.FC = () => {
 
   return (
     <div className="w-64 fixed left-0 top-0 h-full bg-white border-r border-gray-200 flex flex-col">
-      {/* Logo Area */}
+      {/* Logo Area - Design System Spacing */}
       <div className="h-16 flex items-center px-6 border-b border-gray-200">
         <Link to="/app/dashboard" className="flex items-center space-x-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2563eb]">
             <GraduationCap className="h-5 w-5 text-white" />
           </div>
           <span className="font-bold text-lg text-gray-900">LearnSpark AI</span>
         </Link>
       </div>
 
-      {/* Navigation Menu */}
+      {/* Navigation Menu - Design System Spacing */}
       <nav className="flex-1 py-6 overflow-y-auto">
         <div className="space-y-6">
           {/* Primary Navigation */}

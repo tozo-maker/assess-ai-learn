@@ -69,9 +69,9 @@ const Students: React.FC = () => {
         <DSPageContainer>
           <Breadcrumbs />
           
-          {/* Page Header - Standardized */}
+          {/* Page Header - Standardized with Design System Spacing */}
           <DSCard className="mb-8">
-            <DSCardHeader>
+            <DSCardHeader className="p-6">
               <DSFlexContainer justify="between" align="center" className="flex-col md:flex-row gap-4">
                 <div>
                   <DSPageTitle className="text-3xl font-bold text-gray-900 mb-2">
@@ -101,18 +101,17 @@ const Students: React.FC = () => {
             </DSCardHeader>
           </DSCard>
 
-          {/* Filter Bar with View Toggle */}
+          {/* Filter Bar with View Toggle - Design System Card */}
           <DSCard className="mb-6">
             <DSCardContent className="p-6 bg-gray-50">
               <DSFlexContainer justify="between" align="center" className="flex-col md:flex-row gap-4">
                 <div className="flex-1">
-                  {/* Filters would go here */}
                   <DSBodyText className="text-gray-600">
                     Filter options will be added here
                   </DSBodyText>
                 </div>
                 
-                {/* View Toggle */}
+                {/* View Toggle - Design System Colors */}
                 <DSFlexContainer gap="xs" className="border border-gray-300 rounded-md p-1 bg-white">
                   <button
                     onClick={() => setViewMode('list')}

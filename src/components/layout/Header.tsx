@@ -42,8 +42,8 @@ const Header = () => {
       {/* Mobile Navigation Component */}
       <MobileNavigation />
       
-      {/* Desktop Header */}
-      <header className="hidden md:block sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {/* Desktop Header - Design System Colors and Spacing */}
+      <header className="hidden md:block sticky top-0 z-50 w-full border-b border-gray-200 bg-white">
         <div className="flex h-16 items-center justify-between px-6 ml-64">
           {/* Global Search */}
           <div className="flex-1 max-w-2xl">
@@ -73,11 +73,11 @@ const Header = () => {
                     <p className="text-sm font-medium leading-none">
                       {profile?.full_name || 'Teacher'}
                     </p>
-                    <p className="text-xs leading-none text-muted-foreground">
+                    <p className="text-xs leading-none text-gray-500">
                       {user?.email}
                     </p>
                     {profile?.school && (
-                      <p className="text-xs leading-none text-muted-foreground">
+                      <p className="text-xs leading-none text-gray-500">
                         {profile.school}
                       </p>
                     )}

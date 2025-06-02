@@ -76,7 +76,7 @@ const Breadcrumbs: React.FC = () => {
           ) : (
             <Link
               to={breadcrumb.href!}
-              className="hover:text-primary transition-colors duration-200"
+              className="hover:text-[#2563eb] transition-colors duration-200"
             >
               {breadcrumb.label}
             </Link>

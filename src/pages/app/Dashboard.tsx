@@ -46,8 +46,10 @@ const Dashboard = () => {
   if (isLoading) {
     return (
       <AppLayout>
-        <Breadcrumbs />
-        <EnhancedLoadingState type="dashboard" message="Loading your dashboard..." />
+        <DSPageContainer>
+          <Breadcrumbs />
+          <EnhancedLoadingState type="dashboard" message="Loading your dashboard..." />
+        </DSPageContainer>
       </AppLayout>
     );
   }
@@ -55,13 +57,15 @@ const Dashboard = () => {
   if (hasError) {
     return (
       <AppLayout>
-        <Breadcrumbs />
-        <ErrorState
-          error={error}
-          onRetry={handleRetry}
-          title="Failed to load dashboard"
-          description="There was an error loading your dashboard data. Please try again."
-        />
+        <DSPageContainer>
+          <Breadcrumbs />
+          <ErrorState
+            error={error}
+            onRetry={handleRetry}
+            title="Failed to load dashboard"
+            description="There was an error loading your dashboard data. Please try again."
+          />
+        </DSPageContainer>
       </AppLayout>
     );
   }
@@ -78,7 +82,7 @@ const Dashboard = () => {
               <DashboardWelcomeSection teacher={teacher} />
             </ErrorBoundary>
 
-            <DSSpacer size="xl" />
+            <DSSpacer size="2xl" />
 
             {/* Critical Alerts - If Any */}
             {alerts.length > 0 && (
@@ -86,7 +90,7 @@ const Dashboard = () => {
                 <ErrorBoundary fallback={<ErrorState title="Alerts unavailable" />}>
                   <DashboardAlerts alerts={alerts} />
                 </ErrorBoundary>
-                <DSSpacer size="xl" />
+                <DSSpacer size="2xl" />
               </>
             )}
 
@@ -103,7 +107,7 @@ const Dashboard = () => {
               />
             </ErrorBoundary>
 
-            <DSSpacer size="xl" />
+            <DSSpacer size="2xl" />
 
             {/* Recent Activity - 2-Column: List + Insights */}
             <DSContentGrid cols={2}>
@@ -126,7 +130,7 @@ const Dashboard = () => {
               </DSGridItem>
             </DSContentGrid>
 
-            <DSSpacer size="xl" />
+            <DSSpacer size="2xl" />
 
             {/* Secondary Widgets - 3-Column Grid */}
             <ErrorBoundary fallback={<ErrorState title="Additional widgets unavailable" />}>
@@ -137,7 +141,7 @@ const Dashboard = () => {
               />
             </ErrorBoundary>
 
-            <DSSpacer size="2xl" />
+            <DSSpacer size="3xl" />
 
             {/* Customize Dashboard Option */}
             <DSCard className="text-center">
