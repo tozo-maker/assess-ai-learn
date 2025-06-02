@@ -46,6 +46,20 @@ export const useDashboardData = () => {
       new Date(a.created_at) >= oneWeekAgo
     )?.length || 0;
 
+    // Calculate new students this month
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    const newStudentsThisMonth = students?.filter(s => 
+      new Date(s.created_at) >= oneMonthAgo
+    )?.length || 0;
+
+    // Calculate today's insights
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todaysInsights = communications?.filter(c => 
+      c.communication_type === 'ai_insight' && new Date(c.created_at) >= startOfDay
+    )?.length || 0;
+
     // Generate alerts based on real data
     const alerts = [
       ...(studentMetrics?.studentsNeedingAttention && studentMetrics.studentsNeedingAttention > 0 ? [{
@@ -80,8 +94,13 @@ export const useDashboardData = () => {
         totalAssessments,
         aiInsights,
         recentAssessments,
+        newStudentsThisMonth,
+        todaysInsights,
         averagePerformance: studentMetrics?.averagePerformance || "N/A",
-        studentsNeedingAttention: studentMetrics?.studentsNeedingAttention || 0
+        studentsNeedingAttention: studentMetrics?.studentsNeedingAttention || 0,
+        studentMetrics: {
+          averagePerformance: studentMetrics?.averagePerformance || "N/A"
+        }
       },
       alerts,
       students,
