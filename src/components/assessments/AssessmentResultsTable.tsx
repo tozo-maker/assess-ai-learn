@@ -9,7 +9,8 @@ import {
   DSCardContent,
   DSCardTitle,
   DSButton,
-  DSFlexContainer
+  DSFlexContainer,
+  DSBodyText
 } from '@/components/ui/design-system';
 
 // Original Components
@@ -82,9 +83,9 @@ const AssessmentResultsTable: React.FC<AssessmentResultsTableProps> = ({
   return (
     <DSCard>
       <DSCardHeader>
-        <DSFlexContainer justify="between" align="center">
-          <DSCardTitle>Student Results</DSCardTitle>
-          <DSFlexContainer gap="sm">
+        <DSFlexContainer justify="between" align="center" className="flex-col md:flex-row gap-4">
+          <DSCardTitle className="text-lg font-semibold text-gray-900">Student Results</DSCardTitle>
+          <DSFlexContainer gap="sm" className="flex-wrap">
             <DSButton variant="secondary" size="sm">
               <Filter className="mr-2 h-4 w-4" />
               Filter
@@ -108,15 +109,15 @@ const AssessmentResultsTable: React.FC<AssessmentResultsTableProps> = ({
           </DSFlexContainer>
         </DSFlexContainer>
       </DSCardHeader>
-      <DSCardContent>
+      <DSCardContent className="p-0">
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50">
               <TableHead className="w-8"></TableHead>
-              <TableHead className="font-medium">Student</TableHead>
-              <TableHead className="font-medium">Score</TableHead>
-              <TableHead className="font-medium">Percentage</TableHead>
-              <TableHead className="font-medium">Status</TableHead>
+              <TableHead className="font-medium text-gray-700">Student</TableHead>
+              <TableHead className="font-medium text-gray-700">Score</TableHead>
+              <TableHead className="font-medium text-gray-700">Percentage</TableHead>
+              <TableHead className="font-medium text-gray-700">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -127,18 +128,18 @@ const AssessmentResultsTable: React.FC<AssessmentResultsTableProps> = ({
                   onOpenChange={() => toggleRow(result.id)}
                 >
                   <CollapsibleTrigger asChild>
-                    <TableRow className="hover:bg-gray-100 cursor-pointer transition-colors duration-200">
+                    <TableRow className="hover:bg-gray-50 cursor-pointer transition-colors duration-200">
                       <TableCell>
                         {expandedRows.has(result.id) ? (
-                          <ChevronDown className="h-4 w-4" />
+                          <ChevronDown className="h-4 w-4 text-gray-500" />
                         ) : (
-                          <ChevronRight className="h-4 w-4" />
+                          <ChevronRight className="h-4 w-4 text-gray-500" />
                         )}
                       </TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium text-gray-900">
                         {result.firstName} {result.lastName}
                       </TableCell>
-                      <TableCell>{result.score}</TableCell>
+                      <TableCell className="text-gray-700">{result.score}</TableCell>
                       <TableCell>
                         <span className={`font-semibold ${getPerformanceColor(result.percentage)}`}>
                           {result.percentage}%
@@ -155,11 +156,11 @@ const AssessmentResultsTable: React.FC<AssessmentResultsTableProps> = ({
                       <TableRow>
                         <TableCell colSpan={5} className="bg-gray-50 border-t">
                           <div className="py-4 transition-all duration-300">
-                            <h4 className="text-sm font-medium text-gray-700 mb-3">Item-by-Item Breakdown</h4>
+                            <DSBodyText className="font-medium text-gray-700 mb-3">Item-by-Item Breakdown</DSBodyText>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                               {result.itemScores.map((item) => (
-                                <div key={item.itemNumber} className="flex items-center justify-between p-3 bg-white rounded-md border">
-                                  <span className="text-sm font-medium">Item {item.itemNumber}</span>
+                                <div key={item.itemNumber} className="flex items-center justify-between p-3 bg-white rounded-md border border-gray-200">
+                                  <DSBodyText className="font-medium text-gray-700">Item {item.itemNumber}</DSBodyText>
                                   <span className={`text-sm font-semibold ${
                                     (item.score / item.maxScore) >= 0.8 ? 'text-[#10b981]' : 
                                     (item.score / item.maxScore) >= 0.6 ? 'text-[#f59e0b]' : 'text-[#ef4444]'

@@ -2,7 +2,6 @@
 import React from 'react';
 import Header from './Header';
 import AppSidebar from './AppSidebar';
-import { DSPageContainer } from '@/components/ui/design-system';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -11,7 +10,7 @@ interface AppLayoutProps {
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children, showBreadcrumbs = true }) => {
   return (
-    <>
+    <div className="min-h-screen flex w-full">
       {/* Desktop Sidebar */}
       <AppSidebar />
       
@@ -19,12 +18,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, showBreadcrumbs = true 
       <div className="flex-1 flex flex-col min-h-screen">
         <Header />
         <main className="flex-1 py-8 bg-gray-50">
-          <DSPageContainer>
-            {children}
-          </DSPageContainer>
+          {children}
         </main>
       </div>
-    </>
+    </div>
   );
 };
 

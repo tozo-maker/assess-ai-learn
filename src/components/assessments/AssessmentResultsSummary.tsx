@@ -5,11 +5,11 @@ import { TrendingUp, Users, Target, AlertCircle } from 'lucide-react';
 // Design System Components
 import {
   DSCard,
-  DSCardHeader,
   DSCardContent,
-  DSCardTitle,
   DSFlexContainer,
-  DSContentGrid
+  DSContentGrid,
+  DSGridItem,
+  DSBodyText
 } from '@/components/ui/design-system';
 
 interface AssessmentResultsSummaryProps {
@@ -61,19 +61,21 @@ const AssessmentResultsSummary: React.FC<AssessmentResultsSummaryProps> = ({
       {summaryCards.map((card, index) => {
         const IconComponent = card.icon;
         return (
-          <DSCard key={index} className="hover:shadow-md transition-shadow duration-300">
-            <DSCardContent>
-              <DSFlexContainer justify="between" align="center">
-                <div>
-                  <p className="text-sm text-gray-600">{card.title}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-1">{card.value}</p>
-                </div>
-                <div className={`w-12 h-12 rounded-lg ${card.bgColor} flex items-center justify-center`}>
-                  <IconComponent className={`h-6 w-6 ${card.color}`} />
-                </div>
-              </DSFlexContainer>
-            </DSCardContent>
-          </DSCard>
+          <DSGridItem key={index} span={1}>
+            <DSCard className="hover:shadow-md transition-shadow duration-300">
+              <DSCardContent className="p-6">
+                <DSFlexContainer justify="between" align="center">
+                  <div>
+                    <DSBodyText className="text-sm text-gray-600">{card.title}</DSBodyText>
+                    <DSBodyText className="text-3xl font-bold text-gray-900 mt-1">{card.value}</DSBodyText>
+                  </div>
+                  <div className={`w-12 h-12 rounded-lg ${card.bgColor} flex items-center justify-center`}>
+                    <IconComponent className={`h-6 w-6 ${card.color}`} />
+                  </div>
+                </DSFlexContainer>
+              </DSCardContent>
+            </DSCard>
+          </DSGridItem>
         );
       })}
     </DSContentGrid>
