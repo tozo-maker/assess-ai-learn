@@ -27,11 +27,18 @@ const BulkSelection: React.FC<BulkSelectionProps> = ({
     <DSCard className="border-2 border-dashed border-gray-200">
       <DSCardContent className="p-4">
         <DSFlexContainer align="center" gap="sm">
-          <Checkbox
-            checked={isAllSelected}
-            indeterminate={isIndeterminate}
-            onCheckedChange={onSelectAll}
-          />
+          <div className="relative">
+            <Checkbox
+              checked={isAllSelected}
+              onCheckedChange={onSelectAll}
+              className={isIndeterminate ? "data-[state=checked]:bg-blue-600 bg-blue-600" : ""}
+            />
+            {isIndeterminate && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-2 h-0.5 bg-white rounded"></div>
+              </div>
+            )}
+          </div>
           <DSBodyText className="flex-1">
             {selectedCount > 0 
               ? `${selectedCount} of ${totalStudents} students selected`
