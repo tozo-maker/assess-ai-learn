@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -20,8 +19,12 @@ import {
   DSButton,
   DSFlexContainer,
   DSBodyText,
-  DSSpacer
+  DSSpacer,
+  DSContentGrid
 } from '@/components/ui/design-system';
+import { MetricDisplay, StatusBadge, InteractiveCard } from '@/components/ui/design-system-enhanced';
+import { semanticColors } from '@/components/ui/design-system-colors';
+import { transitionClasses } from '@/components/ui/transitions';
 
 interface AnalyticsData {
   totalStudents: number;
@@ -40,19 +43,41 @@ interface AnalyticsDashboardProps {
 }
 
 const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ data, className = "" }) => {
-  const getPerformanceColor = (score: number) => {
-    if (score >= 85) return 'text-[#10b981]';
-    if (score >= 70) return 'text-[#f59e0b]';
-    return 'text-[#ef4444]';
-  };
-
   const getPerformanceBadge = (score: number) => {
-    if (score >= 85) return { color: 'bg-[#d1fae5] text-[#10b981]', label: 'Excellent' };
-    if (score >= 70) return { color: 'bg-[#fef3c7] text-[#f59e0b]', label: 'Good' };
-    return { color: 'bg-[#fee2e2] text-[#ef4444]', label: 'Needs Attention' };
+    if (score >= 85) return { variant: 'success' as const, label: 'Excellent' };
+    if (score >= 70) return { variant: 'warning' as const, label: 'Good' };
+    return { variant: 'danger' as const, label: 'Needs Attention' };
   };
 
   const performanceBadge = getPerformanceBadge(data.averagePerformance);
+
+  const keyMetrics = [
+    {
+      label: "Total Students",
+      value: data.totalStudents,
+      icon: <Users className="h-6 w-6" />,
+      variant: 'primary' as const
+    },
+    {
+      label: "Assessments",
+      value: data.totalAssessments,
+      icon: <BookOpen className="h-6 w-6" />,
+      variant: 'success' as const
+    },
+    {
+      label: "Avg Performance",
+      value: `${data.averagePerformance}%`,
+      icon: <Target className="h-6 w-6" />,
+      variant: data.averagePerformance >= 85 ? 'success' as const : 
+             data.averagePerformance >= 70 ? 'warning' as const : 'danger' as const
+    },
+    {
+      label: "Completion Rate",
+      value: `${data.completionRate}%`,
+      icon: <Clock className="h-6 w-6" />,
+      variant: 'warning' as const
+    }
+  ];
 
   return (
     <DSCard className={className}>
@@ -60,78 +85,74 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ data, className
         <DSCardTitle>
           <DSFlexContainer justify="between" align="center">
             <DSFlexContainer align="center" gap="sm">
-              <TrendingUp className="h-5 w-5 text-[#2563eb]" />
+              <TrendingUp className={`h-5 w-5 ${semanticColors.primary.text}`} />
               <span>Class Analytics Overview</span>
             </DSFlexContainer>
-            <Badge className={performanceBadge.color}>
+            <StatusBadge variant={performanceBadge.variant}>
               {performanceBadge.label}
-            </Badge>
+            </StatusBadge>
           </DSFlexContainer>
         </DSCardTitle>
       </DSCardHeader>
-      <DSCardContent className="space-y-xl">
+      <DSCardContent className="space-y-8">
         {/* Key Metrics Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-md">
-          <div className="text-center p-md bg-[#dbeafe] rounded-lg">
-            <Users className="h-6 w-6 text-[#2563eb] mx-auto mb-sm" />
-            <div className="text-2xl font-bold text-[#2563eb]">{data.totalStudents}</div>
-            <div className="text-xs text-[#2563eb]">Total Students</div>
-          </div>
-          
-          <div className="text-center p-md bg-[#d1fae5] rounded-lg">
-            <BookOpen className="h-6 w-6 text-[#10b981] mx-auto mb-sm" />
-            <div className="text-2xl font-bold text-[#10b981]">{data.totalAssessments}</div>
-            <div className="text-xs text-[#10b981]">Assessments</div>
-          </div>
-          
-          <div className="text-center p-md bg-[#f3e8ff] rounded-lg">
-            <Target className="h-6 w-6 text-[#7c3aed] mx-auto mb-sm" />
-            <div className={`text-2xl font-bold ${getPerformanceColor(data.averagePerformance)}`}>
-              {data.averagePerformance}%
+        <DSContentGrid cols={4} className="gap-4">
+          {keyMetrics.map((metric, index) => (
+            <div key={index} className={`text-center p-4 ${semanticColors[metric.variant].light} rounded-lg`}>
+              <div className={`${semanticColors[metric.variant].text} mx-auto mb-2`}>
+                {metric.icon}
+              </div>
+              <MetricDisplay
+                label={metric.label}
+                value={metric.value}
+                variant={metric.variant}
+                className="text-center"
+              />
             </div>
-            <div className="text-xs text-[#7c3aed]">Avg Performance</div>
-          </div>
-          
-          <div className="text-center p-md bg-[#fed7aa] rounded-lg">
-            <Clock className="h-6 w-6 text-[#ea580c] mx-auto mb-sm" />
-            <div className="text-2xl font-bold text-[#ea580c]">{data.completionRate}%</div>
-            <div className="text-xs text-[#ea580c]">Completion Rate</div>
-          </div>
-        </div>
+          ))}
+        </DSContentGrid>
 
         {/* Performance Insights */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-          <div className="p-md border border-gray-200 rounded-lg">
-            <DSFlexContainer justify="between" align="center" className="mb-sm">
+        <DSContentGrid cols={2} className="gap-6">
+          <InteractiveCard>
+            <DSFlexContainer justify="between" align="center" className="mb-4">
               <h4 className="font-medium text-gray-900">Students at Risk</h4>
-              <AlertTriangle className="h-4 w-4 text-[#ef4444]" />
+              <AlertTriangle className={`h-4 w-4 ${semanticColors.danger.text}`} />
             </DSFlexContainer>
-            <div className="text-2xl font-bold text-[#ef4444] mb-xs">{data.studentsAtRisk}</div>
-            <DSBodyText className="text-gray-600 mb-sm">Need immediate attention</DSBodyText>
+            <MetricDisplay
+              label="Need immediate attention"
+              value={data.studentsAtRisk}
+              variant="danger"
+            />
+            <DSSpacer size="md" />
             <Link to="/app/students">
               <DSButton variant="secondary" size="sm" className="w-full">
                 View Details
               </DSButton>
             </Link>
-          </div>
+          </InteractiveCard>
 
-          <div className="p-md border border-gray-200 rounded-lg">
-            <DSFlexContainer justify="between" align="center" className="mb-sm">
+          <InteractiveCard>
+            <DSFlexContainer justify="between" align="center" className="mb-4">
               <h4 className="font-medium text-gray-900">High Performers</h4>
-              <CheckCircle className="h-4 w-4 text-[#10b981]" />
+              <CheckCircle className={`h-4 w-4 ${semanticColors.success.text}`} />
             </DSFlexContainer>
-            <div className="text-2xl font-bold text-[#10b981] mb-xs">{data.studentsExcelling}</div>
-            <DSBodyText className="text-gray-600 mb-sm">Exceeding expectations</DSBodyText>
+            <MetricDisplay
+              label="Exceeding expectations"
+              value={data.studentsExcelling}
+              variant="success"
+            />
+            <DSSpacer size="md" />
             <Link to="/app/insights/class">
               <DSButton variant="secondary" size="sm" className="w-full">
                 View Insights
               </DSButton>
             </Link>
-          </div>
-        </div>
+          </InteractiveCard>
+        </DSContentGrid>
 
         {/* Growth Indicator */}
-        <div className="p-md bg-gradient-to-r from-[#dbeafe] to-[#f3e8ff] rounded-lg">
+        <div className={`p-6 bg-gradient-to-r from-${semanticColors.primary.light} to-${semanticColors.info.light} rounded-lg`}>
           <DSFlexContainer justify="between" align="center">
             <div>
               <h4 className="font-medium text-gray-900">Recent Growth</h4>
@@ -139,11 +160,11 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ data, className
             </div>
             <DSFlexContainer align="center" gap="sm">
               {data.recentGrowth > 0 ? (
-                <TrendingUp className="h-5 w-5 text-[#10b981]" />
+                <TrendingUp className={`h-5 w-5 ${semanticColors.success.text}`} />
               ) : (
-                <TrendingDown className="h-5 w-5 text-[#ef4444]" />
+                <TrendingDown className={`h-5 w-5 ${semanticColors.danger.text}`} />
               )}
-              <span className={`text-lg font-bold ${data.recentGrowth > 0 ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
+              <span className={`text-lg font-bold ${data.recentGrowth > 0 ? semanticColors.success.text : semanticColors.danger.text}`}>
                 {data.recentGrowth > 0 ? '+' : ''}{data.recentGrowth}%
               </span>
             </DSFlexContainer>

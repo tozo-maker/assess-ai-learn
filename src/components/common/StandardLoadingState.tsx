@@ -1,6 +1,8 @@
 
 import React from 'react';
-import { DSCard, DSCardContent, DSBodyText } from '@/components/ui/design-system';
+import { DSCard, DSCardContent, DSBodyText, DSSpacer } from '@/components/ui/design-system';
+import { semanticColors } from '@/components/ui/design-system-colors';
+import { spacingSystem } from '@/components/ui/design-system-enhanced';
 
 interface StandardLoadingStateProps {
   message?: string;
@@ -26,7 +28,8 @@ const StandardLoadingState: React.FC<StandardLoadingStateProps> = ({
   return (
     <DSCard>
       <DSCardContent className={`text-center ${containerPadding[size]}`}>
-        <div className={`animate-spin rounded-full ${sizeClasses[size]} border-b-2 border-[#2563eb] mx-auto mb-4`}></div>
+        <div className={`animate-spin rounded-full ${sizeClasses[size]} border-b-2 ${semanticColors.primary.border} mx-auto`}></div>
+        <DSSpacer size="md" />
         <DSBodyText className="text-gray-600">
           {message}
         </DSBodyText>

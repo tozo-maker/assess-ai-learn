@@ -9,7 +9,7 @@ const PageTitle = React.forwardRef<
   <h1
     ref={ref}
     className={cn(
-      "text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 tracking-tight leading-tight",
+      "text-3xl font-bold text-gray-900 leading-tight tracking-tight",
       className
     )}
     {...props}
@@ -24,7 +24,7 @@ const SectionHeader = React.forwardRef<
   <h2
     ref={ref}
     className={cn(
-      "text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-800 tracking-tight leading-tight",
+      "text-2xl font-semibold text-gray-800 leading-tight",
       className
     )}
     {...props}
@@ -39,7 +39,7 @@ const SubsectionHeader = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-lg sm:text-xl lg:text-2xl font-medium text-gray-700 leading-tight",
+      "text-xl font-medium text-gray-700 leading-tight",
       className
     )}
     {...props}
@@ -54,7 +54,7 @@ const BodyText = React.forwardRef<
   <p
     ref={ref}
     className={cn(
-      "text-base sm:text-lg text-gray-600 leading-relaxed",
+      "text-base text-gray-600 leading-6",
       className
     )}
     {...props}
@@ -69,7 +69,7 @@ const HelpText = React.forwardRef<
   <p
     ref={ref}
     className={cn(
-      "text-sm text-gray-500 leading-normal",
+      "text-sm text-gray-500 leading-5",
       className
     )}
     {...props}
@@ -84,7 +84,7 @@ const CaptionText = React.forwardRef<
   <p
     ref={ref}
     className={cn(
-      "text-xs text-gray-400 leading-normal",
+      "text-xs text-gray-400 leading-4",
       className
     )}
     {...props}
@@ -92,11 +92,11 @@ const CaptionText = React.forwardRef<
 ))
 CaptionText.displayName = "CaptionText"
 
-export {
-  PageTitle,
-  SectionHeader,
-  SubsectionHeader,
-  BodyText,
-  HelpText,
-  CaptionText
+export { 
+  PageTitle, 
+  SectionHeader, 
+  SubsectionHeader, 
+  BodyText, 
+  HelpText, 
+  CaptionText 
 }

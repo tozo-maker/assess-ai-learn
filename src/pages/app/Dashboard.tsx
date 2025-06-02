@@ -13,12 +13,7 @@ import {
   DSPageContainer,
   DSContentGrid,
   DSGridItem,
-  DSSpacer,
-  DSCard,
-  DSCardContent,
-  DSSectionHeader,
-  DSBodyText,
-  DSButton
+  DSSpacer
 } from '@/components/ui/design-system';
 
 // Import dashboard components - using redesigned versions
@@ -73,11 +68,11 @@ const Dashboard = () => {
   return (
     <AppLayout>
       <ErrorBoundary>
-        <DSSection className="space-y-2xl">
+        <DSSection>
           <DSPageContainer>
             <Breadcrumbs />
             
-            {/* Welcome Section - Full Width */}
+            {/* Welcome Section - Full Width with proper spacing */}
             <ErrorBoundary fallback={<ErrorState title="Welcome section unavailable" />}>
               <DashboardWelcomeSection teacher={teacher} />
             </ErrorBoundary>
@@ -94,7 +89,7 @@ const Dashboard = () => {
               </>
             )}
 
-            {/* Primary Metrics - Standardized Stats Cards */}
+            {/* Primary Metrics - Design System Compliant */}
             <ErrorBoundary fallback={<ErrorState title="Metrics unavailable" />}>
               <DashboardStatsRedesigned 
                 totalStudents={metrics.totalStudents}
@@ -109,7 +104,7 @@ const Dashboard = () => {
 
             <DSSpacer size="2xl" />
 
-            {/* Recent Activity - 2-Column: List + Insights */}
+            {/* Recent Activity - 2-Column with consistent spacing */}
             <DSContentGrid cols={2}>
               <DSGridItem span={1}>
                 <ErrorBoundary fallback={<ErrorState title="Activity feed unavailable" />}>
@@ -132,7 +127,7 @@ const Dashboard = () => {
 
             <DSSpacer size="2xl" />
 
-            {/* Secondary Widgets - 3-Column Grid */}
+            {/* Secondary Widgets - 3-Column Grid with consistent styling */}
             <ErrorBoundary fallback={<ErrorState title="Additional widgets unavailable" />}>
               <DashboardSecondaryWidgets 
                 assessments={assessments}
@@ -142,19 +137,6 @@ const Dashboard = () => {
             </ErrorBoundary>
 
             <DSSpacer size="3xl" />
-
-            {/* Customize Dashboard Option */}
-            <DSCard className="text-center">
-              <DSCardContent className="p-2xl">
-                <DSSectionHeader className="mb-lg">Customize Your Dashboard</DSSectionHeader>
-                <DSBodyText className="mb-xl max-w-2xl mx-auto text-gray-600">
-                  Add more widgets, rearrange sections, or adjust what information is displayed to match your teaching workflow.
-                </DSBodyText>
-                <DSButton variant="secondary" size="md">
-                  Customize Dashboard
-                </DSButton>
-              </DSCardContent>
-            </DSCard>
           </DSPageContainer>
         </DSSection>
       </ErrorBoundary>
