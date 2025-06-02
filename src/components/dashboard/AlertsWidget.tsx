@@ -1,10 +1,20 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { AlertCircle, TrendingDown, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  DSCard,
+  DSCardContent,
+  DSCardHeader,
+  DSCardTitle,
+  DSButton,
+  DSStatusBadge,
+  DSFlexContainer,
+  DSBodyText,
+  DSHelpText,
+  DSSpacer,
+  designSystem
+} from '@/components/ui/design-system';
 
 interface Alert {
   id: string;
@@ -32,57 +42,64 @@ const AlertsWidget: React.FC<AlertsWidgetProps> = ({ alerts }) => {
     }
   };
 
-  const getSeverityColor = (severity: string) => {
+  const getSeverityVariant = (severity: string): 'danger' | 'warning' | 'neutral' => {
     switch (severity) {
       case 'high':
-        return 'destructive';
+        return 'danger';
       case 'medium':
-        return 'secondary';
+        return 'warning';
       default:
-        return 'outline';
+        return 'neutral';
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <AlertCircle className="h-5 w-5 text-red-600" />
-          <span>Priority Alerts</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <DSCard>
+      <DSCardHeader>
+        <DSCardTitle>
+          <DSFlexContainer align="center" gap="sm">
+            <AlertCircle className={`h-5 w-5 ${designSystem.colors.danger.text}`} />
+            <span>Priority Alerts</span>
+          </DSFlexContainer>
+        </DSCardTitle>
+      </DSCardHeader>
+      <DSCardContent>
         <div className="space-y-4">
           {alerts.slice(0, 3).map((alert) => (
-            <div key={alert.id} className="border rounded-lg p-3">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  {getAlertIcon(alert.type)}
-                  <h4 className="font-medium text-sm">{alert.title}</h4>
-                </div>
-                <Badge variant={getSeverityColor(alert.severity) as any}>
-                  {alert.severity}
-                </Badge>
-              </div>
-              <p className="text-xs text-gray-600 mb-2">{alert.description}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">
-                  {alert.studentCount} student{alert.studentCount > 1 ? 's' : ''} affected
-                </span>
-                <Button size="sm" variant="outline" asChild>
-                  <Link to={alert.actionUrl}>Take Action</Link>
-                </Button>
-              </div>
-            </div>
+            <DSCard key={alert.id} className="border rounded-lg">
+              <DSCardContent className="p-3">
+                <DSFlexContainer justify="between" align="start" className="mb-2">
+                  <DSFlexContainer align="center" gap="sm">
+                    {getAlertIcon(alert.type)}
+                    <DSBodyText className="font-medium text-sm">{alert.title}</DSBodyText>
+                  </DSFlexContainer>
+                  <DSStatusBadge variant={getSeverityVariant(alert.severity)} size="sm">
+                    {alert.severity}
+                  </DSStatusBadge>
+                </DSFlexContainer>
+                <DSHelpText className="mb-2">{alert.description}</DSHelpText>
+                <DSFlexContainer justify="between" align="center">
+                  <DSHelpText>
+                    {alert.studentCount} student{alert.studentCount > 1 ? 's' : ''} affected
+                  </DSHelpText>
+                  <DSButton size="sm" variant="secondary" asChild>
+                    <Link to={alert.actionUrl}>Take Action</Link>
+                  </DSButton>
+                </DSFlexContainer>
+              </DSCardContent>
+            </DSCard>
           ))}
           {alerts.length > 3 && (
-            <Button variant="outline" className="w-full" asChild>
-              <Link to="/app/insights/recommendations">View All Alerts</Link>
-            </Button>
+            <>
+              <DSSpacer size="md" />
+              <DSButton variant="secondary" className="w-full" asChild>
+                <Link to="/app/insights/recommendations">View All Alerts</Link>
+              </DSButton>
+            </>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </DSCardContent>
+    </DSCard>
   );
 };
 

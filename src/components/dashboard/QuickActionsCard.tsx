@@ -1,9 +1,19 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Plus, FileText, Users, Lightbulb, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  DSCard,
+  DSCardContent,
+  DSCardHeader,
+  DSCardTitle,
+  DSButton,
+  DSContentGrid,
+  DSFlexContainer,
+  DSBodyText,
+  DSSpacer,
+  designSystem
+} from '@/components/ui/design-system';
 
 const QuickActionsCard: React.FC = () => {
   const quickActions = [
@@ -12,58 +22,74 @@ const QuickActionsCard: React.FC = () => {
       description: "Upload or enter new assessment data",
       href: "/app/assessments/add",
       icon: <FileText className="h-5 w-5" />,
-      color: "bg-blue-600 hover:bg-blue-700"
+      variant: 'info' as const
     },
     {
       title: "Add Student",
       description: "Register a new student to your class",
       href: "/app/students/add",
       icon: <Users className="h-5 w-5" />,
-      color: "bg-green-600 hover:bg-green-700"
+      variant: 'success' as const
     },
     {
       title: "View Insights",
       description: "See latest AI analysis and recommendations",
       href: "/app/insights/class",
       icon: <Lightbulb className="h-5 w-5" />,
-      color: "bg-purple-600 hover:bg-purple-700"
+      variant: 'warning' as const
     },
     {
       title: "Class Analytics",
       description: "Comprehensive class performance analysis",
       href: "/app/insights/class",
       icon: <BarChart3 className="h-5 w-5" />,
-      color: "bg-orange-600 hover:bg-orange-700"
+      variant: 'danger' as const
     }
   ];
 
+  const getVariantStyles = (variant: string) => {
+    switch (variant) {
+      case 'info':
+        return `${designSystem.colors.info.bg} ${designSystem.colors.info.hover}`;
+      case 'success':
+        return `${designSystem.colors.success.bg} ${designSystem.colors.success.hover}`;
+      case 'warning':
+        return `${designSystem.colors.warning.bg} ${designSystem.colors.warning.hover}`;
+      case 'danger':
+        return `${designSystem.colors.danger.bg} ${designSystem.colors.danger.hover}`;
+      default:
+        return `${designSystem.colors.primary.bg} ${designSystem.colors.primary.hover}`;
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Plus className="h-5 w-5" />
-          <span>Quick Actions</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-3">
+    <DSCard>
+      <DSCardHeader>
+        <DSCardTitle>
+          <DSFlexContainer align="center" gap="sm">
+            <Plus className="h-5 w-5" />
+            <span>Quick Actions</span>
+          </DSFlexContainer>
+        </DSCardTitle>
+      </DSCardHeader>
+      <DSCardContent>
+        <DSContentGrid cols={2}>
           {quickActions.map((action, index) => (
             <Link key={index} to={action.href}>
-              <Button 
-                className={`w-full h-auto p-3 ${action.color}`}
-                variant="default"
+              <DSButton 
+                className={`w-full h-auto p-3 ${getVariantStyles(action.variant)} text-white`}
                 size="sm"
               >
-                <div className="flex flex-col items-center space-y-1">
+                <DSFlexContainer direction="col" align="center" gap="xs">
                   {action.icon}
-                  <span className="text-xs font-medium">{action.title}</span>
-                </div>
-              </Button>
+                  <DSBodyText className="text-xs font-medium text-white">{action.title}</DSBodyText>
+                </DSFlexContainer>
+              </DSButton>
             </Link>
           ))}
-        </div>
-      </CardContent>
-    </Card>
+        </DSContentGrid>
+      </DSCardContent>
+    </DSCard>
   );
 };
 

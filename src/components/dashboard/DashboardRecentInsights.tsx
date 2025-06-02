@@ -11,7 +11,8 @@ import {
   DSBodyText,
   DSHelpText,
   DSButton,
-  DSSpacer
+  DSSpacer,
+  designSystem
 } from '@/components/ui/design-system';
 
 interface DashboardRecentInsightsProps {
@@ -23,11 +24,10 @@ const DashboardRecentInsights: React.FC<DashboardRecentInsightsProps> = ({
   students,
   communications
 }) => {
-  // Generate sample insights based on actual data
   const insights = [
     ...(students.length > 0 ? [{
       id: '1',
-      icon: <TrendingUp className="h-4 w-4 text-green-500" />,
+      icon: <TrendingUp className={`h-4 w-4 ${designSystem.colors.success.text}`} />,
       title: 'Math Performance Improving',
       description: `${Math.min(3, students.length)} students showing growth in problem-solving skills`,
       actionText: 'View Details',
@@ -35,7 +35,7 @@ const DashboardRecentInsights: React.FC<DashboardRecentInsightsProps> = ({
     }] : []),
     ...(students.length > 5 ? [{
       id: '2',
-      icon: <Users className="h-4 w-4 text-blue-500" />,
+      icon: <Users className={`h-4 w-4 ${designSystem.colors.info.text}`} />,
       title: 'Class Engagement High',
       description: 'Overall participation rates above 85% this week',
       actionText: 'See Analytics',
@@ -43,7 +43,7 @@ const DashboardRecentInsights: React.FC<DashboardRecentInsightsProps> = ({
     }] : []),
     {
       id: '3',
-      icon: <BookOpen className="h-4 w-4 text-purple-500" />,
+      icon: <BookOpen className={`h-4 w-4 ${designSystem.colors.warning.text}`} />,
       title: 'Reading Comprehension Focus',
       description: 'AI suggests targeted reading exercises for improved outcomes',
       actionText: 'View Recommendations',
@@ -66,19 +66,23 @@ const DashboardRecentInsights: React.FC<DashboardRecentInsightsProps> = ({
       <DSCardContent>
         {insights.length === 0 ? (
           <div className="text-center py-12">
-            <Lightbulb className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <DSBodyText className="text-gray-600 mb-4">
+            <Lightbulb className={`h-12 w-12 ${designSystem.colors.neutral.text} mx-auto mb-4`} />
+            <DSBodyText className={designSystem.colors.neutral.text + " mb-4"}>
               No insights available yet
             </DSBodyText>
-            <DSBodyText className="text-sm text-gray-500">
+            <DSHelpText>
               Insights will appear as you add assessments and track student progress
-            </DSBodyText>
+            </DSHelpText>
           </div>
         ) : (
           <div className="space-y-4">
             {insights.map((insight, index) => (
               <div key={insight.id}>
-                <DSFlexContainer align="start" gap="md" className="group hover:bg-gray-50 -mx-2 px-2 py-2 rounded-lg transition-colors cursor-pointer">
+                <DSFlexContainer 
+                  align="start" 
+                  gap="md" 
+                  className={`group ${designSystem.colors.neutral.light} -mx-2 px-2 py-2 rounded-lg ${designSystem.transitions.normal} cursor-pointer`}
+                >
                   <div className="mt-1">
                     {insight.icon}
                   </div>
@@ -91,7 +95,7 @@ const DashboardRecentInsights: React.FC<DashboardRecentInsightsProps> = ({
                     </DSHelpText>
                     <Link 
                       to={insight.actionUrl}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      className={`text-sm ${designSystem.colors.primary.text} hover:text-blue-800 font-medium`}
                     >
                       {insight.actionText}
                     </Link>

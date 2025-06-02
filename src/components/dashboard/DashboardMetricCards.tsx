@@ -8,7 +8,8 @@ import {
   DSCardContent,
   DSCardTitle,
   DSFlexContainer,
-  DSHelpText
+  DSHelpText,
+  designSystem
 } from '@/components/ui/design-system';
 
 interface DashboardMetricCardsProps {
@@ -27,7 +28,7 @@ const DashboardMetricCards: React.FC<DashboardMetricCardsProps> = ({ metrics }) 
     {
       title: 'Total Students',
       value: metrics.totalStudents.toString(),
-      icon: <Users className="h-5 w-5 text-blue-500" />,
+      icon: <Users className={`h-5 w-5 ${designSystem.colors.primary.text}`} />,
       trend: {
         value: '+2 this month',
         isPositive: true
@@ -36,7 +37,7 @@ const DashboardMetricCards: React.FC<DashboardMetricCardsProps> = ({ metrics }) 
     {
       title: 'Assessments',
       value: metrics.totalAssessments.toString(),
-      icon: <FileText className="h-5 w-5 text-green-500" />,
+      icon: <FileText className={`h-5 w-5 ${designSystem.colors.success.text}`} />,
       trend: {
         value: `${metrics.recentAssessments} this week`,
         isPositive: metrics.recentAssessments > 0
@@ -45,7 +46,7 @@ const DashboardMetricCards: React.FC<DashboardMetricCardsProps> = ({ metrics }) 
     {
       title: 'AI Insights',
       value: metrics.aiInsights.toString(),
-      icon: <Lightbulb className="h-5 w-5 text-purple-500" />,
+      icon: <Lightbulb className={`h-5 w-5 ${designSystem.colors.warning.text}`} />,
       trend: {
         value: 'Up to date',
         isPositive: true
@@ -71,12 +72,12 @@ const DashboardMetricCards: React.FC<DashboardMetricCardsProps> = ({ metrics }) 
             </div>
             <DSFlexContainer align="center" gap="xs">
               {card.trend.isPositive ? (
-                <TrendingUp className="h-4 w-4 text-green-500" />
+                <TrendingUp className={`h-4 w-4 ${designSystem.colors.success.text}`} />
               ) : (
-                <TrendingDown className="h-4 w-4 text-red-500" />
+                <TrendingDown className={`h-4 w-4 ${designSystem.colors.danger.text}`} />
               )}
               <DSHelpText className={`${
-                card.trend.isPositive ? 'text-green-600' : 'text-red-600'
+                card.trend.isPositive ? designSystem.colors.success.text : designSystem.colors.danger.text
               }`}>
                 {card.trend.value}
               </DSHelpText>
