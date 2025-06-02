@@ -36,6 +36,33 @@ const StudentProfile: React.FC = () => {
     enabled: !!id,
   });
 
+  // Mock data for required props - in a real app, these would come from actual queries
+  const performanceData = {
+    averageScore: student?.performance && !Array.isArray(student.performance) ? student.performance.average_score || 0 : 0,
+    assessmentsCompleted: student?.performance && !Array.isArray(student.performance) ? student.performance.assessment_count || 0 : 0,
+    needsAttention: student?.performance && !Array.isArray(student.performance) ? student.performance.needs_attention || false : false,
+  };
+
+  const handleEditClick = () => {
+    // Navigate to edit student page
+    navigate(`/app/students/${id}/edit`);
+  };
+
+  const handleDelete = () => {
+    // Handle student deletion
+    console.log('Delete student:', id);
+  };
+
+  const handleViewAssessments = () => {
+    // Navigate to student assessments
+    navigate(`/app/students/${id}/assessments`);
+  };
+
+  const handleRefreshInsights = () => {
+    // Refresh insights data
+    console.log('Refresh insights for student:', id);
+  };
+
   if (isLoading) {
     return (
       <AppLayout>
@@ -120,7 +147,19 @@ const StudentProfile: React.FC = () => {
           <DSSpacer size="lg" />
 
           {/* Student Profile Tabs */}
-          <StudentProfileTabs student={student} />
+          <StudentProfileTabs 
+            student={student}
+            studentId={id || ''}
+            performanceData={performanceData}
+            studentAssessmentsData={{ assessments: [], insights: [] }}
+            assessmentsLoading={false}
+            studentGoals={[]}
+            goalsLoading={false}
+            onEditClick={handleEditClick}
+            onDelete={handleDelete}
+            onViewAssessments={handleViewAssessments}
+            onRefreshInsights={handleRefreshInsights}
+          />
         </DSPageContainer>
       </DSSection>
     </AppLayout>

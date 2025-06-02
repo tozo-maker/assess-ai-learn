@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Plus, Upload, Grid, List } from 'lucide-react';
 
 // Layout Components
@@ -22,10 +23,17 @@ import {
 } from '@/components/ui/design-system';
 
 import EnhancedStudentList from '@/components/students/EnhancedStudentList';
+import { studentService } from '@/services/student-service';
 
 const Students: React.FC = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+
+  const { data: students = [], isLoading } = useQuery({
+    queryKey: ['students'],
+    queryFn: studentService.getStudents,
+  });
 
   const handleAddStudent = () => {
     navigate('/app/students/add');
@@ -33,6 +41,26 @@ const Students: React.FC = () => {
 
   const handleBulkImport = () => {
     navigate('/app/students/import');
+  };
+
+  const handleSelectStudent = (studentId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedStudents(prev => [...prev, studentId]);
+    } else {
+      setSelectedStudents(prev => prev.filter(id => id !== studentId));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedStudents(students.map(student => student.id));
+    } else {
+      setSelectedStudents([]);
+    }
+  };
+
+  const handleStudentClick = (studentId: string) => {
+    navigate(`/app/students/${studentId}`);
   };
 
   return (
@@ -118,7 +146,14 @@ const Students: React.FC = () => {
           <DSSpacer size="lg" />
 
           {/* Student List */}
-          <EnhancedStudentList viewMode={viewMode} />
+          <EnhancedStudentList 
+            students={students}
+            selectedStudents={selectedStudents}
+            onSelectStudent={handleSelectStudent}
+            onSelectAll={handleSelectAll}
+            onStudentClick={handleStudentClick}
+            isLoading={isLoading}
+          />
         </DSPageContainer>
       </DSSection>
     </AppLayout>
