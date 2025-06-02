@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Upload, Grid, List } from 'lucide-react';
+import { Plus, Upload, Grid, List, Trash2, Download, Mail } from 'lucide-react';
 
 // Layout Components
 import AppLayout from '@/components/layout/AppLayout';
@@ -23,6 +23,9 @@ import {
 } from '@/components/ui/design-system';
 
 import EnhancedStudentList from '@/components/students/EnhancedStudentList';
+import BulkOperationsToolbar from '@/components/workflow/BulkOperationsToolbar';
+import StandardizedEmptyState from '@/components/common/StandardizedEmptyState';
+import ContextualHelpTooltip from '@/components/help/ContextualHelpTooltip';
 import { studentService } from '@/services/student-service';
 
 const Students: React.FC = () => {
@@ -63,6 +66,42 @@ const Students: React.FC = () => {
     navigate(`/app/students/${studentId}`);
   };
 
+  // Bulk operations
+  const bulkActions = [
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: <Trash2 className="h-4 w-4" />,
+      action: (ids: string[]) => {
+        console.log('Delete students:', ids);
+        // TODO: Implement delete functionality
+        setSelectedStudents([]);
+      },
+      variant: 'destructive' as const,
+      requiresConfirmation: true
+    },
+    {
+      id: 'export',
+      label: 'Export',
+      icon: <Download className="h-4 w-4" />,
+      action: (ids: string[]) => {
+        console.log('Export students:', ids);
+        // TODO: Implement export functionality
+      },
+      variant: 'default' as const
+    },
+    {
+      id: 'email',
+      label: 'Send Email',
+      icon: <Mail className="h-4 w-4" />,
+      action: (ids: string[]) => {
+        console.log('Email students:', ids);
+        // TODO: Implement email functionality
+      },
+      variant: 'default' as const
+    }
+  ];
+
   return (
     <AppLayout>
       <DSSection>
@@ -74,9 +113,24 @@ const Students: React.FC = () => {
             <DSCardHeader className="p-6">
               <DSFlexContainer justify="between" align="center" className="flex-col md:flex-row gap-4">
                 <div>
-                  <DSPageTitle className="text-3xl font-bold text-gray-900 mb-2">
-                    Students
-                  </DSPageTitle>
+                  <DSFlexContainer align="center" gap="sm" className="mb-2">
+                    <DSPageTitle className="text-3xl font-bold text-gray-900">
+                      Students
+                    </DSPageTitle>
+                    <ContextualHelpTooltip
+                      title="Student Management"
+                      content="Manage your students, track their progress, and organize their learning profiles."
+                      steps={[
+                        "Add individual students or import from CSV",
+                        "View student profiles and performance data",
+                        "Use bulk operations for efficient management"
+                      ]}
+                      link={{
+                        text: "Learn more about student management",
+                        url: "/help/students"
+                      }}
+                    />
+                  </DSFlexContainer>
                   <DSBodyText className="text-gray-600">
                     Manage your students and track their learning progress
                   </DSBodyText>
@@ -100,6 +154,17 @@ const Students: React.FC = () => {
               </DSFlexContainer>
             </DSCardHeader>
           </DSCard>
+
+          {/* Bulk Operations Toolbar */}
+          <BulkOperationsToolbar
+            selectedCount={selectedStudents.length}
+            totalCount={students.length}
+            onSelectAll={handleSelectAll}
+            onClearSelection={() => setSelectedStudents([])}
+            actions={bulkActions}
+            selectedIds={selectedStudents}
+            className="mb-6"
+          />
 
           {/* Filter Bar with View Toggle - Design System Card */}
           <DSCard className="mb-6">
@@ -144,15 +209,42 @@ const Students: React.FC = () => {
 
           <DSSpacer size="lg" />
 
-          {/* Student List */}
-          <EnhancedStudentList 
-            students={students}
-            selectedStudents={selectedStudents}
-            onSelectStudent={handleSelectStudent}
-            onSelectAll={handleSelectAll}
-            onStudentClick={handleStudentClick}
-            isLoading={isLoading}
-          />
+          {/* Student List or Empty State */}
+          {students.length === 0 && !isLoading ? (
+            <StandardizedEmptyState
+              icon={<Users className="h-12 w-12" />}
+              title="No Students Yet"
+              description="Start building your class by adding students. You can add them individually or import from a CSV file."
+              actions={[
+                {
+                  label: 'Add First Student',
+                  action: handleAddStudent,
+                  variant: 'primary',
+                  icon: <Plus className="h-4 w-4" />
+                },
+                {
+                  label: 'Import from CSV',
+                  action: handleBulkImport,
+                  variant: 'secondary',
+                  icon: <Upload className="h-4 w-4" />
+                }
+              ]}
+              suggestions={[
+                'Add student basic information and learning preferences',
+                'Import class rosters from your school system',
+                'Set up learning goals and track progress over time'
+              ]}
+            />
+          ) : (
+            <EnhancedStudentList 
+              students={students}
+              selectedStudents={selectedStudents}
+              onSelectStudent={handleSelectStudent}
+              onSelectAll={handleSelectAll}
+              onStudentClick={handleStudentClick}
+              isLoading={isLoading}
+            />
+          )}
         </DSPageContainer>
       </DSSection>
     </AppLayout>
