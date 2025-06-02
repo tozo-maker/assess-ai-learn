@@ -1,7 +1,11 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { 
+  DSButton,
+  DSFlexContainer,
+  designSystem
+} from '@/components/ui/design-system';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -16,9 +20,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import NotificationWidget from '@/components/notifications/NotificationWidget';
 import GlobalSearch from '@/components/navigation/GlobalSearch';
 import MobileNavigation from '@/components/layout/MobileNavigation';
-import { semanticColors } from '@/components/ui/design-system-colors';
-import { transitionClasses } from '@/components/ui/transitions';
-import { spacingSystem } from '@/components/ui/design-system-enhanced';
 
 const Header = () => {
   const { user, profile, signOut } = useAuth();
@@ -45,7 +46,7 @@ const Header = () => {
       {/* Mobile Navigation Component */}
       <MobileNavigation />
       
-      {/* Desktop Header - Design System Colors and Spacing */}
+      {/* Desktop Header - Design System Compliant */}
       <header className="hidden md:block sticky top-0 z-50 w-full border-b border-gray-200 bg-white">
         <div className="flex h-16 items-center justify-between px-8 ml-64">
           {/* Global Search */}
@@ -54,21 +55,24 @@ const Header = () => {
           </div>
 
           {/* Right side - Notifications and User menu */}
-          <div className={`flex items-center gap-${spacingSystem.md}`}>
+          <DSFlexContainer gap="md">
             {/* Notification Widget */}
             <NotificationWidget />
 
             {/* User menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className={`relative h-8 w-8 rounded-full ${transitionClasses.hover}`}>
+                <DSButton 
+                  variant="ghost" 
+                  className={`relative h-8 w-8 rounded-full transition-all ${designSystem.transitions.normal}`}
+                >
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || 'User'} />
-                    <AvatarFallback className={`${semanticColors.primary.bg} text-white`}>
+                    <AvatarFallback className={`${designSystem.colors.primary.bg} text-white`}>
                       {profile?.full_name ? getInitials(profile.full_name) : <User className="h-4 w-4" />}
                     </AvatarFallback>
                   </Avatar>
-                </Button>
+                </DSButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 bg-white border border-gray-200 shadow-lg" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
@@ -88,25 +92,34 @@ const Header = () => {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/app/settings/profile" className={`cursor-pointer ${transitionClasses.hover}`}>
+                  <Link 
+                    to="/app/settings/profile" 
+                    className={`cursor-pointer transition-colors ${designSystem.transitions.normal}`}
+                  >
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile Settings</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/app/settings/notifications" className={`cursor-pointer ${transitionClasses.hover}`}>
+                  <Link 
+                    to="/app/settings/notifications" 
+                    className={`cursor-pointer transition-colors ${designSystem.transitions.normal}`}
+                  >
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Preferences</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className={`cursor-pointer ${transitionClasses.hover} ${semanticColors.danger.text}`}>
+                <DropdownMenuItem 
+                  onClick={handleSignOut} 
+                  className={`cursor-pointer transition-colors ${designSystem.transitions.normal} ${designSystem.colors.danger.text}`}
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sign Out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </DSFlexContainer>
         </div>
       </header>
     </>

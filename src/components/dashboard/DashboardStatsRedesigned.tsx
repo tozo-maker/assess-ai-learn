@@ -4,11 +4,11 @@ import { Users, FileText, Lightbulb, TrendingUp } from 'lucide-react';
 import { 
   DSCard,
   DSCardContent,
-  DSContentGrid
+  DSContentGrid,
+  DSBodyText,
+  DSHelpText,
+  designSystem
 } from '@/components/ui/design-system';
-import { MetricDisplay, StatusBadge } from '@/components/ui/design-system-enhanced';
-import { transitionClasses } from '@/components/ui/transitions';
-import { semanticColors } from '@/components/ui/design-system-colors';
 
 interface StatsData {
   title: string;
@@ -70,24 +70,65 @@ const DashboardStatsRedesigned: React.FC<DashboardStatsRedesignedProps> = ({
     }
   ];
 
+  const getVariantStyles = (variant: string) => {
+    switch (variant) {
+      case 'primary':
+        return {
+          iconColor: designSystem.colors.primary.text,
+          valueColor: designSystem.colors.primary.text
+        };
+      case 'success':
+        return {
+          iconColor: designSystem.colors.success.text,
+          valueColor: designSystem.colors.success.text
+        };
+      case 'warning':
+        return {
+          iconColor: designSystem.colors.warning.text,
+          valueColor: designSystem.colors.warning.text
+        };
+      case 'danger':
+        return {
+          iconColor: designSystem.colors.danger.text,
+          valueColor: designSystem.colors.danger.text
+        };
+      default:
+        return {
+          iconColor: designSystem.colors.neutral.text,
+          valueColor: designSystem.colors.neutral.text
+        };
+    }
+  };
+
   return (
     <DSContentGrid cols={4} className="gap-6">
-      {stats.map((stat, index) => (
-        <DSCard key={index} className={transitionClasses.hover}>
-          <DSCardContent className="p-6">
-            <MetricDisplay
-              label={stat.title}
-              value={stat.value}
-              icon={stat.icon}
-              variant={stat.variant}
-              trend={{
-                value: stat.trend,
-                direction: stat.trend.includes('+') ? 'up' : 'neutral'
-              }}
-            />
-          </DSCardContent>
-        </DSCard>
-      ))}
+      {stats.map((stat, index) => {
+        const styles = getVariantStyles(stat.variant);
+        return (
+          <DSCard key={index} className={`transition-all ${designSystem.transitions.normal} hover:shadow-md`}>
+            <DSCardContent className="p-6">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <DSBodyText className="text-sm font-medium text-gray-600">
+                    {stat.title}
+                  </DSBodyText>
+                  <div className={styles.iconColor}>
+                    {stat.icon}
+                  </div>
+                </div>
+                <div className={`text-3xl font-bold ${styles.valueColor}`}>
+                  {stat.value}
+                </div>
+                <DSHelpText className={`${
+                  stat.trend.includes('+') ? designSystem.colors.success.text : 'text-gray-500'
+                }`}>
+                  {stat.trend}
+                </DSHelpText>
+              </div>
+            </DSCardContent>
+          </DSCard>
+        );
+      })}
     </DSContentGrid>
   );
 };
