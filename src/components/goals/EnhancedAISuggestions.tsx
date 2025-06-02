@@ -28,7 +28,7 @@ const EnhancedAISuggestions: React.FC<EnhancedAISuggestionsProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Enhanced AI suggestions with context
-  const { data: rawSuggestions = [], isLoading, refetch } = useQuery({
+  const { data: rawSuggestions, isLoading, refetch } = useQuery({
     queryKey: ['enhanced-goal-suggestions', studentId],
     queryFn: () => optimizedAIService.generateContextAwareGoals(studentId),
     enabled: !!studentId,
@@ -56,7 +56,12 @@ const EnhancedAISuggestions: React.FC<EnhancedAISuggestionsProps> = ({
   });
 
   // Transform raw suggestions into enhanced suggestions
-  const enhancedSuggestions: AISuggestion[] = rawSuggestions.map((suggestion: string, index: number) => ({
+  // Handle both array response and object response with suggestions property
+  const suggestionsList = Array.isArray(rawSuggestions) 
+    ? rawSuggestions 
+    : rawSuggestions?.suggestions || [];
+
+  const enhancedSuggestions: AISuggestion[] = suggestionsList.map((suggestion: string, index: number) => ({
     id: `suggestion-${index}`,
     title: suggestion,
     description: `AI-generated learning objective based on comprehensive performance analysis`,
