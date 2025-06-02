@@ -251,6 +251,21 @@ export const DSCardTitle = React.forwardRef<
 ))
 DSCardTitle.displayName = "DSCardTitle"
 
+export const DSCardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn(
+      "text-sm text-gray-600 leading-5 mt-2",
+      className
+    )}
+    {...props}
+  />
+))
+DSCardDescription.displayName = "DSCardDescription"
+
 export const DSCardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -289,8 +304,8 @@ DSPageContainer.displayName = "DSPageContainer"
 
 export const DSSection = React.forwardRef<
   HTMLElement,
-  React.HTMLAttributes<HTMLElement>
->(({ className, ...props }, ref) => (
+  React.HTMLAttributes<HTMLElement> & { fullWidth?: boolean }
+>(({ className, fullWidth, ...props }, ref) => (
   <section
     ref={ref}
     className={cn("py-12 md:py-16 lg:py-20", className)}
@@ -465,6 +480,35 @@ export const DSInput = React.forwardRef<
 })
 DSInput.displayName = "DSInput"
 
+export const DSTextarea = React.forwardRef<
+  HTMLTextAreaElement,
+  React.TextareaHTMLAttributes<HTMLTextAreaElement> & { error?: boolean; helpText?: string }
+>(({ className, error, helpText, ...props }, ref) => {
+  return (
+    <div className="space-y-1">
+      <textarea
+        className={cn(
+          "flex min-h-[80px] w-full rounded-md border px-3 py-2 text-base transition-colors",
+          "placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          error
+            ? `${designSystem.colors.danger.border} ${designSystem.colors.danger.text} focus-visible:${designSystem.colors.danger.ring}`
+            : `border-gray-300 focus-visible:${designSystem.colors.primary.border} focus-visible:${designSystem.colors.primary.ring}`,
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+      {helpText && (
+        <DSHelpText className={error ? designSystem.colors.danger.text : ""}>
+          {helpText}
+        </DSHelpText>
+      )}
+    </div>
+  )
+})
+DSTextarea.displayName = "DSTextarea"
+
 export const DSLabel = React.forwardRef<
   HTMLLabelElement,
   React.LabelHTMLAttributes<HTMLLabelElement> & { required?: boolean }
@@ -482,6 +526,20 @@ export const DSLabel = React.forwardRef<
   </label>
 ))
 DSLabel.displayName = "DSLabel"
+
+export const DSFormField: React.FC<{
+  label: string
+  required?: boolean
+  children: React.ReactNode
+  className?: string
+}> = ({ label, required, children, className }) => {
+  return (
+    <div className={cn("space-y-2", className)}>
+      <DSLabel required={required}>{label}</DSLabel>
+      {children}
+    </div>
+  )
+}
 
 // Status Badge Component
 interface DSStatusBadgeProps {
