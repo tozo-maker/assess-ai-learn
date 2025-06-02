@@ -7,9 +7,11 @@ import {
   DSCard,
   DSCardContent,
   DSFlexContainer,
-  DSSpacer
+  DSSpacer,
+  DSSubsectionHeader
 } from '@/components/ui/design-system';
 import { Student } from '@/types/student';
+import { transitionClasses } from '@/components/ui/transitions';
 
 interface StudentSelectionCardProps {
   students: Student[];
@@ -28,22 +30,23 @@ const StudentSelectionCard: React.FC<StudentSelectionCardProps> = ({
 }) => {
   return (
     <div>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Select Students</h3>
+      <DSSubsectionHeader className="mb-md">Select Students</DSSubsectionHeader>
       <DSCard>
-        <DSCardContent className="p-4">
-          <div className="max-h-60 overflow-y-auto space-y-3">
+        <DSCardContent className="p-md">
+          <div className="max-h-60 overflow-y-auto space-y-md">
             {students?.map(student => (
-              <DSFlexContainer key={student.id} align="center" gap="sm" className="py-2">
+              <DSFlexContainer key={student.id} align="center" gap="sm" className={`py-sm ${transitionClasses.hover} rounded-md px-sm`}>
                 <Checkbox
                   id={student.id}
                   checked={selectedStudents.includes(student.id)}
                   onCheckedChange={(checked) => 
                     onStudentSelection(student.id, checked as boolean)
                   }
+                  className="transition-colors duration-200"
                 />
                 <label 
                   htmlFor={student.id}
-                  className="flex-1 cursor-pointer text-base text-gray-700"
+                  className="flex-1 cursor-pointer text-base text-gray-700 transition-colors duration-200"
                 >
                   {student.first_name} {student.last_name} ({student.grade_level})
                 </label>
@@ -58,6 +61,7 @@ const StudentSelectionCard: React.FC<StudentSelectionCardProps> = ({
               variant="secondary" 
               size="sm"
               onClick={onSelectAll}
+              className="transition-colors duration-200"
             >
               Select All
             </DSButton>
@@ -65,6 +69,7 @@ const StudentSelectionCard: React.FC<StudentSelectionCardProps> = ({
               variant="secondary" 
               size="sm"
               onClick={onClearSelection}
+              className="transition-colors duration-200"
             >
               Clear Selection
             </DSButton>

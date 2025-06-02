@@ -73,7 +73,7 @@ const Dashboard = () => {
   return (
     <AppLayout>
       <ErrorBoundary>
-        <DSSection>
+        <DSSection className="space-y-2xl">
           <DSPageContainer>
             <Breadcrumbs />
             
@@ -145,9 +145,9 @@ const Dashboard = () => {
 
             {/* Customize Dashboard Option */}
             <DSCard className="text-center">
-              <DSCardContent className="py-8">
-                <DSSectionHeader className="mb-4">Customize Your Dashboard</DSSectionHeader>
-                <DSBodyText className="mb-6 max-w-2xl mx-auto text-gray-600">
+              <DSCardContent className="p-2xl">
+                <DSSectionHeader className="mb-lg">Customize Your Dashboard</DSSectionHeader>
+                <DSBodyText className="mb-xl max-w-2xl mx-auto text-gray-600">
                   Add more widgets, rearrange sections, or adjust what information is displayed to match your teaching workflow.
                 </DSBodyText>
                 <DSButton variant="secondary" size="md">

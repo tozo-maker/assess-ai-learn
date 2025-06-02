@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -14,6 +12,16 @@ import {
   Clock
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  DSCard,
+  DSCardContent,
+  DSCardHeader,
+  DSCardTitle,
+  DSButton,
+  DSFlexContainer,
+  DSBodyText,
+  DSSpacer
+} from '@/components/ui/design-system';
 
 interface AnalyticsData {
   totalStudents: number;
@@ -33,130 +41,130 @@ interface AnalyticsDashboardProps {
 
 const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ data, className = "" }) => {
   const getPerformanceColor = (score: number) => {
-    if (score >= 85) return 'text-green-600';
-    if (score >= 70) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 85) return 'text-[#10b981]';
+    if (score >= 70) return 'text-[#f59e0b]';
+    return 'text-[#ef4444]';
   };
 
   const getPerformanceBadge = (score: number) => {
-    if (score >= 85) return { color: 'bg-green-100 text-green-800', label: 'Excellent' };
-    if (score >= 70) return { color: 'bg-yellow-100 text-yellow-800', label: 'Good' };
-    return { color: 'bg-red-100 text-red-800', label: 'Needs Attention' };
+    if (score >= 85) return { color: 'bg-[#d1fae5] text-[#10b981]', label: 'Excellent' };
+    if (score >= 70) return { color: 'bg-[#fef3c7] text-[#f59e0b]', label: 'Good' };
+    return { color: 'bg-[#fee2e2] text-[#ef4444]', label: 'Needs Attention' };
   };
 
   const performanceBadge = getPerformanceBadge(data.averagePerformance);
 
   return (
-    <Card className={`${className}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            Class Analytics Overview
-          </span>
-          <Badge className={performanceBadge.color}>
-            {performanceBadge.label}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          {/* Key Metrics Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <Users className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-blue-700">{data.totalStudents}</div>
-              <div className="text-xs text-blue-600">Total Students</div>
-            </div>
-            
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <BookOpen className="h-6 w-6 text-green-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-green-700">{data.totalAssessments}</div>
-              <div className="text-xs text-green-600">Assessments</div>
-            </div>
-            
-            <div className="text-center p-3 bg-purple-50 rounded-lg">
-              <Target className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-              <div className={`text-2xl font-bold ${getPerformanceColor(data.averagePerformance)}`}>
-                {data.averagePerformance}%
-              </div>
-              <div className="text-xs text-purple-600">Avg Performance</div>
-            </div>
-            
-            <div className="text-center p-3 bg-orange-50 rounded-lg">
-              <Clock className="h-6 w-6 text-orange-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-orange-700">{data.completionRate}%</div>
-              <div className="text-xs text-orange-600">Completion Rate</div>
-            </div>
+    <DSCard className={className}>
+      <DSCardHeader>
+        <DSCardTitle>
+          <DSFlexContainer justify="between" align="center">
+            <DSFlexContainer align="center" gap="sm">
+              <TrendingUp className="h-5 w-5 text-[#2563eb]" />
+              <span>Class Analytics Overview</span>
+            </DSFlexContainer>
+            <Badge className={performanceBadge.color}>
+              {performanceBadge.label}
+            </Badge>
+          </DSFlexContainer>
+        </DSCardTitle>
+      </DSCardHeader>
+      <DSCardContent className="space-y-xl">
+        {/* Key Metrics Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-md">
+          <div className="text-center p-md bg-[#dbeafe] rounded-lg">
+            <Users className="h-6 w-6 text-[#2563eb] mx-auto mb-sm" />
+            <div className="text-2xl font-bold text-[#2563eb]">{data.totalStudents}</div>
+            <div className="text-xs text-[#2563eb]">Total Students</div>
           </div>
-
-          {/* Performance Insights */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-gray-900">Students at Risk</h4>
-                <AlertTriangle className="h-4 w-4 text-red-600" />
-              </div>
-              <div className="text-2xl font-bold text-red-600 mb-1">{data.studentsAtRisk}</div>
-              <p className="text-sm text-gray-600">Need immediate attention</p>
-              <Link to="/app/students">
-                <Button variant="outline" size="sm" className="mt-2 w-full">
-                  View Details
-                </Button>
-              </Link>
-            </div>
-
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-gray-900">High Performers</h4>
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              </div>
-              <div className="text-2xl font-bold text-green-600 mb-1">{data.studentsExcelling}</div>
-              <p className="text-sm text-gray-600">Exceeding expectations</p>
-              <Link to="/app/insights/class">
-                <Button variant="outline" size="sm" className="mt-2 w-full">
-                  View Insights
-                </Button>
-              </Link>
-            </div>
+          
+          <div className="text-center p-md bg-[#d1fae5] rounded-lg">
+            <BookOpen className="h-6 w-6 text-[#10b981] mx-auto mb-sm" />
+            <div className="text-2xl font-bold text-[#10b981]">{data.totalAssessments}</div>
+            <div className="text-xs text-[#10b981]">Assessments</div>
           </div>
-
-          {/* Growth Indicator */}
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-medium text-gray-900">Recent Growth</h4>
-                <p className="text-sm text-gray-600">Compared to last month</p>
-              </div>
-              <div className="flex items-center gap-2">
-                {data.recentGrowth > 0 ? (
-                  <TrendingUp className="h-5 w-5 text-green-600" />
-                ) : (
-                  <TrendingDown className="h-5 w-5 text-red-600" />
-                )}
-                <span className={`text-lg font-bold ${data.recentGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {data.recentGrowth > 0 ? '+' : ''}{data.recentGrowth}%
-                </span>
-              </div>
+          
+          <div className="text-center p-md bg-[#f3e8ff] rounded-lg">
+            <Target className="h-6 w-6 text-[#7c3aed] mx-auto mb-sm" />
+            <div className={`text-2xl font-bold ${getPerformanceColor(data.averagePerformance)}`}>
+              {data.averagePerformance}%
             </div>
+            <div className="text-xs text-[#7c3aed]">Avg Performance</div>
           </div>
+          
+          <div className="text-center p-md bg-[#fed7aa] rounded-lg">
+            <Clock className="h-6 w-6 text-[#ea580c] mx-auto mb-sm" />
+            <div className="text-2xl font-bold text-[#ea580c]">{data.completionRate}%</div>
+            <div className="text-xs text-[#ea580c]">Completion Rate</div>
+          </div>
+        </div>
 
-          {/* Quick Actions */}
-          <div className="flex gap-2">
-            <Link to="/app/assessments/add" className="flex-1">
-              <Button variant="outline" size="sm" className="w-full">
-                Create Assessment
-              </Button>
+        {/* Performance Insights */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+          <div className="p-md border border-gray-200 rounded-lg">
+            <DSFlexContainer justify="between" align="center" className="mb-sm">
+              <h4 className="font-medium text-gray-900">Students at Risk</h4>
+              <AlertTriangle className="h-4 w-4 text-[#ef4444]" />
+            </DSFlexContainer>
+            <div className="text-2xl font-bold text-[#ef4444] mb-xs">{data.studentsAtRisk}</div>
+            <DSBodyText className="text-gray-600 mb-sm">Need immediate attention</DSBodyText>
+            <Link to="/app/students">
+              <DSButton variant="secondary" size="sm" className="w-full">
+                View Details
+              </DSButton>
             </Link>
-            <Link to="/app/insights/class" className="flex-1">
-              <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
-                View All Insights
-              </Button>
+          </div>
+
+          <div className="p-md border border-gray-200 rounded-lg">
+            <DSFlexContainer justify="between" align="center" className="mb-sm">
+              <h4 className="font-medium text-gray-900">High Performers</h4>
+              <CheckCircle className="h-4 w-4 text-[#10b981]" />
+            </DSFlexContainer>
+            <div className="text-2xl font-bold text-[#10b981] mb-xs">{data.studentsExcelling}</div>
+            <DSBodyText className="text-gray-600 mb-sm">Exceeding expectations</DSBodyText>
+            <Link to="/app/insights/class">
+              <DSButton variant="secondary" size="sm" className="w-full">
+                View Insights
+              </DSButton>
             </Link>
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Growth Indicator */}
+        <div className="p-md bg-gradient-to-r from-[#dbeafe] to-[#f3e8ff] rounded-lg">
+          <DSFlexContainer justify="between" align="center">
+            <div>
+              <h4 className="font-medium text-gray-900">Recent Growth</h4>
+              <DSBodyText className="text-gray-600">Compared to last month</DSBodyText>
+            </div>
+            <DSFlexContainer align="center" gap="sm">
+              {data.recentGrowth > 0 ? (
+                <TrendingUp className="h-5 w-5 text-[#10b981]" />
+              ) : (
+                <TrendingDown className="h-5 w-5 text-[#ef4444]" />
+              )}
+              <span className={`text-lg font-bold ${data.recentGrowth > 0 ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
+                {data.recentGrowth > 0 ? '+' : ''}{data.recentGrowth}%
+              </span>
+            </DSFlexContainer>
+          </DSFlexContainer>
+        </div>
+
+        {/* Quick Actions */}
+        <DSFlexContainer gap="sm">
+          <Link to="/app/assessments/add" className="flex-1">
+            <DSButton variant="secondary" size="sm" className="w-full">
+              Create Assessment
+            </DSButton>
+          </Link>
+          <Link to="/app/insights/class" className="flex-1">
+            <DSButton size="sm" className="w-full">
+              View All Insights
+            </DSButton>
+          </Link>
+        </DSFlexContainer>
+      </DSCardContent>
+    </DSCard>
   );
 };
 
