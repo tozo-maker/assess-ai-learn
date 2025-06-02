@@ -1,10 +1,15 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ButtonRedesigned } from '@/components/ui/button-redesigned';
+import { Badge } from '@/components/ui/badge';
 import { FileText, Download, Eye, Settings } from 'lucide-react';
+import {
+  DSCard,
+  DSCardContent,
+  DSFlexContainer,
+  DSBodyText
+} from '@/components/ui/design-system';
 import { StudentWithPerformance } from '@/types/student';
 import PDFCustomizationDialog from './PDFCustomizationDialog';
 import { PDFGenerationOptions } from '@/services/pdf-service';
@@ -54,79 +59,79 @@ const StudentReportCard: React.FC<StudentReportCardProps> = ({
 
   return (
     <>
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+      <DSCard>
+        <DSCardContent className="p-6">
+          <DSFlexContainer justify="between" align="center">
+            <DSFlexContainer align="center" gap="md">
               <Checkbox
                 checked={isSelected}
                 onCheckedChange={(checked) => onSelect(student.id, checked as boolean)}
               />
               
               <div className="flex-1">
-                <h3 className="font-medium">
+                <h3 className="text-lg font-medium text-gray-900">
                   {student.first_name} {student.last_name}
                 </h3>
-                <p className="text-sm text-gray-600">
+                <DSBodyText className="text-gray-600">
                   Grade {student.grade_level}
-                </p>
+                </DSBodyText>
               </div>
-            </div>
+            </DSFlexContainer>
 
-            <div className="flex items-center space-x-3">
+            <DSFlexContainer align="center" gap="md">
               <div className="text-right">
                 <Badge variant={getPerformanceBadgeVariant()}>
                   {getPerformanceText()}
                 </Badge>
                 {performance && (
-                  <p className="text-sm text-gray-600 mt-1">
+                  <DSBodyText className="text-gray-600 mt-1">
                     {performance.assessment_count || 0} assessments
-                  </p>
+                  </DSBodyText>
                 )}
               </div>
 
-              <div className="flex space-x-2">
-                <Button
+              <DSFlexContainer gap="sm">
+                <ButtonRedesigned
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => onGenerateReport(student.id)}
                   disabled={isGeneratingReport}
                 >
                   <Eye className="h-4 w-4 mr-1" />
                   {isGeneratingReport ? 'Loading...' : 'Preview'}
-                </Button>
+                </ButtonRedesigned>
                 
-                <Button
+                <ButtonRedesigned
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => onGeneratePDF(student.id)}
                   disabled={isGeneratingPDF}
                 >
                   <Download className="h-4 w-4 mr-1" />
                   {isGeneratingPDF ? 'Generating...' : 'Quick PDF'}
-                </Button>
+                </ButtonRedesigned>
                 
-                <Button
+                <ButtonRedesigned
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => setShowPDFDialog(true)}
                   disabled={isGeneratingPDF}
                 >
                   <Settings className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
+                </ButtonRedesigned>
+              </DSFlexContainer>
+            </DSFlexContainer>
+          </DSFlexContainer>
 
           {performance?.needs_attention && (
-            <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-700">
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <DSBodyText className="text-red-700">
                 ⚠️ This student may need additional support
-              </p>
+              </DSBodyText>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </DSCardContent>
+      </DSCard>
 
       <PDFCustomizationDialog
         open={showPDFDialog}

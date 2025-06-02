@@ -8,7 +8,6 @@ import {
   DSCardContent,
   DSCardHeader,
   DSCardTitle,
-  DSButton,
   DSFlexContainer,
   DSBodyText,
   DSSpacer
@@ -243,7 +242,7 @@ const ProgressReports = () => {
           )}
 
           {/* Student List */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             {filteredStudents.length === 0 ? (
               <DSCard>
                 <DSCardContent className="py-12 text-center">

@@ -1,7 +1,12 @@
 
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
+import {
+  DSCard,
+  DSCardContent,
+  DSFlexContainer,
+  DSBodyText
+} from '@/components/ui/design-system';
 
 interface BulkSelectionProps {
   isAllSelected: boolean;
@@ -19,20 +24,23 @@ const BulkSelection: React.FC<BulkSelectionProps> = ({
   selectedCount
 }) => {
   return (
-    <div className="flex items-center gap-2 p-2 border rounded-lg bg-gray-50">
-      <Checkbox
-        checked={isAllSelected ? true : isIndeterminate ? "indeterminate" : false}
-        onCheckedChange={onSelectAll}
-      />
-      <span className="text-sm text-gray-600">
-        Select all students ({totalStudents})
-      </span>
-      {selectedCount > 0 && (
-        <Badge variant="secondary" className="ml-auto">
-          {selectedCount} selected
-        </Badge>
-      )}
-    </div>
+    <DSCard className="border-2 border-dashed border-gray-200">
+      <DSCardContent className="p-4">
+        <DSFlexContainer align="center" gap="sm">
+          <Checkbox
+            checked={isAllSelected}
+            indeterminate={isIndeterminate}
+            onCheckedChange={onSelectAll}
+          />
+          <DSBodyText className="flex-1">
+            {selectedCount > 0 
+              ? `${selectedCount} of ${totalStudents} students selected`
+              : `Select all ${totalStudents} students`
+            }
+          </DSBodyText>
+        </DSFlexContainer>
+      </DSCardContent>
+    </DSCard>
   );
 };
 
