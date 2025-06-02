@@ -137,5 +137,3 @@ export const InteractiveCard: React.FC<InteractiveCardProps> = ({
     </Component>
   );
 };
-
-export { semanticColors, spacingSystem };
