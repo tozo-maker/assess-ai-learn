@@ -10,13 +10,17 @@ import Breadcrumbs from '@/components/navigation/Breadcrumbs';
 
 // Design System Components
 import {
+  DSPageContainer,
+  DSSection,
   DSCard,
   DSCardHeader,
   DSCardContent,
   DSCardTitle,
   DSButton,
   DSFlexContainer,
-  DSSpacer
+  DSSpacer,
+  DSPageTitle,
+  DSBodyText
 } from '@/components/ui/design-system';
 
 // Assessment Components
@@ -54,13 +58,17 @@ const AssessmentResults: React.FC = () => {
   if (isLoadingAssessment || isLoadingResponses) {
     return (
       <AppLayout>
-        <Breadcrumbs />
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563eb] mx-auto"></div>
-            <p className="mt-4">Loading assessment results...</p>
-          </div>
-        </div>
+        <DSSection>
+          <DSPageContainer>
+            <Breadcrumbs />
+            <div className="flex justify-center items-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2563eb] mx-auto"></div>
+                <DSBodyText className="mt-4">Loading assessment results...</DSBodyText>
+              </div>
+            </div>
+          </DSPageContainer>
+        </DSSection>
       </AppLayout>
     );
   }
@@ -68,18 +76,22 @@ const AssessmentResults: React.FC = () => {
   if (!assessment) {
     return (
       <AppLayout>
-        <Breadcrumbs />
-        <DSCard>
-          <DSCardContent>
-            <div className="text-center py-8">
-              <h2 className="text-xl font-semibold text-gray-900">Assessment Not Found</h2>
-              <p className="mt-2 text-base text-gray-600">The requested assessment could not be found.</p>
-              <DSButton onClick={() => navigate('/app/assessments')} className="mt-4">
-                Back to Assessments
-              </DSButton>
-            </div>
-          </DSCardContent>
-        </DSCard>
+        <DSSection>
+          <DSPageContainer>
+            <Breadcrumbs />
+            <DSCard>
+              <DSCardContent>
+                <div className="text-center py-8">
+                  <DSPageTitle className="text-xl font-semibold text-gray-900">Assessment Not Found</DSPageTitle>
+                  <DSBodyText className="mt-2 text-gray-600">The requested assessment could not be found.</DSBodyText>
+                  <DSButton onClick={() => navigate('/app/assessments')} className="mt-4">
+                    Back to Assessments
+                  </DSButton>
+                </div>
+              </DSCardContent>
+            </DSCard>
+          </DSPageContainer>
+        </DSSection>
       </AppLayout>
     );
   }
@@ -123,45 +135,49 @@ const AssessmentResults: React.FC = () => {
 
   return (
     <AppLayout>
-      <Breadcrumbs />
-      
-      {/* Page Header */}
-      <DSCard className="mb-8">
-        <DSCardHeader>
-          <DSFlexContainer justify="between" align="center">
-            <div>
-              <DSButton 
-                variant="ghost" 
-                onClick={() => navigate(`/app/assessments/${id}`)}
-                className="mb-4 pl-0"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Assessment
-              </DSButton>
-              <DSCardTitle className="text-2xl font-bold text-gray-900 mb-1">
-                Assessment Results
-              </DSCardTitle>
-              <p className="text-base text-gray-600">
-                {assessment.title} | {assessment.subject} | Grade {assessment.grade_level}
-              </p>
-            </div>
-            <div className="flex items-center">
-              <BarChart2 className="h-8 w-8 text-[#2563eb]" />
-            </div>
-          </DSFlexContainer>
-        </DSCardHeader>
-      </DSCard>
+      <DSSection>
+        <DSPageContainer>
+          <Breadcrumbs />
+          
+          {/* Page Header - Standardized */}
+          <DSCard className="mb-8">
+            <DSCardHeader>
+              <DSFlexContainer justify="between" align="center">
+                <div>
+                  <DSButton 
+                    variant="ghost" 
+                    onClick={() => navigate(`/app/assessments/${id}`)}
+                    className="mb-4 pl-0"
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Assessment
+                  </DSButton>
+                  <DSPageTitle className="text-3xl font-bold text-gray-900 mb-1">
+                    Assessment Results
+                  </DSPageTitle>
+                  <DSBodyText className="text-gray-600">
+                    {assessment.title} | {assessment.subject} | Grade {assessment.grade_level}
+                  </DSBodyText>
+                </div>
+                <div className="flex items-center">
+                  <BarChart2 className="h-8 w-8 text-[#2563eb]" />
+                </div>
+              </DSFlexContainer>
+            </DSCardHeader>
+          </DSCard>
 
-      {/* Summary Cards */}
-      <AssessmentResultsSummary {...summaryData} />
-      
-      <DSSpacer size="xl" />
+          {/* Summary Cards */}
+          <AssessmentResultsSummary {...summaryData} />
+          
+          <DSSpacer size="xl" />
 
-      {/* Results Table */}
-      <AssessmentResultsTable 
-        results={mockResults}
-        onExport={handleExport}
-      />
+          {/* Results Table */}
+          <AssessmentResultsTable 
+            results={mockResults}
+            onExport={handleExport}
+          />
+        </DSPageContainer>
+      </DSSection>
     </AppLayout>
   );
 };

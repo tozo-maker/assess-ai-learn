@@ -21,9 +21,9 @@ import {
   DSButton
 } from '@/components/ui/design-system';
 
-// Import dashboard components
+// Import dashboard components - using redesigned versions
 import DashboardWelcomeSection from '@/components/dashboard/DashboardWelcomeSection';
-import DashboardMetricCards from '@/components/dashboard/DashboardMetricCards';
+import DashboardStatsRedesigned from '@/components/dashboard/DashboardStatsRedesigned';
 import DashboardActivityFeed from '@/components/dashboard/DashboardActivityFeed';
 import DashboardRecentInsights from '@/components/dashboard/DashboardRecentInsights';
 import DashboardAlerts from '@/components/dashboard/DashboardAlerts';
@@ -78,7 +78,7 @@ const Dashboard = () => {
               <DashboardWelcomeSection teacher={teacher} />
             </ErrorBoundary>
 
-            <DSSpacer size="lg" />
+            <DSSpacer size="xl" />
 
             {/* Critical Alerts - If Any */}
             {alerts.length > 0 && (
@@ -86,16 +86,24 @@ const Dashboard = () => {
                 <ErrorBoundary fallback={<ErrorState title="Alerts unavailable" />}>
                   <DashboardAlerts alerts={alerts} />
                 </ErrorBoundary>
-                <DSSpacer size="lg" />
+                <DSSpacer size="xl" />
               </>
             )}
 
-            {/* Primary Metrics - 3-Column Grid */}
+            {/* Primary Metrics - Standardized Stats Cards */}
             <ErrorBoundary fallback={<ErrorState title="Metrics unavailable" />}>
-              <DashboardMetricCards metrics={metrics} />
+              <DashboardStatsRedesigned 
+                totalStudents={metrics.totalStudents}
+                totalAssessments={metrics.totalAssessments}
+                aiInsights={metrics.aiInsights}
+                recentAssessments={metrics.recentAssessments}
+                newStudentsThisMonth={metrics.newStudentsThisMonth}
+                todaysInsights={metrics.todaysInsights}
+                studentMetrics={metrics.studentMetrics}
+              />
             </ErrorBoundary>
 
-            <DSSpacer size="lg" />
+            <DSSpacer size="xl" />
 
             {/* Recent Activity - 2-Column: List + Insights */}
             <DSContentGrid cols={2}>
@@ -118,7 +126,7 @@ const Dashboard = () => {
               </DSGridItem>
             </DSContentGrid>
 
-            <DSSpacer size="lg" />
+            <DSSpacer size="xl" />
 
             {/* Secondary Widgets - 3-Column Grid */}
             <ErrorBoundary fallback={<ErrorState title="Additional widgets unavailable" />}>
@@ -129,13 +137,13 @@ const Dashboard = () => {
               />
             </ErrorBoundary>
 
-            <DSSpacer size="xl" />
+            <DSSpacer size="2xl" />
 
             {/* Customize Dashboard Option */}
             <DSCard className="text-center">
               <DSCardContent className="py-8">
                 <DSSectionHeader className="mb-4">Customize Your Dashboard</DSSectionHeader>
-                <DSBodyText className="mb-6 max-w-2xl mx-auto">
+                <DSBodyText className="mb-6 max-w-2xl mx-auto text-gray-600">
                   Add more widgets, rearrange sections, or adjust what information is displayed to match your teaching workflow.
                 </DSBodyText>
                 <DSButton variant="secondary" size="md">
