@@ -1,17 +1,38 @@
 
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import PageShell from '@/components/ui/page-shell';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { User, TrendingUp, Target, AlertCircle, Calendar, BookOpen, ArrowUp } from 'lucide-react';
+
+// Layout Components
+import AppLayout from '@/components/layout/AppLayout';
+import Breadcrumbs from '@/components/navigation/Breadcrumbs';
+
+// Design System Components
+import {
+  DSPageContainer,
+  DSSection,
+  DSCard,
+  DSCardHeader,
+  DSCardContent,
+  DSCardTitle,
+  DSCardDescription,
+  DSButton,
+  DSFlexContainer,
+  DSContentGrid,
+  DSGridItem,
+  DSSpacer,
+  DSPageTitle,
+  DSBodyText
+} from '@/components/ui/design-system';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, TrendingUp, Target, AlertCircle } from 'lucide-react';
 import PerformanceTimelineChart from '@/components/charts/PerformanceTimelineChart';
 import SkillMasteryRadarChart from '@/components/charts/SkillMasteryRadarChart';
 import GrowthTrendChart from '@/components/charts/GrowthTrendChart';
 import { studentService } from '@/services/student-service';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const IndividualInsights = () => {
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
@@ -103,258 +124,321 @@ const IndividualInsights = () => {
   ];
 
   return (
-    <PageShell 
-      title="Individual Student Analysis" 
-      description="Deep dive into individual student learning patterns and growth"
-      icon={<User className="h-6 w-6 text-blue-600" />}
-    >
-      <div className="space-y-6">
-        {/* Student Selection */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-            <SelectTrigger className="w-64">
-              <SelectValue placeholder="Select a student" />
-            </SelectTrigger>
-            <SelectContent>
-              {students?.map(student => (
-                <SelectItem key={student.id} value={student.id}>
-                  {student.first_name} {student.last_name} - Grade {student.grade_level}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <AppLayout>
+      <DSSection>
+        <DSPageContainer>
+          <Breadcrumbs />
+          
+          {/* Page Header */}
+          <DSCard className="mb-8">
+            <DSCardHeader>
+              <DSFlexContainer justify="between" align="center" className="flex-col md:flex-row gap-4">
+                <div>
+                  <DSPageTitle className="text-3xl font-bold text-gray-900 mb-2">
+                    Individual Student Analysis
+                  </DSPageTitle>
+                  <DSBodyText className="text-gray-600">
+                    Deep dive into individual student learning patterns and growth
+                  </DSBodyText>
+                </div>
+              </DSFlexContainer>
+            </DSCardHeader>
+          </DSCard>
 
-        {selectedStudentId ? (
-          <>
-            {/* Student Overview Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Current Performance</p>
-                      <p className="text-3xl font-bold text-gray-900">{studentMetrics.currentGPA}</p>
-                      <p className="text-sm text-green-600 flex items-center mt-1">
-                        <TrendingUp className="h-4 w-4 mr-1" />
-                        {studentMetrics.growthRate} improvement
-                      </p>
-                    </div>
-                    <div className="h-12 w-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                      <TrendingUp className="h-6 w-6 text-blue-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Class Rank</p>
-                      <p className="text-3xl font-bold text-gray-900">{studentMetrics.classRank}</p>
-                      <p className="text-sm text-gray-500">
-                        of {studentMetrics.totalStudents} students
-                      </p>
-                    </div>
-                    <div className="h-12 w-12 bg-purple-50 rounded-lg flex items-center justify-center">
-                      <Target className="h-6 w-6 text-purple-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Strength Areas</p>
-                      <p className="text-lg font-bold text-gray-900">{studentMetrics.strengthAreas.length}</p>
-                      <p className="text-sm text-green-600">skills mastered</p>
-                    </div>
-                    <div className="h-12 w-12 bg-green-50 rounded-lg flex items-center justify-center">
-                      <User className="h-6 w-6 text-green-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Goal Progress</p>
-                      <p className="text-lg font-bold text-green-600">On Track</p>
-                      <p className="text-sm text-gray-500">meeting targets</p>
-                    </div>
-                    <div className="h-12 w-12 bg-green-50 rounded-lg flex items-center justify-center">
-                      <Target className="h-6 w-6 text-green-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Main Analysis Tabs */}
-            <Tabs defaultValue="performance" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="performance">Performance Timeline</TabsTrigger>
-                <TabsTrigger value="skills">Skills Mastery</TabsTrigger>
-                <TabsTrigger value="growth">Growth Trends</TabsTrigger>
-                <TabsTrigger value="insights">AI Insights</TabsTrigger>
-                <TabsTrigger value="recommendations">Action Plan</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="performance" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Performance Timeline</CardTitle>
-                    <CardDescription>
-                      {studentName}'s assessment scores compared to class average over time
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <PerformanceTimelineChart 
-                      data={performanceTimelineData} 
-                      studentName={studentName}
-                    />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="skills" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Skills Mastery Analysis</CardTitle>
-                    <CardDescription>
-                      Current skill levels compared to targets and class averages
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <SkillMasteryRadarChart 
-                      data={skillMasteryData} 
-                      studentName={studentName}
-                    />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="growth" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Growth Trajectory & Predictions</CardTitle>
-                    <CardDescription>
-                      Actual progress with AI-predicted trends and target goals
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <GrowthTrendChart 
-                      data={growthTrendData} 
-                      studentName={studentName}
-                    />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="insights" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recent AI Insights</CardTitle>
-                    <CardDescription>
-                      Latest observations and patterns identified by our AI analysis
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {recentInsights.map((insight, index) => (
-                        <div key={index} className="border rounded-lg p-4">
-                          <div className="flex items-start space-x-3">
-                            <div className={`p-2 rounded-lg ${
-                              insight.type === 'strength' ? 'bg-green-100' :
-                              insight.type === 'improvement' ? 'bg-blue-100' :
-                              'bg-yellow-100'
-                            }`}>
-                              {insight.type === 'strength' ? (
-                                <TrendingUp className="h-4 w-4 text-green-600" />
-                              ) : insight.type === 'improvement' ? (
-                                <Target className="h-4 w-4 text-blue-600" />
-                              ) : (
-                                <AlertCircle className="h-4 w-4 text-yellow-600" />
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-medium text-gray-900">{insight.title}</h4>
-                              <p className="text-sm text-gray-600 mt-1">{insight.description}</p>
-                              <p className="text-xs text-gray-500 mt-2">{insight.date}</p>
-                            </div>
-                          </div>
-                        </div>
+          {/* Student Selector - Searchable dropdown with consistent styling */}
+          <DSCard className="mb-6">
+            <DSCardContent className="p-6">
+              <DSFlexContainer gap="md" className="flex-col sm:flex-row">
+                <div className="flex-1">
+                  <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+                    <SelectTrigger className="w-full sm:w-64">
+                      <SelectValue placeholder="Select a student to analyze" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {students?.map(student => (
+                        <SelectItem key={student.id} value={student.id}>
+                          {student.first_name} {student.last_name} - Grade {student.grade_level}
+                        </SelectItem>
                       ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Selected student card with avatar */}
+                {selectedStudent && (
+                  <DSCard className="bg-blue-50 border-blue-200">
+                    <DSCardContent className="p-4">
+                      <DSFlexContainer align="center" gap="md">
+                        <Avatar className="h-12 w-12">
+                          <AvatarFallback className="bg-[#2563eb] text-white">
+                            {selectedStudent.first_name.charAt(0)}{selectedStudent.last_name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <DSCardTitle className="text-base font-semibold text-gray-900">
+                            {selectedStudent.first_name} {selectedStudent.last_name}
+                          </DSCardTitle>
+                          <DSBodyText className="text-sm text-gray-600">
+                            Grade {selectedStudent.grade_level} • Class Rank: {studentMetrics.classRank}
+                          </DSBodyText>
+                        </div>
+                      </DSFlexContainer>
+                    </DSCardContent>
+                  </DSCard>
+                )}
+              </DSFlexContainer>
+            </DSCardContent>
+          </DSCard>
 
-              <TabsContent value="recommendations" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Personalized Action Plan</CardTitle>
-                    <CardDescription>
-                      Targeted interventions and next steps for {studentName}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      {recommendations.map((rec, index) => (
-                        <div key={index} className="border rounded-lg p-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center space-x-3">
-                              <h4 className="text-lg font-semibold">{rec.area}</h4>
-                              <Badge variant={rec.priority === 'High' ? 'destructive' : 'secondary'}>
-                                {rec.priority} Priority
-                              </Badge>
-                            </div>
-                            <div className="text-sm text-gray-600">
-                              Timeline: {rec.timeline}
-                            </div>
+          {selectedStudentId ? (
+            <>
+              {/* Student Overview Metrics - Quick stats inline */}
+              <DSContentGrid cols={4} className="mb-8">
+                <DSGridItem span={1}>
+                  <DSCard className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+                    <DSCardContent className="p-6">
+                      <DSFlexContainer justify="between" align="center">
+                        <div>
+                          <DSBodyText className="text-sm text-gray-500 mb-1">Current Performance</DSBodyText>
+                          <div className="text-2xl font-bold text-gray-900 mb-2">{studentMetrics.currentGPA}</div>
+                          <DSFlexContainer align="center" gap="xs">
+                            <ArrowUp className="h-4 w-4 text-[#10b981]" />
+                            <DSBodyText className="text-sm text-[#10b981]">{studentMetrics.growthRate} improvement</DSBodyText>
+                          </DSFlexContainer>
+                        </div>
+                        <div className="w-12 h-12 bg-[#2563eb] bg-opacity-10 rounded-lg flex items-center justify-center">
+                          <TrendingUp className="h-6 w-6 text-[#2563eb]" />
+                        </div>
+                      </DSFlexContainer>
+                    </DSCardContent>
+                  </DSCard>
+                </DSGridItem>
+
+                <DSGridItem span={1}>
+                  <DSCard className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
+                    <DSCardContent className="p-6">
+                      <DSFlexContainer justify="between" align="center">
+                        <div>
+                          <DSBodyText className="text-sm text-gray-500 mb-1">Class Rank</DSBodyText>
+                          <div className="text-2xl font-bold text-gray-900 mb-2">{studentMetrics.classRank}</div>
+                          <DSBodyText className="text-sm text-gray-600">
+                            of {studentMetrics.totalStudents} students
+                          </DSBodyText>
+                        </div>
+                        <div className="w-12 h-12 bg-purple-600 bg-opacity-10 rounded-lg flex items-center justify-center">
+                          <Target className="h-6 w-6 text-purple-600" />
+                        </div>
+                      </DSFlexContainer>
+                    </DSCardContent>
+                  </DSCard>
+                </DSGridItem>
+
+                <DSGridItem span={1}>
+                  <DSCard className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+                    <DSCardContent className="p-6">
+                      <DSFlexContainer justify="between" align="center">
+                        <div>
+                          <DSBodyText className="text-sm text-gray-500 mb-1">Strength Areas</DSBodyText>
+                          <div className="text-2xl font-bold text-gray-900 mb-2">{studentMetrics.strengthAreas.length}</div>
+                          <DSBodyText className="text-sm text-[#10b981]">skills mastered</DSBodyText>
+                        </div>
+                        <div className="w-12 h-12 bg-[#10b981] bg-opacity-10 rounded-lg flex items-center justify-center">
+                          <BookOpen className="h-6 w-6 text-[#10b981]" />
+                        </div>
+                      </DSFlexContainer>
+                    </DSCardContent>
+                  </DSCard>
+                </DSGridItem>
+
+                <DSGridItem span={1}>
+                  <DSCard className="bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200">
+                    <DSCardContent className="p-6">
+                      <DSFlexContainer justify="between" align="center">
+                        <div>
+                          <DSBodyText className="text-sm text-gray-500 mb-1">Goal Progress</DSBodyText>
+                          <div className="text-lg font-bold text-[#10b981] mb-2">On Track</div>
+                          <DSBodyText className="text-sm text-gray-600">meeting targets</DSBodyText>
+                        </div>
+                        <div className="w-12 h-12 bg-[#f59e0b] bg-opacity-10 rounded-lg flex items-center justify-center">
+                          <Target className="h-6 w-6 text-[#f59e0b]" />
+                        </div>
+                      </DSFlexContainer>
+                    </DSCardContent>
+                  </DSCard>
+                </DSGridItem>
+              </DSContentGrid>
+
+              <DSSpacer size="lg" />
+
+              {/* Main Analysis Tabs - Progress Visualizations */}
+              <Tabs defaultValue="performance" className="space-y-6">
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="performance">Performance Timeline</TabsTrigger>
+                  <TabsTrigger value="skills">Skills Mastery</TabsTrigger>
+                  <TabsTrigger value="growth">Growth Trends</TabsTrigger>
+                  <TabsTrigger value="insights">AI Insights</TabsTrigger>
+                  <TabsTrigger value="recommendations">Action Plan</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="performance" className="space-y-6">
+                  <DSCard>
+                    <DSCardHeader>
+                      <DSCardTitle className="text-lg font-semibold text-gray-900">Performance Timeline</DSCardTitle>
+                      <DSCardDescription className="text-sm text-gray-600">
+                        {studentName}'s assessment scores compared to class average over time
+                      </DSCardDescription>
+                    </DSCardHeader>
+                    <DSCardContent>
+                      {/* Timeline with primary color markers */}
+                      <PerformanceTimelineChart 
+                        data={performanceTimelineData} 
+                        studentName={studentName}
+                      />
+                    </DSCardContent>
+                  </DSCard>
+                </TabsContent>
+
+                <TabsContent value="skills" className="space-y-6">
+                  <DSCard>
+                    <DSCardHeader>
+                      <DSCardTitle className="text-lg font-semibold text-gray-900">Skills Mastery Analysis</DSCardTitle>
+                      <DSCardDescription className="text-sm text-gray-600">
+                        Current skill levels compared to targets and class averages
+                      </DSCardDescription>
+                    </DSCardHeader>
+                    <DSCardContent>
+                      {/* Skill radar using color palette */}
+                      <SkillMasteryRadarChart 
+                        data={skillMasteryData} 
+                        studentName={studentName}
+                      />
+                    </DSCardContent>
+                  </DSCard>
+                </TabsContent>
+
+                <TabsContent value="growth" className="space-y-6">
+                  <DSCard>
+                    <DSCardHeader>
+                      <DSCardTitle className="text-lg font-semibold text-gray-900">Growth Trajectory & Predictions</DSCardTitle>
+                      <DSCardDescription className="text-sm text-gray-600">
+                        Actual progress with AI-predicted trends and target goals
+                      </DSCardDescription>
+                    </DSCardHeader>
+                    <DSCardContent>
+                      {/* Progress bars with semantic colors */}
+                      <GrowthTrendChart 
+                        data={growthTrendData} 
+                        studentName={studentName}
+                      />
+                    </DSCardContent>
+                  </DSCard>
+                </TabsContent>
+
+                <TabsContent value="insights" className="space-y-6">
+                  <DSCard>
+                    <DSCardHeader>
+                      <DSCardTitle className="text-lg font-semibold text-gray-900">Recent AI Insights</DSCardTitle>
+                      <DSCardDescription className="text-sm text-gray-600">
+                        Latest observations and patterns identified by our AI analysis
+                      </DSCardDescription>
+                    </DSCardHeader>
+                    <DSCardContent>
+                      <div className="space-y-4">
+                        {recentInsights.map((insight, index) => (
+                          <div key={index} className="border rounded-lg p-4">
+                            <DSFlexContainer align="start" gap="md">
+                              <div className={`p-2 rounded-lg ${
+                                insight.type === 'strength' ? 'bg-green-100' :
+                                insight.type === 'improvement' ? 'bg-blue-100' :
+                                'bg-yellow-100'
+                              }`}>
+                                {insight.type === 'strength' ? (
+                                  <TrendingUp className="h-4 w-4 text-[#10b981]" />
+                                ) : insight.type === 'improvement' ? (
+                                  <Target className="h-4 w-4 text-[#2563eb]" />
+                                ) : (
+                                  <AlertCircle className="h-4 w-4 text-[#f59e0b]" />
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <DSCardTitle className="text-base font-medium text-gray-900 mb-1">{insight.title}</DSCardTitle>
+                                <DSBodyText className="text-sm text-gray-600 mb-2">{insight.description}</DSBodyText>
+                                <DSFlexContainer align="center" gap="xs">
+                                  <Calendar className="h-3 w-3 text-gray-400" />
+                                  <DSBodyText className="text-xs text-gray-500">{insight.date}</DSBodyText>
+                                </DSFlexContainer>
+                              </div>
+                            </DSFlexContainer>
                           </div>
-                          
-                          <p className="text-gray-700 mb-4">{rec.action}</p>
-                          
-                          <div>
-                            <h5 className="font-medium mb-2">Recommended Resources:</h5>
-                            <div className="flex flex-wrap gap-2">
-                              {rec.resources.map((resource, resourceIndex) => (
-                                <Badge key={resourceIndex} variant="outline">
-                                  {resource}
+                        ))}
+                      </div>
+                    </DSCardContent>
+                  </DSCard>
+                </TabsContent>
+
+                <TabsContent value="recommendations" className="space-y-6">
+                  <DSCard>
+                    <DSCardHeader>
+                      <DSCardTitle className="text-lg font-semibold text-gray-900">Personalized Action Plan</DSCardTitle>
+                      <DSCardDescription className="text-sm text-gray-600">
+                        Targeted interventions and next steps for {studentName}
+                      </DSCardDescription>
+                    </DSCardHeader>
+                    <DSCardContent>
+                      <div className="space-y-6">
+                        {recommendations.map((rec, index) => (
+                          <div key={index} className="border rounded-lg p-6">
+                            <DSFlexContainer justify="between" align="center" className="mb-4">
+                              <DSFlexContainer align="center" gap="md">
+                                <DSCardTitle className="text-lg font-semibold text-gray-900">{rec.area}</DSCardTitle>
+                                <Badge variant={rec.priority === 'High' ? 'destructive' : 'secondary'}>
+                                  {rec.priority} Priority
                                 </Badge>
-                              ))}
+                              </DSFlexContainer>
+                              <div className="text-sm text-gray-600">
+                                Timeline: {rec.timeline}
+                              </div>
+                            </DSFlexContainer>
+                            
+                            <DSBodyText className="text-gray-700 mb-4">{rec.action}</DSBodyText>
+                            
+                            <div>
+                              <DSCardTitle className="text-sm font-medium text-gray-900 mb-2">Recommended Resources:</DSCardTitle>
+                              <DSFlexContainer gap="sm" className="flex-wrap">
+                                {rec.resources.map((resource, resourceIndex) => (
+                                  <Badge key={resourceIndex} variant="outline">
+                                    {resource}
+                                  </Badge>
+                                ))}
+                              </DSFlexContainer>
                             </div>
+                            
+                            <DSFlexContainer gap="sm" className="mt-4">
+                              <DSButton size="sm">Start Intervention</DSButton>
+                              <DSButton size="sm" variant="secondary">Schedule Review</DSButton>
+                            </DSFlexContainer>
                           </div>
-                          
-                          <div className="mt-4 flex space-x-2">
-                            <Button size="sm">Start Intervention</Button>
-                            <Button size="sm" variant="outline">Schedule Review</Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </>
-        ) : (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Select a Student</h3>
-              <p className="text-gray-600">Choose a student from the dropdown above to view their detailed learning analysis.</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </PageShell>
+                        ))}
+                      </div>
+                    </DSCardContent>
+                  </DSCard>
+                </TabsContent>
+              </Tabs>
+            </>
+          ) : (
+            <DSCard>
+              <DSCardContent className="p-8 text-center">
+                <User className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <DSCardTitle className="text-lg font-semibold text-gray-900 mb-2">Select a Student</DSCardTitle>
+                <DSBodyText className="text-gray-600">
+                  Choose a student from the dropdown above to view their detailed learning analysis.
+                </DSBodyText>
+              </DSCardContent>
+            </DSCard>
+          )}
+        </DSPageContainer>
+      </DSSection>
+    </AppLayout>
   );
 };
 
