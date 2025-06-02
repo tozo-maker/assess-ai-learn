@@ -1,7 +1,12 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
+import {
+  DSButton,
+  DSFlexContainer,
+  DSPageTitle,
+  DSBodyText
+} from '@/components/ui/design-system';
 
 interface ProgressReportHeaderProps {
   student: {
@@ -13,18 +18,20 @@ interface ProgressReportHeaderProps {
 
 const ProgressReportHeader: React.FC<ProgressReportHeaderProps> = ({ student }) => {
   return (
-    <div className="flex justify-between items-start">
+    <DSFlexContainer justify="between" align="start" className="flex-col md:flex-row gap-4">
       <div>
-        <h1 className="text-2xl font-bold print:text-3xl">
+        <DSPageTitle className="text-2xl print:text-3xl mb-2">
           Progress Report: {student.first_name} {student.last_name}
-        </h1>
-        <p className="text-muted-foreground">Grade {student.grade_level} • {new Date().toLocaleDateString()}</p>
+        </DSPageTitle>
+        <DSBodyText className="text-gray-600">
+          Grade {student.grade_level} • {new Date().toLocaleDateString()}
+        </DSBodyText>
       </div>
-      <Button className="print:hidden">
+      <DSButton variant="secondary" className="print:hidden">
         <Download className="h-4 w-4 mr-2" />
         Print Report
-      </Button>
-    </div>
+      </DSButton>
+    </DSFlexContainer>
   );
 };
 

@@ -2,12 +2,20 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FileText, Download, Mail, Users, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  DSButton,
+  DSCard,
+  DSCardContent,
+  DSCardHeader,
+  DSCardTitle,
+  DSFlexContainer,
+  DSBodyText,
+  DSSpacer
+} from '@/components/ui/design-system';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import StandardLoadingState from '@/components/common/StandardLoadingState';
 import { studentService } from '@/services/student-service';
-import { assessmentService } from '@/services/assessment-service';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -29,7 +37,7 @@ const ProgressReportGenerator: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
-  const { data: students } = useQuery({
+  const { data: students, isLoading } = useQuery({
     queryKey: ['students'],
     queryFn: studentService.getStudents,
   });
@@ -60,29 +68,6 @@ const ProgressReportGenerator: React.FC = () => {
         const student = students?.find(s => s.id === studentId);
         if (!student) continue;
 
-        // Gather student data
-        const assessments = await assessmentService.getAssessments();
-        const studentAssessments = [];
-        const studentAnalyses = [];
-
-        for (const assessment of assessments) {
-          const responses = await assessmentService.getStudentResponses(assessment.id, studentId);
-          if (responses.length > 0) {
-            studentAssessments.push({
-              assessment,
-              responses,
-              totalScore: responses.reduce((sum, r) => sum + r.score, 0),
-              maxScore: assessment.max_score
-            });
-
-            const analysis = await assessmentService.getAssessmentAnalysis(assessment.id, studentId);
-            if (analysis) {
-              studentAnalyses.push({ assessment, analysis });
-            }
-          }
-        }
-
-        // Create report data
         const reportData = {
           student: {
             first_name: student.first_name,
@@ -90,14 +75,11 @@ const ProgressReportGenerator: React.FC = () => {
             grade_level: student.grade_level,
             student_id: student.student_id
           },
-          assessments: studentAssessments,
-          analyses: studentAnalyses,
           options: reportOptions,
           generated_at: new Date().toISOString()
         };
 
         if (format === 'pdf') {
-          // Call PDF generation function
           const { data, error } = await supabase.functions.invoke('generate-progress-pdf', {
             body: {
               student_id: studentId,
@@ -108,14 +90,12 @@ const ProgressReportGenerator: React.FC = () => {
           if (error) throw error;
 
           if (data?.pdf_url) {
-            // Download PDF
             const link = document.createElement('a');
             link.href = data.pdf_url;
             link.download = `${student.first_name}_${student.last_name}_Progress_Report.pdf`;
             link.click();
           }
         } else if (format === 'email') {
-          // Call email sending function
           const { data, error } = await supabase.functions.invoke('send-parent-communication', {
             body: {
               student_id: studentId,
@@ -147,22 +127,20 @@ const ProgressReportGenerator: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return <StandardLoadingState message="Loading students..." />;
+  }
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <FileText className="h-5 w-5 mr-2" />
-            Generate Progress Reports
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Student Selection */}
-          <div>
-            <h3 className="font-medium mb-3">Select Students</h3>
-            <div className="max-h-60 overflow-y-auto border rounded-lg p-3">
+    <div className="space-y-8">
+      {/* Student Selection */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Select Students</h3>
+        <DSCard>
+          <DSCardContent className="p-4">
+            <div className="max-h-60 overflow-y-auto space-y-3">
               {students?.map(student => (
-                <div key={student.id} className="flex items-center space-x-2 py-2">
+                <DSFlexContainer key={student.id} align="center" gap="sm" className="py-2">
                   <Checkbox
                     id={student.id}
                     checked={selectedStudents.includes(student.id)}
@@ -172,37 +150,43 @@ const ProgressReportGenerator: React.FC = () => {
                   />
                   <label 
                     htmlFor={student.id}
-                    className="flex-1 cursor-pointer"
+                    className="flex-1 cursor-pointer text-base text-gray-700"
                   >
                     {student.first_name} {student.last_name} ({student.grade_level})
                   </label>
-                </div>
+                </DSFlexContainer>
               ))}
             </div>
             
-            <div className="flex gap-2 mt-2">
-              <Button 
-                variant="outline" 
+            <DSSpacer size="md" />
+            
+            <DSFlexContainer gap="sm">
+              <DSButton 
+                variant="secondary" 
                 size="sm"
                 onClick={() => setSelectedStudents(students?.map(s => s.id) || [])}
               >
                 Select All
-              </Button>
-              <Button 
-                variant="outline" 
+              </DSButton>
+              <DSButton 
+                variant="secondary" 
                 size="sm"
                 onClick={() => setSelectedStudents([])}
               >
                 Clear Selection
-              </Button>
-            </div>
-          </div>
+              </DSButton>
+            </DSFlexContainer>
+          </DSCardContent>
+        </DSCard>
+      </div>
 
-          {/* Report Options */}
-          <div>
-            <h3 className="font-medium mb-3">Report Options</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
+      {/* Report Options */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Report Options</h3>
+        <DSCard>
+          <DSCardContent className="p-4 space-y-4">
+            <DSFlexContainer direction="col" gap="md">
+              <DSFlexContainer align="center" gap="sm">
                 <Checkbox
                   id="insights"
                   checked={reportOptions.includeInsights}
@@ -210,10 +194,10 @@ const ProgressReportGenerator: React.FC = () => {
                     setReportOptions(prev => ({ ...prev, includeInsights: checked as boolean }))
                   }
                 />
-                <label htmlFor="insights">Include AI Insights & Analysis</label>
-              </div>
+                <label htmlFor="insights" className="text-base text-gray-700">Include AI Insights & Analysis</label>
+              </DSFlexContainer>
               
-              <div className="flex items-center space-x-2">
+              <DSFlexContainer align="center" gap="sm">
                 <Checkbox
                   id="goals"
                   checked={reportOptions.includeGoals}
@@ -221,10 +205,10 @@ const ProgressReportGenerator: React.FC = () => {
                     setReportOptions(prev => ({ ...prev, includeGoals: checked as boolean }))
                   }
                 />
-                <label htmlFor="goals">Include Learning Goals Progress</label>
-              </div>
+                <label htmlFor="goals" className="text-base text-gray-700">Include Learning Goals Progress</label>
+              </DSFlexContainer>
               
-              <div className="flex items-center space-x-2">
+              <DSFlexContainer align="center" gap="sm">
                 <Checkbox
                   id="recommendations"
                   checked={reportOptions.includeRecommendations}
@@ -232,60 +216,67 @@ const ProgressReportGenerator: React.FC = () => {
                     setReportOptions(prev => ({ ...prev, includeRecommendations: checked as boolean }))
                   }
                 />
-                <label htmlFor="recommendations">Include Teacher Recommendations</label>
-              </div>
-            </div>
-          </div>
+                <label htmlFor="recommendations" className="text-base text-gray-700">Include Teacher Recommendations</label>
+              </DSFlexContainer>
+            </DSFlexContainer>
+          </DSCardContent>
+        </DSCard>
+      </div>
 
-          {/* Timeframe Selection */}
-          <div>
-            <h3 className="font-medium mb-3">Timeframe</h3>
-            <Select 
-              value={reportOptions.timeframe}
-              onValueChange={(value: 'last-month' | 'last-quarter' | 'all-time') =>
-                setReportOptions(prev => ({ ...prev, timeframe: value }))
-              }
-            >
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="last-month">Last Month</SelectItem>
-                <SelectItem value="last-quarter">Last Quarter</SelectItem>
-                <SelectItem value="all-time">All Time</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Timeframe Selection */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Timeframe</h3>
+        <Select 
+          value={reportOptions.timeframe}
+          onValueChange={(value: 'last-month' | 'last-quarter' | 'all-time') =>
+            setReportOptions(prev => ({ ...prev, timeframe: value }))
+          }
+        >
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="last-month">Last Month</SelectItem>
+            <SelectItem value="last-quarter">Last Quarter</SelectItem>
+            <SelectItem value="all-time">All Time</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-          {/* Generation Buttons */}
-          <div className="flex gap-3 pt-4 border-t">
-            <Button 
+      {/* Generation Buttons */}
+      <DSCard>
+        <DSCardContent className="p-6">
+          <DSFlexContainer gap="md" className="flex-col sm:flex-row">
+            <DSButton 
               onClick={() => generateProgressReport('pdf')}
               disabled={isGenerating || selectedStudents.length === 0}
               className="flex-1"
             >
               <Download className="h-4 w-4 mr-2" />
               {isGenerating ? 'Generating...' : 'Generate PDF Reports'}
-            </Button>
+            </DSButton>
             
-            <Button 
+            <DSButton 
               onClick={() => generateProgressReport('email')}
               disabled={isGenerating || selectedStudents.length === 0}
-              variant="outline"
+              variant="secondary"
               className="flex-1"
             >
               <Mail className="h-4 w-4 mr-2" />
               {isGenerating ? 'Sending...' : 'Email to Parents'}
-            </Button>
-          </div>
+            </DSButton>
+          </DSFlexContainer>
 
           {selectedStudents.length > 0 && (
-            <div className="text-sm text-gray-600 text-center">
-              {selectedStudents.length} student{selectedStudents.length > 1 ? 's' : ''} selected
-            </div>
+            <>
+              <DSSpacer size="sm" />
+              <DSBodyText className="text-center text-gray-600">
+                {selectedStudents.length} student{selectedStudents.length > 1 ? 's' : ''} selected
+              </DSBodyText>
+            </>
           )}
-        </CardContent>
-      </Card>
+        </DSCardContent>
+      </DSCard>
     </div>
   );
 };

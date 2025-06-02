@@ -1,9 +1,18 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import PageShell from '@/components/ui/page-shell';
+import PageTemplate from '@/components/ui/page-template';
 import { FileText, Users } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+  DSCard,
+  DSCardContent,
+  DSCardHeader,
+  DSCardTitle,
+  DSButton,
+  DSFlexContainer,
+  DSBodyText,
+  DSSpacer
+} from '@/components/ui/design-system';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -14,9 +23,9 @@ import BulkSelection from '@/components/reports/BulkSelection';
 import StudentReportCard from '@/components/reports/StudentReportCard';
 import RecentReports from '@/components/reports/RecentReports';
 import ClassReportsTab from '@/components/reports/ClassReportsTab';
+import StandardLoadingState from '@/components/common/StandardLoadingState';
 import { studentService } from '@/services/student-service';
 import { communicationsService } from '@/services/communications-service';
-import { StudentWithPerformance } from '@/types/student';
 import { ProgressReportData } from '@/types/communications';
 import { PDFGenerationOptions } from '@/services/pdf-service';
 
@@ -65,7 +74,6 @@ const ProgressReports = () => {
     mutationFn: ({ studentId, options }: { studentId: string; options?: PDFGenerationOptions }) => 
       communicationsService.generateProgressReportPDF(studentId, options),
     onSuccess: (pdfUrl) => {
-      // Auto-download the PDF
       const link = document.createElement('a');
       link.href = pdfUrl;
       link.download = `progress_report_${Date.now()}.pdf`;
@@ -168,106 +176,130 @@ const ProgressReports = () => {
     filteredStudents.every(student => selectedStudents.has(student.id));
   const isIndeterminate = selectedStudents.size > 0 && !isAllSelected;
 
+  const actions = (
+    <DSFlexContainer gap="sm">
+      <FileText className="h-5 w-5 text-[#2563eb]" />
+    </DSFlexContainer>
+  );
+
+  if (studentsLoading) {
+    return (
+      <PageTemplate
+        title="Progress Reports" 
+        description="Generate comprehensive student progress reports"
+        actions={actions}
+      >
+        <StandardLoadingState message="Loading students and reports..." />
+      </PageTemplate>
+    );
+  }
+
   return (
-    <PageShell 
+    <PageTemplate 
       title="Progress Reports" 
       description="Generate comprehensive student progress reports"
-      icon={<FileText className="h-6 w-6 text-blue-600" />}
+      actions={actions}
     >
-      <div className="space-y-6">
-        {/* Overview Cards */}
-        <ProgressReportsOverview 
-          students={students}
-          reports={reports}
-          selectedCount={selectedStudents.size}
-        />
+      <DSSpacer size="lg" />
+      
+      {/* Overview Cards */}
+      <ProgressReportsOverview 
+        students={students}
+        reports={reports}
+        selectedCount={selectedStudents.size}
+      />
 
-        {/* Report Generation Tabs */}
-        <Tabs value={reportType} onValueChange={(value) => setReportType(value as 'individual' | 'class')}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="individual">Individual Reports</TabsTrigger>
-            <TabsTrigger value="class">Class Reports</TabsTrigger>
-          </TabsList>
+      <DSSpacer size="xl" />
 
-          <TabsContent value="individual" className="space-y-6">
-            {/* Filters and Search */}
-            <ProgressReportsFilters
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              gradeFilter={gradeFilter}
-              setGradeFilter={setGradeFilter}
-              gradelevels={gradelevels}
+      {/* Report Generation Tabs */}
+      <Tabs value={reportType} onValueChange={(value) => setReportType(value as 'individual' | 'class')}>
+        <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsTrigger value="individual" className="text-base">Individual Reports</TabsTrigger>
+          <TabsTrigger value="class" className="text-base">Class Reports</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="individual" className="space-y-8">
+          {/* Filters and Search */}
+          <ProgressReportsFilters
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            gradeFilter={gradeFilter}
+            setGradeFilter={setGradeFilter}
+            gradelevels={gradelevels}
+            selectedCount={selectedStudents.size}
+            onBulkPDFGeneration={handleBulkPDFGeneration}
+            isGeneratingPDF={bulkPDFMutation.isPending}
+          />
+
+          {/* Bulk Selection */}
+          {filteredStudents.length > 0 && (
+            <BulkSelection
+              isAllSelected={isAllSelected}
+              isIndeterminate={isIndeterminate}
+              onSelectAll={handleSelectAll}
+              totalStudents={filteredStudents.length}
               selectedCount={selectedStudents.size}
-              onBulkPDFGeneration={handleBulkPDFGeneration}
-              isGeneratingPDF={bulkPDFMutation.isPending}
             />
+          )}
 
-            {/* Bulk Selection */}
-            {filteredStudents.length > 0 && (
-              <BulkSelection
-                isAllSelected={isAllSelected}
-                isIndeterminate={isIndeterminate}
-                onSelectAll={handleSelectAll}
-                totalStudents={filteredStudents.length}
-                selectedCount={selectedStudents.size}
-              />
+          {/* Student List */}
+          <div className="space-y-4">
+            {filteredStudents.length === 0 ? (
+              <DSCard>
+                <DSCardContent className="py-12 text-center">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <DSCardTitle className="mb-2">No students found</DSCardTitle>
+                  <DSBodyText className="text-gray-500">
+                    {searchQuery || gradeFilter !== 'all' ? 'Try adjusting your filters.' : 'Add students to generate reports.'}
+                  </DSBodyText>
+                </DSCardContent>
+              </DSCard>
+            ) : (
+              filteredStudents.map((student) => (
+                <StudentReportCard
+                  key={student.id}
+                  student={student}
+                  isSelected={selectedStudents.has(student.id)}
+                  onSelect={handleStudentSelect}
+                  onGenerateReport={handleGenerateIndividualReport}
+                  onGeneratePDF={handleGeneratePDF}
+                  isGeneratingReport={generateReportMutation.isPending}
+                  isGeneratingPDF={generatePDFMutation.isPending}
+                />
+              ))
             )}
+          </div>
+        </TabsContent>
 
-            {/* Student List */}
-            <div className="grid gap-4">
-              {studentsLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                  <p className="mt-2">Loading students...</p>
-                </div>
-              ) : filteredStudents.length === 0 ? (
-                <Card>
-                  <CardContent className="py-8 text-center">
-                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium">No students found</h3>
-                    <p className="text-gray-500">
-                      {searchQuery || gradeFilter !== 'all' ? 'Try adjusting your filters.' : 'Add students to generate reports.'}
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                filteredStudents.map((student) => (
-                  <StudentReportCard
-                    key={student.id}
-                    student={student}
-                    isSelected={selectedStudents.has(student.id)}
-                    onSelect={handleStudentSelect}
-                    onGenerateReport={handleGenerateIndividualReport}
-                    onGeneratePDF={handleGeneratePDF}
-                    isGeneratingReport={generateReportMutation.isPending}
-                    isGeneratingPDF={generatePDFMutation.isPending}
-                  />
-                ))
-              )}
-            </div>
-          </TabsContent>
+        <TabsContent value="class" className="space-y-8">
+          <ClassReportsTab />
+        </TabsContent>
+      </Tabs>
 
-          <TabsContent value="class" className="space-y-6">
-            <ClassReportsTab />
-          </TabsContent>
-        </Tabs>
+      <DSSpacer size="xl" />
 
-        {/* Recent Reports */}
-        <RecentReports reports={reports} />
+      {/* Recent Reports */}
+      <DSCard>
+        <DSCardHeader>
+          <DSCardTitle>Recent Reports</DSCardTitle>
+        </DSCardHeader>
+        <DSCardContent>
+          <RecentReports reports={reports} />
+        </DSCardContent>
+      </DSCard>
 
-        {/* Report Preview Dialog */}
-        <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Progress Report Preview</DialogTitle>
-            </DialogHeader>
-            {currentReportData && (
-              <ProgressReportViewer reportData={currentReportData} />
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
-    </PageShell>
+      {/* Report Preview Dialog */}
+      <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Progress Report Preview</DialogTitle>
+          </DialogHeader>
+          {currentReportData && (
+            <ProgressReportViewer reportData={currentReportData} />
+          )}
+        </DialogContent>
+      </Dialog>
+    </PageTemplate>
   );
 };
 

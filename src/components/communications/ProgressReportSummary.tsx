@@ -1,8 +1,15 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Check, AlertCircle } from 'lucide-react';
+import {
+  DSCard,
+  DSCardContent,
+  DSCardHeader,
+  DSCardTitle,
+  DSBodyText,
+  DSFlexContainer
+} from '@/components/ui/design-system';
+import { Badge } from '@/components/ui/badge';
 
 interface ProgressReportSummaryProps {
   performance: {
@@ -15,48 +22,50 @@ interface ProgressReportSummaryProps {
 
 const ProgressReportSummary: React.FC<ProgressReportSummaryProps> = ({ performance }) => {
   return (
-    <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{performance.average_score}%</div>
-          <p className="text-xs text-muted-foreground">Based on {performance.assessment_count} assessments</p>
-        </CardContent>
-      </Card>
+    <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+      <DSCard>
+        <DSCardHeader className="pb-4">
+          <DSCardTitle className="text-lg">Average Score</DSCardTitle>
+        </DSCardHeader>
+        <DSCardContent>
+          <div className="text-3xl font-bold text-gray-900 mb-2">{performance.average_score}%</div>
+          <DSBodyText className="text-gray-600">
+            Based on {performance.assessment_count} assessments
+          </DSBodyText>
+        </DSCardContent>
+      </DSCard>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Performance Level</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{performance.performance_level}</div>
-          <p className="text-xs text-muted-foreground">Overall academic standing</p>
-        </CardContent>
-      </Card>
+      <DSCard>
+        <DSCardHeader className="pb-4">
+          <DSCardTitle className="text-lg">Performance Level</DSCardTitle>
+        </DSCardHeader>
+        <DSCardContent>
+          <div className="text-3xl font-bold text-gray-900 mb-2">{performance.performance_level}</div>
+          <DSBodyText className="text-gray-600">Overall academic standing</DSBodyText>
+        </DSCardContent>
+      </DSCard>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Status</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center">
+      <DSCard>
+        <DSCardHeader className="pb-4">
+          <DSCardTitle className="text-lg">Status</DSCardTitle>
+        </DSCardHeader>
+        <DSCardContent>
+          <DSFlexContainer align="center" gap="sm" className="mb-2">
             {performance.needs_attention ? (
               <>
-                <Badge variant="destructive" className="mr-2">Needs Support</Badge>
-                <AlertCircle className="h-4 w-4 text-destructive" />
+                <Badge variant="destructive">Needs Support</Badge>
+                <AlertCircle className="h-4 w-4 text-[#ef4444]" />
               </>
             ) : (
               <>
-                <Badge variant="default" className="mr-2 bg-green-500">On Track</Badge>
-                <Check className="h-4 w-4 text-green-500" />
+                <Badge className="bg-[#10b981] hover:bg-[#059669]">On Track</Badge>
+                <Check className="h-4 w-4 text-[#10b981]" />
               </>
             )}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">Based on recent performance</p>
-        </CardContent>
-      </Card>
+          </DSFlexContainer>
+          <DSBodyText className="text-gray-600">Based on recent performance</DSBodyText>
+        </DSCardContent>
+      </DSCard>
     </div>
   );
 };
