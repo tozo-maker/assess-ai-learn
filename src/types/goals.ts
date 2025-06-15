@@ -1,9 +1,12 @@
+
 export interface Goal {
   id: string;
   student_id: string;
   teacher_id: string;
   title: string;
   description?: string;
+  category?: string; // Added category field
+  priority?: 'High' | 'Medium' | 'Low'; // Added priority field
   target_date?: string;
   status: 'active' | 'completed' | 'paused' | 'cancelled';
   progress_percentage?: number;
@@ -17,7 +20,7 @@ export interface GoalMilestone {
   title: string;
   description?: string;
   target_date?: string;
-  completed_at?: string;
+  completed_at?: string | null; // Updated to allow null
   created_at: string;
 }
 
@@ -28,6 +31,8 @@ export interface GoalWithMilestones extends Goal {
 export interface GoalFormData {
   title: string;
   description?: string;
+  category?: string; // Added category field
+  priority?: 'High' | 'Medium' | 'Low'; // Added priority field
   target_date?: string;
   status?: 'active' | 'completed' | 'paused' | 'cancelled';
   progress_percentage?: number;

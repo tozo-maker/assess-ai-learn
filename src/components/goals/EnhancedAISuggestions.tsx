@@ -85,8 +85,6 @@ const EnhancedAISuggestions: React.FC<EnhancedAISuggestionsProps> = ({
     const goalData: GoalFormData = {
       title: suggestion.title,
       description: suggestion.description || '',
-      category: suggestion.category,
-      priority: suggestion.priority,
       status: 'active',
       progress_percentage: 0,
       target_date: suggestion.estimatedWeeks ? 
