@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  LineChart,
   Line,
-  AreaChart,
   Area,
   BarChart,
   Bar,
@@ -31,17 +30,13 @@ import {
 } from 'recharts';
 import {
   TrendingUp,
-  TrendingDown,
   BarChart3,
-  PieChart as PieChartIcon,
   Activity,
   Target,
   Users,
   Brain,
   Zap,
-  Filter,
   Download,
-  Maximize2,
   RefreshCw
 } from 'lucide-react';
 
@@ -84,7 +79,6 @@ export interface AnalyticsData {
 interface AdvancedDataVisualizationProps {
   data: AnalyticsData;
   className?: string;
-  onStudentSelect?: (studentId: string) => void;
   onExportData?: (format: 'csv' | 'pdf' | 'json') => void;
 }
 
@@ -98,30 +92,18 @@ const COLORS = {
   gray: '#6b7280'
 };
 
-const CHART_COLORS = [
-  COLORS.primary,
-  COLORS.secondary,
-  COLORS.success,
-  COLORS.warning,
-  COLORS.danger,
-  COLORS.info
-];
-
 const AdvancedDataVisualization: React.FC<AdvancedDataVisualizationProps> = ({
   data,
   className = '',
-  onStudentSelect,
   onExportData
 }) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState('30d');
-  const [selectedSubject, setSelectedSubject] = useState('all');
   const [chartType, setChartType] = useState<'line' | 'bar' | 'area'>('line');
   const [showPredictions, setShowPredictions] = useState(true);
-  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
   // Memoized calculations for performance
   const processedData = useMemo(() => {
-    const { students, classMetrics } = data;
+    const { students } = data;
 
     // Performance distribution
     const performanceDistribution = students.reduce((acc, student) => {
@@ -640,4 +622,4 @@ const AdvancedDataVisualization: React.FC<AdvancedDataVisualizationProps> = ({
   );
 };
 
-export default AdvancedDataVisualization; 
+export default AdvancedDataVisualization;

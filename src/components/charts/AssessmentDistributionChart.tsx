@@ -38,7 +38,7 @@ const AssessmentDistributionChart: React.FC<AssessmentDistributionChartProps> = 
         <ChartTooltip
           content={<ChartTooltipContent />}
           labelFormatter={(label) => `Score Range: ${label}`}
-          formatter={(value, name, props) => {
+          formatter={(value, _, props) => {
             const entry = data.find(d => d.range === props.payload?.range);
             return [`${value} students (${entry?.percentage || 0}%)`, 'Count'];
           }}
