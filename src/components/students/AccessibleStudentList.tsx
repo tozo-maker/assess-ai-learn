@@ -495,7 +495,9 @@ const AccessibleStudentList: React.FC<AccessibleStudentListProps> = ({
         <div 
           id={listId}
           className="min-h-96"
-          {...aria.createListAttributes(currentStudents.length, activeIndex >= 0 ? activeIndex : undefined)}
+          role="listbox"
+          aria-multiselectable="true"
+          aria-activedescendant={activeIndex >= 0 ? `student-${activeIndex}` : undefined}
           onKeyDown={(e) => handleKeyDown(e.nativeEvent)}
           tabIndex={0}
           ref={focusRef as React.RefObject<HTMLDivElement>}
@@ -546,4 +548,4 @@ const AccessibleStudentList: React.FC<AccessibleStudentListProps> = ({
   );
 };
 
-export default memo(AccessibleStudentList); 
+export default memo(AccessibleStudentList);

@@ -166,9 +166,6 @@ const AssessmentWizard: React.FC = () => {
         return;
       }
       
-      // Calculate total max score from items
-      const totalItemsScore = data.items.reduce((sum, item) => sum + Number(item.max_score), 0);
-      
       // Create the assessment first
       const assessment = await assessmentService.createAssessment({
         title: data.title,
@@ -184,7 +181,7 @@ const AssessmentWizard: React.FC = () => {
       });
       
       // Then create the assessment items
-      const assessmentItems = await assessmentService.createAssessmentItems(
+      await assessmentService.createAssessmentItems(
         data.items.map((item, index) => ({
           assessment_id: assessment.id,
           item_number: index + 1,
