@@ -1,4 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -109,35 +110,31 @@ class ErrorBoundary extends Component<Props, State> {
               <div className="p-4 bg-gray-100 rounded-lg">
                 <h4 className="font-medium mb-2">Error Details:</h4>
                 <p className="text-sm text-red-600 font-mono break-all">
-                  {this.state.error.toString()}
+                  {this.state.error.name}: {this.state.error.message}
                 </p>
-                {this.state.errorInfo && (
-                  <details className="mt-2">
-                    <summary className="text-sm cursor-pointer">Stack trace</summary>
-                    <pre className="text-xs mt-2 overflow-auto max-h-32">
-                      {this.state.errorInfo.componentStack}
-                    </pre>
-                  </details>
-                )}
               </div>
             )}
             
-            <div className={`flex ${level === 'page' ? 'space-x-3' : 'justify-center'}`}>
-              <Button 
+            <div className="flex gap-3 justify-center">
+              <Button
                 onClick={this.handleRetry}
-                className={level === 'page' ? 'flex-1' : ''}
                 variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-4 w-4" />
                 Try Again
               </Button>
+              
               {level === 'page' && (
-                <Button 
+                <Button
                   onClick={this.handleGoHome}
-                  className="flex-1"
+                  variant="default"
+                  size="sm"
+                  className="flex items-center gap-2"
                 >
-                  <Home className="h-4 w-4 mr-2" />
-                  Go Home
+                  <Home className="h-4 w-4" />
+                  Go to Dashboard
                 </Button>
               )}
             </div>
