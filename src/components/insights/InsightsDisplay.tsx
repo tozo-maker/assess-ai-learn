@@ -72,7 +72,7 @@ const InsightsDisplay: React.FC<InsightsDisplayProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {filteredInsights.map((insight, index) => (
+            {filteredInsights.map((insight) => (
               <div key={insight.id} className="border rounded-lg p-4 hover:shadow-sm transition-shadow">
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="font-medium">{insight.assessments?.title}</h4>

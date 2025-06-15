@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 
 interface DistributionData {
@@ -11,10 +11,9 @@ interface DistributionData {
 
 interface AssessmentDistributionChartProps {
   data: DistributionData[];
-  title: string;
 }
 
-const AssessmentDistributionChart: React.FC<AssessmentDistributionChartProps> = ({ data, title }) => {
+const AssessmentDistributionChart: React.FC<AssessmentDistributionChartProps> = ({ data }) => {
   const chartConfig: ChartConfig = {
     count: {
       label: 'Number of Students',
@@ -39,7 +38,7 @@ const AssessmentDistributionChart: React.FC<AssessmentDistributionChartProps> = 
         <ChartTooltip
           content={<ChartTooltipContent />}
           labelFormatter={(label) => `Score Range: ${label}`}
-          formatter={(value, name, props) => {
+          formatter={(value, props) => {
             const entry = data.find(d => d.range === props?.payload?.range);
             return [`${value} students (${entry?.percentage || 0}%)`, 'Count'];
           }}

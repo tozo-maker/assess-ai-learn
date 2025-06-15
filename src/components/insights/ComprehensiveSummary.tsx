@@ -64,7 +64,7 @@ const ComprehensiveSummary: React.FC<ComprehensiveSummaryProps> = ({ insights })
             </p>
           ) : (
             <div className="space-y-2">
-              {insights.map((insight, index) => (
+              {insights.map((insight) => (
                 <div key={insight.id} className="p-2 bg-blue-100 rounded border-l-2 border-blue-400">
                   <div className="font-medium text-blue-800">
                     {insight.assessments?.title} ({insight.assessments?.subject})
