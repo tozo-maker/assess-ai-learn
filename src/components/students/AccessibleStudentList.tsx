@@ -12,7 +12,6 @@ import {
   ScreenReaderAnnouncer, 
   useFocusManagement, 
   useKeyboardNavigation,
-  aria,
   useReducedMotion 
 } from '@/utils/accessibility';
 
@@ -126,6 +125,9 @@ const AccessibleStudentRow = memo<{
       `}
       onKeyDown={handleKeyDown}
       aria-label={`Student: ${studentName}. ${studentInfo}. ${performanceInfo}. ${isSelected ? 'Selected' : 'Not selected'}`}
+      role="option"
+      aria-selected={isSelected}
+      tabIndex={-1}
     >
       <Checkbox
         checked={isSelected}

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -493,7 +494,7 @@ const BusinessLogicValidator = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants = {
+    const variants: Record<string, 'default' | 'destructive' | 'secondary' | 'outline'> = {
       passed: 'default',
       failed: 'destructive',
       warning: 'secondary',

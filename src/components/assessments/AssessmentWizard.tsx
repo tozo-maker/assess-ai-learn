@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useNavigate } from 'react-router-dom';
@@ -371,8 +372,8 @@ const AssessmentWizard: React.FC = () => {
               {/* Assessment Items Tab */}
               <TabsContent value="assessment-items">
                 <div className="space-y-8">
-                  {fields.map((field, index) => (
-                    <DSCard key={field.id}>
+                  {fields.map((fieldItem, index) => (
+                    <DSCard key={fieldItem.id}>
                       <DSCardContent>
                         <DSFlexContainer justify="between" align="center" className="mb-6">
                           <h3 className="text-lg font-semibold text-gray-900">Item #{index + 1}</h3>

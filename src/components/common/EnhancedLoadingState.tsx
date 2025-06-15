@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Loader2, BookOpen, Users, BarChart3 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface EnhancedLoadingStateProps {
   type?: 'dashboard' | 'table' | 'form' | 'cards' | 'spinner';
