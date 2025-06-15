@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -108,15 +109,13 @@ const AccessibleStudentRow = memo<{
     }
   }, []);
 
-  // Create ARIA attributes
-  const listItemAttributes = aria.createListItemAttributes(index, isSelected, isActive);
+  // Create list item attributes manually
   const studentName = `${student.first_name} ${student.last_name}`;
   const studentInfo = `Grade ${student.grade_level}, ID: ${student.student_id || 'N/A'}`;
   const performanceInfo = `Average score: ${performanceData.averageScore.toFixed(1)}%, Risk level: ${performanceData.riskLevel}`;
   
   return (
     <div 
-      {...listItemAttributes}
       ref={setRef}
       className={`
         flex items-center gap-4 p-4 border-b transition-colors
@@ -357,8 +356,8 @@ const AccessibleStudentList: React.FC<AccessibleStudentListProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
 
   // Generate unique IDs for accessibility
-  const searchId = useMemo(() => aria.generateId('student-search'), []);
-  const listId = useMemo(() => aria.generateId('student-list'), []);
+  const searchId = useMemo(() => `student-search-${Math.random().toString(36).substr(2, 9)}`, []);
+  const listId = useMemo(() => `student-list-${Math.random().toString(36).substr(2, 9)}`, []);
 
   // Debounced search to improve performance
   const debouncedSearchTerm = useDebounce(searchTerm, 300);

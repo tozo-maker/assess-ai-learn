@@ -538,7 +538,7 @@ const AssessmentWizard: React.FC = () => {
                     <DSCardContent>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Item Point Summary</h3>
                       <div className="space-y-2">
-                        {fields.map((field, index) => (
+                        {fields.map((_, index) => (
                           <DSFlexContainer key={index} justify="between">
                             <span className="text-sm text-gray-600">Item #{index + 1}:</span>
                             <span className="text-sm font-medium">{form.watch(`items.${index}.max_score`)} points</span>
