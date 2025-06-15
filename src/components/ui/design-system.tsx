@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { Slot } from "@radix-ui/react-slot"
 
 // Core Design System Foundation
 export const designSystem = {
@@ -174,7 +175,7 @@ interface DSButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const DSButton = React.forwardRef<HTMLButtonElement, DSButtonProps>(
-  ({ className, variant = 'primary', size = 'md', ...props }, ref) => {
+  ({ className, variant = 'primary', size = 'md', asChild = false, ...props }, ref) => {
     const variants = {
       primary: `${designSystem.colors.primary.bg} text-white ${designSystem.colors.primary.hover} ${designSystem.colors.primary.ring}`,
       secondary: "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 ring-[#2563eb]/20",
@@ -188,8 +189,10 @@ export const DSButton = React.forwardRef<HTMLButtonElement, DSButtonProps>(
       lg: "h-12 px-6 text-lg"
     };
 
+    const Comp = asChild ? Slot : "button"
+
     return (
-      <button
+      <Comp
         className={cn(
           "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium",
           "transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",

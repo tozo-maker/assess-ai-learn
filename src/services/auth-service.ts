@@ -81,12 +81,22 @@ export const authService = {
         const metadata = user.user.user_metadata;
         
         try {
-          const newProfile = await this.createProfile({
+          const newProfile = await authService.createProfile({
             full_name: metadata.full_name || '',
             school: metadata.school || '',
-            grade_levels: metadata.grade_levels ? metadata.grade_levels.split(',') : [],
-            subjects: metadata.subjects ? metadata.subjects.split(',') : [],
-            years_experience: metadata.years_experience ? parseInt(metadata.years_experience) : undefined
+            grade_levels: typeof metadata.grade_levels === 'string' 
+              ? metadata.grade_levels.split(',') 
+              : Array.isArray(metadata.grade_levels) 
+                ? metadata.grade_levels 
+                : [],
+            subjects: typeof metadata.subjects === 'string' 
+              ? metadata.subjects.split(',') 
+              : Array.isArray(metadata.subjects) 
+                ? metadata.subjects 
+                : [],
+            years_experience: metadata.years_experience 
+              ? parseInt(String(metadata.years_experience)) 
+              : undefined
           });
           return newProfile;
         } catch (createError) {

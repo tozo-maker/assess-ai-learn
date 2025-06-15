@@ -1,4 +1,3 @@
-
 export interface Goal {
   id: string;
   student_id: string;
@@ -8,9 +7,6 @@ export interface Goal {
   target_date?: string;
   status: 'active' | 'completed' | 'paused' | 'cancelled';
   progress_percentage?: number;
-  category?: string;
-  priority?: 'High' | 'Medium' | 'Low';
-  tags?: string;
   created_at: string;
   updated_at: string;
 }
@@ -35,9 +31,6 @@ export interface GoalFormData {
   target_date?: string;
   status?: 'active' | 'completed' | 'paused' | 'cancelled';
   progress_percentage?: number;
-  category?: string;
-  priority?: 'High' | 'Medium' | 'Low';
-  tags?: string;
 }
 
 // Goal Analytics Types
@@ -45,8 +38,7 @@ export interface GoalAnalytics {
   totalGoals: number;
   completedGoals: number;
   averageProgress: number;
-  goalsByCategory: { [key: string]: number };
-  goalsByPriority: { [key: string]: number };
+  goalsByStatus: { [key: string]: number };
   upcomingDeadlines: Goal[];
 }
 
