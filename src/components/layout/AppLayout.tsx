@@ -1,28 +1,29 @@
 
 import React from 'react';
-import Header from './Header';
-import Navigation from './Navigation';
+import Header from '@/components/layout/Header';
+import AppSidebar from '@/components/layout/AppSidebar';
+import FloatingActionButton from '@/components/layout/FloatingActionButton';
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  showBreadcrumbs?: boolean;
 }
 
-const AppLayout: React.FC<AppLayoutProps> = ({ children, showBreadcrumbs = true }) => {
+const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen flex w-full bg-gray-50">
-      {/* Desktop Navigation Sidebar */}
-      <div className="hidden md:block">
-        <Navigation />
-      </div>
+    <div className="min-h-screen bg-gray-50 w-full">
+      {/* Sidebar - hidden on mobile */}
+      <AppSidebar />
       
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-screen md:ml-64">
-        <Header />
-        <main className="flex-1 py-8 px-6 md:px-8 mb-16 md:mb-0">
-          {children}
-        </main>
-      </div>
+      {/* Header */}
+      <Header />
+      
+      {/* Main content */}
+      <main className="md:ml-64 pt-16 md:pt-0">
+        {children}
+      </main>
+
+      {/* Floating Action Button - mobile only */}
+      <FloatingActionButton />
     </div>
   );
 };
