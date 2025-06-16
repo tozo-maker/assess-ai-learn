@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,9 +11,7 @@ import {
   XCircle, 
   AlertTriangle,
   Clock,
-  TrendingUp,
-  Database,
-  Globe
+  TrendingUp
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -104,10 +102,12 @@ const PerformanceTestSuite = () => {
     const startTime = performance.now();
     
     try {
+      if (!user?.id) throw new Error('User ID is required');
+      
       await supabase
         .from('students')
         .select('id, first_name, last_name')
-        .eq('teacher_id', user?.id)
+        .eq('teacher_id', user.id)
         .limit(50);
     } catch (error) {
       console.error('Database query test error:', error);
@@ -119,12 +119,14 @@ const PerformanceTestSuite = () => {
   const simulateConcurrentLoad = async (): Promise<number> => {
     const startTime = performance.now();
     
+    if (!user?.id) throw new Error('User ID is required');
+    
     // Simulate multiple concurrent requests
     const promises = Array.from({ length: 10 }, async () => {
       await supabase
         .from('assessments')
         .select('id, title')
-        .eq('teacher_id', user?.id)
+        .eq('teacher_id', user.id)
         .limit(10);
     });
     
@@ -153,12 +155,14 @@ const PerformanceTestSuite = () => {
     const startTime = Date.now();
     let requestCount = 0;
     
+    if (!user?.id) throw new Error('User ID is required');
+    
     while (Date.now() - startTime < testDuration) {
       try {
         await supabase
           .from('students')
           .select('id')
-          .eq('teacher_id', user?.id)
+          .eq('teacher_id', user.id)
           .limit(1);
         requestCount++;
       } catch (error) {
@@ -259,7 +263,7 @@ const PerformanceTestSuite = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants = {
+    const variantMap: Record<string, "default" | "destructive" | "secondary" | "outline"> = {
       passed: 'default',
       failed: 'destructive',
       warning: 'secondary',
@@ -268,7 +272,7 @@ const PerformanceTestSuite = () => {
     };
     
     return (
-      <Badge variant={variants[status] || 'outline'}>
+      <Badge variant={variantMap[status] || 'outline'}>
         {status.toUpperCase()}
       </Badge>
     );

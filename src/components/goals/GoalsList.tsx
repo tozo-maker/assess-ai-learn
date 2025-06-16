@@ -12,7 +12,6 @@ interface GoalsListProps {
   goals: GoalWithMilestones[];
   onEditGoal: (goal: GoalWithMilestones) => void;
   onDeleteGoal: (goalId: string) => void;
-  onUpdateProgress: (goalId: string, progress: number) => void;
 }
 
 const statusIcons = {
@@ -32,8 +31,7 @@ const statusColors = {
 const GoalsList: React.FC<GoalsListProps> = ({ 
   goals, 
   onEditGoal, 
-  onDeleteGoal, 
-  onUpdateProgress 
+  onDeleteGoal
 }) => {
   if (goals.length === 0) {
     return (
