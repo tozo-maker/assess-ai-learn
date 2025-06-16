@@ -55,7 +55,7 @@ interface LazyWrapperProps {
 
 export const LazyWrapper: React.FC<LazyWrapperProps> = ({
   children,
-  fallback = <EnhancedLoadingState type="component" />,
+  fallback = <EnhancedLoadingState type="spinner" />,
   errorFallback = <div className="p-4 text-center text-gray-500">Failed to load component</div>
 }) => {
   return (
@@ -112,7 +112,7 @@ interface LazyContainerProps {
 
 export const LazyContainer: React.FC<LazyContainerProps> = ({
   children,
-  placeholder = <EnhancedLoadingState type="component" />,
+  placeholder = <EnhancedLoadingState type="spinner" />,
   className = ''
 }) => {
   const containerRef = React.useRef<HTMLDivElement>(null);

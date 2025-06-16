@@ -13,6 +13,7 @@ interface QueryPlan {
 class QueryOptimizer {
   // Intelligent query builder
   static buildOptimizedQuery(plan: QueryPlan) {
+    // Cast table name to any to avoid strict typing issues
     let query = supabase.from(plan.table as any);
     
     // Select specific columns only

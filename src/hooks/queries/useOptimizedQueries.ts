@@ -31,13 +31,17 @@ export const useOptimizedStudents = (options?: Partial<UseQueryOptions<StudentWi
     queryFn: async (): Promise<StudentWithPerformance[]> => {
       if (!user?.id) throw new Error('No authenticated user');
       
-      return enhancedCache.getCachedStudents(user.id);
+      const result = await enhancedCache.getCachedStudents(user.id);
+      return Array.isArray(result) ? result : [];
     },
     enabled: !!user?.id,
     ...optimizedQueryDefaults,
     ...options,
   });
 };
+
+// Export alias for compatibility
+export const useStudents = useOptimizedStudents;
 
 // Assessment queries with background prefetching
 export const useOptimizedAssessments = (options?: Partial<UseQueryOptions<Assessment[], Error>>) => {
@@ -48,13 +52,17 @@ export const useOptimizedAssessments = (options?: Partial<UseQueryOptions<Assess
     queryFn: async (): Promise<Assessment[]> => {
       if (!user?.id) throw new Error('No authenticated user');
       
-      return enhancedCache.getCachedAssessments(user.id);
+      const result = await enhancedCache.getCachedAssessments(user.id);
+      return Array.isArray(result) ? result : [];
     },
     enabled: !!user?.id,
     ...optimizedQueryDefaults,
     ...options,
   });
 };
+
+// Export alias for compatibility
+export const useAssessments = useOptimizedAssessments;
 
 // Student metrics with aggressive caching
 export const useOptimizedStudentMetrics = (options?: Partial<UseQueryOptions<any, Error>>) => {
@@ -70,10 +78,31 @@ export const useOptimizedStudentMetrics = (options?: Partial<UseQueryOptions<any
         tags: ['metrics', 'students']
       });
       
-      return metrics;
+      return metrics || {};
     },
     ...optimizedQueryDefaults,
     staleTime: 5 * 60 * 1000, // 5 minutes for metrics
+    ...options,
+  });
+};
+
+// Export alias for compatibility
+export const useStudentMetrics = useOptimizedStudentMetrics;
+
+// Communications query for compatibility
+export const useCommunications = (options?: Partial<UseQueryOptions<any[], Error>>) => {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ['communications'],
+    queryFn: async (): Promise<any[]> => {
+      if (!user?.id) throw new Error('No authenticated user');
+      
+      // Mock communications data - replace with actual service call
+      return [];
+    },
+    enabled: !!user?.id,
+    ...optimizedQueryDefaults,
     ...options,
   });
 };
