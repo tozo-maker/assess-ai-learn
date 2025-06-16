@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { aiOptimizationService } from './ai-optimization-service';
 
@@ -130,7 +129,7 @@ class OptimizedAIService {
       // Get current goals to avoid duplication
       const { data: existingGoals } = await supabase
         .from('goals')
-        .select('title, category, status')
+        .select('title, status')
         .eq('student_id', studentId)
         .eq('status', 'active');
 

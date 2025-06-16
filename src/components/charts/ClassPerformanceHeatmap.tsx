@@ -24,16 +24,6 @@ const ClassPerformanceHeatmap: React.FC<ClassPerformanceHeatmapProps> = ({ data 
     return 'bg-red-500';
   };
 
-  const getMasteryColor = (level: string) => {
-    switch (level) {
-      case 'Advanced': return 'bg-green-600';
-      case 'Proficient': return 'bg-green-400';
-      case 'Basic': return 'bg-yellow-400';
-      case 'Below Basic': return 'bg-red-400';
-      default: return 'bg-gray-300';
-    }
-  };
-
   return (
     <Card>
       <CardHeader>

@@ -1,5 +1,4 @@
 
-import React from 'react';
 import EnhancedBreadcrumbs from './EnhancedBreadcrumbs';
 
 // Wrapper to maintain backward compatibility

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -61,6 +60,9 @@ const AddStudent = () => {
       grade_level: '5th',
       learning_goals: '',
       special_considerations: '',
+      parent_name: '',
+      parent_email: '',
+      parent_phone: '',
     },
   });
 
@@ -83,6 +85,9 @@ const AddStudent = () => {
         student_id: values.student_id || undefined,
         learning_goals: values.learning_goals || undefined,
         special_considerations: values.special_considerations || undefined,
+        parent_name: values.parent_name || undefined,
+        parent_email: values.parent_email || undefined,
+        parent_phone: values.parent_phone || undefined,
       };
       
       return studentService.createStudent(studentData);
@@ -211,6 +216,58 @@ const AddStudent = () => {
                   </div>
 
                   <DSSpacer size="lg" />
+
+                  {/* Parent Contact Information Section - Following Design System */}
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-6">Parent Contact Information</h2>
+                    <DSContentGrid cols={2}>
+                      <FormField
+                        control={form.control}
+                        name="parent_name"
+                        render={({ field }) => (
+                          <DSFormField label="Parent/Guardian Name">
+                            <DSInput 
+                              placeholder="Enter parent/guardian name" 
+                              {...field} 
+                              helpText="Primary contact person"
+                            />
+                          </DSFormField>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="parent_phone"
+                        render={({ field }) => (
+                          <DSFormField label="Phone Number">
+                            <DSInput 
+                              placeholder="Enter phone number" 
+                              {...field} 
+                              helpText="Primary contact phone"
+                            />
+                          </DSFormField>
+                        )}
+                      />
+                      <div className="col-span-full">
+                        <FormField
+                          control={form.control}
+                          name="parent_email"
+                          render={({ field }) => (
+                            <DSFormField label="Email Address">
+                              <DSInput 
+                                type="email"
+                                placeholder="Enter email address" 
+                                {...field} 
+                                error={!!form.formState.errors.parent_email}
+                                helpText={form.formState.errors.parent_email?.message || "For progress reports and communications"}
+                              />
+                            </DSFormField>
+                          )}
+                        />
+                      </div>
+                    </DSContentGrid>
+                  </div>
+
+                  <DSSpacer size="xl" />
 
                   {/* Learning Information Section - Following Design System */}
                   <div>

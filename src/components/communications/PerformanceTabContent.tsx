@@ -92,7 +92,7 @@ const PerformanceTabContent: React.FC<PerformanceTabContentProps> = ({
         </CardHeader>
         <CardContent>
           <div className="h-80">
-            <GrowthTrendChart data={growthTrendData} studentName={student.first_name} />
+            <GrowthTrendChart data={growthTrendData} />
           </div>
         </CardContent>
       </Card>

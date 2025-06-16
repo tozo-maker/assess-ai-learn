@@ -17,12 +17,10 @@ import {
 
 interface DashboardRecentInsightsProps {
   students: any[];
-  communications: any[];
 }
 
 const DashboardRecentInsights: React.FC<DashboardRecentInsightsProps> = ({
-  students,
-  communications
+  students
 }) => {
   const insights = [
     ...(students.length > 0 ? [{

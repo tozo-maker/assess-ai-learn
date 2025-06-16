@@ -1,181 +1,129 @@
+// Performance monitoring service for LearnSpark AI
+export interface PerformanceMetric {
+  timestamp: number;
+  component: string;
+  operation: string;
+  duration: number;
+  success: boolean;
+  metadata?: Record<string, any>;
+}
 
-import { supabase } from '@/integrations/supabase/client';
-
-interface PerformanceMetric {
-  endpoint: string;
-  method: string;
-  response_time_ms: number;
-  status_code: number;
-  error_message?: string;
+export interface PerformanceReport {
+  averageLoadTime: number;
+  slowestOperations: PerformanceMetric[];
+  errorRate: number;
+  recommendations: string[];
 }
 
 class PerformanceService {
   private metrics: PerformanceMetric[] = [];
-  private batchSize = 10;
-  private flushInterval = 5000; // 5 seconds
+  private readonly MAX_METRICS = 1000;
 
-  constructor() {
-    // Auto-flush metrics periodically
-    setInterval(() => {
-      this.flushMetrics();
-    }, this.flushInterval);
+  public trackOperation<T>(
+    component: string,
+    operation: string,
+    fn: () => Promise<T>,
+    metadata?: Record<string, any>
+  ): Promise<T> {
+    const startTime = performance.now();
+    
+    return fn()
+      .then(result => {
+        this.recordMetric({
+          timestamp: Date.now(),
+          component,
+          operation,
+          duration: performance.now() - startTime,
+          success: true,
+          metadata
+        });
+        return result;
+      })
+      .catch(error => {
+        this.recordMetric({
+          timestamp: Date.now(),
+          component,
+          operation,
+          duration: performance.now() - startTime,
+          success: false,
+          metadata: { ...metadata, error: error.message }
+        });
+        throw error;
+      });
   }
 
-  logMetric(metric: PerformanceMetric) {
+  private recordMetric(metric: PerformanceMetric): void {
     this.metrics.push(metric);
     
-    if (this.metrics.length >= this.batchSize) {
-      this.flushMetrics();
+    // Keep only the most recent metrics
+    if (this.metrics.length > this.MAX_METRICS) {
+      this.metrics = this.metrics.slice(-this.MAX_METRICS);
     }
   }
 
-  private async flushMetrics() {
-    if (this.metrics.length === 0) return;
+  public getReport(): PerformanceReport {
+    const successfulMetrics = this.metrics.filter(m => m.success);
+    const averageLoadTime = successfulMetrics.length > 0
+      ? successfulMetrics.reduce((sum, m) => sum + m.duration, 0) / successfulMetrics.length
+      : 0;
 
-    const metricsToFlush = [...this.metrics];
-    this.metrics = [];
+    const slowestOperations = [...this.metrics]
+      .sort((a, b) => b.duration - a.duration)
+      .slice(0, 10);
 
-    try {
-      await supabase
-        .from('system_performance_logs')
-        .insert(metricsToFlush);
-    } catch (error) {
-      console.warn('Failed to log performance metrics:', error);
-      // Put metrics back if failed
-      this.metrics.unshift(...metricsToFlush);
+    const errorRate = this.metrics.length > 0
+      ? (this.metrics.filter(m => !m.success).length / this.metrics.length) * 100
+      : 0;
+
+    const recommendations: string[] = [];
+    
+    if (averageLoadTime > 2000) {
+      recommendations.push('Consider optimizing slow operations');
     }
-  }
-
-  async getPerformanceStats(timeframe: 'hour' | 'day' | 'week' = 'day') {
-    const timeframeHours = timeframe === 'hour' ? 1 : timeframe === 'day' ? 24 : 168;
-    const since = new Date(Date.now() - timeframeHours * 60 * 60 * 1000).toISOString();
-
-    const { data, error } = await supabase
-      .from('system_performance_logs')
-      .select('*')
-      .gte('created_at', since)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
+    
+    if (errorRate > 5) {
+      recommendations.push('High error rate detected, review error handling');
+    }
 
     return {
-      totalRequests: data.length,
-      averageResponseTime: data.reduce((sum, log) => sum + log.response_time_ms, 0) / data.length,
-      errorRate: data.filter(log => log.status_code >= 400).length / data.length,
-      slowRequests: data.filter(log => log.response_time_ms > 2000).length,
-      data
+      averageLoadTime,
+      slowestOperations,
+      errorRate,
+      recommendations
     };
   }
 
-  // Add the missing updateStudentPerformance method
-  async updateStudentPerformance(studentId: string): Promise<void> {
-    try {
-      // Get all student responses for this student
-      const { data: responses, error: responsesError } = await supabase
-        .from('student_responses')
-        .select(`
-          score,
-          assessment_item_id,
-          assessment_items!inner(max_score)
-        `)
-        .eq('student_id', studentId);
+  public clearMetrics(): void {
+    this.metrics = [];
+  }
 
-      if (responsesError) throw responsesError;
-
-      if (!responses || responses.length === 0) {
-        // No responses yet, create a default performance record
-        await supabase
-          .from('student_performance')
-          .upsert({
-            student_id: studentId,
-            average_score: null,
-            performance_level: null,
-            assessment_count: 0,
-            needs_attention: false,
-            last_assessment_date: null
-          });
-        return;
+  public logMetric({
+    endpoint,
+    method,
+    response_time_ms,
+    status_code,
+    error_message
+  }: {
+    endpoint: string;
+    method: string;
+    response_time_ms: number;
+    status_code: number;
+    error_message?: string;
+  }): void {
+    this.recordMetric({
+      timestamp: Date.now(),
+      component: 'api',
+      operation: `${method} ${endpoint}`,
+      duration: response_time_ms,
+      success: status_code >= 200 && status_code < 300,
+      metadata: {
+        status_code,
+        error_message
       }
-
-      // Calculate performance metrics
-      let totalPossibleScore = 0;
-      let totalActualScore = 0;
-      
-      responses.forEach(response => {
-        const maxScore = (response as any).assessment_items.max_score;
-        totalPossibleScore += maxScore;
-        totalActualScore += response.score;
-      });
-
-      const averageScore = totalPossibleScore > 0 ? (totalActualScore / totalPossibleScore) * 100 : 0;
-      
-      // Determine performance level
-      let performanceLevel = 'Beginning';
-      if (averageScore >= 90) performanceLevel = 'Advanced';
-      else if (averageScore >= 80) performanceLevel = 'Proficient';
-      else if (averageScore >= 65) performanceLevel = 'Developing';
-
-      // Determine if needs attention (below 65% average)
-      const needsAttention = averageScore < 65;
-
-      // Get the most recent assessment date
-      const { data: lastAssessment } = await supabase
-        .from('student_responses')
-        .select('created_at')
-        .eq('student_id', studentId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      // Update or insert performance record
-      await supabase
-        .from('student_performance')
-        .upsert({
-          student_id: studentId,
-          average_score: Math.round(averageScore * 100) / 100, // Round to 2 decimal places
-          performance_level: performanceLevel,
-          assessment_count: responses.length,
-          needs_attention: needsAttention,
-          last_assessment_date: lastAssessment?.created_at || null
-        });
-
-    } catch (error) {
-      console.error('Error updating student performance:', error);
-      throw error;
-    }
+    });
   }
 }
 
-export const performanceService = new PerformanceService();
-
-// Performance monitoring hook
-export const withPerformanceTracking = <T extends (...args: any[]) => Promise<any>>(
-  fn: T,
-  endpoint: string,
-  method: string = 'GET'
-): T => {
-  return (async (...args: any[]) => {
-    const startTime = Date.now();
-    let status_code = 200;
-    let error_message: string | undefined;
-
-    try {
-      const result = await fn(...args);
-      return result;
-    } catch (error: any) {
-      status_code = error.status || 500;
-      error_message = error.message;
-      throw error;
-    } finally {
-      const response_time_ms = Date.now() - startTime;
-      
-      performanceService.logMetric({
-        endpoint,
-        method,
-        response_time_ms,
-        status_code,
-        error_message
-      });
-    }
-  }) as T;
-};
+// Export as default
+const performanceService = new PerformanceService();
+export default performanceService;

@@ -1,5 +1,4 @@
 
-import React from 'react';
 import PerformanceWidget from '@/components/dashboard/PerformanceWidget';
 
 interface PerformanceData {
@@ -16,9 +15,9 @@ interface PerformanceSectionProps {
 
 const PerformanceSection: React.FC<PerformanceSectionProps> = ({ assessments, studentMetrics }) => {
   // Generate performance data from actual assessments
-  const generatePerformanceData = (assessments: any[], offset = 0): PerformanceData[] => {
+  const generatePerformanceData = (offset = 0): PerformanceData[] => {
     const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
-    return weeks.map((week, index) => {
+    return weeks.map((week) => {
       // For demo purposes, use a base score with some variation
       const baseScore = studentMetrics?.averagePerformance !== "N/A" 
         ? parseFloat(studentMetrics?.averagePerformance?.replace('%', '') || '75') 
@@ -31,9 +30,9 @@ const PerformanceSection: React.FC<PerformanceSectionProps> = ({ assessments, st
     });
   };
 
-  const mathPerformanceData = generatePerformanceData(assessments, 0);
-  const readingPerformanceData = generatePerformanceData(assessments, -5);
-  const sciencePerformanceData = generatePerformanceData(assessments, 3);
+  const mathPerformanceData = generatePerformanceData(0);
+  const readingPerformanceData = generatePerformanceData(-5);
+  const sciencePerformanceData = generatePerformanceData(3);
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
