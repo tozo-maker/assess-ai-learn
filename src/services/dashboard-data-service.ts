@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { enhancedCache } from '@/services/enhanced-caching-service';
 
@@ -56,7 +55,14 @@ class DashboardDataService {
     teacher: { name: string; firstName: string };
   }> {
     const cacheKey = `dashboard_${teacherId}`;
-    const cached = this.getCached(cacheKey);
+    const cached = this.getCached<{
+      students: any[];
+      assessments: any[];
+      metrics: DashboardMetrics;
+      alerts: DashboardAlert[];
+      teacher: { name: string; firstName: string };
+    }>(cacheKey);
+    
     if (cached) return cached;
 
     try {

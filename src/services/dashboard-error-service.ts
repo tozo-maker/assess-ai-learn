@@ -1,3 +1,6 @@
+
+import React from 'react';
+
 interface DashboardError {
   id: string;
   timestamp: number;
