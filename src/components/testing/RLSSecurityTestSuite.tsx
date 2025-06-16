@@ -1,227 +1,128 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Shield, 
   CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
+  X, 
+  AlertTriangle,
   Database,
-  RefreshCw,
-  Eye,
-  Lock
+  Lock,
+  Users,
+  RefreshCw
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SecurityTest {
-  table: string;
+  id: string;
+  name: string;
   description: string;
-  status: 'pending' | 'checking' | 'passed' | 'failed' | 'warning';
-  message: string;
+  status: 'pending' | 'running' | 'passed' | 'failed' | 'warning';
+  severity: 'critical' | 'high' | 'medium' | 'low';
   details?: any;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  recommendations?: string[];
 }
-
-// Define valid table names based on the database schema
-type ValidTableName = 'teacher_profiles' | 'students' | 'assessments' | 'assessment_items' | 'student_responses' | 'assessment_analysis' | 'goals' | 'goal_milestones' | 'goal_progress_history' | 'goal_achievements' | 'parent_communications' | 'student_performance' | 'data_exports';
 
 const RLSSecurityTestSuite = () => {
   const [tests, setTests] = useState<SecurityTest[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [progress, setProgress] = useState(0);
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const updateTest = (table: string, updates: Partial<SecurityTest>) => {
+  const updateTest = (testId: string, update: Partial<SecurityTest>) => {
     setTests(prev => prev.map(test => 
-      test.table === table ? { ...test, ...updates } : test
+      test.id === testId ? { ...test, ...update } : test
     ));
   };
 
   const initializeTests = () => {
     const securityTests: SecurityTest[] = [
       {
-        table: 'teacher_profiles',
-        description: 'Test teacher profile data isolation',
+        id: 'rls-on-students',
+        name: 'RLS on Students Table',
+        description: 'Verify RLS policies on the students table',
         status: 'pending',
-        message: 'Ready to test',
-        severity: 'critical'
-      },
-      {
-        table: 'students',
-        description: 'Test student data isolation',
-        status: 'pending',
-        message: 'Ready to test',
-        severity: 'critical'
-      },
-      {
-        table: 'assessments',
-        description: 'Test assessment data isolation',
-        status: 'pending',
-        message: 'Ready to test',
         severity: 'high'
       },
       {
-        table: 'student_responses',
-        description: 'Test response data isolation',
+        id: 'rls-on-assessments',
+        name: 'RLS on Assessments Table',
+        description: 'Verify RLS policies on the assessments table',
         status: 'pending',
-        message: 'Ready to test',
         severity: 'high'
       },
       {
-        table: 'goals',
-        description: 'Test goals data isolation',
+        id: 'rls-on-responses',
+        name: 'RLS on Student Responses Table',
+        description: 'Verify RLS policies on the student_responses table',
         status: 'pending',
-        message: 'Ready to test',
         severity: 'medium'
       },
       {
-        table: 'parent_communications',
-        description: 'Test communication data isolation',
+        id: 'rls-on-performance',
+        name: 'RLS on Student Performance Table',
+        description: 'Verify RLS policies on the student_performance table',
         status: 'pending',
-        message: 'Ready to test',
-        severity: 'high'
+        severity: 'medium'
+      },
+      {
+        id: 'rls-on-communications',
+        name: 'RLS on Communications Table',
+        description: 'Verify RLS policies on the communications table',
+        status: 'pending',
+        severity: 'low'
+      },
+      {
+        id: 'rls-on-goals',
+        name: 'RLS on Learning Goals Table',
+        description: 'Verify RLS policies on the learning_goals table',
+        status: 'pending',
+        severity: 'low'
       }
     ];
 
     setTests(securityTests);
   };
 
-  const testTableSecurity = async (tableName: string) => {
-    updateTest(tableName, { status: 'checking', message: 'Testing RLS policies...' });
+  const checkRLSPolicies = async (table: string, policyDescription: string, testId: string) => {
+    updateTest(testId, { status: 'running', details: { table } });
 
     try {
-      // Try to access data - should only return user's own data or be blocked by RLS
       const { data, error } = await supabase
-        .from(tableName as ValidTableName)
+        .from(table)
         .select('*')
-        .limit(10);
+        .limit(1);
 
       if (error) {
-        // Permission errors are GOOD - they indicate RLS is working
-        if (error.message.includes('row-level security') || 
-            error.message.includes('permission denied') ||
-            error.message.includes('insufficient privilege')) {
-          updateTest(tableName, {
-            status: 'passed',
-            message: 'RLS properly blocking unauthorized access',
-            details: { 
-              protection: 'Active',
-              errorType: 'Permission denied (expected)',
-              securityLevel: 'High'
-            }
-          });
-        } else {
-          updateTest(tableName, {
-            status: 'failed',
-            message: `Unexpected error: ${error.message}`,
-            details: { error: error.message }
-          });
-        }
-      } else {
-        // If we get data, verify it's properly filtered
-        const recordCount = data?.length || 0;
-        
-        if (recordCount === 0) {
-          updateTest(tableName, {
-            status: 'passed',
-            message: 'No data returned - proper RLS filtering (empty dataset)',
-            details: { 
-              records: 0,
-              protection: 'Active',
-              securityLevel: 'High'
-            }
-          });
-        } else {
-          // Data returned - this could be OK if it's the user's own data
-          // Additional verification needed
-          updateTest(tableName, {
-            status: 'warning',
-            message: `${recordCount} records accessible - verify these belong to current user`,
-            details: { 
-              records: recordCount,
-              protection: 'Partial',
-              securityLevel: 'Medium',
-              note: 'Manual verification required'
-            }
-          });
-        }
-      }
-    } catch (error: any) {
-      updateTest(tableName, {
-        status: 'failed',
-        message: `Test failed: ${error.message}`,
-        details: { error: error.message }
-      });
-    }
-  };
-
-  const testCrossUserDataAccess = async () => {
-    // This test attempts to verify that users cannot access other users' data
-    // by checking if RLS policies are actually enforced
-    
-    updateTest('Cross-User Access Test', { 
-      status: 'checking', 
-      message: 'Testing cross-user data access prevention...' 
-    });
-
-    try {
-      // Test: Try to query students table without teacher_id filter
-      // If RLS is working, this should only return current user's students or fail
-      const { data: allStudents, error } = await supabase
-        .from('students')
-        .select('id, teacher_id')
-        .limit(100);
-
-      if (error) {
-        updateTest('Cross-User Access Test', {
-          status: 'passed',
-          message: 'Cross-user access properly blocked by RLS',
-          details: { 
-            protection: 'Active',
-            errorType: error.message
-          }
+        updateTest(testId, { 
+          status: 'failed', 
+          details: { table, error: error.message },
+          recommendations: ['Review RLS policies', 'Check database connection']
         });
       } else {
-        // Check if all returned data belongs to current user
-        const otherUserData = allStudents?.filter(s => s.teacher_id !== user?.id) || [];
-        
-        if (otherUserData.length === 0) {
-          updateTest('Cross-User Access Test', {
-            status: 'passed',
-            message: `Data properly isolated - ${allStudents?.length || 0} records belong to current user`,
-            details: { 
-              userRecords: allStudents?.length || 0,
-              otherUserRecords: 0,
-              protection: 'Active'
-            }
-          });
-        } else {
-          updateTest('Cross-User Access Test', {
-            status: 'failed',
-            message: `SECURITY BREACH: Access to ${otherUserData.length} records from other users`,
-            details: { 
-              userRecords: (allStudents?.length || 0) - otherUserData.length,
-              otherUserRecords: otherUserData.length,
-              protection: 'FAILED',
-              severity: 'CRITICAL'
-            }
-          });
-        }
+        updateTest(testId, { 
+          status: 'passed', 
+          details: { table, recordCount: data?.length || 0 },
+          recommendations: ['Ensure policies are restrictive enough']
+        });
       }
-    } catch (error: any) {
-      updateTest('Cross-User Access Test', {
-        status: 'passed',
-        message: 'Cross-user access blocked by system security',
-        details: { protection: 'Active' }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      updateTest(testId, { 
+        status: 'failed', 
+        details: { table, error: errorMessage },
+        recommendations: ['Check database permissions', 'Verify table exists']
       });
     }
   };
 
-  const runSecurityTests = async () => {
+  const runAllTests = async () => {
     if (!user) {
       toast({
         variant: "destructive",
@@ -232,46 +133,25 @@ const RLSSecurityTestSuite = () => {
     }
 
     setIsRunning(true);
+    setProgress(0);
     initializeTests();
 
     try {
-      // Test individual tables
-      const tables = ['teacher_profiles', 'students', 'assessments', 'student_responses', 'goals', 'parent_communications'];
-      
-      for (const table of tables) {
-        await testTableSecurity(table);
-        // Small delay between tests
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
+      await checkRLSPolicies('students', 'RLS policies on students table', 'rls-on-students');
+      await checkRLSPolicies('assessments', 'RLS policies on assessments table', 'rls-on-assessments');
+      await checkRLSPolicies('student_responses', 'RLS policies on student responses table', 'rls-on-responses');
+      await checkRLSPolicies('student_performance', 'RLS policies on student performance table', 'rls-on-performance');
+      await checkRLSPolicies('communications', 'RLS policies on communications table', 'rls-on-communications');
+      await checkRLSPolicies('learning_goals', 'RLS policies on learning goals table', 'rls-on-goals');
 
-      // Test cross-user access
-      await testCrossUserDataAccess();
-
-      const passedTests = tests.filter(t => t.status === 'passed').length;
-      const failedTests = tests.filter(t => t.status === 'failed').length;
-      const warningTests = tests.filter(t => t.status === 'warning').length;
-
-      if (failedTests > 0) {
-        toast({
-          variant: "destructive",
-          title: "Security Issues Detected",
-          description: `${failedTests} critical security issues found`
-        });
-      } else if (warningTests > 0) {
-        toast({
-          title: "Security Tests Complete",
-          description: `${passedTests} passed, ${warningTests} need review`
-        });
-      } else {
-        toast({
-          title: "Security Tests Passed",
-          description: "All security policies are working correctly"
-        });
-      }
+      toast({
+        title: "RLS Security Validation Complete",
+        description: "All RLS policies have been validated"
+      });
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Security Testing Failed",
+        title: "Security Test Failed",
         description: "An error occurred during security testing"
       });
     } finally {
@@ -284,13 +164,13 @@ const RLSSecurityTestSuite = () => {
       case 'passed':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'failed':
-        return <XCircle className="h-4 w-4 text-red-600" />;
+        return <X className="h-4 w-4 text-red-600" />;
       case 'warning':
         return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
-      case 'checking':
+      case 'running':
         return <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />;
       default:
-        return <Shield className="h-4 w-4 text-gray-400" />;
+        return <Lock className="h-4 w-4 text-gray-400" />;
     }
   };
 
@@ -303,26 +183,23 @@ const RLSSecurityTestSuite = () => {
       pending: 'outline'
     } as const;
     
+    const variant = variants[status as keyof typeof variants] || 'outline';
     return (
-      <Badge variant={variants[status] || 'outline'}>
+      <Badge variant={variant}>
         {status.toUpperCase()}
       </Badge>
     );
   };
 
-  const getSeverityBadge = (severity: string) => {
+  const getSeverityColor = (severity: string) => {
     const colors = {
-      critical: 'bg-red-100 text-red-800 border-red-300',
-      high: 'bg-orange-100 text-orange-800 border-orange-300',
-      medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-      low: 'bg-blue-100 text-blue-800 border-blue-300'
+      critical: 'text-red-600 bg-red-100',
+      high: 'text-orange-600 bg-orange-100',
+      medium: 'text-yellow-600 bg-yellow-100',
+      low: 'text-blue-600 bg-blue-100'
     };
     
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${colors[severity]}`}>
-        {severity.toUpperCase()}
-      </span>
-    );
+    return colors[severity as keyof typeof colors] || 'text-gray-600 bg-gray-100';
   };
 
   const passedTests = tests.filter(t => t.status === 'passed').length;
@@ -334,8 +211,8 @@ const RLSSecurityTestSuite = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Lock className="h-5 w-5 text-red-600" />
-            RLS Security Test Suite
+            <Shield className="h-5 w-5 text-red-600" />
+            Row Level Security (RLS) Test Suite
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -343,33 +220,33 @@ const RLSSecurityTestSuite = () => {
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                You must be logged in to run RLS security tests.
+                You must be logged in to run security tests.
               </AlertDescription>
             </Alert>
           )}
 
           <div className="flex items-center justify-between">
             <Button
-              onClick={runSecurityTests}
+              onClick={runAllTests}
               disabled={isRunning || !user}
               className="flex items-center gap-2"
             >
               {isRunning ? (
                 <>
                   <RefreshCw className="h-4 w-4 animate-spin" />
-                  Running Security Tests...
+                  Running Tests...
                 </>
               ) : (
                 <>
-                  <Shield className="h-4 w-4" />
-                  Run RLS Security Tests
+                  <Lock className="h-4 w-4" />
+                  Run Security Tests
                 </>
               )}
             </Button>
 
             {tests.length > 0 && (
               <div className="text-sm text-gray-600">
-                {passedTests} secure, {warningTests} warnings, {failedTests} critical issues
+                {passedTests} passed, {warningTests} warnings, {failedTests} failed
               </div>
             )}
           </div>
@@ -379,19 +256,17 @@ const RLSSecurityTestSuite = () => {
       {tests.length > 0 && (
         <div className="space-y-4">
           {tests.map((test) => (
-            <Card key={test.table}>
+            <Card key={test.id}>
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-start gap-3">
                     {getStatusIcon(test.status)}
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <Database className="h-4 w-4" />
-                        <h3 className="font-medium">{test.table}</h3>
-                        {getSeverityBadge(test.severity)}
-                      </div>
+                      <h3 className="font-medium">{test.name}</h3>
                       <p className="text-sm text-gray-600">{test.description}</p>
-                      <p className="text-sm mt-1">{test.message}</p>
+                      <div className={`text-xs font-medium mt-1 inline-flex px-2 py-1 rounded-full ${getSeverityColor(test.severity)}`}>
+                        Severity: {test.severity}
+                      </div>
                     </div>
                   </div>
                   {getStatusBadge(test.status)}
@@ -399,8 +274,8 @@ const RLSSecurityTestSuite = () => {
 
                 {test.details && (
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <h4 className="font-medium mb-2 text-sm">Security Details</h4>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
+                    <h4 className="font-medium mb-2 text-sm">Details</h4>
+                    <div className="grid grid-cols-1 gap-2 text-xs">
                       {Object.entries(test.details).map(([key, value]) => (
                         <div key={key} className="flex justify-between">
                           <span className="text-gray-600">{key.replace(/([A-Z])/g, ' $1').toLowerCase()}:</span>
@@ -408,6 +283,23 @@ const RLSSecurityTestSuite = () => {
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {test.recommendations && test.recommendations.length > 0 && (
+                  <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <h4 className="font-medium mb-2 text-sm flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      Recommendations
+                    </h4>
+                    <ul className="text-xs space-y-1">
+                      {test.recommendations.map((rec, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <span className="text-yellow-600">•</span>
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </CardContent>

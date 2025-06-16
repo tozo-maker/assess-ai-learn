@@ -60,10 +60,13 @@ export const useCommunications = (options?: Partial<UseQueryOptions<ParentCommun
   });
 };
 
-export const useTeacherProfile = (options?: Partial<UseQueryOptions<TeacherProfile, Error>>) => {
+export const useTeacherProfile = (options?: Partial<UseQueryOptions<TeacherProfile | null, Error>>) => {
   return useQuery({
     queryKey: ['teacher-profile'],
-    queryFn: authService.getProfile,
+    queryFn: async () => {
+      const profile = await authService.getProfile();
+      return profile;
+    },
     ...defaultQueryOptions,
     ...options,
   });

@@ -1,33 +1,16 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line
-} from 'recharts';
-import { 
-  TrendingUp, 
   Users, 
   BookOpen, 
-  Target,
-  AlertCircle,
-  CheckCircle,
-  Calendar,
-  Download
+  Target, 
+  Clock,
+  ArrowUp,
+  ArrowDown,
+  Minus
 } from 'lucide-react';
 import { analyticsService } from '@/services/analytics-service';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,270 +20,255 @@ interface AnalyticsData {
   totalAssessments: number;
   averageScore: number;
   completionRate: number;
-  trends: any[];
-  performanceDistribution: any[];
-  subjectPerformance: any[];
-  recentActivity: any[];
+  trends: {
+    date: string;
+    averageScore: number;
+  }[];
+  performanceDistribution: {
+    name: string;
+    value: number;
+  }[];
+  subjectPerformance: {
+    subject: string;
+    averageScore: number;
+  }[];
+  recentActivity: {
+    title: string;
+    description: string;
+    type: string;
+    date: string;
+  }[];
 }
 
 const AnalyticsDashboard = () => {
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [timeRange, setTimeRange] = useState<string>('30d');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { user } = useAuth();
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState('30d');
+  const { toast } = useToast();
 
   useEffect(() => {
-    loadAnalyticsData();
+    if (user) {
+      fetchAnalyticsData();
+    }
   }, [user, timeRange]);
 
-  const loadAnalyticsData = async () => {
-    if (!user) return;
-    
+  const fetchAnalyticsData = async () => {
+    setIsLoading(true);
     try {
-      setLoading(true);
-      const analyticsData = await analyticsService.getTeacherAnalytics(user.id, timeRange);
-      setData(analyticsData);
+      const data = await analyticsService.getTeacherAnalytics(user?.id || '', timeRange);
+      setAnalyticsData(data);
     } catch (error) {
-      console.error('Failed to load analytics data:', error);
+      toast({
+        title: "Failed to load analytics",
+        description: "Could not retrieve analytics data. Please try again.",
+        variant: "destructive"
+      });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleExportData = async () => {
-    if (!user) return;
-    
+  const handleExportReport = async () => {
     try {
-      await analyticsService.exportAnalyticsReport(user.id, timeRange);
+      await analyticsService.exportAnalyticsReport(user?.id || '', timeRange);
+      toast({
+        title: "Report Exported",
+        description: "Your analytics report has been exported successfully."
+      });
     } catch (error) {
-      console.error('Failed to export analytics data:', error);
+      toast({
+        title: "Export Failed",
+        description: "Could not export analytics report. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
-  if (loading) {
+  const renderTrendIcon = (trend: any) => {
+    if (trend > 0) return <ArrowUp className="h-4 w-4 text-green-600" />;
+    if (trend < 0) return <ArrowDown className="h-4 w-4 text-red-600" />;
+    return <Minus className="h-4 w-4 text-gray-400" />;
+  };
+
+  if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-8 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
-  if (!data) {
+  if (!analyticsData) {
     return (
-      <div className="text-center py-8">
-        <AlertCircle className="h-8 w-8 mx-auto mb-4 text-gray-400" />
-        <p className="text-gray-600">No analytics data available</p>
+      <div className="text-center py-12">
+        <p className="text-gray-500">No analytics data available</p>
+        <Button onClick={fetchAnalyticsData} className="mt-4">
+          Refresh Data
+        </Button>
       </div>
     );
   }
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Analytics Header */}
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
-          <p className="text-gray-600">Comprehensive insights into student performance and engagement</p>
+          <h2 className="text-3xl font-bold">Analytics Dashboard</h2>
+          <p className="text-gray-600">Comprehensive insights into student performance and learning trends</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExportData}>
-            <Download className="h-4 w-4 mr-2" />
-            Export Report
-          </Button>
-        </div>
-      </div>
-
-      {/* Time Range Selector */}
-      <div className="flex gap-2">
-        {['7d', '30d', '90d', '1y'].map((range) => (
-          <Button
-            key={range}
-            variant={timeRange === range ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTimeRange(range)}
+          <select 
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value)}
+            className="border rounded p-2"
           >
-            {range === '7d' ? 'Last 7 days' :
-             range === '30d' ? 'Last 30 days' :
-             range === '90d' ? 'Last 3 months' : 'Last year'}
-          </Button>
-        ))}
+            <option value="7d">Last 7 days</option>
+            <option value="30d">Last 30 days</option>
+            <option value="90d">Last 90 days</option>
+            <option value="all">All time</option>
+          </select>
+          <Button onClick={handleExportReport}>Export Report</Button>
+        </div>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.totalStudents}</div>
-            <p className="text-xs text-muted-foreground">
-              Active learners in your classes
-            </p>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-gray-600">Total Students</p>
+                <h3 className="text-2xl font-bold">{analyticsData.totalStudents}</h3>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-full">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Assessments Given</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.totalAssessments}</div>
-            <p className="text-xs text-muted-foreground">
-              Total assessments administered
-            </p>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-gray-600">Total Assessments</p>
+                <h3 className="text-2xl font-bold">{analyticsData.totalAssessments}</h3>
+              </div>
+              <div className="p-3 bg-green-100 rounded-full">
+                <BookOpen className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.averageScore}%</div>
-            <p className="text-xs text-muted-foreground">
-              Across all assessments
-            </p>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-gray-600">Average Score</p>
+                <h3 className="text-2xl font-bold">{analyticsData.averageScore}%</h3>
+              </div>
+              <div className="p-3 bg-purple-100 rounded-full">
+                <Target className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.completionRate}%</div>
-            <p className="text-xs text-muted-foreground">
-              Assessment completion rate
-            </p>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-gray-600">Completion Rate</p>
+                <h3 className="text-2xl font-bold">{analyticsData.completionRate}%</h3>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-full">
+                <Clock className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts and Analytics */}
-      <Tabs defaultValue="performance" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="performance">Performance Trends</TabsTrigger>
-          <TabsTrigger value="distribution">Score Distribution</TabsTrigger>
-          <TabsTrigger value="subjects">Subject Analysis</TabsTrigger>
-          <TabsTrigger value="activity">Recent Activity</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="performance" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Performance Trends</CardTitle>
-              <CardDescription>Student performance over time</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={data.trends}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="averageScore" stroke="#8884d8" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="distribution" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Score Distribution</CardTitle>
-              <CardDescription>How students are performing across different score ranges</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={data.performanceDistribution}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {data.performanceDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="subjects" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Subject Performance</CardTitle>
-              <CardDescription>Average scores by subject area</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={data.subjectPerformance}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="subject" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="averageScore" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="activity" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Latest assessments and student interactions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {data.recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Calendar className="h-4 w-4 text-gray-500" />
-                      <div>
-                        <p className="font-medium">{activity.title}</p>
-                        <p className="text-sm text-gray-600">{activity.description}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant={activity.type === 'assessment' ? 'default' : 'secondary'}>
-                        {activity.type}
-                      </Badge>
-                      <p className="text-sm text-gray-500 mt-1">{activity.date}</p>
-                    </div>
-                  </div>
-                ))}
+      {/* Performance Distribution */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Performance Distribution</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {analyticsData.performanceDistribution.map((item, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium">{item.name}</span>
+                  <span className="text-sm text-gray-600">{item.value} students</span>
+                </div>
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-600 rounded-full" 
+                    style={{ 
+                      width: `${(item.value / analyticsData.totalStudents) * 100}%` 
+                    }}
+                  ></div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Subject Performance */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Subject Performance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {analyticsData.subjectPerformance.map((subject, index) => (
+              <div key={index} className="border rounded-lg p-4">
+                <h4 className="font-medium">{subject.subject}</h4>
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-xl font-bold">{subject.averageScore}%</span>
+                  <Badge variant={subject.averageScore >= 80 ? 'default' : 'secondary'}>
+                    {subject.averageScore >= 80 ? 'Good' : 'Needs Attention'}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {analyticsData.recentActivity.map((activity, index) => (
+              <div key={index} className="flex items-start gap-3 pb-4 border-b last:border-0">
+                <div className={`p-2 rounded-full ${
+                  activity.type === 'assessment' ? 'bg-blue-100' : 'bg-green-100'
+                }`}>
+                  {activity.type === 'assessment' ? (
+                    <BookOpen className="h-4 w-4 text-blue-600" />
+                  ) : (
+                    <Users className="h-4 w-4 text-green-600" />
+                  )}
+                </div>
+                <div>
+                  <h4 className="font-medium">{activity.title}</h4>
+                  <p className="text-sm text-gray-600">{activity.description}</p>
+                  <p className="text-xs text-gray-500 mt-1">{activity.date}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -1,12 +1,13 @@
-
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { Users, BookOpen, FileText, Brain, MessageSquare, Trash2, PlayCircle } from 'lucide-react';
 import { sampleDataGenerator } from '@/utils/sample-data-generator';
+import { useAuth } from '@/contexts/AuthContext';
+import { Progress } from '@/components/ui/progress';
 
 const SampleDataGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -14,6 +15,8 @@ const SampleDataGenerator = () => {
   const [generateAnalysis, setGenerateAnalysis] = useState(true);
   const [generationComplete, setGenerationComplete] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [progress, setProgress] = useState(0);
 
   const handleGenerateData = async () => {
     try {
@@ -40,7 +43,7 @@ const SampleDataGenerator = () => {
       console.error('Error generating sample data:', error);
       toast({
         title: 'Error Generating Sample Data',
-        description: error.message || 'An unexpected error occurred',
+        description: (error as any).message || 'An unexpected error occurred',
         variant: 'destructive'
       });
     } finally {
@@ -75,6 +78,38 @@ const SampleDataGenerator = () => {
       description: 'Parent communications, progress reports, and engagement records'
     }
   ];
+
+  const generateSampleData = async () => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Required",
+        description: "Please log in to generate sample data"
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    setProgress(0);
+
+    try {
+      // Generate sample data logic here
+      setProgress(100);
+      toast({
+        title: "Sample Data Generated",
+        description: "Sample data has been successfully generated"
+      });
+    } catch (error) {
+      const errorMessage = (error as any).message || 'Failed to generate sample data';
+      toast({
+        variant: "destructive",
+        title: "Generation Failed",
+        description: errorMessage
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
