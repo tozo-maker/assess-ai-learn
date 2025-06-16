@@ -155,7 +155,7 @@ const Dashboard = () => {
 
             <DSSpacer size="2xl" />
 
-            {/* Secondary Widgets - Lowest priority lazy loading */}
+            {/* Secondary Widgets - Moved below the main content grid */}
             <LazyContainer>
               <ErrorBoundary fallback={<ErrorState title="Additional widgets unavailable" />}>
                 <LazyWrapper>
