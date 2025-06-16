@@ -48,11 +48,22 @@ class OptimizedDashboardService {
         dashboardQueryService.getTeacherProfile(teacherId)
       ]);
 
-      // Safe extraction with fallbacks
-      const students = studentsResult.status === 'fulfilled' ? studentsResult.value : [];
-      const assessments = assessmentsResult.status === 'fulfilled' ? assessmentsResult.value : [];
-      const performance = performanceResult.status === 'fulfilled' ? performanceResult.value : [];
-      const teacher = teacherResult.status === 'fulfilled' ? teacherResult.value : { full_name: 'Teacher' };
+      // Safe extraction with fallbacks and proper type checking
+      const students = studentsResult.status === 'fulfilled' && Array.isArray(studentsResult.value) 
+        ? studentsResult.value 
+        : [];
+      
+      const assessments = assessmentsResult.status === 'fulfilled' && Array.isArray(assessmentsResult.value)
+        ? assessmentsResult.value 
+        : [];
+      
+      const performance = performanceResult.status === 'fulfilled' && Array.isArray(performanceResult.value)
+        ? performanceResult.value 
+        : [];
+      
+      const teacher = teacherResult.status === 'fulfilled' && teacherResult.value && typeof teacherResult.value === 'object'
+        ? teacherResult.value as { full_name?: string }
+        : { full_name: 'Teacher' };
 
       // Log any failed requests for debugging
       [studentsResult, assessmentsResult, performanceResult, teacherResult].forEach((result, index) => {
