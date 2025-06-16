@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { dashboardDataService } from '@/services/dashboard-data-service';
+import { optimizedDashboardService } from '@/services/dashboard/optimized-dashboard-service';
 import { dashboardPerformanceService } from '@/services/dashboard-performance-service';
 
 export const useOptimizedDashboardData = () => {
@@ -14,7 +14,7 @@ export const useOptimizedDashboardData = () => {
       
       return dashboardPerformanceService.measureAsync(
         'dashboard-data-fetch',
-        () => dashboardDataService.getDashboardData(user.id),
+        () => optimizedDashboardService.getDashboardData(user.id),
         { good: 300, warning: 800 }
       );
     },
@@ -22,7 +22,7 @@ export const useOptimizedDashboardData = () => {
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes instead of constant polling
+    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
     retry: (failureCount, error: any) => {
       // Don't retry on auth errors
       if (error?.status === 401 || error?.status === 403) return false;

@@ -24,15 +24,30 @@ const DashboardPerformanceWidget: React.FC = () => {
 
   React.useEffect(() => {
     const updateStats = () => {
-      const perfStats = dashboardPerformanceService.getPerformanceStats();
-      const score = dashboardPerformanceService.getDashboardScore();
-      setStats({ ...perfStats, score });
+      try {
+        const perfStats = dashboardPerformanceService.getPerformanceStats();
+        const score = dashboardPerformanceService.getDashboardScore();
+        setStats({ ...perfStats, score });
+      } catch (error) {
+        console.error('Failed to update performance stats:', error);
+      }
     };
 
     updateStats();
     const interval = setInterval(updateStats, 30000); // Update every 30 seconds
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      // Memory cleanup
+      setStats({
+        avgResponseTime: 0,
+        slowQueries: 0,
+        errorRate: 0,
+        totalRequests: 0,
+        memoryUsage: 0,
+        score: 100
+      });
+    };
   }, []);
 
   const getStatusVariant = (value: number, thresholds: { good: number; warning: number }): "success" | "warning" | "danger" => {

@@ -34,7 +34,7 @@ import DashboardAlerts from '@/components/dashboard/DashboardAlerts';
 import DashboardPerformanceWidget from '@/components/dashboard/DashboardPerformanceWidget';
 
 const Dashboard = () => {
-  // Single optimized data fetch
+  // Single optimized data fetch with request deduplication
   const { data: dashboardData, isLoading, error, refetch } = useOptimizedDashboardData();
 
   // Loading state
@@ -49,7 +49,7 @@ const Dashboard = () => {
     );
   }
 
-  // Error state
+  // Error state with better error handling
   if (error || !dashboardData) {
     return (
       <AppLayout>
@@ -76,42 +76,35 @@ const Dashboard = () => {
             <Breadcrumbs />
             
             {/* Welcome Section - Always visible */}
-            <ErrorBoundary fallback={<ErrorState title="Welcome section unavailable" />}>
-              <DashboardWelcomeSection teacher={teacher} />
-            </ErrorBoundary>
-
+            <DashboardWelcomeSection teacher={teacher} />
             <DSSpacer size="2xl" />
 
             {/* Critical Alerts - If Any */}
             {alerts.length > 0 && (
               <>
-                <ErrorBoundary fallback={<ErrorState title="Alerts unavailable" />}>
-                  <DashboardAlerts alerts={alerts} />
-                </ErrorBoundary>
+                <DashboardAlerts alerts={alerts} />
                 <DSSpacer size="2xl" />
               </>
             )}
 
             {/* Primary Metrics - Lazy loaded with high priority */}
             <LazyContainer>
-              <ErrorBoundary fallback={<ErrorState title="Metrics unavailable" />}>
-                <LazyWrapper>
-                  <LazyDashboardStats 
-                    totalStudents={metrics.totalStudents}
-                    totalAssessments={metrics.totalAssessments}
-                    aiInsights={metrics.aiInsights}
-                    recentAssessments={metrics.recentAssessments}
-                    newStudentsThisMonth={metrics.newStudentsThisMonth}
-                    todaysInsights={metrics.todaysInsights}
-                    studentMetrics={{
-                      totalStudents: metrics.totalStudents,
-                      studentsNeedingAttention: metrics.studentsNeedingAttention,
-                      aboveAverageCount: metrics.aboveAverageCount,
-                      averagePerformance: metrics.averagePerformance
-                    }}
-                  />
-                </LazyWrapper>
-              </ErrorBoundary>
+              <LazyWrapper>
+                <LazyDashboardStats 
+                  totalStudents={metrics.totalStudents}
+                  totalAssessments={metrics.totalAssessments}
+                  aiInsights={metrics.aiInsights}
+                  recentAssessments={metrics.recentAssessments}
+                  newStudentsThisMonth={metrics.newStudentsThisMonth}
+                  todaysInsights={metrics.todaysInsights}
+                  studentMetrics={{
+                    totalStudents: metrics.totalStudents,
+                    studentsNeedingAttention: metrics.studentsNeedingAttention,
+                    aboveAverageCount: metrics.aboveAverageCount,
+                    averagePerformance: metrics.averagePerformance
+                  }}
+                />
+              </LazyWrapper>
             </LazyContainer>
 
             <DSSpacer size="2xl" />
@@ -120,35 +113,29 @@ const Dashboard = () => {
             <DSContentGrid cols={3}>
               <DSGridItem span={2}>
                 <LazyContainer>
-                  <ErrorBoundary fallback={<ErrorState title="Activity feed unavailable" />}>
-                    <LazyWrapper>
-                      <LazyActivityFeed 
-                        recentAssessments={metrics.recentAssessments}
-                        totalStudents={metrics.totalStudents}
-                        studentsNeedingAttention={metrics.studentsNeedingAttention}
-                      />
-                    </LazyWrapper>
-                  </ErrorBoundary>
+                  <LazyWrapper>
+                    <LazyActivityFeed 
+                      recentAssessments={metrics.recentAssessments}
+                      totalStudents={metrics.totalStudents}
+                      studentsNeedingAttention={metrics.studentsNeedingAttention}
+                    />
+                  </LazyWrapper>
                 </LazyContainer>
               </DSGridItem>
               
               <DSGridItem span={1}>
                 <div className="space-y-6">
                   <LazyContainer>
-                    <ErrorBoundary fallback={<ErrorState title="Recent insights unavailable" />}>
-                      <LazyWrapper>
-                        <LazyRecentInsights 
-                          students={students}
-                          communications={[]}
-                        />
-                      </LazyWrapper>
-                    </ErrorBoundary>
+                    <LazyWrapper>
+                      <LazyRecentInsights 
+                        students={students}
+                        communications={[]}
+                      />
+                    </LazyWrapper>
                   </LazyContainer>
                   
                   {/* Performance monitoring widget */}
-                  <ErrorBoundary fallback={<ErrorState title="Performance monitoring unavailable" />}>
-                    <DashboardPerformanceWidget />
-                  </ErrorBoundary>
+                  <DashboardPerformanceWidget />
                 </div>
               </DSGridItem>
             </DSContentGrid>
@@ -157,18 +144,16 @@ const Dashboard = () => {
 
             {/* Secondary Widgets - Moved below the main content grid */}
             <LazyContainer>
-              <ErrorBoundary fallback={<ErrorState title="Additional widgets unavailable" />}>
-                <LazyWrapper>
-                  <LazySecondaryWidgets 
-                    assessments={assessments}
-                    students={students}
-                    metrics={{
-                      averagePerformance: metrics.averagePerformance,
-                      studentsNeedingAttention: metrics.studentsNeedingAttention
-                    }}
-                  />
-                </LazyWrapper>
-              </ErrorBoundary>
+              <LazyWrapper>
+                <LazySecondaryWidgets 
+                  assessments={assessments}
+                  students={students}
+                  metrics={{
+                    averagePerformance: metrics.averagePerformance,
+                    studentsNeedingAttention: metrics.studentsNeedingAttention
+                  }}
+                />
+              </LazyWrapper>
             </LazyContainer>
 
             <DSSpacer size="3xl" />
