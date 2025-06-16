@@ -52,7 +52,7 @@ const RealTimeMonitoringDashboard: React.FC = () => {
       setLogMetrics(logStats);
 
       // Calculate system health
-      const health = calculateSystemHealth(perfStats, errMetrics);
+      const health = calculateSystemHealth(perfStats);
       setSystemHealth(health);
 
     } catch (error) {
@@ -62,7 +62,7 @@ const RealTimeMonitoringDashboard: React.FC = () => {
     }
   };
 
-  const calculateSystemHealth = (perfStats: any, errorStats: any): SystemHealth => {
+  const calculateSystemHealth = (perfStats: any): SystemHealth => {
     const responseTime = perfStats?.averageResponseTime || 0;
     const errorRate = perfStats?.errorRate || 0;
     

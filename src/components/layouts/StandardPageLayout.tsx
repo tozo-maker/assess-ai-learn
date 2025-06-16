@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 import {
   DSPageContainer,
   DSSection,
-  DSSpacer,
   DSPageTitle,
   DSFlexContainer
 } from '@/components/ui/design-system';
