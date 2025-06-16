@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { StudentWithPerformance } from '@/types/student';
+import { useEffect } from 'react';
 
 const formSchema = z.object({
   first_name: z.string().min(2, {
@@ -67,7 +68,7 @@ const EditStudentDialog: React.FC<EditStudentDialogProps> = ({
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (student) {
       form.reset({
         first_name: student.first_name || "",
