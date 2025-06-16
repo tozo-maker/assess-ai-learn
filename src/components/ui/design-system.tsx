@@ -251,6 +251,21 @@ export const DSCardTitle = React.forwardRef<
 ))
 DSCardTitle.displayName = "DSCardTitle"
 
+export const DSCardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn(
+      "text-sm text-gray-600 leading-5",
+      className
+    )}
+    {...props}
+  />
+))
+DSCardDescription.displayName = "DSCardDescription"
+
 export const DSCardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>

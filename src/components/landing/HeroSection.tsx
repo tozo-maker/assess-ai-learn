@@ -13,7 +13,7 @@ import {
 
 const HeroSection = () => {
   return (
-    <DSSection className="bg-gradient-to-b from-blue-50 to-white w-full" fullWidth>
+    <DSSection className="bg-gradient-to-b from-blue-50 to-white w-full">
       <DSPageContainer fullWidth>
         <div className="text-center max-w-4xl mx-auto">
           <DSPageTitle className="mb-6">

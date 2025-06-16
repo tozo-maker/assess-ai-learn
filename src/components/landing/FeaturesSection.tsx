@@ -37,7 +37,7 @@ const FeaturesSection = () => {
   ];
 
   return (
-    <DSSection id="features" className="bg-white w-full" fullWidth>
+    <DSSection id="features" className="bg-white w-full">
       <DSPageContainer fullWidth>
         <div className="text-center mb-16 max-w-3xl mx-auto">
           <DSSectionHeader className="mb-4">
