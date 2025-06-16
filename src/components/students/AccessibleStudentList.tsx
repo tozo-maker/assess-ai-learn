@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,11 +31,10 @@ const AccessibleStudentRow = memo<{
   isSelected: boolean;
   onSelect: (studentId: string, checked: boolean) => void;
   onClick: (studentId: string) => void;
-  rowIndex: number;
   isActive: boolean;
   onKeyDown: (e: React.KeyboardEvent) => void;
   setRef: (ref: HTMLElement | null) => void;
-}>(({ student, isSelected, onSelect, onClick, rowIndex, isActive, onKeyDown, setRef }) => {
+}>(({ student, isSelected, onSelect, onClick, isActive, onKeyDown, setRef }) => {
   const { logPerformance } = usePerformanceMonitor('AccessibleStudentRow');
   const announcer = ScreenReaderAnnouncer.getInstance();
 
@@ -511,7 +511,6 @@ const AccessibleStudentList: React.FC<AccessibleStudentListProps> = ({
                 isSelected={selectedStudents.includes(student.id)}
                 onSelect={onSelectStudent}
                 onClick={onStudentClick}
-                rowIndex={index}
                 isActive={index === activeIndex}
                 onKeyDown={(e) => handleKeyDown(e.nativeEvent)}
                 setRef={setItemRef(index)}
