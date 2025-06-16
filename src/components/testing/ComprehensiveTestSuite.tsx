@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,18 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  TestTube, 
-  Shield, 
-  Database, 
-  Navigation,
-  TrendingUp,
-  Brain,
   CheckCircle,
-  XCircle,
-  AlertTriangle,
-  PlayCircle,
-  Settings,
-  Wrench
+  TrendingUp,
+  X,
+  PlayCircle
 } from 'lucide-react';
 
 // Import individual test components
@@ -52,7 +44,7 @@ const ComprehensiveTestSuite = () => {
         id: 'functionality',
         name: 'Core Functionality',
         description: 'Authentication, CRUD operations, and basic platform features',
-        icon: TestTube,
+        icon: CheckCircle,
         component: FunctionalityTester,
         status: 'pending'
       },
@@ -60,7 +52,7 @@ const ComprehensiveTestSuite = () => {
         id: 'data-integrity',
         name: 'Data Integrity',
         description: 'Database relationships, constraints, and data consistency',
-        icon: Database,
+        icon: TrendingUp,
         component: DataIntegrityChecker,
         status: 'pending'
       },
@@ -68,7 +60,7 @@ const ComprehensiveTestSuite = () => {
         id: 'e2e',
         name: 'End-to-End Testing',
         description: 'Complete user journeys and workflow validation',
-        icon: Navigation,
+        icon: TrendingUp,
         component: E2ETestRunner,
         status: 'pending'
       },
@@ -84,7 +76,7 @@ const ComprehensiveTestSuite = () => {
         id: 'security',
         name: 'Security Validation',
         description: 'Authentication, authorization, and data protection',
-        icon: Shield,
+        icon: CheckCircle,
         component: SecurityTestValidator,
         status: 'pending'
       },
@@ -92,7 +84,7 @@ const ComprehensiveTestSuite = () => {
         id: 'business-logic',
         name: 'Business Logic',
         description: 'Educational algorithms, grading, and domain-specific logic',
-        icon: Brain,
+        icon: TrendingUp,
         component: BusinessLogicValidator,
         status: 'pending'
       }
@@ -160,7 +152,7 @@ const ComprehensiveTestSuite = () => {
       case 'completed':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'failed':
-        return <XCircle className="h-4 w-4 text-red-600" />;
+        return <X className="h-4 w-4 text-red-600" />;
       case 'running':
         return <div className="h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />;
       default:
@@ -203,7 +195,7 @@ const ComprehensiveTestSuite = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TestTube className="h-5 w-5 text-blue-600" />
+            <CheckCircle className="h-5 w-5 text-blue-600" />
             Comprehensive Test Suite
           </CardTitle>
           <CardDescription>

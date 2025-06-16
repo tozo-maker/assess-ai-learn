@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,13 +8,10 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   PlayCircle, 
   CheckCircle, 
-  XCircle, 
+  X, 
   Clock,
-  Users,
-  FileText,
-  BarChart3,
   AlertTriangle,
-  Navigation
+  TrendingUp
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -122,7 +119,8 @@ const E2ETestRunner = () => {
       
       setTimeout(() => {
         if (shouldFail && test.id !== 'user-login-flow') {
-          reject(new Error(`E2E test failed at step: ${test.steps[Math.floor(Math.random() * test.steps.length)]}`));
+          const errorMessage = `E2E test failed at step: ${test.steps[Math.floor(Math.random() * test.steps.length)]}`;
+          reject(new Error(errorMessage));
         } else {
           resolve();
         }
@@ -157,7 +155,8 @@ const E2ETestRunner = () => {
           updateTestStatus(test.id, 'passed', duration);
         } catch (error) {
           const duration = Date.now() - startTime;
-          updateTestStatus(test.id, 'failed', duration, error.message);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+          updateTestStatus(test.id, 'failed', duration, errorMessage);
         }
         
         setProgress(((i + 1) / tests.length) * 100);
@@ -184,7 +183,7 @@ const E2ETestRunner = () => {
       case 'passed':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'failed':
-        return <XCircle className="h-4 w-4 text-red-600" />;
+        return <X className="h-4 w-4 text-red-600" />;
       case 'running':
         return <Clock className="h-4 w-4 text-blue-600 animate-spin" />;
       default:
@@ -193,7 +192,7 @@ const E2ETestRunner = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants = {
+    const variants: Record<string, "default" | "destructive" | "secondary" | "outline"> = {
       passed: 'default',
       failed: 'destructive',
       running: 'secondary',
@@ -215,7 +214,7 @@ const E2ETestRunner = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Navigation className="h-5 w-5 text-purple-600" />
+            <TrendingUp className="h-5 w-5 text-purple-600" />
             End-to-End Test Runner
           </CardTitle>
         </CardHeader>

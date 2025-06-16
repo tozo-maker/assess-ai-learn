@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,11 +8,10 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   Database, 
   CheckCircle, 
-  XCircle, 
+  X, 
   AlertTriangle, 
-  Info,
-  RefreshCw,
-  Link as LinkIcon
+  Plus,
+  RefreshCw
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -91,7 +90,7 @@ const DataIntegrityChecker = () => {
       const { data: students, error } = await supabase
         .from('students')
         .select('id, teacher_id, first_name, last_name')
-        .eq('teacher_id', user?.id);
+        .eq('teacher_id', user?.id || '');
 
       if (error) throw error;
 
@@ -113,9 +112,10 @@ const DataIntegrityChecker = () => {
           : undefined
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateCheck('Student-Teacher Relationships', {
         status: 'failed',
-        message: `Check failed: ${error.message}`,
+        message: `Check failed: ${errorMessage}`,
         recommendations: ['Check database permissions', 'Verify user authentication']
       });
     }
@@ -139,7 +139,7 @@ const DataIntegrityChecker = () => {
             student_id
           )
         `)
-        .eq('teacher_id', user?.id);
+        .eq('teacher_id', user?.id || '');
 
       if (assessmentError) throw assessmentError;
 
@@ -171,9 +171,10 @@ const DataIntegrityChecker = () => {
           : undefined
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateCheck('Assessment-Response Consistency', {
         status: 'failed',
-        message: `Check failed: ${error.message}`,
+        message: `Check failed: ${errorMessage}`,
         recommendations: ['Verify database schema', 'Check foreign key constraints']
       });
     }
@@ -201,7 +202,7 @@ const DataIntegrityChecker = () => {
             assessment_count
           )
         `)
-        .eq('teacher_id', user?.id);
+        .eq('teacher_id', user?.id || '');
 
       if (error) throw error;
 
@@ -250,9 +251,10 @@ const DataIntegrityChecker = () => {
           : undefined
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateCheck('Performance Data Accuracy', {
         status: 'failed',
-        message: `Check failed: ${error.message}`,
+        message: `Check failed: ${errorMessage}`,
         recommendations: ['Check performance calculation logic', 'Verify data access permissions']
       });
     }
@@ -287,7 +289,7 @@ const DataIntegrityChecker = () => {
       const { data: students, error } = await supabase
         .from('students')
         .select('id, first_name, last_name, grade_level, teacher_id')
-        .eq('teacher_id', user?.id);
+        .eq('teacher_id', user?.id || '');
 
       if (error) throw error;
 
@@ -311,9 +313,10 @@ const DataIntegrityChecker = () => {
           : undefined
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateCheck('Data Completeness', {
         status: 'failed',
-        message: `Check failed: ${error.message}`,
+        message: `Check failed: ${errorMessage}`,
         recommendations: ['Verify data access permissions', 'Check database connectivity']
       });
     }
@@ -329,7 +332,7 @@ const DataIntegrityChecker = () => {
       const { data: students, error } = await supabase
         .from('students')
         .select('first_name, last_name, student_id')
-        .eq('teacher_id', user?.id);
+        .eq('teacher_id', user?.id || '');
 
       if (error) throw error;
 
@@ -360,9 +363,10 @@ const DataIntegrityChecker = () => {
           : undefined
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateCheck('Duplicate Detection', {
         status: 'failed',
-        message: `Check failed: ${error.message}`,
+        message: `Check failed: ${errorMessage}`,
         recommendations: ['Check data access permissions', 'Verify search functionality']
       });
     }
@@ -409,18 +413,18 @@ const DataIntegrityChecker = () => {
       case 'passed':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'failed':
-        return <XCircle className="h-4 w-4 text-red-600" />;
+        return <X className="h-4 w-4 text-red-600" />;
       case 'warning':
         return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
       case 'checking':
         return <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />;
       default:
-        return <Info className="h-4 w-4 text-gray-400" />;
+        return <Plus className="h-4 w-4 text-gray-400" />;
     }
   };
 
   const getStatusBadge = (status: string) => {
-    const variants = {
+    const variants: Record<string, "default" | "destructive" | "secondary" | "outline"> = {
       passed: 'default',
       failed: 'destructive',
       warning: 'secondary',
