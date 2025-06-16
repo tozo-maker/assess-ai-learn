@@ -1,7 +1,7 @@
 
 import React, { Suspense, lazy } from 'react';
-import { EnhancedLoadingState } from '@/components/common/EnhancedLoadingState';
-import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import EnhancedLoadingState from '@/components/common/EnhancedLoadingState';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
 
 // Lazy load heavy dashboard components
 export const LazyDashboardStats = lazy(() => 

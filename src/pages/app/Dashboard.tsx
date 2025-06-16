@@ -21,9 +21,9 @@ import {
   useOptimizedAssessments,
   useOptimizedStudentMetrics,
   usePrefetchQueries,
-  useBackgroundSync
+  useBackgroundSync,
+  useTeacherProfile
 } from '@/hooks/queries/useOptimizedQueries';
-import { useTeacherProfile } from '@/hooks/queries/useOptimizedQueries';
 
 // Import lazy components
 import {

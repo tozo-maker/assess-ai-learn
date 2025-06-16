@@ -1,9 +1,9 @@
 
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { enhancedCache } from '@/services/enhanced-caching-service';
 import { studentService } from '@/services/student-service';
 import { assessmentService } from '@/services/assessment-service';
-import { authService } from '@/services/auth-service';
 import { StudentWithPerformance } from '@/types/student';
 import { Assessment } from '@/types/assessment';
 
@@ -24,14 +24,16 @@ const optimizedQueryDefaults = {
 
 // Student queries with intelligent caching
 export const useOptimizedStudents = (options?: Partial<UseQueryOptions<StudentWithPerformance[], Error>>) => {
+  const { user } = useAuth();
+  
   return useQuery({
     queryKey: ['students'],
-    queryFn: async () => {
-      const user = await authService.getCurrentUser();
-      if (!user) throw new Error('No authenticated user');
+    queryFn: async (): Promise<StudentWithPerformance[]> => {
+      if (!user?.id) throw new Error('No authenticated user');
       
       return enhancedCache.getCachedStudents(user.id);
     },
+    enabled: !!user?.id,
     ...optimizedQueryDefaults,
     ...options,
   });
@@ -39,14 +41,16 @@ export const useOptimizedStudents = (options?: Partial<UseQueryOptions<StudentWi
 
 // Assessment queries with background prefetching
 export const useOptimizedAssessments = (options?: Partial<UseQueryOptions<Assessment[], Error>>) => {
+  const { user } = useAuth();
+  
   return useQuery({
     queryKey: ['assessments'],
-    queryFn: async () => {
-      const user = await authService.getCurrentUser();
-      if (!user) throw new Error('No authenticated user');
+    queryFn: async (): Promise<Assessment[]> => {
+      if (!user?.id) throw new Error('No authenticated user');
       
       return enhancedCache.getCachedAssessments(user.id);
     },
+    enabled: !!user?.id,
     ...optimizedQueryDefaults,
     ...options,
   });
@@ -74,16 +78,52 @@ export const useOptimizedStudentMetrics = (options?: Partial<UseQueryOptions<any
   });
 };
 
+// Teacher profile hook
+export const useTeacherProfile = (options?: Partial<UseQueryOptions<any, Error>>) => {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ['teacher-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) throw new Error('No authenticated user');
+      
+      const cached = enhancedCache.get('teacher-profile', { params: { userId: user.id } });
+      if (cached) return cached;
+
+      // Mock teacher profile data - replace with actual service call
+      const profile = {
+        id: user.id,
+        full_name: user.user_metadata?.full_name || 'Teacher',
+        school: user.user_metadata?.school || 'School',
+        subjects: user.user_metadata?.subjects || [],
+        grade_levels: user.user_metadata?.grade_levels || []
+      };
+      
+      enhancedCache.set('teacher-profile', profile, {
+        ttl: 10 * 60 * 1000, // 10 minutes
+        tags: ['teacher', `user:${user.id}`],
+        params: { userId: user.id }
+      });
+      
+      return profile;
+    },
+    enabled: !!user?.id,
+    ...optimizedQueryDefaults,
+    ...options,
+  });
+};
+
 // Prefetch helper for background loading
 export const usePrefetchQueries = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const prefetchStudents = async () => {
+    if (!user?.id) return;
+    
     await queryClient.prefetchQuery({
       queryKey: ['students'],
       queryFn: async () => {
-        const user = await authService.getCurrentUser();
-        if (!user) throw new Error('No authenticated user');
         return enhancedCache.getCachedStudents(user.id);
       },
       staleTime: 2 * 60 * 1000,
@@ -91,11 +131,11 @@ export const usePrefetchQueries = () => {
   };
 
   const prefetchAssessments = async () => {
+    if (!user?.id) return;
+    
     await queryClient.prefetchQuery({
       queryKey: ['assessments'],
       queryFn: async () => {
-        const user = await authService.getCurrentUser();
-        if (!user) throw new Error('No authenticated user');
         return enhancedCache.getCachedAssessments(user.id);
       },
       staleTime: 3 * 60 * 1000,
@@ -117,12 +157,12 @@ export const usePrefetchQueries = () => {
 // Optimized mutations with cache invalidation
 export const useOptimizedStudentMutation = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: studentService.createStudent,
     onSuccess: async (data, variables) => {
-      const user = await authService.getCurrentUser();
-      if (user) {
+      if (user?.id) {
         // Invalidate cache
         enhancedCache.invalidateStudentData(user.id);
         
@@ -145,12 +185,12 @@ export const useOptimizedStudentMutation = () => {
 
 export const useOptimizedAssessmentMutation = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: assessmentService.createAssessment,
     onSuccess: async (data, variables) => {
-      const user = await authService.getCurrentUser();
-      if (user) {
+      if (user?.id) {
         // Invalidate cache
         enhancedCache.invalidateAssessmentData(user.id);
         

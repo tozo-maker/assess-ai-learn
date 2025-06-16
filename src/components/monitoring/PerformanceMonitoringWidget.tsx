@@ -61,7 +61,7 @@ const PerformanceMonitoringWidget: React.FC = () => {
     }
   }, [performanceData]);
 
-  const getStatusVariant = (value: number, thresholds: { good: number; warning: number }) => {
+  const getStatusVariant = (value: number, thresholds: { good: number; warning: number }): "success" | "warning" | "danger" => {
     if (value <= thresholds.good) return 'success';
     if (value <= thresholds.warning) return 'warning';
     return 'danger';

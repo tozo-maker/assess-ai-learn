@@ -13,7 +13,7 @@ interface QueryPlan {
 class QueryOptimizer {
   // Intelligent query builder
   static buildOptimizedQuery(plan: QueryPlan) {
-    let query = supabase.from(plan.table);
+    let query = supabase.from(plan.table as any);
     
     // Select specific columns only
     const selectClause = plan.select.join(', ');
@@ -200,6 +200,7 @@ export const commonQueries = {
         'student_performance!inner(average_score, performance_level, needs_attention)'
       ],
       filters: { teacher_id: teacherId },
+      joins: [],
       orderBy: { column: 'last_name', ascending: true }
     });
   },
@@ -210,6 +211,7 @@ export const commonQueries = {
       table: 'assessments',
       select: ['id', 'title', 'subject', 'assessment_date', 'max_score'],
       filters: { teacher_id: teacherId },
+      joins: [],
       orderBy: { column: 'assessment_date', ascending: false },
       limit
     });
@@ -224,6 +226,7 @@ export const commonQueries = {
         student_id: studentId,
         status: 'active'
       },
+      joins: [],
       orderBy: { column: 'created_at', ascending: false }
     });
   }
