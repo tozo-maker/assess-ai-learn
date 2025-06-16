@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface QueryPlan {
@@ -13,14 +12,11 @@ interface QueryPlan {
 class QueryOptimizer {
   // Intelligent query builder
   static buildOptimizedQuery(plan: QueryPlan) {
-    // Cast table name to any to avoid strict typing issues
-    let query = supabase.from(plan.table as any);
-    
-    // Select specific columns only
+    // Start with the table and select - this gives us a PostgrestFilterBuilder
     const selectClause = plan.select.join(', ');
-    query = query.select(selectClause);
+    let query = supabase.from(plan.table as any).select(selectClause);
     
-    // Apply filters efficiently
+    // Apply filters efficiently - now we have access to filter methods
     Object.entries(plan.filters).forEach(([key, value]) => {
       if (Array.isArray(value)) {
         query = query.in(key, value);
