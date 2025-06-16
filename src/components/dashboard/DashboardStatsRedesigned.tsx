@@ -1,24 +1,19 @@
 
 import React from 'react';
-import { Users, FileText, Lightbulb, TrendingUp } from 'lucide-react';
-import { 
+import { TrendingUp, Users, BookOpen, Brain, Target, Calendar } from 'lucide-react';
+import {
   DSCard,
+  DSCardHeader,
   DSCardContent,
-  DSContentGrid,
+  DSCardTitle,
+  DSFlexContainer,
   DSBodyText,
-  DSHelpText,
-  designSystem
+  DSSection,
+  DSContentGrid,
+  DSGridItem
 } from '@/components/ui/design-system';
 
-interface StatsData {
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-  trend: string;
-  variant: 'primary' | 'success' | 'warning' | 'danger';
-}
-
-interface DashboardStatsRedesignedProps {
+interface DashboardStatsProps {
   totalStudents: number;
   totalAssessments: number;
   aiInsights: number;
@@ -26,110 +21,130 @@ interface DashboardStatsRedesignedProps {
   newStudentsThisMonth: number;
   todaysInsights: number;
   studentMetrics?: {
+    totalStudents: number;
+    studentsNeedingAttention: number;
+    aboveAverageCount: number;
     averagePerformance: string;
   };
 }
 
-const DashboardStatsRedesigned: React.FC<DashboardStatsRedesignedProps> = ({
-  totalStudents,
-  totalAssessments,
-  aiInsights,
-  recentAssessments,
-  newStudentsThisMonth,
-  todaysInsights,
+const DashboardStatsRedesigned: React.FC<DashboardStatsProps> = ({
+  totalStudents = 0,
+  totalAssessments = 0,
+  aiInsights = 0,
+  recentAssessments = 0,
+  newStudentsThisMonth = 0,
+  todaysInsights = 0,
   studentMetrics
 }) => {
-  const stats: StatsData[] = [
+  // Safe access to studentMetrics with defaults
+  const safeStudentMetrics = {
+    totalStudents: studentMetrics?.totalStudents || totalStudents || 0,
+    studentsNeedingAttention: studentMetrics?.studentsNeedingAttention || 0,
+    aboveAverageCount: studentMetrics?.aboveAverageCount || 0,
+    averagePerformance: studentMetrics?.averagePerformance || 'No data'
+  };
+
+  const primaryStats = [
     {
-      title: "Total Students",
-      value: totalStudents.toString(),
-      icon: <Users className="h-6 w-6" />,
-      trend: newStudentsThisMonth > 0 ? `+${newStudentsThisMonth} this month` : "No new students",
-      variant: 'primary'
+      title: 'Total Students',
+      value: safeStudentMetrics.totalStudents.toString(),
+      icon: <Users className="h-5 w-5 text-blue-600" />,
+      trend: newStudentsThisMonth > 0 ? `+${newStudentsThisMonth} this month` : 'No new students'
     },
     {
-      title: "Assessments",
-      value: totalAssessments.toString(),
-      icon: <FileText className="h-6 w-6" />,
-      trend: recentAssessments > 0 ? `+${recentAssessments} this week` : "No recent assessments",
-      variant: 'success'
+      title: 'Assessments',
+      value: (totalAssessments || 0).toString(),
+      icon: <BookOpen className="h-5 w-5 text-green-600" />,
+      trend: recentAssessments > 0 ? `${recentAssessments} recent` : 'No recent assessments'
     },
     {
-      title: "AI Insights Generated",
-      value: aiInsights.toString(),
-      icon: <Lightbulb className="h-6 w-6" />,
-      trend: todaysInsights > 0 ? `+${todaysInsights} today` : "No new insights",
-      variant: 'warning'
-    },
-    {
-      title: "Avg. Class Performance",
-      value: studentMetrics?.averagePerformance || "N/A",
-      icon: <TrendingUp className="h-6 w-6" />,
-      trend: studentMetrics?.averagePerformance !== "N/A" ? "Based on latest data" : "No data available",
-      variant: 'danger'
+      title: 'AI Insights',
+      value: (aiInsights || 0).toString(),
+      icon: <Brain className="h-5 w-5 text-purple-600" />,
+      trend: todaysInsights > 0 ? `${todaysInsights} today` : 'No insights today'
     }
   ];
 
-  const getVariantStyles = (variant: string) => {
-    switch (variant) {
-      case 'primary':
-        return {
-          iconColor: designSystem.colors.primary.text,
-          valueColor: designSystem.colors.primary.text
-        };
-      case 'success':
-        return {
-          iconColor: designSystem.colors.success.text,
-          valueColor: designSystem.colors.success.text
-        };
-      case 'warning':
-        return {
-          iconColor: designSystem.colors.warning.text,
-          valueColor: designSystem.colors.warning.text
-        };
-      case 'danger':
-        return {
-          iconColor: designSystem.colors.danger.text,
-          valueColor: designSystem.colors.danger.text
-        };
-      default:
-        return {
-          iconColor: designSystem.colors.neutral.text,
-          valueColor: designSystem.colors.neutral.text
-        };
+  const performanceStats = [
+    {
+      title: 'Students Needing Attention',
+      value: safeStudentMetrics.studentsNeedingAttention.toString(),
+      icon: <Target className="h-5 w-5 text-red-600" />,
+      color: 'text-red-600'
+    },
+    {
+      title: 'Above Average Performance',
+      value: safeStudentMetrics.aboveAverageCount.toString(),
+      icon: <TrendingUp className="h-5 w-5 text-green-600" />,
+      color: 'text-green-600'
+    },
+    {
+      title: 'Average Performance',
+      value: safeStudentMetrics.averagePerformance,
+      icon: <Calendar className="h-5 w-5 text-blue-600" />,
+      color: 'text-blue-600'
     }
-  };
+  ];
 
   return (
-    <DSContentGrid cols={4} className="gap-6">
-      {stats.map((stat, index) => {
-        const styles = getVariantStyles(stat.variant);
-        return (
-          <DSCard key={index} className={`transition-all ${designSystem.transitions.normal} hover:shadow-md`}>
-            <DSCardContent className="p-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <DSBodyText className="text-sm font-medium text-gray-600">
-                    {stat.title}
-                  </DSBodyText>
-                  <div className={styles.iconColor}>
+    <DSSection>
+      {/* Primary Statistics */}
+      <DSContentGrid cols={3}>
+        {primaryStats.map((stat, index) => (
+          <DSGridItem key={index} span={1}>
+            <DSCard>
+              <DSCardContent className="p-6">
+                <DSFlexContainer align="center" justify="between">
+                  <div>
+                    <DSBodyText className="text-sm font-medium text-gray-600 mb-1">
+                      {stat.title}
+                    </DSBodyText>
+                    <div className="text-2xl font-bold text-gray-900">
+                      {stat.value}
+                    </div>
+                    <DSBodyText className="text-xs text-gray-500 mt-1">
+                      {stat.trend}
+                    </DSBodyText>
+                  </div>
+                  <div className="ml-4">
                     {stat.icon}
                   </div>
-                </div>
-                <div className={`text-3xl font-bold ${styles.valueColor}`}>
-                  {stat.value}
-                </div>
-                <DSHelpText className={`${
-                  stat.trend.includes('+') ? designSystem.colors.success.text : 'text-gray-500'
-                }`}>
-                  {stat.trend}
-                </DSHelpText>
-              </div>
-            </DSCardContent>
-          </DSCard>
-        );
-      })}
-    </DSContentGrid>
+                </DSFlexContainer>
+              </DSCardContent>
+            </DSCard>
+          </DSGridItem>
+        ))}
+      </DSContentGrid>
+
+      {/* Performance Metrics */}
+      <div className="mt-6">
+        <DSCard>
+          <DSCardHeader>
+            <DSCardTitle>Performance Overview</DSCardTitle>
+          </DSCardHeader>
+          <DSCardContent>
+            <DSContentGrid cols={3}>
+              {performanceStats.map((stat, index) => (
+                <DSGridItem key={index} span={1}>
+                  <DSFlexContainer align="center" gap="md">
+                    {stat.icon}
+                    <div>
+                      <DSBodyText className="text-sm text-gray-600">
+                        {stat.title}
+                      </DSBodyText>
+                      <div className={`text-lg font-semibold ${stat.color || 'text-gray-900'}`}>
+                        {stat.value}
+                      </div>
+                    </div>
+                  </DSFlexContainer>
+                </DSGridItem>
+              ))}
+            </DSContentGrid>
+          </DSCardContent>
+        </DSCard>
+      </div>
+    </DSSection>
   );
 };
 
