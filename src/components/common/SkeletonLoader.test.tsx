@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderHook } from '@testing-library/react';
 import { render } from '@/test/utils';
 import {
   Skeleton,
@@ -400,4 +399,4 @@ describe('LoadingWrapper', () => {
     expect(screen.getByText('Actual content')).toBeInTheDocument();
     expect(screen.queryByText('Loading skeleton')).not.toBeInTheDocument();
   });
-}); 
+});

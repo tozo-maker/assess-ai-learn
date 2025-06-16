@@ -1,205 +1,307 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line
+} from 'recharts';
 import { 
   TrendingUp, 
-  TrendingDown, 
   Users, 
+  BookOpen, 
   Target,
-  BookOpen,
-  AlertTriangle,
+  AlertCircle,
   CheckCircle,
-  Clock
+  Calendar,
+  Download
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import {
-  DSCard,
-  DSCardContent,
-  DSCardHeader,
-  DSCardTitle,
-  DSButton,
-  DSFlexContainer,
-  DSBodyText,
-  DSSpacer,
-  DSContentGrid,
-  DSStatusBadge,
-  designSystem
-} from '@/components/ui/design-system';
+import { analyticsService } from '@/services/analytics-service';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AnalyticsData {
   totalStudents: number;
   totalAssessments: number;
-  averagePerformance: number;
-  studentsAtRisk: number;
-  studentsExcelling: number;
-  recentGrowth: number;
+  averageScore: number;
   completionRate: number;
-  engagementScore: number;
+  trends: any[];
+  performanceDistribution: any[];
+  subjectPerformance: any[];
+  recentActivity: any[];
 }
 
-interface AnalyticsDashboardProps {
-  data: AnalyticsData;
-  className?: string;
-}
+const AnalyticsDashboard = () => {
+  const { user } = useAuth();
+  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState('30d');
 
-const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ data, className = "" }) => {
-  const getPerformanceBadge = (score: number) => {
-    if (score >= 85) return { variant: 'success' as const, label: 'Excellent' };
-    if (score >= 70) return { variant: 'warning' as const, label: 'Good' };
-    return { variant: 'danger' as const, label: 'Needs Attention' };
-  };
+  useEffect(() => {
+    loadAnalyticsData();
+  }, [user, timeRange]);
 
-  const performanceBadge = getPerformanceBadge(data.averagePerformance);
-
-  const keyMetrics = [
-    {
-      label: "Total Students",
-      value: data.totalStudents,
-      icon: <Users className="h-6 w-6" />,
-      variant: 'primary' as const
-    },
-    {
-      label: "Assessments",
-      value: data.totalAssessments,
-      icon: <BookOpen className="h-6 w-6" />,
-      variant: 'success' as const
-    },
-    {
-      label: "Avg Performance",
-      value: `${data.averagePerformance}%`,
-      icon: <Target className="h-6 w-6" />,
-      variant: data.averagePerformance >= 85 ? 'success' as const : 
-             data.averagePerformance >= 70 ? 'warning' as const : 'danger' as const
-    },
-    {
-      label: "Completion Rate",
-      value: `${data.completionRate}%`,
-      icon: <Clock className="h-6 w-6" />,
-      variant: 'warning' as const
+  const loadAnalyticsData = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      const analyticsData = await analyticsService.getTeacherAnalytics(user.id, timeRange);
+      setData(analyticsData);
+    } catch (error) {
+      console.error('Failed to load analytics data:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  const getVariantStyles = (variant: string) => {
-    return designSystem.colors[variant as keyof typeof designSystem.colors];
   };
+
+  const handleExportData = async () => {
+    if (!user) return;
+    
+    try {
+      await analyticsService.exportAnalyticsReport(user.id, timeRange);
+    } catch (error) {
+      console.error('Failed to export analytics data:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-8 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="text-center py-8">
+        <AlertCircle className="h-8 w-8 mx-auto mb-4 text-gray-400" />
+        <p className="text-gray-600">No analytics data available</p>
+      </div>
+    );
+  }
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
   return (
-    <DSCard className={className}>
-      <DSCardHeader>
-        <DSCardTitle>
-          <DSFlexContainer justify="between" align="center">
-            <DSFlexContainer align="center" gap="sm">
-              <TrendingUp className={`h-5 w-5 ${designSystem.colors.primary.text}`} />
-              <span>Class Analytics Overview</span>
-            </DSFlexContainer>
-            <DSStatusBadge variant={performanceBadge.variant}>
-              {performanceBadge.label}
-            </DSStatusBadge>
-          </DSFlexContainer>
-        </DSCardTitle>
-      </DSCardHeader>
-      <DSCardContent className="space-y-8">
-        {/* Key Metrics Grid */}
-        <DSContentGrid cols={4} className="gap-4">
-          {keyMetrics.map((metric, index) => {
-            const styles = getVariantStyles(metric.variant);
-            return (
-              <div key={index} className={`text-center p-4 ${styles.light} rounded-lg`}>
-                <div className={`${styles.text} mx-auto mb-2`}>
-                  {metric.icon}
-                </div>
-                <div className="space-y-2">
-                  <DSBodyText className="text-sm font-medium text-gray-600">
-                    {metric.label}
-                  </DSBodyText>
-                  <div className={`text-3xl font-bold ${styles.text}`}>
-                    {metric.value}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </DSContentGrid>
-
-        {/* Performance Insights */}
-        <DSContentGrid cols={2} className="gap-6">
-          <DSCard className={`transition-all ${designSystem.transitions.normal} hover:shadow-md`}>
-            <DSFlexContainer justify="between" align="center" className="mb-4 p-4">
-              <DSBodyText className="font-medium text-gray-900">Students at Risk</DSBodyText>
-              <AlertTriangle className={`h-4 w-4 ${designSystem.colors.danger.text}`} />
-            </DSFlexContainer>
-            <div className="px-4 pb-4">
-              <div className={`text-3xl font-bold ${designSystem.colors.danger.text} mb-2`}>
-                {data.studentsAtRisk}
-              </div>
-              <DSBodyText className="text-sm text-gray-600 mb-4">
-                Need immediate attention
-              </DSBodyText>
-              <Link to="/app/students">
-                <DSButton variant="secondary" size="sm" className="w-full">
-                  View Details
-                </DSButton>
-              </Link>
-            </div>
-          </DSCard>
-
-          <DSCard className={`transition-all ${designSystem.transitions.normal} hover:shadow-md`}>
-            <DSFlexContainer justify="between" align="center" className="mb-4 p-4">
-              <DSBodyText className="font-medium text-gray-900">High Performers</DSBodyText>
-              <CheckCircle className={`h-4 w-4 ${designSystem.colors.success.text}`} />
-            </DSFlexContainer>
-            <div className="px-4 pb-4">
-              <div className={`text-3xl font-bold ${designSystem.colors.success.text} mb-2`}>
-                {data.studentsExcelling}
-              </div>
-              <DSBodyText className="text-sm text-gray-600 mb-4">
-                Exceeding expectations
-              </DSBodyText>
-              <Link to="/app/insights/class">
-                <DSButton variant="secondary" size="sm" className="w-full">
-                  View Insights
-                </DSButton>
-              </Link>
-            </div>
-          </DSCard>
-        </DSContentGrid>
-
-        {/* Growth Indicator */}
-        <div className={`p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg`}>
-          <DSFlexContainer justify="between" align="center">
-            <div>
-              <DSBodyText className="font-medium text-gray-900 mb-1">Recent Growth</DSBodyText>
-              <DSBodyText className="text-gray-600">Compared to last month</DSBodyText>
-            </div>
-            <DSFlexContainer align="center" gap="sm">
-              {data.recentGrowth > 0 ? (
-                <TrendingUp className={`h-5 w-5 ${designSystem.colors.success.text}`} />
-              ) : (
-                <TrendingDown className={`h-5 w-5 ${designSystem.colors.danger.text}`} />
-              )}
-              <span className={`text-lg font-bold ${
-                data.recentGrowth > 0 ? designSystem.colors.success.text : designSystem.colors.danger.text
-              }`}>
-                {data.recentGrowth > 0 ? '+' : ''}{data.recentGrowth}%
-              </span>
-            </DSFlexContainer>
-          </DSFlexContainer>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
+          <p className="text-gray-600">Comprehensive insights into student performance and engagement</p>
         </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportData}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Report
+          </Button>
+        </div>
+      </div>
 
-        {/* Quick Actions */}
-        <DSFlexContainer gap="sm">
-          <Link to="/app/assessments/add" className="flex-1">
-            <DSButton variant="secondary" size="sm" className="w-full">
-              Create Assessment
-            </DSButton>
-          </Link>
-          <Link to="/app/insights/class" className="flex-1">
-            <DSButton size="sm" className="w-full">
-              View All Insights
-            </DSButton>
-          </Link>
-        </DSFlexContainer>
-      </DSCardContent>
-    </DSCard>
+      {/* Time Range Selector */}
+      <div className="flex gap-2">
+        {['7d', '30d', '90d', '1y'].map((range) => (
+          <Button
+            key={range}
+            variant={timeRange === range ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setTimeRange(range)}
+          >
+            {range === '7d' ? 'Last 7 days' :
+             range === '30d' ? 'Last 30 days' :
+             range === '90d' ? 'Last 3 months' : 'Last year'}
+          </Button>
+        ))}
+      </div>
+
+      {/* Key Metrics */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{data.totalStudents}</div>
+            <p className="text-xs text-muted-foreground">
+              Active learners in your classes
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Assessments Given</CardTitle>
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{data.totalAssessments}</div>
+            <p className="text-xs text-muted-foreground">
+              Total assessments administered
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{data.averageScore}%</div>
+            <p className="text-xs text-muted-foreground">
+              Across all assessments
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{data.completionRate}%</div>
+            <p className="text-xs text-muted-foreground">
+              Assessment completion rate
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts and Analytics */}
+      <Tabs defaultValue="performance" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="performance">Performance Trends</TabsTrigger>
+          <TabsTrigger value="distribution">Score Distribution</TabsTrigger>
+          <TabsTrigger value="subjects">Subject Analysis</TabsTrigger>
+          <TabsTrigger value="activity">Recent Activity</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="performance" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Performance Trends</CardTitle>
+              <CardDescription>Student performance over time</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={data.trends}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="averageScore" stroke="#8884d8" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="distribution" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Score Distribution</CardTitle>
+              <CardDescription>How students are performing across different score ranges</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={data.performanceDistribution}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {data.performanceDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="subjects" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Subject Performance</CardTitle>
+              <CardDescription>Average scores by subject area</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={data.subjectPerformance}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="subject" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="averageScore" fill="#8884d8" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Latest assessments and student interactions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {data.recentActivity.map((activity, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="font-medium">{activity.title}</p>
+                        <p className="text-sm text-gray-600">{activity.description}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant={activity.type === 'assessment' ? 'default' : 'secondary'}>
+                        {activity.type}
+                      </Badge>
+                      <p className="text-sm text-gray-500 mt-1">{activity.date}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
