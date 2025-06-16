@@ -483,6 +483,50 @@ export const DSLabel = React.forwardRef<
 ))
 DSLabel.displayName = "DSLabel"
 
+export const DSTextarea = React.forwardRef<
+  HTMLTextAreaElement,
+  React.TextareaHTMLAttributes<HTMLTextAreaElement> & { error?: boolean; helpText?: string }
+>(({ className, error, helpText, ...props }, ref) => {
+  return (
+    <div className="space-y-1">
+      <textarea
+        className={cn(
+          "flex min-h-[80px] w-full rounded-md border px-3 py-2 text-base transition-colors",
+          "placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          error
+            ? `${designSystem.colors.danger.border} ${designSystem.colors.danger.text} focus-visible:${designSystem.colors.danger.ring}`
+            : `border-gray-300 focus-visible:${designSystem.colors.primary.border} focus-visible:${designSystem.colors.primary.ring}`,
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+      {helpText && (
+        <DSHelpText className={error ? designSystem.colors.danger.text : ""}>
+          {helpText}
+        </DSHelpText>
+      )}
+    </div>
+  )
+})
+DSTextarea.displayName = "DSTextarea"
+
+// Form Field Component
+export const DSFormField: React.FC<{
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+  className?: string;
+}> = ({ label, required, children, className }) => {
+  return (
+    <div className={cn("space-y-2", className)}>
+      <DSLabel required={required}>{label}</DSLabel>
+      {children}
+    </div>
+  );
+};
+
 // Status Badge Component
 interface DSStatusBadgeProps {
   variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
