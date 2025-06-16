@@ -22,7 +22,6 @@ import { useOptimizedDashboard } from '@/hooks/useOptimizedDashboard';
 import {
   LazyWrapper,
   LazyContainer,
-  LazyDashboardStats,
   LazyActivityFeed,
   LazyRecentInsights,
   LazySecondaryWidgets
@@ -31,7 +30,7 @@ import {
 // Import regular components
 import DashboardWelcomeSection from '@/components/dashboard/DashboardWelcomeSection';
 import DashboardAlerts from '@/components/dashboard/DashboardAlerts';
-import DashboardPerformanceWidget from '@/components/dashboard/DashboardPerformanceWidget';
+import DashboardStatsRedesigned from '@/components/dashboard/DashboardStatsRedesigned';
 
 const Dashboard = () => {
   const { data, isInitialLoading, error, refetch, isEmpty } = useOptimizedDashboard();
@@ -130,7 +129,7 @@ const Dashboard = () => {
             {/* Primary Metrics */}
             <LazyContainer>
               <LazyWrapper>
-                <LazyDashboardStats 
+                <DashboardStatsRedesigned 
                   totalStudents={metrics.totalStudents}
                   totalAssessments={metrics.totalAssessments}
                   aiInsights={Math.floor(metrics.totalAssessments * 0.3)}
@@ -177,9 +176,6 @@ const Dashboard = () => {
                       />
                     </LazyWrapper>
                   </LazyContainer>
-                  
-                  {/* Performance monitoring widget */}
-                  <DashboardPerformanceWidget />
                 </div>
               </DSGridItem>
             </DSContentGrid>
