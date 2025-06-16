@@ -11,8 +11,8 @@ import {
 
 interface DashboardWelcomeSectionProps {
   teacher: {
-    name: string;
-    firstName: string;
+    full_name?: string;
+    firstName?: string;
   };
 }
 
@@ -23,6 +23,9 @@ const DashboardWelcomeSection: React.FC<DashboardWelcomeSectionProps> = ({ teach
     month: 'long',
     day: 'numeric'
   });
+
+  // Extract first name from full_name or use firstName
+  const firstName = teacher?.firstName || teacher?.full_name?.split(' ')[0] || 'Teacher';
 
   const quickActions = [
     {
@@ -52,7 +55,7 @@ const DashboardWelcomeSection: React.FC<DashboardWelcomeSectionProps> = ({ teach
       {/* Welcome Header */}
       <div>
         <DSSectionHeader className="text-gray-800 mb-2">
-          Welcome back, {teacher.firstName}! 👋
+          Welcome back, {firstName}! 👋
         </DSSectionHeader>
         <DSBodyText className="text-gray-600">
           {currentDate} • Here's what's happening with your students today

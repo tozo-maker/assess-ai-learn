@@ -11,7 +11,10 @@ export const useOptimizedDashboard = () => {
     queryKey: ['optimized-dashboard', user?.id],
     queryFn: async () => {
       if (!user?.id) throw new Error('No authenticated user');
-      return dashboardOptimizedQueries.getDashboardData(user.id);
+      console.log('Fetching dashboard data for user:', user.id);
+      const data = await dashboardOptimizedQueries.getDashboardData(user.id);
+      console.log('Dashboard data fetched:', data);
+      return data;
     },
     enabled: !!user?.id,
     staleTime: 2 * 60 * 1000, // 2 minutes
@@ -19,6 +22,7 @@ export const useOptimizedDashboard = () => {
     refetchOnWindowFocus: false,
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
     retry: (failureCount, error: any) => {
+      console.log('Dashboard query retry:', { failureCount, error });
       // Don't retry on auth errors
       if (error?.status === 401 || error?.status === 403) return false;
       return failureCount < 2;
@@ -32,9 +36,13 @@ export const useOptimizedDashboard = () => {
     };
   }, []);
 
-  return {
+  const result = {
     ...query,
     isInitialLoading: query.isLoading && !query.data,
     isEmpty: !query.isLoading && !query.error && !query.data?.students?.length
   };
+
+  console.log('useOptimizedDashboard result:', result);
+  
+  return result;
 };

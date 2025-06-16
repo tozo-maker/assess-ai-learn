@@ -1,164 +1,80 @@
 
 import React, { Suspense, lazy } from 'react';
-import EnhancedLoadingState from '@/components/common/EnhancedLoadingState';
-import ErrorBoundary from '@/components/common/ErrorBoundary';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
-// Lazy load heavy dashboard components
-export const LazyDashboardStats = lazy(() => 
-  import('@/components/dashboard/DashboardStatsRedesigned')
-    .then(module => ({ default: module.default }))
-);
+// Lazy loading with error boundaries
+const LazyActivityFeed = lazy(() => import('@/components/dashboard/DashboardActivityFeed'));
+const LazyRecentInsights = lazy(() => import('@/components/dashboard/DashboardRecentInsights'));
+const LazySecondaryWidgets = lazy(() => import('@/components/dashboard/DashboardSecondaryWidgets'));
 
-export const LazyActivityFeed = lazy(() => 
-  import('@/components/dashboard/DashboardActivityFeed')
-    .then(module => ({ default: module.default }))
-);
+// Error boundary component for lazy loaded components
+class LazyErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback?: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
-export const LazyRecentInsights = lazy(() => 
-  import('@/components/dashboard/DashboardRecentInsights')
-    .then(module => ({ default: module.default }))
-);
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
 
-export const LazySecondaryWidgets = lazy(() => 
-  import('@/components/dashboard/DashboardSecondaryWidgets')
-    .then(module => ({ default: module.default }))
-);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Lazy component error:', error, errorInfo);
+  }
 
-// Lazy load assessment components
-export const LazyAssessmentList = lazy(() => 
-  import('@/components/assessments/AssessmentList')
-    .then(module => ({ default: module.default }))
-);
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || (
+        <Alert className="border-orange-200 bg-orange-50">
+          <AlertCircle className="h-4 w-4 text-orange-600" />
+          <AlertDescription className="text-orange-800">
+            Unable to load this section. Please refresh the page.
+          </AlertDescription>
+        </Alert>
+      );
+    }
 
-export const LazyStudentList = lazy(() => 
-  import('@/components/students/EnhancedStudentList')
-    .then(module => ({ default: module.default }))
-);
-
-// Lazy load chart components
-export const LazyPerformanceChart = lazy(() => 
-  import('@/components/charts/PerformanceTimelineChart')
-    .then(module => ({ default: module.default }))
-);
-
-export const LazySkillsMasteryGrid = lazy(() => 
-  import('@/components/charts/SkillsMasteryGrid')
-    .then(module => ({ default: module.default }))
-);
-
-// Higher-order component for lazy loading with error boundary
-interface LazyWrapperProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
-  errorFallback?: React.ReactNode;
+    return this.props.children;
+  }
 }
 
-export const LazyWrapper: React.FC<LazyWrapperProps> = ({
-  children,
-  fallback = <EnhancedLoadingState type="spinner" />,
-  errorFallback = <div className="p-4 text-center text-gray-500">Failed to load component</div>
-}) => {
-  return (
-    <ErrorBoundary fallback={errorFallback}>
-      <Suspense fallback={fallback}>
-        {children}
-      </Suspense>
-    </ErrorBoundary>
-  );
-};
-
-// Intersection Observer hook for lazy loading on scroll
-export const useIntersectionObserver = (
-  elementRef: React.RefObject<Element>,
-  options: IntersectionObserverInit = {}
-) => {
-  const [isIntersecting, setIsIntersecting] = React.useState(false);
-  const [hasIntersected, setHasIntersected] = React.useState(false);
-
-  React.useEffect(() => {
-    const element = elementRef.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsIntersecting(entry.isIntersecting);
-        if (entry.isIntersecting && !hasIntersected) {
-          setHasIntersected(true);
-        }
-      },
-      {
-        rootMargin: '100px', // Load 100px before element comes into view
-        threshold: 0.1,
-        ...options
-      }
-    );
-
-    observer.observe(element);
-
-    return () => {
-      observer.unobserve(element);
-    };
-  }, [hasIntersected, options]);
-
-  return { isIntersecting, hasIntersected };
-};
-
-// Lazy container that loads content when scrolled into view
-interface LazyContainerProps {
-  children: React.ReactNode;
-  placeholder?: React.ReactNode;
-  className?: string;
-}
-
-export const LazyContainer: React.FC<LazyContainerProps> = ({
-  children,
-  placeholder = <EnhancedLoadingState type="spinner" />,
-  className = ''
-}) => {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const { hasIntersected } = useIntersectionObserver(containerRef);
-
-  return (
-    <div ref={containerRef} className={className}>
-      {hasIntersected ? children : placeholder}
+// Loading skeleton for lazy components
+const LazyLoadingSkeleton: React.FC = () => (
+  <div className="space-y-4">
+    <Skeleton className="h-6 w-48" />
+    <div className="space-y-3">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="flex items-center space-x-4">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+        </div>
+      ))}
     </div>
-  );
-};
+  </div>
+);
 
-// Performance monitoring for lazy components
-export const useLazyLoadingStats = () => {
-  const [loadedComponents, setLoadedComponents] = React.useState<Set<string>>(new Set());
-  const [loadTimes, setLoadTimes] = React.useState<Map<string, number>>(new Map());
+// Wrapper components
+export const LazyWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <LazyErrorBoundary>
+    <Suspense fallback={<LazyLoadingSkeleton />}>
+      {children}
+    </Suspense>
+  </LazyErrorBoundary>
+);
 
-  const trackComponentLoad = React.useCallback((componentName: string) => {
-    const startTime = performance.now();
-    
-    return () => {
-      const endTime = performance.now();
-      const loadTime = endTime - startTime;
-      
-      setLoadedComponents(prev => new Set([...prev, componentName]));
-      setLoadTimes(prev => new Map([...prev, [componentName, loadTime]]));
-      
-      console.log(`Lazy component "${componentName}" loaded in ${loadTime.toFixed(2)}ms`);
-    };
-  }, []);
+export const LazyContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="min-h-0">
+    {children}
+  </div>
+);
 
-  const getStats = React.useCallback(() => {
-    const avgLoadTime = Array.from(loadTimes.values()).reduce((sum, time) => sum + time, 0) / loadTimes.size;
-    
-    return {
-      totalLoaded: loadedComponents.size,
-      averageLoadTime: avgLoadTime || 0,
-      slowestComponent: Array.from(loadTimes.entries()).sort(([, a], [, b]) => b - a)[0],
-      allLoadTimes: Object.fromEntries(loadTimes)
-    };
-  }, [loadedComponents, loadTimes]);
-
-  return {
-    trackComponentLoad,
-    getStats,
-    loadedComponents: Array.from(loadedComponents),
-    loadTimes: Object.fromEntries(loadTimes)
-  };
-};
+// Export lazy components with proper error handling
+export { LazyActivityFeed, LazyRecentInsights, LazySecondaryWidgets };

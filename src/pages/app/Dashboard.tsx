@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import Breadcrumbs from '@/components/navigation/Breadcrumbs';
 import DashboardErrorBoundary from '@/components/dashboard/DashboardErrorBoundary';
@@ -35,8 +36,11 @@ import DashboardStatsRedesigned from '@/components/dashboard/DashboardStatsRedes
 const Dashboard = () => {
   const { data, isInitialLoading, error, refetch, isEmpty } = useOptimizedDashboard();
 
+  console.log('Dashboard render:', { data, isInitialLoading, error, isEmpty });
+
   // Show loading state for initial load
   if (isInitialLoading) {
+    console.log('Showing loading state');
     return (
       <AppLayout>
         <DSPageContainer>
@@ -49,6 +53,7 @@ const Dashboard = () => {
 
   // Show error state with recovery options
   if (error || !data) {
+    console.log('Showing error state:', error);
     return (
       <AppLayout>
         <DSPageContainer>
@@ -66,6 +71,7 @@ const Dashboard = () => {
 
   // Show empty state if no students
   if (isEmpty) {
+    console.log('Showing empty state');
     return (
       <AppLayout>
         <DSPageContainer>
@@ -79,12 +85,12 @@ const Dashboard = () => {
             <p className="text-gray-600 mb-6">
               Start by adding students to your class to see their progress and insights.
             </p>
-            <a 
-              href="/app/students/add" 
+            <Link 
+              to="/app/students/add" 
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
             >
               Add Your First Student
-            </a>
+            </Link>
           </div>
         </DSPageContainer>
       </AppLayout>
@@ -92,6 +98,7 @@ const Dashboard = () => {
   }
 
   const { students, assessments, metrics, teacher } = data;
+  console.log('Dashboard with data:', { studentsCount: students?.length, assessmentsCount: assessments?.length, metrics });
 
   // Generate alerts from metrics
   const alerts = [];
