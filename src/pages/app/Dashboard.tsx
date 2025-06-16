@@ -15,15 +15,8 @@ import {
   DSSpacer
 } from '@/components/ui/design-system';
 
-// Import optimized hooks
-import { 
-  useOptimizedStudents,
-  useOptimizedAssessments,
-  useOptimizedStudentMetrics,
-  usePrefetchQueries,
-  useBackgroundSync,
-  useTeacherProfile
-} from '@/hooks/queries/useOptimizedQueries';
+// Import optimized hook
+import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
 
 // Import lazy components
 import {
@@ -38,60 +31,13 @@ import {
 // Import regular components
 import DashboardWelcomeSection from '@/components/dashboard/DashboardWelcomeSection';
 import DashboardAlerts from '@/components/dashboard/DashboardAlerts';
-import PerformanceMonitoringWidget from '@/components/monitoring/PerformanceMonitoringWidget';
+import DashboardPerformanceWidget from '@/components/dashboard/DashboardPerformanceWidget';
 
 const Dashboard = () => {
-  // Optimized data fetching
-  const { data: teacher, isLoading: teacherLoading, error: teacherError } = useTeacherProfile();
-  const { data: students, isLoading: studentsLoading } = useOptimizedStudents();
-  const { data: assessments, isLoading: assessmentsLoading } = useOptimizedAssessments();
-  const { data: metrics, isLoading: metricsLoading } = useOptimizedStudentMetrics();
-  
-  // Background sync and prefetching
-  const { prefetchAll } = usePrefetchQueries();
-  const { syncInBackground } = useBackgroundSync();
-
-  // Prefetch data on mount
-  React.useEffect(() => {
-    const prefetchData = async () => {
-      try {
-        await prefetchAll();
-      } catch (error) {
-        console.warn('Prefetch failed:', error);
-      }
-    };
-
-    prefetchData();
-  }, [prefetchAll]);
-
-  // Background sync every 5 minutes
-  React.useEffect(() => {
-    const interval = setInterval(syncInBackground, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [syncInBackground]);
-
-  // Mock alerts data
-  const alerts = React.useMemo(() => {
-    if (!students || !metrics) return [];
-    
-    const alertsList = [];
-    if (metrics.studentsNeedingAttention > 0) {
-      alertsList.push({
-        id: '1',
-        type: 'performance' as const,
-        title: 'Students Need Attention',
-        description: `${metrics.studentsNeedingAttention} students are showing declining performance`,
-        severity: 'high' as const,
-        actionUrl: '/app/students?filter=needs-attention',
-        studentCount: metrics.studentsNeedingAttention
-      });
-    }
-    return alertsList;
-  }, [students, metrics]);
+  // Single optimized data fetch
+  const { data: dashboardData, isLoading, error, refetch } = useOptimizedDashboardData();
 
   // Loading state
-  const isLoading = teacherLoading || studentsLoading || assessmentsLoading || metricsLoading;
-  
   if (isLoading) {
     return (
       <AppLayout>
@@ -104,45 +50,23 @@ const Dashboard = () => {
   }
 
   // Error state
-  if (teacherError || !teacher) {
+  if (error || !dashboardData) {
     return (
       <AppLayout>
         <DSPageContainer>
           <Breadcrumbs />
           <ErrorState
-            error={teacherError}
+            error={error}
             title="Failed to load dashboard"
             description="There was an error loading your dashboard data. Please try again."
+            onRetry={refetch}
           />
         </DSPageContainer>
       </AppLayout>
     );
   }
 
-  // Transform teacher data
-  const teacherData = {
-    name: teacher.full_name,
-    firstName: teacher.full_name.split(' ')[0]
-  };
-
-  // Default values for optional data
-  const safeStudents = students || [];
-  const safeAssessments = assessments || [];
-  const safeMetrics = metrics || {
-    totalStudents: 0,
-    totalAssessments: 0,
-    aiInsights: 0,
-    recentAssessments: 0,
-    newStudentsThisMonth: 0,
-    todaysInsights: 0,
-    studentsNeedingAttention: 0,
-    studentMetrics: {
-      totalStudents: 0,
-      studentsNeedingAttention: 0,
-      aboveAverageCount: 0,
-      averagePerformance: 'No data'
-    }
-  };
+  const { students, assessments, metrics, alerts, teacher } = dashboardData;
 
   return (
     <AppLayout>
@@ -153,7 +77,7 @@ const Dashboard = () => {
             
             {/* Welcome Section - Always visible */}
             <ErrorBoundary fallback={<ErrorState title="Welcome section unavailable" />}>
-              <DashboardWelcomeSection teacher={teacherData} />
+              <DashboardWelcomeSection teacher={teacher} />
             </ErrorBoundary>
 
             <DSSpacer size="2xl" />
@@ -173,13 +97,18 @@ const Dashboard = () => {
               <ErrorBoundary fallback={<ErrorState title="Metrics unavailable" />}>
                 <LazyWrapper>
                   <LazyDashboardStats 
-                    totalStudents={safeMetrics.totalStudents}
-                    totalAssessments={safeMetrics.totalAssessments}
-                    aiInsights={safeMetrics.aiInsights}
-                    recentAssessments={safeMetrics.recentAssessments}
-                    newStudentsThisMonth={safeMetrics.newStudentsThisMonth}
-                    todaysInsights={safeMetrics.todaysInsights}
-                    studentMetrics={safeMetrics.studentMetrics}
+                    totalStudents={metrics.totalStudents}
+                    totalAssessments={metrics.totalAssessments}
+                    aiInsights={metrics.aiInsights}
+                    recentAssessments={metrics.recentAssessments}
+                    newStudentsThisMonth={metrics.newStudentsThisMonth}
+                    todaysInsights={metrics.todaysInsights}
+                    studentMetrics={{
+                      totalStudents: metrics.totalStudents,
+                      studentsNeedingAttention: metrics.studentsNeedingAttention,
+                      aboveAverageCount: metrics.aboveAverageCount,
+                      averagePerformance: metrics.averagePerformance
+                    }}
                   />
                 </LazyWrapper>
               </ErrorBoundary>
@@ -194,9 +123,9 @@ const Dashboard = () => {
                   <ErrorBoundary fallback={<ErrorState title="Activity feed unavailable" />}>
                     <LazyWrapper>
                       <LazyActivityFeed 
-                        recentAssessments={safeMetrics.recentAssessments}
-                        totalStudents={safeMetrics.totalStudents}
-                        studentsNeedingAttention={safeMetrics.studentsNeedingAttention}
+                        recentAssessments={metrics.recentAssessments}
+                        totalStudents={metrics.totalStudents}
+                        studentsNeedingAttention={metrics.studentsNeedingAttention}
                       />
                     </LazyWrapper>
                   </ErrorBoundary>
@@ -209,7 +138,7 @@ const Dashboard = () => {
                     <ErrorBoundary fallback={<ErrorState title="Recent insights unavailable" />}>
                       <LazyWrapper>
                         <LazyRecentInsights 
-                          students={safeStudents}
+                          students={students}
                           communications={[]}
                         />
                       </LazyWrapper>
@@ -218,7 +147,7 @@ const Dashboard = () => {
                   
                   {/* Performance monitoring widget */}
                   <ErrorBoundary fallback={<ErrorState title="Performance monitoring unavailable" />}>
-                    <PerformanceMonitoringWidget />
+                    <DashboardPerformanceWidget />
                   </ErrorBoundary>
                 </div>
               </DSGridItem>
@@ -231,9 +160,12 @@ const Dashboard = () => {
               <ErrorBoundary fallback={<ErrorState title="Additional widgets unavailable" />}>
                 <LazyWrapper>
                   <LazySecondaryWidgets 
-                    assessments={safeAssessments}
-                    students={safeStudents}
-                    metrics={safeMetrics}
+                    assessments={assessments}
+                    students={students}
+                    metrics={{
+                      averagePerformance: metrics.averagePerformance,
+                      studentsNeedingAttention: metrics.studentsNeedingAttention
+                    }}
                   />
                 </LazyWrapper>
               </ErrorBoundary>
