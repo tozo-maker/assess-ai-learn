@@ -9,8 +9,7 @@ import {
   DSCardTitle,
   DSFlexContainer,
   DSBodyText,
-  DSButton,
-  designSystem
+  DSButton
 } from '@/components/ui/design-system';
 
 interface Alert {
@@ -35,27 +34,27 @@ const DashboardAlerts: React.FC<DashboardAlertsProps> = ({ alerts }) => {
   const getAlertIcon = (severity: string) => {
     switch (severity) {
       case 'high':
-        return <AlertTriangle className={`h-5 w-5 ${designSystem.colors.danger.text}`} />;
+        return <AlertTriangle className="h-5 w-5 text-red-500" />;
       case 'medium':
-        return <Info className={`h-5 w-5 ${designSystem.colors.warning.text}`} />;
+        return <Info className="h-5 w-5 text-amber-500" />;
       default:
-        return <CheckCircle className={`h-5 w-5 ${designSystem.colors.info.text}`} />;
+        return <CheckCircle className="h-5 w-5 text-blue-500" />;
     }
   };
 
   const getAlertStyles = (severity: string) => {
     switch (severity) {
       case 'high':
-        return `border-l-4 ${designSystem.colors.danger.border} ${designSystem.colors.danger.light}`;
+        return 'border-red-200 bg-red-50';
       case 'medium':
-        return `border-l-4 ${designSystem.colors.warning.border} ${designSystem.colors.warning.light}`;
+        return 'border-amber-200 bg-amber-50';
       default:
-        return `border-l-4 ${designSystem.colors.info.border} ${designSystem.colors.info.light}`;
+        return 'border-blue-200 bg-blue-50';
     }
   };
 
   return (
-    <DSCard className={getAlertStyles(alerts[0].severity)}>
+    <DSCard className={`${getAlertStyles(alerts[0].severity)} border-l-4`}>
       <DSCardHeader>
         <DSCardTitle>Priority Alerts</DSCardTitle>
       </DSCardHeader>

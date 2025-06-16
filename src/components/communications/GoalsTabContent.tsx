@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -36,6 +35,7 @@ const GoalsTabContent: React.FC<GoalsTabContentProps> = ({ goals: initialGoals, 
     achievements,
     celebratingAchievement,
     handleDismissAchievement,
+    handleCelebrate,
     handleCloseCelebration,
     refetchAchievements
   } = useGoalAchievements(studentId);
@@ -167,6 +167,14 @@ const GoalsTabContent: React.FC<GoalsTabContentProps> = ({ goals: initialGoals, 
       goalId, 
       data: { progress_percentage: progress } 
     });
+  };
+
+  const calculateProgress = (goal: GoalWithMilestones) => {
+    if (goal.milestones && goal.milestones.length > 0) {
+      const completedMilestones = goal.milestones.filter(m => m.completed_at).length;
+      return (completedMilestones / goal.milestones.length) * 100;
+    }
+    return goal.progress_percentage || 0;
   };
 
   const handleGoalCreatedFromSuggestion = () => {

@@ -5,11 +5,12 @@ export interface Goal {
   teacher_id: string;
   title: string;
   description?: string;
-  category?: string; // Added category field
-  priority?: 'High' | 'Medium' | 'Low'; // Added priority field
   target_date?: string;
   status: 'active' | 'completed' | 'paused' | 'cancelled';
   progress_percentage?: number;
+  category?: string;
+  priority?: 'High' | 'Medium' | 'Low';
+  tags?: string;
   created_at: string;
   updated_at: string;
 }
@@ -20,7 +21,7 @@ export interface GoalMilestone {
   title: string;
   description?: string;
   target_date?: string;
-  completed_at?: string | null; // Updated to allow null
+  completed_at?: string;
   created_at: string;
 }
 
@@ -31,11 +32,12 @@ export interface GoalWithMilestones extends Goal {
 export interface GoalFormData {
   title: string;
   description?: string;
-  category?: string; // Added category field
-  priority?: 'High' | 'Medium' | 'Low'; // Added priority field
   target_date?: string;
   status?: 'active' | 'completed' | 'paused' | 'cancelled';
   progress_percentage?: number;
+  category?: string;
+  priority?: 'High' | 'Medium' | 'Low';
+  tags?: string;
 }
 
 // Goal Analytics Types
@@ -43,7 +45,8 @@ export interface GoalAnalytics {
   totalGoals: number;
   completedGoals: number;
   averageProgress: number;
-  goalsByStatus: { [key: string]: number };
+  goalsByCategory: { [key: string]: number };
+  goalsByPriority: { [key: string]: number };
   upcomingDeadlines: Goal[];
 }
 

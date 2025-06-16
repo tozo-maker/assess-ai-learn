@@ -11,12 +11,12 @@ import {
   DSFlexContainer,
   DSBodyText,
   DSButton,
-  DSHelpText,
-  designSystem
+  DSHelpText
 } from '@/components/ui/design-system';
 
 interface DashboardSecondaryWidgetsProps {
   assessments: any[];
+  students: any[];
   metrics: {
     averagePerformance: string;
     studentsNeedingAttention: number;
@@ -25,12 +25,13 @@ interface DashboardSecondaryWidgetsProps {
 
 const DashboardSecondaryWidgets: React.FC<DashboardSecondaryWidgetsProps> = ({
   assessments,
+  students,
   metrics
 }) => {
   const widgets = [
     {
       title: 'Performance Overview',
-      icon: <BarChart3 className={`h-5 w-5 ${designSystem.colors.info.text}`} />,
+      icon: <BarChart3 className="h-5 w-5 text-blue-500" />,
       content: (
         <div className="space-y-3">
           <div>
@@ -52,7 +53,7 @@ const DashboardSecondaryWidgets: React.FC<DashboardSecondaryWidgetsProps> = ({
     },
     {
       title: 'Upcoming Tasks',
-      icon: <Calendar className={`h-5 w-5 ${designSystem.colors.success.text}`} />,
+      icon: <Calendar className="h-5 w-5 text-green-500" />,
       content: (
         <div className="space-y-3">
           <DSBodyText>
@@ -71,7 +72,7 @@ const DashboardSecondaryWidgets: React.FC<DashboardSecondaryWidgetsProps> = ({
     },
     {
       title: 'Goals & Progress',
-      icon: <Target className={`h-5 w-5 ${designSystem.colors.warning.text}`} />,
+      icon: <Target className="h-5 w-5 text-purple-500" />,
       content: (
         <div className="space-y-3">
           <DSBodyText>

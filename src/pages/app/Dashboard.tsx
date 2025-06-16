@@ -16,16 +16,13 @@ import {
   DSSpacer
 } from '@/components/ui/design-system';
 
-// Import dashboard components
+// Import dashboard components - using redesigned versions
 import DashboardWelcomeSection from '@/components/dashboard/DashboardWelcomeSection';
 import DashboardStatsRedesigned from '@/components/dashboard/DashboardStatsRedesigned';
 import DashboardActivityFeed from '@/components/dashboard/DashboardActivityFeed';
 import DashboardRecentInsights from '@/components/dashboard/DashboardRecentInsights';
 import DashboardAlerts from '@/components/dashboard/DashboardAlerts';
 import DashboardSecondaryWidgets from '@/components/dashboard/DashboardSecondaryWidgets';
-
-// Import new workflow components
-import ContextualQuickActions from '@/components/workflow/ContextualQuickActions';
 
 const Dashboard = () => {
   const {
@@ -78,13 +75,6 @@ const Dashboard = () => {
             {/* Welcome Section - Full Width with proper spacing */}
             <ErrorBoundary fallback={<ErrorState title="Welcome section unavailable" />}>
               <DashboardWelcomeSection teacher={teacher} />
-            </ErrorBoundary>
-
-            <DSSpacer size="2xl" />
-
-            {/* Contextual Quick Actions */}
-            <ErrorBoundary fallback={<ErrorState title="Quick actions unavailable" />}>
-              <ContextualQuickActions />
             </ErrorBoundary>
 
             <DSSpacer size="2xl" />

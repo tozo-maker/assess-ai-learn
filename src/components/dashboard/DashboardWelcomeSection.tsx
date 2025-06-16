@@ -6,8 +6,7 @@ import {
   DSFlexContainer,
   DSButton,
   DSBodyText,
-  DSSectionHeader,
-  DSSpacer
+  DSSectionHeader
 } from '@/components/ui/design-system';
 
 interface DashboardWelcomeSectionProps {
@@ -60,12 +59,10 @@ const DashboardWelcomeSection: React.FC<DashboardWelcomeSectionProps> = ({ teach
         </DSBodyText>
       </div>
 
-      <DSSpacer size="lg" />
-
       {/* Quick Actions */}
       <DSFlexContainer 
         direction="row" 
-        gap="md" 
+        gap="sm" 
         className="flex-wrap"
       >
         {quickActions.map((action, index) => (

@@ -1,8 +1,8 @@
+
 import { enhancedErrorTracking } from './enhanced-error-tracking';
 import { structuredLogger } from './structured-logging';
 import { advancedCachingService } from './advanced-caching-service';
 import { performanceMonitoringService } from './performance-monitoring-service';
-import { logger } from './logger';
 
 interface MonitoringConfig {
   enablePerformanceTracking: boolean;
@@ -13,131 +13,38 @@ interface MonitoringConfig {
 
 class MonitoringIntegration {
   private config: MonitoringConfig = {
-    enablePerformanceTracking: true,  // Re-enabled
-    enableErrorTracking: true,        // Re-enabled
-    enableCaching: true,              // Re-enabled
-    enableResourceOptimization: true // Re-enabled
+    enablePerformanceTracking: false, // Disabled to prevent interference
+    enableErrorTracking: false,       // Disabled to prevent interference
+    enableCaching: false,             // Disabled to prevent interference
+    enableResourceOptimization: false // Disabled to prevent interference
   };
 
   private isInitialized = false;
 
   async initialize() {
-    if (this.isInitialized) {
-      logger.warn('Monitoring integration already initialized', {}, 'MonitoringIntegration');
-      return;
-    }
-
-    try {
-      logger.info('Initializing monitoring services...', {}, 'MonitoringIntegration');
-
-      // Initialize services based on configuration
-      if (this.config.enableErrorTracking) {
-        enhancedErrorTracking.enable();
-        logger.info('Error tracking enabled', {}, 'MonitoringIntegration');
-      }
-
-      if (this.config.enablePerformanceTracking) {
-        performanceMonitoringService.enable();
-        logger.info('Performance monitoring enabled', {}, 'MonitoringIntegration');
-      }
-
-      if (this.config.enableCaching) {
-        // Advanced caching service doesn't have an enable method, it's controlled by internal flag
-        logger.info('Advanced caching enabled', {}, 'MonitoringIntegration');
-      }
-
-      // Initialize structured logging
-      structuredLogger.info('Monitoring integration initialized successfully');
-
-      this.isInitialized = true;
-      logger.info('All monitoring services initialized successfully', {}, 'MonitoringIntegration');
-
-    } catch (error) {
-      logger.error('Failed to initialize monitoring services', { error }, 'MonitoringIntegration');
-      throw error;
-    }
+    // Skip initialization completely to prevent interference with landing page
+    console.log('Monitoring services disabled to prevent landing page interference');
+    return;
   }
 
   getStatus() {
     return {
-      initialized: this.isInitialized,
+      initialized: false,
       services: {
-        errorTracking: this.config.enableErrorTracking,
-        structuredLogging: true, // Always available
-        advancedCaching: this.config.enableCaching,
-        performanceMonitoring: this.config.enablePerformanceTracking
-      },
-      config: this.config
+        errorTracking: false,
+        structuredLogging: false,
+        advancedCaching: false,
+        performanceMonitoring: false
+      }
     };
   }
 
-  updateConfig(newConfig: Partial<MonitoringConfig>) {
-    this.config = { ...this.config, ...newConfig };
-    logger.info('Monitoring configuration updated', { config: this.config }, 'MonitoringIntegration');
-  }
-
-  async reinitialize() {
-    this.isInitialized = false;
-    await this.initialize();
-  }
-
-  // Health check for monitoring services
-  async healthCheck() {
-    const health = {
-      errorTracking: false,
-      performanceMonitoring: false,
-      caching: false,
-      structuredLogging: false
-    };
-
-    try {
-      // Test error tracking
-      if (this.config.enableErrorTracking) {
-        health.errorTracking = true;
-      }
-
-      // Test performance monitoring
-      if (this.config.enablePerformanceTracking) {
-        health.performanceMonitoring = true;
-      }
-
-      // Test caching
-      if (this.config.enableCaching) {
-        health.caching = true;
-      }
-
-      // Test structured logging
-      health.structuredLogging = true;
-
-      logger.info('Monitoring health check completed', { health }, 'MonitoringIntegration');
-      return health;
-
-    } catch (error) {
-      logger.error('Monitoring health check failed', { error }, 'MonitoringIntegration');
-      return health;
-    }
-  }
-
-  // Get monitoring metrics
-  async getMetrics() {
-    const metrics = {
-      errors: await enhancedErrorTracking.getErrorMetrics('hour').catch(() => null),
-      performance: await performanceMonitoringService.getPerformanceStats('hour').catch(() => null),
-      cache: advancedCachingService.getStats(),
-      logs: structuredLogger.getLogMetrics('hour').catch(() => null)
-    };
-
-    return metrics;
+  private shouldInitialize(): boolean {
+    return false; // Always return false to keep services disabled
   }
 }
 
 const monitoringIntegration = new MonitoringIntegration();
 
-// Auto-initialize in production
-if (typeof window !== 'undefined') {
-  monitoringIntegration.initialize().catch((error) => {
-    logger.error('Failed to auto-initialize monitoring', { error }, 'MonitoringIntegration');
-  });
-}
-
+// Don't auto-initialize to prevent interference
 export { monitoringIntegration };
