@@ -1,10 +1,12 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { 
   Brain, 
   TrendingUp, 
-  Target,
+  Target, 
+  Calendar,
   BarChart3
 } from 'lucide-react';
 
@@ -35,6 +37,9 @@ const InsightMetricsDashboard: React.FC<InsightMetricsDashboardProps> = ({
   const totalStrengths = new Set(insights.flatMap(i => i.strengths || [])).size;
   const totalGrowthAreas = new Set(insights.flatMap(i => i.growth_areas || [])).size;
   const totalRecommendations = new Set(insights.flatMap(i => i.recommendations || [])).size;
+  const lastAnalysisDate = insights.length > 0 
+    ? new Date(insights[0].created_at).toLocaleDateString()
+    : 'None';
 
   const completionRate = assessmentsWithoutAnalysis === 0 && totalInsights > 0 
     ? 100 
@@ -63,9 +68,9 @@ const InsightMetricsDashboard: React.FC<InsightMetricsDashboardProps> = ({
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-green-600">Strengths Identified</p>
+              <p className="text-sm font-medium text-green-600">Strengths Found</p>
               <p className="text-2xl font-bold text-green-900">{totalStrengths}</p>
-              <p className="text-xs text-green-600">Unique strengths found</p>
+              <p className="text-xs text-green-600">unique strengths</p>
             </div>
             <div className="p-2 bg-green-200 rounded-lg">
               <TrendingUp className="h-5 w-5 text-green-700" />
@@ -80,7 +85,7 @@ const InsightMetricsDashboard: React.FC<InsightMetricsDashboardProps> = ({
             <div>
               <p className="text-sm font-medium text-orange-600">Growth Areas</p>
               <p className="text-2xl font-bold text-orange-900">{totalGrowthAreas}</p>
-              <p className="text-xs text-orange-600">Areas for improvement</p>
+              <p className="text-xs text-orange-600">areas identified</p>
             </div>
             <div className="p-2 bg-orange-200 rounded-lg">
               <Target className="h-5 w-5 text-orange-700" />
@@ -93,9 +98,9 @@ const InsightMetricsDashboard: React.FC<InsightMetricsDashboardProps> = ({
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-purple-600">AI Recommendations</p>
+              <p className="text-sm font-medium text-purple-600">Recommendations</p>
               <p className="text-2xl font-bold text-purple-900">{totalRecommendations}</p>
-              <p className="text-xs text-purple-600">Actionable suggestions</p>
+              <p className="text-xs text-purple-600">actionable items</p>
             </div>
             <div className="p-2 bg-purple-200 rounded-lg">
               <Brain className="h-5 w-5 text-purple-700" />

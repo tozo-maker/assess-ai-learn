@@ -1,110 +1,95 @@
+
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Plus, 
-  UserPlus, 
-  FileText, 
-  BarChart3, 
-  Target, 
-  Mail,
-  Upload,
-  Download
-} from 'lucide-react';
+import { Plus, FileText, Users, Lightbulb, BarChart3 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import {
+  DSCard,
+  DSCardContent,
+  DSCardHeader,
+  DSCardTitle,
+  DSButton,
+  DSContentGrid,
+  DSFlexContainer,
+  DSBodyText,
+  DSSpacer,
+  designSystem
+} from '@/components/ui/design-system';
 
-const QuickActionsCard = () => {
-  const navigate = useNavigate();
-
+const QuickActionsCard: React.FC = () => {
   const quickActions = [
     {
-      title: 'Add Student',
-      description: 'Register a new student',
-      icon: UserPlus,
-      action: () => navigate('/app/students/new'),
-      variant: 'default' as const
+      title: "Add Assessment",
+      description: "Upload or enter new assessment data",
+      href: "/app/assessments/add",
+      icon: <FileText className="h-5 w-5" />,
+      variant: 'info' as const
     },
     {
-      title: 'Create Assessment',
-      description: 'Design a new assessment',
-      icon: Plus,
-      action: () => navigate('/app/assessments/new'),
-      variant: 'default' as const
+      title: "Add Student",
+      description: "Register a new student to your class",
+      href: "/app/students/add",
+      icon: <Users className="h-5 w-5" />,
+      variant: 'success' as const
     },
     {
-      title: 'Generate Report',
-      description: 'Create student reports',
-      icon: FileText,
-      action: () => navigate('/app/reports'),
-      variant: 'outline' as const
+      title: "View Insights",
+      description: "See latest AI analysis and recommendations",
+      href: "/app/insights/class",
+      icon: <Lightbulb className="h-5 w-5" />,
+      variant: 'warning' as const
     },
     {
-      title: 'View Analytics',
-      description: 'Check performance data',
-      icon: BarChart3,
-      action: () => navigate('/app/analytics'),
-      variant: 'outline' as const
-    },
-    {
-      title: 'Set Goals',
-      description: 'Create learning objectives',
-      icon: Target,
-      action: () => navigate('/app/goals'),
-      variant: 'outline' as const
-    },
-    {
-      title: 'Send Communication',
-      description: 'Contact parents/guardians',
-      icon: Mail,
-      action: () => navigate('/app/communications'),
-      variant: 'outline' as const
-    },
-    {
-      title: 'Import Data',
-      description: 'Upload student information',
-      icon: Upload,
-      action: () => navigate('/app/import'),
-      variant: 'outline' as const
-    },
-    {
-      title: 'Export Data',
-      description: 'Download reports and data',
-      icon: Download,
-      action: () => navigate('/app/export'),
-      variant: 'outline' as const
+      title: "Class Analytics",
+      description: "Comprehensive class performance analysis",
+      href: "/app/insights/class",
+      icon: <BarChart3 className="h-5 w-5" />,
+      variant: 'danger' as const
     }
   ];
 
+  const getVariantStyles = (variant: string) => {
+    switch (variant) {
+      case 'info':
+        return `${designSystem.colors.info.bg} ${designSystem.colors.info.hover}`;
+      case 'success':
+        return `${designSystem.colors.success.bg} ${designSystem.colors.success.hover}`;
+      case 'warning':
+        return `${designSystem.colors.warning.bg} ${designSystem.colors.warning.hover}`;
+      case 'danger':
+        return `${designSystem.colors.danger.bg} ${designSystem.colors.danger.hover}`;
+      default:
+        return `${designSystem.colors.primary.bg} ${designSystem.colors.primary.hover}`;
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Plus className="h-5 w-5" />
-          Quick Actions
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {quickActions.map((action) => {
-            const IconComponent = action.icon;
-            return (
-              <Button
-                key={action.title}
-                variant={action.variant}
-                className="h-auto p-4 flex flex-col items-center gap-2 text-center"
-                onClick={action.action}
+    <DSCard>
+      <DSCardHeader>
+        <DSCardTitle>
+          <DSFlexContainer align="center" gap="sm">
+            <Plus className="h-5 w-5" />
+            <span>Quick Actions</span>
+          </DSFlexContainer>
+        </DSCardTitle>
+      </DSCardHeader>
+      <DSCardContent>
+        <DSContentGrid cols={2}>
+          {quickActions.map((action, index) => (
+            <Link key={index} to={action.href}>
+              <DSButton 
+                className={`w-full h-auto p-3 ${getVariantStyles(action.variant)} text-white`}
+                size="sm"
               >
-                <IconComponent className="h-6 w-6" />
-                <div>
-                  <div className="font-medium text-sm">{action.title}</div>
-                  <div className="text-xs opacity-70">{action.description}</div>
-                </div>
-              </Button>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+                <DSFlexContainer direction="col" align="center" gap="xs">
+                  {action.icon}
+                  <DSBodyText className="text-xs font-medium text-white">{action.title}</DSBodyText>
+                </DSFlexContainer>
+              </DSButton>
+            </Link>
+          ))}
+        </DSContentGrid>
+      </DSCardContent>
+    </DSCard>
   );
 };
 

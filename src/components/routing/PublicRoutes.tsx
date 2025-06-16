@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Route } from 'react-router-dom';
 import LandingPage from '@/pages/Index';
 import LoginPage from '@/pages/auth/Login';

@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Upload, Grid, List, Trash2, Download, Mail } from 'lucide-react';
+import { Plus, Upload, Grid, List, Trash2, Download, Mail, Users } from 'lucide-react';
 
 // Layout Components
 import AppLayout from '@/components/layout/AppLayout';

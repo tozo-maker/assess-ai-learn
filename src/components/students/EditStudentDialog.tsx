@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -22,7 +23,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { StudentWithPerformance } from '@/types/student';
-import { useEffect } from 'react';
 
 const formSchema = z.object({
   first_name: z.string().min(2, {
@@ -31,14 +31,19 @@ const formSchema = z.object({
   last_name: z.string().min(2, {
     message: "Last name must be at least 2 characters.",
   }),
-  student_id: z.string().optional(),
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }).optional(),
+  student_id: z.string().min(3, {
+    message: "Student ID must be at least 3 characters.",
+  }),
   grade_level: z.string().min(1, {
     message: "Please select a grade level.",
   }),
   parent_name: z.string().optional(),
   parent_email: z.string().email({
     message: "Please enter a valid email address.",
-  }).optional().or(z.literal("")),
+  }).optional(),
   parent_phone: z.string().optional(),
 });
 
@@ -60,6 +65,7 @@ const EditStudentDialog: React.FC<EditStudentDialogProps> = ({
     defaultValues: {
       first_name: student?.first_name || "",
       last_name: student?.last_name || "",
+      email: student?.email || "",
       student_id: student?.student_id || "",
       grade_level: student?.grade_level || "",
       parent_name: student?.parent_name || "",
@@ -68,11 +74,12 @@ const EditStudentDialog: React.FC<EditStudentDialogProps> = ({
     },
   });
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (student) {
       form.reset({
         first_name: student.first_name || "",
         last_name: student.last_name || "",
+        email: student.email || "",
         student_id: student.student_id || "",
         grade_level: student.grade_level || "",
         parent_name: student.parent_name || "",
@@ -114,6 +121,19 @@ const EditStudentDialog: React.FC<EditStudentDialogProps> = ({
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
                     <Input placeholder="Last name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Email" type="email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

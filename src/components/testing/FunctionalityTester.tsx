@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import {
   Clock, 
   Shield, 
   Database, 
+  Users, 
   FileText, 
   AlertTriangle,
   PlayCircle,
@@ -93,10 +94,9 @@ const FunctionalityTester = () => {
         details: { sessionExists: !!session, userId: session?.user?.id }
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateTestResult('User Session Validation', {
         status: 'failed',
-        message: `Session check failed: ${errorMessage}`,
+        message: `Session check failed: ${error.message}`,
         duration: Date.now() - startTime
       });
     }
@@ -115,10 +115,9 @@ const FunctionalityTester = () => {
         details: { userId: user.id, email: user.email }
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateTestResult('Profile Data Access', {
         status: 'failed',
-        message: `Profile access failed: ${errorMessage}`,
+        message: `Profile access failed: ${error.message}`,
         duration: Date.now() - profileStartTime
       });
     }
@@ -138,10 +137,9 @@ const FunctionalityTester = () => {
         details: { consistent: isConsistent }
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateTestResult('Auth State Persistence', {
         status: 'failed',
-        message: `Persistence test failed: ${errorMessage}`,
+        message: `Persistence test failed: ${error.message}`,
         duration: Date.now() - persistenceStartTime
       });
     }
@@ -180,10 +178,9 @@ const FunctionalityTester = () => {
         details: { studentId: testStudentId }
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateTestResult('Student Creation', {
         status: 'failed',
-        message: `Creation failed: ${errorMessage}`,
+        message: `Creation failed: ${error.message}`,
         duration: Date.now() - createStartTime
       });
       return;
@@ -208,10 +205,9 @@ const FunctionalityTester = () => {
         details: { count: students.length }
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateTestResult('Student Reading', {
         status: 'failed',
-        message: `Read failed: ${errorMessage}`,
+        message: `Read failed: ${error.message}`,
         duration: Date.now() - readStartTime
       });
     }
@@ -235,10 +231,9 @@ const FunctionalityTester = () => {
           duration: Date.now() - updateStartTime
         });
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         updateTestResult('Student Update', {
           status: 'failed',
-          message: `Update failed: ${errorMessage}`,
+          message: `Update failed: ${error.message}`,
           duration: Date.now() - updateStartTime
         });
       }
@@ -263,10 +258,9 @@ const FunctionalityTester = () => {
           duration: Date.now() - deleteStartTime
         });
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         updateTestResult('Student Deletion', {
           status: 'failed',
-          message: `Deletion failed: ${errorMessage}`,
+          message: `Deletion failed: ${error.message}`,
           duration: Date.now() - deleteStartTime
         });
       }
@@ -322,10 +316,9 @@ const FunctionalityTester = () => {
         details: { studentsChecked: studentsWithResponses.length }
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateTestResult('Foreign Key Constraints', {
         status: 'failed',
-        message: `Constraint check failed: ${errorMessage}`,
+        message: `Constraint check failed: ${error.message}`,
         duration: Date.now() - constraintStartTime
       });
     }
@@ -417,7 +410,7 @@ const FunctionalityTester = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const variantMap: Record<string, "default" | "destructive" | "secondary" | "outline"> = {
+    const variants = {
       passed: 'default',
       failed: 'destructive',
       running: 'secondary',
@@ -425,7 +418,7 @@ const FunctionalityTester = () => {
     };
     
     return (
-      <Badge variant={variantMap[status] || 'outline'}>
+      <Badge variant={variants[status] || 'outline'}>
         {status.toUpperCase()}
       </Badge>
     );

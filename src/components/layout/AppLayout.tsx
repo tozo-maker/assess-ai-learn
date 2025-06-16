@@ -1,4 +1,5 @@
 
+import React from 'react';
 import Header from '@/components/layout/Header';
 import AppSidebar from '@/components/layout/AppSidebar';
 import FloatingActionButton from '@/components/layout/FloatingActionButton';

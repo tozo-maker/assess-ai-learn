@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useNavigate } from 'react-router-dom';
@@ -167,6 +166,9 @@ const AssessmentWizard: React.FC = () => {
         return;
       }
       
+      // Calculate total max score from items
+      const totalItemsScore = data.items.reduce((sum, item) => sum + Number(item.max_score), 0);
+      
       // Create the assessment first
       const assessment = await assessmentService.createAssessment({
         title: data.title,
@@ -182,7 +184,7 @@ const AssessmentWizard: React.FC = () => {
       });
       
       // Then create the assessment items
-      await assessmentService.createAssessmentItems(
+      const assessmentItems = await assessmentService.createAssessmentItems(
         data.items.map((item, index) => ({
           assessment_id: assessment.id,
           item_number: index + 1,
@@ -372,8 +374,8 @@ const AssessmentWizard: React.FC = () => {
               {/* Assessment Items Tab */}
               <TabsContent value="assessment-items">
                 <div className="space-y-8">
-                  {fields.map((fieldItem, index) => (
-                    <DSCard key={fieldItem.id}>
+                  {fields.map((field, index) => (
+                    <DSCard key={field.id}>
                       <DSCardContent>
                         <DSFlexContainer justify="between" align="center" className="mb-6">
                           <h3 className="text-lg font-semibold text-gray-900">Item #{index + 1}</h3>
@@ -538,7 +540,7 @@ const AssessmentWizard: React.FC = () => {
                     <DSCardContent>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Item Point Summary</h3>
                       <div className="space-y-2">
-                        {fields.map((_, index) => (
+                        {fields.map((field, index) => (
                           <DSFlexContainer key={index} justify="between">
                             <span className="text-sm text-gray-600">Item #{index + 1}:</span>
                             <span className="text-sm font-medium">{form.watch(`items.${index}.max_score`)} points</span>

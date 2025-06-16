@@ -1,188 +1,255 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Input } from '@/components/ui/input';
+import { Download, FileText, Calendar, Filter } from 'lucide-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { exportsService } from '@/services/exports-service';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  Download, 
-  Calendar,
-  Filter,
-  FileSpreadsheet,
-  FileType,
-  Clock
-} from 'lucide-react';
-import { exportService } from '@/services/export-service';
-import { useAuth } from '@/contexts/AuthContext';
+import DateRangeFilter from '@/components/exports/DateRangeFilter';
+import { ExportRequestData } from '@/types/exports';
 
 interface ExportDataDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  size?: "default" | "sm" | "lg" | "icon";
+  className?: string;
 }
 
-const ExportDataDialog: React.FC<ExportDataDialogProps> = ({ open, onOpenChange }) => {
-  const [exportType, setExportType] = useState('students');
-  const [exportFormat, setExportFormat] = useState('csv');
-  const [dateRange, setDateRange] = useState('last_month');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [exportId, setExportId] = useState<string | null>(null);
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const { user } = useAuth();
+const ExportDataDialog: React.FC<ExportDataDialogProps> = ({
+  variant = "outline",
+  size = "sm",
+  className = ""
+}) => {
+  const [open, setOpen] = useState(false);
+  const [exportType, setExportType] = useState<'student_data' | 'assessment_results' | 'progress_reports' | 'class_summary' | 'analytics_data'>('student_data');
+  const [includeArchived, setIncludeArchived] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const { toast } = useToast();
 
-  const handleCreateExport = async () => {
-    if (!user) {
+  const exportMutation = useMutation({
+    mutationFn: (exportData: ExportRequestData) => exportsService.requestExport(exportData),
+    onSuccess: () => {
       toast({
-        variant: "destructive",
-        title: "Authentication Required",
-        description: "Please log in to export data"
+        title: 'Export Started',
+        description: 'Your export is being processed. You can download it from the exports page when ready.'
       });
-      return;
+      setOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: 'Export Failed',
+        description: error.message,
+        variant: 'destructive'
+      });
     }
+  });
 
-    setIsGenerating(true);
-    setExportId(null);
-    setDownloadUrl(null);
+  const { data: recentExports } = useQuery({
+    queryKey: ['exports'],
+    queryFn: exportsService.getExports
+  });
 
-    try {
-      const request = {
-        type: exportType,
-        format: exportFormat,
-        dateRange: dateRange,
-        teacherId: user.id
-      };
+  const handleExport = () => {
+    const filters: Record<string, any> = {};
+    
+    if (startDate) filters.start_date = new Date(startDate).toISOString();
+    if (endDate) filters.end_date = new Date(endDate).toISOString();
+    if (selectedFields.length > 0) filters.fields = selectedFields;
+    if (includeArchived) filters.include_archived = true;
 
-      const exportResult = await exportService.createExport(request);
-      setExportId(exportResult.id);
+    exportMutation.mutate({
+      export_type: exportType,
+      export_format: 'csv',
+      filters
+    });
+  };
 
-      // Simulate export processing (replace with actual polling)
-      setTimeout(() => {
-        setDownloadUrl('/sample-report.pdf'); // Replace with actual URL
-        setIsGenerating(false);
-        toast({
-          title: "Export Ready",
-          description: "Your export is ready for download"
-        });
-      }, 3000);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Export Failed",
-        description: "An error occurred during export"
-      });
-      setIsGenerating(false);
+  const getExportDescription = (type: string) => {
+    switch (type) {
+      case 'student_data':
+        return 'Student roster with demographics and contact information';
+      case 'assessment_results':
+        return 'Assessment scores with AI insights and analysis';
+      case 'progress_reports':
+        return 'Student progress reports and goal tracking';
+      case 'class_summary':
+        return 'Class-wide performance analytics and summaries';
+      case 'analytics_data':
+        return 'Detailed analytics data for external analysis';
+      default:
+        return '';
+    }
+  };
+
+  const getAvailableFields = (type: string) => {
+    switch (type) {
+      case 'student_data':
+        return ['demographics', 'contact_info', 'learning_goals', 'special_considerations'];
+      case 'assessment_results':
+        return ['scores', 'ai_insights', 'skill_mastery', 'trends'];
+      case 'progress_reports':
+        return ['goals', 'milestones', 'achievements', 'recommendations'];
+      default:
+        return [];
     }
   };
 
   return (
-    <div className={`fixed inset-0 z-50 ${open ? '' : 'hidden'}`}>
-      <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity">
-        <div className="flex items-center justify-center min-h-screen">
-          <Card className="max-w-md w-full p-6 bg-white rounded-lg shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">Export Data</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Export Type */}
-              <div>
-                <Label htmlFor="export-type">Export Type</Label>
-                <Select value={exportType} onValueChange={setExportType}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select export type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="students">Students</SelectItem>
-                    <SelectItem value="assessments">Assessments</SelectItem>
-                    <SelectItem value="reports">Reports</SelectItem>
-                  </SelectContent>
-                </Select>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant={variant} size={size} className={className}>
+          <Download className="h-4 w-4 mr-2" />
+          Export Data
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center">
+            <FileText className="h-5 w-5 mr-2" />
+            Export Data
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-6">
+          <div>
+            <Label>Export Type</Label>
+            <Select value={exportType} onValueChange={(value: any) => setExportType(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="student_data">Student Data</SelectItem>
+                <SelectItem value="assessment_results">Assessment Results</SelectItem>
+                <SelectItem value="progress_reports">Progress Reports</SelectItem>
+                <SelectItem value="class_summary">Class Summary</SelectItem>
+                <SelectItem value="analytics_data">Analytics Data</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-gray-600 mt-1">
+              {getExportDescription(exportType)}
+            </p>
+          </div>
+
+          <div>
+            <Label className="flex items-center mb-2">
+              <Calendar className="h-4 w-4 mr-2" />
+              Date Range (Optional)
+            </Label>
+            <DateRangeFilter
+              startDate={startDate}
+              endDate={endDate}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+            />
+          </div>
+
+          {getAvailableFields(exportType).length > 0 && (
+            <div>
+              <Label className="flex items-center mb-2">
+                <Filter className="h-4 w-4 mr-2" />
+                Include Fields
+              </Label>
+              <div className="space-y-2">
+                {getAvailableFields(exportType).map((field) => (
+                  <div key={field} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={field}
+                      checked={selectedFields.includes(field)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedFields([...selectedFields, field]);
+                        } else {
+                          setSelectedFields(selectedFields.filter(f => f !== field));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={field} className="capitalize">
+                      {field.replace(/_/g, ' ')}
+                    </Label>
+                  </div>
+                ))}
               </div>
+            </div>
+          )}
 
-              {/* Export Format */}
-              <div>
-                <Label htmlFor="export-format">Export Format</Label>
-                <Select value={exportFormat} onValueChange={setExportFormat}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select export format" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="csv">CSV</SelectItem>
-                    <SelectItem value="pdf">PDF</SelectItem>
-                    <SelectItem value="excel">Excel</SelectItem>
-                  </SelectContent>
-                </Select>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="include-archived"
+              checked={includeArchived}
+              onCheckedChange={(checked) => setIncludeArchived(!!checked)}
+            />
+            <Label htmlFor="include-archived">Include archived data</Label>
+          </div>
+
+          {recentExports && recentExports.length > 0 && (
+            <div>
+              <Label className="text-sm font-medium">Recent Exports</Label>
+              <div className="mt-2 space-y-1 max-h-24 overflow-y-auto">
+                {recentExports.slice(0, 3).map((exp) => (
+                  <div key={exp.id} className="text-sm text-gray-600 flex justify-between">
+                    <span>{exp.export_type.replace(/_/g, ' ')}</span>
+                    <span className={`capitalize ${exp.status === 'completed' ? 'text-green-600' : exp.status === 'failed' ? 'text-red-600' : 'text-yellow-600'}`}>
+                      {exp.status}
+                    </span>
+                  </div>
+                ))}
               </div>
+            </div>
+          )}
 
-              {/* Date Range */}
-              <div>
-                <Label htmlFor="date-range">Date Range</Label>
-                <Select value={dateRange} onValueChange={setDateRange}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select date range" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all_time">All Time</SelectItem>
-                    <SelectItem value="last_month">Last Month</SelectItem>
-                    <SelectItem value="last_quarter">Last Quarter</SelectItem>
-                    <SelectItem value="last_year">Last Year</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Generate Export Button */}
-              <Button
-                className="w-full"
-                disabled={isGenerating}
-                onClick={handleCreateExport}
-              >
-                {isGenerating ? (
-                  <>
-                    <Clock className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Download className="mr-2 h-4 w-4" />
-                    Generate Export
-                  </>
-                )}
-              </Button>
-
-              {/* Display Export Status */}
-              {exportId && (
-                <div className="mt-4">
-                  {downloadUrl ? (
-                    <Alert className="bg-green-100 border-green-200 text-green-800">
-                      <Download className="h-4 w-4 mr-2" />
-                      <AlertDescription>
-                        Export ready! <a href={downloadUrl} className="underline" target="_blank">Download now</a>
-                      </AlertDescription>
-                    </Alert>
-                  ) : (
-                    <Alert className="bg-blue-100 border-blue-200 text-blue-800">
-                      <Clock className="mr-2 h-4 w-4 animate-spin" />
-                      <AlertDescription>
-                        Generating export... Please wait.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </div>
-              )}
-
-              {/* Close Button */}
-              <Button variant="secondary" className="w-full" onClick={() => onOpenChange(false)}>
-                Close
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="flex justify-end space-x-2 pt-4 border-t">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleExport} disabled={exportMutation.isPending}>
+              {exportMutation.isPending ? 'Processing...' : 'Start Export'}
+            </Button>
+          </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
+};
+
+const getExportDescription = (type: string) => {
+  switch (type) {
+    case 'student_data':
+      return 'Student roster with demographics and contact information';
+    case 'assessment_results':
+      return 'Assessment scores with AI insights and analysis';
+    case 'progress_reports':
+      return 'Student progress reports and goal tracking';
+    case 'class_summary':
+      return 'Class-wide performance analytics and summaries';
+    case 'analytics_data':
+      return 'Detailed analytics data for external analysis';
+    default:
+      return '';
+  }
+};
+
+const getAvailableFields = (type: string) => {
+  switch (type) {
+    case 'student_data':
+      return ['demographics', 'contact_info', 'learning_goals', 'special_considerations'];
+    case 'assessment_results':
+      return ['scores', 'ai_insights', 'skill_mastery', 'trends'];
+    case 'progress_reports':
+      return ['goals', 'milestones', 'achievements', 'recommendations'];
+    default:
+      return [];
+  }
 };
 
 export default ExportDataDialog;

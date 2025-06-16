@@ -1,5 +1,4 @@
-
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { authService } from '@/services/auth-service';
@@ -26,17 +25,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchProfile = useCallback(async () => {
+  const fetchProfile = async (userId: string) => {
     try {
-      console.log('AuthContext: Fetching profile for current user');
+      console.log('AuthContext: Fetching profile for user:', userId);
       const profileData = await authService.getProfile();
       setProfile(profileData);
-      console.log('AuthContext: Profile fetched successfully');
+      console.log('AuthContext: Profile fetched successfully:', profileData);
     } catch (error) {
       console.error('AuthContext: Error fetching profile:', error);
       setProfile(null);
     }
-  }, []);
+  };
 
   useEffect(() => {
     console.log('AuthContext: Setting up auth state listener');
@@ -50,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           // Defer profile fetching to avoid blocking auth state changes
           setTimeout(() => {
-            fetchProfile();
+            fetchProfile(session.user.id);
           }, 0);
         } else {
           setProfile(null);
@@ -68,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session?.user) {
         setTimeout(() => {
-          fetchProfile();
+          fetchProfile(session.user.id);
         }, 0);
       }
       
@@ -79,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('AuthContext: Cleaning up auth state listener');
       subscription.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, []);
 
   const signUp = async (data: any) => {
     setIsLoading(true);

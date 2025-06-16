@@ -197,14 +197,14 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
     );
   };
 
-  const handleMarkAsAddressed = (): void => {
+  const handleMarkAsAddressed = (item: string): void => {
     toast({
       title: "Marked as Addressed",
       description: "This recommendation has been marked as addressed.",
     });
   };
 
-  const handleCreateGoal = (goalText: string): void => {
+  const handleCreateGoal = (item: string): void => {
     if (!studentId) {
       toast({
         title: "Error",
@@ -218,7 +218,7 @@ const InsightsTabContent: React.FC<InsightsTabContentProps> = ({
     navigate(`/app/students/${studentId}/goals`, {
       state: {
         fromInsight: true,
-        insightText: goalText,
+        insightText: item,
         autoOpenDialog: true
       }
     });

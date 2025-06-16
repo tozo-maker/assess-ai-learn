@@ -17,6 +17,7 @@ import {
 
 interface DashboardSecondaryWidgetsProps {
   assessments: any[];
+  students: any[];
   metrics: {
     averagePerformance: string;
     studentsNeedingAttention: number;
@@ -25,6 +26,7 @@ interface DashboardSecondaryWidgetsProps {
 
 const DashboardSecondaryWidgets: React.FC<DashboardSecondaryWidgetsProps> = ({
   assessments,
+  students,
   metrics
 }) => {
   const widgets = [

@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Route } from 'react-router-dom';
 import AssessmentsPage from '@/pages/app/assessments/Assessments';
 import AddAssessmentPage from '@/pages/app/assessments/AddAssessment';
@@ -8,59 +9,57 @@ import ResponsesPage from '@/pages/app/assessments/AddStudentResponses';
 import BatchAssessment from '@/pages/app/assessments/BatchAssessment';
 import { ProtectedRoute } from './RouteGuards';
 
-export const AssessmentRoutes = () => [
-  <Route
-    key="assessments"
-    path="/app/assessments"
-    element={
-      <ProtectedRoute>
-        <AssessmentsPage />
-      </ProtectedRoute>
-    }
-  />,
-  <Route
-    key="assessments-add"
-    path="/app/assessments/add"
-    element={
-      <ProtectedRoute>
-        <AddAssessmentPage />
-      </ProtectedRoute>
-    }
-  />,
-  <Route
-    key="assessments-batch"
-    path="/app/assessments/batch"
-    element={
-      <ProtectedRoute>
-        <BatchAssessment />
-      </ProtectedRoute>
-    }
-  />,
-  <Route
-    key="assessments-edit"
-    path="/app/assessments/:id/edit"
-    element={
-      <ProtectedRoute>
-        <EditAssessmentPage />
-      </ProtectedRoute>
-    }
-  />,
-  <Route
-    key="assessments-responses"
-    path="/app/assessments/:id/responses"
-    element={
-      <ProtectedRoute>
-        <ResponsesPage />
-      </ProtectedRoute>
-    }
-  />,
-  <Route
-    key="assessments-details"
-    path="/app/assessments/:id"
-    element={
-      <ProtectedRoute>
-        <AssessmentDetailsPage />
-      </ProtectedRoute>
-    }
-  />
-];
+export const AssessmentRoutes = () => (
+  <React.Fragment>
+    <Route
+      path="/app/assessments"
+      element={
+        <ProtectedRoute>
+          <AssessmentsPage />
+        </ProtectedRoute>
+      }
+    />
+    {/* Static routes BEFORE dynamic routes */}
+    <Route
+      path="/app/assessments/add"
+      element={
+        <ProtectedRoute>
+          <AddAssessmentPage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/app/assessments/batch"
+      element={
+        <ProtectedRoute>
+          <BatchAssessment />
+        </ProtectedRoute>
+      }
+    />
+    {/* Dynamic routes AFTER static routes */}
+    <Route
+      path="/app/assessments/:id/edit"
+      element={
+        <ProtectedRoute>
+          <EditAssessmentPage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/app/assessments/:id/responses"
+      element={
+        <ProtectedRoute>
+          <ResponsesPage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/app/assessments/:id"
+      element={
+        <ProtectedRoute>
+          <AssessmentDetailsPage />
+        </ProtectedRoute>
+      }
+    />
+  </React.Fragment>
+);

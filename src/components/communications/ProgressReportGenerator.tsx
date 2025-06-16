@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import StandardLoadingState from '@/components/common/StandardLoadingState';
 import StudentSelectionCard from './StudentSelectionCard';
@@ -78,7 +78,7 @@ const ProgressReportGenerator: React.FC = () => {
         };
 
         if (format === 'pdf') {
-          const { error } = await supabase.functions.invoke('generate-progress-pdf', {
+          const { data, error } = await supabase.functions.invoke('generate-progress-pdf', {
             body: {
               student_id: studentId,
               report_data: reportData
@@ -87,8 +87,14 @@ const ProgressReportGenerator: React.FC = () => {
 
           if (error) throw error;
 
+          if (data?.pdf_url) {
+            const link = document.createElement('a');
+            link.href = data.pdf_url;
+            link.download = `${student.first_name}_${student.last_name}_Progress_Report.pdf`;
+            link.click();
+          }
         } else if (format === 'email') {
-          const { error } = await supabase.functions.invoke('send-parent-communication', {
+          const { data, error } = await supabase.functions.invoke('send-parent-communication', {
             body: {
               student_id: studentId,
               communication_type: 'progress_report',

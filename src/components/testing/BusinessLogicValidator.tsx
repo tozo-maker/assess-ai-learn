@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -113,7 +113,7 @@ const BusinessLogicValidator = () => {
           assessment_items!inner(max_score),
           assessments!inner(teacher_id)
         `)
-        .eq('assessments.teacher_id', user?.id || '')
+        .eq('assessments.teacher_id', user?.id)
         .limit(10);
 
       if (error) throw error;
@@ -155,10 +155,9 @@ const BusinessLogicValidator = () => {
         }
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateTest('grade-calculation-accuracy', {
         status: 'failed',
-        message: `Grade calculation test failed: ${errorMessage}`
+        message: `Grade calculation test failed: ${error.message}`
       });
     }
   };
@@ -179,7 +178,7 @@ const BusinessLogicValidator = () => {
           last_name,
           student_performance(average_score, assessment_count)
         `)
-        .eq('teacher_id', user?.id || '')
+        .eq('teacher_id', user?.id)
         .limit(5);
 
       if (error) throw error;
@@ -222,10 +221,9 @@ const BusinessLogicValidator = () => {
         }
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateTest('progress-tracking-logic', {
         status: 'failed',
-        message: `Progress tracking test failed: ${errorMessage}`
+        message: `Progress tracking test failed: ${error.message}`
       });
     }
   };
@@ -246,7 +244,7 @@ const BusinessLogicValidator = () => {
           max_score,
           assessment_items(max_score)
         `)
-        .eq('teacher_id', user?.id || '')
+        .eq('teacher_id', user?.id)
         .limit(5);
 
       if (error) throw error;
@@ -288,10 +286,9 @@ const BusinessLogicValidator = () => {
         }
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateTest('assessment-scoring-rules', {
         status: 'failed',
-        message: `Assessment scoring test failed: ${errorMessage}`
+        message: `Assessment scoring test failed: ${error.message}`
       });
     }
   };
@@ -355,10 +352,9 @@ const BusinessLogicValidator = () => {
         }
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateTest('ai-insights-generation', {
         status: 'failed',
-        message: `AI insights test failed: ${errorMessage}`
+        message: `AI insights test failed: ${error.message}`
       });
     }
   };
@@ -374,7 +370,7 @@ const BusinessLogicValidator = () => {
       const { data: goals, error } = await supabase
         .from('goals')
         .select('id, title, progress_percentage, status')
-        .eq('teacher_id', user?.id || '')
+        .eq('teacher_id', user?.id)
         .limit(10);
 
       if (error) throw error;
@@ -414,10 +410,9 @@ const BusinessLogicValidator = () => {
         }
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       updateTest('learning-goals-tracking', {
         status: 'failed',
-        message: `Learning goals test failed: ${errorMessage}`
+        message: `Learning goals test failed: ${error.message}`
       });
     }
   };
@@ -494,7 +489,7 @@ const BusinessLogicValidator = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'destructive' | 'secondary' | 'outline'> = {
+    const variants = {
       passed: 'default',
       failed: 'destructive',
       warning: 'secondary',

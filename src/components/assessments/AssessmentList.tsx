@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -41,7 +40,7 @@ import {
 
 import { useToast } from '@/hooks/use-toast';
 import { assessmentService } from '@/services/assessment-service';
-import { Assessment, assessmentTypeOptions } from '@/types/assessment';
+import { Assessment, AssessmentType, assessmentTypeOptions } from '@/types/assessment';
 
 const AssessmentList: React.FC = () => {
   const navigate = useNavigate();
@@ -112,6 +111,14 @@ const AssessmentList: React.FC = () => {
       newSelected.delete(assessmentId);
     }
     setSelectedAssessments(newSelected);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked && filteredAssessments) {
+      setSelectedAssessments(new Set(filteredAssessments.map(a => a.id)));
+    } else {
+      setSelectedAssessments(new Set());
+    }
   };
 
   const filteredAssessments = assessments?.filter(assessment => {
