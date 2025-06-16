@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Route } from 'react-router-dom';
 import AssessmentsPage from '@/pages/app/assessments/Assessments';
 import AddAssessmentPage from '@/pages/app/assessments/AddAssessment';

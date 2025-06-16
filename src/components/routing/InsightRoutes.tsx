@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Route } from 'react-router-dom';
 import ClassInsightsPage from '@/pages/app/insights/ClassInsights';
 import StudentInsightsPage from '@/pages/app/insights/IndividualInsights';
