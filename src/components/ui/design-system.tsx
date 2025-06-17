@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
@@ -93,6 +94,33 @@ const DSCardFooter = React.forwardRef<
 ))
 DSCardFooter.displayName = "DSCardFooter"
 
+const DSCardTitle = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    className={cn(
+      "text-2xl font-semibold leading-none tracking-tight",
+      className
+    )}
+    {...props}
+  />
+))
+DSCardTitle.displayName = "DSCardTitle"
+
+const DSCardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+DSCardDescription.displayName = "DSCardDescription"
+
 // Enhanced Button Component with proper asChild handling
 const buttonVariants = cva(
   "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
@@ -142,21 +170,79 @@ DSButton.displayName = "DSButton"
 
 const DSInput = React.forwardRef<
   HTMLInputElement,
-  React.HTMLAttributes<HTMLInputElement>
->(({ className, type, ...props }, ref) => {
+  React.InputHTMLAttributes<HTMLInputElement> & {
+    error?: boolean
+    helpText?: string
+  }
+>(({ className, type, error, helpText, ...props }, ref) => {
   return (
-    <input
-      type={type}
-      className={cn(
-        "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        className
+    <div className="w-full">
+      <input
+        type={type}
+        className={cn(
+          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          error && "border-red-500 focus-visible:ring-red-500",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+      {helpText && (
+        <p className={cn("text-sm mt-1", error ? "text-red-500" : "text-muted-foreground")}>
+          {helpText}
+        </p>
       )}
-      ref={ref}
-      {...props}
-    />
+    </div>
   )
 })
 DSInput.displayName = "DSInput"
+
+const DSTextarea = React.forwardRef<
+  HTMLTextAreaElement,
+  React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+    error?: boolean
+    helpText?: string
+  }
+>(({ className, error, helpText, ...props }, ref) => {
+  return (
+    <div className="w-full">
+      <textarea
+        className={cn(
+          "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          error && "border-red-500 focus-visible:ring-red-500",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+      {helpText && (
+        <p className={cn("text-sm mt-1", error ? "text-red-500" : "text-muted-foreground")}>
+          {helpText}
+        </p>
+      )}
+    </div>
+  )
+})
+DSTextarea.displayName = "DSTextarea"
+
+const DSFormField = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    label?: string
+    required?: boolean
+  }
+>(({ className, label, required, children, ...props }, ref) => (
+  <div ref={ref} className={cn("space-y-2", className)} {...props}>
+    {label && (
+      <label className="text-sm font-medium text-gray-700">
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+    )}
+    {children}
+  </div>
+))
+DSFormField.displayName = "DSFormField"
 
 const DSStatusBadge = React.forwardRef<
   HTMLDivElement,
@@ -198,62 +284,141 @@ DSStatusBadge.displayName = "DSStatusBadge";
 
 const DSContentGrid = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "grid gap-6",
-      className
-    )}
-    {...props}
-  />
-))
+  React.HTMLAttributes<HTMLDivElement> & {
+    cols?: number
+  }
+>(({ className, cols = 1, ...props }, ref) => {
+  const gridColsClass = {
+    1: "grid-cols-1",
+    2: "grid-cols-1 md:grid-cols-2",
+    3: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3", 
+    4: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
+    5: "grid-cols-1 md:grid-cols-3 lg:grid-cols-5",
+    6: "grid-cols-1 md:grid-cols-3 lg:grid-cols-6"
+  }[cols] || "grid-cols-1"
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "grid gap-6",
+        gridColsClass,
+        className
+      )}
+      {...props}
+    />
+  )
+})
 DSContentGrid.displayName = "DSContentGrid"
 
 const DSGridItem = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "",
-      className
-    )}
-    {...props}
-  />
-))
+  React.HTMLAttributes<HTMLDivElement> & {
+    span?: number
+  }
+>(({ className, span, ...props }, ref) => {
+  const spanClass = span ? {
+    1: "",
+    2: "col-span-2",
+    3: "col-span-3",
+    4: "col-span-4",
+    5: "col-span-5",
+    6: "col-span-6"
+  }[span] || "" : ""
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        spanClass,
+        className
+      )}
+      {...props}
+    />
+  )
+})
 DSGridItem.displayName = "DSGridItem"
 
 const DSSpacer = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "",
-      className
-    )}
-    {...props}
-  />
-))
+  React.HTMLAttributes<HTMLDivElement> & {
+    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
+  }
+>(({ className, size = 'md', ...props }, ref) => {
+  const sizeClass = {
+    'xs': "h-1",
+    'sm': "h-2", 
+    'md': "h-4",
+    'lg': "h-6",
+    'xl': "h-8",
+    '2xl': "h-12",
+    '3xl': "h-16"
+  }[size]
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        sizeClass,
+        className
+      )}
+      {...props}
+    />
+  )
+})
 DSSpacer.displayName = "DSSpacer"
 
 const DSFlexContainer = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "flex",
-      className
-    )}
-    {...props}
-  />
-))
+  React.HTMLAttributes<HTMLDivElement> & {
+    justify?: 'start' | 'end' | 'center' | 'between' | 'around' | 'evenly'
+    align?: 'start' | 'end' | 'center' | 'baseline' | 'stretch'
+    gap?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+    direction?: 'row' | 'col'
+  }
+>(({ className, justify, align, gap, direction = 'row', ...props }, ref) => {
+  const justifyClass = justify ? {
+    'start': "justify-start",
+    'end': "justify-end", 
+    'center': "justify-center",
+    'between': "justify-between",
+    'around': "justify-around",
+    'evenly': "justify-evenly"
+  }[justify] : ""
+
+  const alignClass = align ? {
+    'start': "items-start",
+    'end': "items-end",
+    'center': "items-center", 
+    'baseline': "items-baseline",
+    'stretch': "items-stretch"
+  }[align] : ""
+
+  const gapClass = gap ? {
+    'xs': "gap-1",
+    'sm': "gap-2",
+    'md': "gap-4", 
+    'lg': "gap-6",
+    'xl': "gap-8"
+  }[gap] : ""
+
+  const directionClass = direction === 'col' ? "flex-col" : "flex-row"
+
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "flex",
+        directionClass,
+        justifyClass,
+        alignClass,
+        gapClass,
+        className
+      )}
+      {...props}
+    />
+  )
+})
 DSFlexContainer.displayName = "DSFlexContainer"
 
 const DSPageTitle = React.forwardRef<
@@ -323,8 +488,12 @@ export {
   DSCardHeader,
   DSCardContent,
   DSCardFooter,
+  DSCardTitle,
+  DSCardDescription,
   DSButton,
   DSInput,
+  DSTextarea,
+  DSFormField,
   DSStatusBadge,
   DSContentGrid,
   DSGridItem,
