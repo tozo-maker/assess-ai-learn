@@ -44,7 +44,9 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const updateFilter = (key: keyof StudentFilterValues, value: any) => {
-    const newFilters = { ...filters, [key]: value };
+    // Convert "all" back to empty string for internal logic
+    const processedValue = value === "all" ? "" : value;
+    const newFilters = { ...filters, [key]: processedValue };
     setFilters(newFilters);
     onFiltersChange(newFilters);
   };
@@ -126,12 +128,12 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
           {/* Grade Level Filter */}
           <div className="space-y-2">
             <Label>Grade Level</Label>
-            <Select value={filters.gradeLevel} onValueChange={(value) => updateFilter('gradeLevel', value)}>
+            <Select value={filters.gradeLevel || "all"} onValueChange={(value) => updateFilter('gradeLevel', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="All grades" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All grades</SelectItem>
+                <SelectItem value="all">All grades</SelectItem>
                 {gradeLevelOptions.map(grade => (
                   <SelectItem key={grade} value={grade}>
                     Grade {grade}
@@ -144,12 +146,12 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
           {/* Performance Level Filter */}
           <div className="space-y-2">
             <Label>Performance Level</Label>
-            <Select value={filters.performanceLevel} onValueChange={(value) => updateFilter('performanceLevel', value)}>
+            <Select value={filters.performanceLevel || "all"} onValueChange={(value) => updateFilter('performanceLevel', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="All levels" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All levels</SelectItem>
+                <SelectItem value="all">All levels</SelectItem>
                 {performanceLevelOptions.map(level => (
                   <SelectItem key={level} value={level}>
                     {level}
@@ -163,14 +165,14 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
           <div className="space-y-2">
             <Label>Attention Required</Label>
             <Select 
-              value={filters.needsAttention?.toString() || ""} 
-              onValueChange={(value) => updateFilter('needsAttention', value === "" ? null : value === "true")}
+              value={filters.needsAttention === null ? "all" : filters.needsAttention.toString()} 
+              onValueChange={(value) => updateFilter('needsAttention', value === "all" ? null : value === "true")}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All students" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All students</SelectItem>
+                <SelectItem value="all">All students</SelectItem>
                 <SelectItem value="true">Needs attention</SelectItem>
                 <SelectItem value="false">No attention needed</SelectItem>
               </SelectContent>
@@ -181,14 +183,14 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
           <div className="space-y-2">
             <Label>Parent Contact</Label>
             <Select 
-              value={filters.hasParentContact?.toString() || ""} 
-              onValueChange={(value) => updateFilter('hasParentContact', value === "" ? null : value === "true")}
+              value={filters.hasParentContact === null ? "all" : filters.hasParentContact.toString()} 
+              onValueChange={(value) => updateFilter('hasParentContact', value === "all" ? null : value === "true")}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All students" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All students</SelectItem>
+                <SelectItem value="all">All students</SelectItem>
                 <SelectItem value="true">Has contact info</SelectItem>
                 <SelectItem value="false">Missing contact info</SelectItem>
               </SelectContent>
