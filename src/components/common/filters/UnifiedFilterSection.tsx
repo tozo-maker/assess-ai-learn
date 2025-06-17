@@ -103,7 +103,7 @@ const UnifiedFilterSection: React.FC<UnifiedFilterProps> = ({
             </CardTitle>
             <FilterClearButton 
               hasActiveFilters={activeFilters}
-              onClearFilters={onClearFilters}
+              onClear={onClearFilters}
               variant="badge"
             />
           </div>
