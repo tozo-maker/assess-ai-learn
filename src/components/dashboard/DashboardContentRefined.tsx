@@ -192,8 +192,8 @@ const DashboardContentRefined: React.FC<DashboardContentRefinedProps> = ({ data 
   );
 
   const activityAndInsights = (
-    <DSContentGrid cols={5}>
-      <DSGridItem span={3}>
+    <DSContentGrid cols={3}>
+      <DSGridItem span={2}>
         <LazyContainer>
           <LazyWrapper>
             <LazyActivityFeedEnhanced 
@@ -205,7 +205,7 @@ const DashboardContentRefined: React.FC<DashboardContentRefinedProps> = ({ data 
         </LazyContainer>
       </DSGridItem>
       
-      <DSGridItem span={2}>
+      <DSGridItem span={1}>
         <LazyContainer>
           <LazyWrapper>
             <LazyRecentInsightsEnhanced 
