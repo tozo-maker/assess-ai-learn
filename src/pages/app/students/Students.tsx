@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -10,30 +11,27 @@ import Breadcrumbs from '@/components/navigation/Breadcrumbs';
 import {
   DSPageContainer,
   DSSection,
-  DSCard,
-  DSCardContent,
   DSSpacer,
   DSBodyText
 } from '@/components/ui/design-system';
 
 // Page Components
 import StudentsPageHeader from '@/components/students/StudentsPageHeader';
-import StudentsViewControls from '@/components/students/StudentsViewControls';
 import StudentsGrid from '@/components/students/StudentsGrid';
 import StudentsEmptyState from '@/components/students/StudentsEmptyState';
 
 // Enhanced Components
-import StudentFilters, { StudentFilterValues } from '@/components/students/StudentFilters';
+import { StudentFilterValues } from '@/components/students/filters/StudentFilterTypes';
 import BulkActionsToolbar from '@/components/students/BulkActionsToolbar';
 import StudentsOverviewMetrics from '@/components/students/StudentsOverviewMetrics';
 import StudentsAlertSystem from '@/components/students/StudentsAlertSystem';
+import UnifiedStudentFilterBar from '@/components/students/UnifiedStudentFilterBar';
 import { studentService } from '@/services/student-service';
 
 const Students: React.FC = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<StudentFilterValues>({
     search: '',
     gradeLevel: '',
@@ -172,17 +170,21 @@ const Students: React.FC = () => {
           {/* Alert System */}
           <StudentsAlertSystem />
 
-          {/* Filters - Always visible */}
-          <DSCard className="mb-6">
-            <DSCardContent className="p-6">
-              <StudentFilters
-                values={filters}
-                onFiltersChange={setFilters}
-                totalStudents={students.length}
-                filteredCount={filteredStudents.length}
-              />
-            </DSCardContent>
-          </DSCard>
+          {/* Unified Filter Bar */}
+          <div className="mb-6">
+            <UnifiedStudentFilterBar
+              filters={filters}
+              onFiltersChange={setFilters}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              isAllSelected={isAllSelected}
+              isIndeterminate={isIndeterminate}
+              onSelectAll={handleSelectAll}
+              selectedCount={selectedStudents.length}
+              totalStudents={students.length}
+              filteredCount={filteredStudents.length}
+            />
+          </div>
 
           {/* Bulk Actions */}
           {selectedStudents.length > 0 && (
@@ -196,18 +198,6 @@ const Students: React.FC = () => {
               />
             </div>
           )}
-
-          {/* View Controls */}
-          <StudentsViewControls
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            isAllSelected={isAllSelected}
-            isIndeterminate={isIndeterminate}
-            onSelectAll={handleSelectAll}
-            filteredCount={filteredStudents.length}
-            showFilters={showFilters}
-            setShowFilters={setShowFilters}
-          />
 
           <DSSpacer size="lg" />
 
