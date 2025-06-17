@@ -21,7 +21,13 @@ const DashboardStateHandler: React.FC<DashboardStateHandlerProps> = ({
   isEmpty,
   refetch
 }) => {
-  console.log('DashboardStateHandler render:', { isInitialLoading, error, isEmpty, hasData: !!data });
+  console.log('DashboardStateHandler render:', { 
+    isInitialLoading, 
+    error: !!error, 
+    isEmpty, 
+    hasData: !!data,
+    studentsCount: data?.students?.length 
+  });
 
   // Show loading state for initial load
   if (isInitialLoading) {
@@ -31,7 +37,7 @@ const DashboardStateHandler: React.FC<DashboardStateHandlerProps> = ({
 
   // Show error state with recovery options
   if (error || !data) {
-    console.log('Showing error state:', error);
+    console.log('Showing error state:', error?.message || 'No data');
     return (
       <DSPageContainer>
         <ErrorState
@@ -46,11 +52,12 @@ const DashboardStateHandler: React.FC<DashboardStateHandlerProps> = ({
 
   // Show empty state if no students
   if (isEmpty) {
-    console.log('Showing empty state');
+    console.log('Showing empty state - no students');
     return <DashboardEmptyState teacher={data.teacher} />;
   }
 
   // Show dashboard with data
+  console.log('Showing dashboard content with data');
   return <DashboardContent data={data} />;
 };
 

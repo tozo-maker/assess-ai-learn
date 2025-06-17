@@ -7,20 +7,26 @@ import DashboardStateHandler from '@/components/dashboard/DashboardStateHandler'
 import { useOptimizedDashboard } from '@/hooks/useOptimizedDashboard';
 
 const Dashboard = () => {
-  const { data, isInitialLoading, error, refetch, isEmpty } = useOptimizedDashboard();
-
-  console.log('Dashboard render:', { data, isInitialLoading, error, isEmpty });
+  const dashboardState = useOptimizedDashboard();
+  
+  console.log('Dashboard render:', { 
+    isInitialLoading: dashboardState.isInitialLoading,
+    hasError: dashboardState.hasError,
+    isEmpty: dashboardState.isEmpty,
+    hasData: dashboardState.hasData,
+    studentsCount: dashboardState.data?.students?.length
+  });
 
   return (
     <AppLayout>
       <DashboardErrorBoundary>
         <Breadcrumbs />
         <DashboardStateHandler
-          isInitialLoading={isInitialLoading}
-          error={error}
-          data={data}
-          isEmpty={isEmpty}
-          refetch={refetch}
+          isInitialLoading={dashboardState.isInitialLoading}
+          error={dashboardState.error}
+          data={dashboardState.data}
+          isEmpty={dashboardState.isEmpty}
+          refetch={dashboardState.refetch}
         />
       </DashboardErrorBoundary>
     </AppLayout>

@@ -8,10 +8,15 @@ interface DashboardStateProps {
 }
 
 export const useDashboardState = ({ data, isLoading, error }: DashboardStateProps) => {
-  return useMemo(() => ({
-    isInitialLoading: isLoading && !data,
-    isEmpty: !isLoading && !error && !data?.students?.length,
-    hasData: !!data,
-    hasError: !!error
-  }), [data, isLoading, error]);
+  return useMemo(() => {
+    const state = {
+      isInitialLoading: isLoading && !data,
+      isEmpty: !isLoading && !error && (!data || !data?.students?.length),
+      hasData: !!data,
+      hasError: !!error
+    };
+    
+    console.log('useDashboardState computed:', state);
+    return state;
+  }, [data, isLoading, error]);
 };
