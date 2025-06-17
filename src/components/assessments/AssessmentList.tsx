@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +11,7 @@ import EnhancedAssessmentCard from './EnhancedAssessmentCard';
 import UnifiedAssessmentFilterBar from './UnifiedAssessmentFilterBar';
 import BulkActionBar from './BulkActionBar';
 import EnhancedEmptyState from './EnhancedEmptyState';
+import AssessmentListSkeleton from './AssessmentListSkeleton';
 
 interface FilterValues {
   search: string;
@@ -137,52 +139,24 @@ const AssessmentList: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        {/* Filter Skeleton */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
-          <div className="animate-pulse">
-            <div className="h-11 bg-gray-200 rounded-lg w-full max-w-md mb-4"></div>
-            <div className="h-6 bg-gray-200 rounded w-48"></div>
-          </div>
-        </div>
-        
-        {/* Cards Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white border border-gray-200 rounded-xl p-6">
-              <div className="animate-pulse">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-5 w-5 bg-gray-200 rounded"></div>
-                  <div className="h-6 bg-gray-200 rounded w-24"></div>
-                </div>
-                <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return <AssessmentListSkeleton />;
   }
 
   if (error) {
     return (
       <div className="bg-white border border-red-200 rounded-xl p-8 text-center">
-        <div className="text-red-600 mb-4">
-          <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Assessments</h3>
-        <p className="text-gray-600 mb-4">There was a problem loading your assessments.</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Unable to load assessments</h3>
+        <p className="text-gray-600 mb-4">There was a problem loading your assessments. Please try again.</p>
         <button 
           onClick={() => refetch()} 
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Try Again
+          Retry
         </button>
       </div>
     );
