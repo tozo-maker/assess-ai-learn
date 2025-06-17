@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -23,7 +24,7 @@ import {
 } from '@/components/ui/design-system';
 
 // Enhanced Components
-import EnhancedStudentCard from '@/components/students/EnhancedStudentCard';
+import EnhancedStudentCardRedesigned from '@/components/students/EnhancedStudentCardRedesigned';
 import StudentFilters, { StudentFilterValues } from '@/components/students/StudentFilters';
 import BulkActionsToolbar from '@/components/students/BulkActionsToolbar';
 import StudentsOverviewMetrics from '@/components/students/StudentsOverviewMetrics';
@@ -308,16 +309,16 @@ const Students: React.FC = () => {
 
           <DSSpacer size="lg" />
 
-          {/* Enhanced Student List/Grid */}
+          {/* Enhanced Student Grid/List with better responsive layout */}
           {filteredStudents.length > 0 ? (
             <div className={`
               ${viewMode === 'grid' 
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6' 
-                : 'space-y-4'
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8' 
+                : 'space-y-6'
               }
             `}>
               {filteredStudents.map((student) => (
-                <EnhancedStudentCard
+                <EnhancedStudentCardRedesigned
                   key={student.id}
                   student={student}
                   onStudentClick={handleStudentClick}
