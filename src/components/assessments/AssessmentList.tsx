@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { Users, BarChart3, Copy, Archive } from 'lucide-react';
 
 import { useToast } from '@/hooks/use-toast';
 import { assessmentService } from '@/services/assessment-service';
@@ -9,7 +9,7 @@ import { Assessment } from '@/types/assessment';
 
 import EnhancedAssessmentCard from './EnhancedAssessmentCard';
 import UnifiedAssessmentFilterBar from './UnifiedAssessmentFilterBar';
-import BulkActionBar from './BulkActionBar';
+import StandardBulkActionBar from '@/components/common/StandardBulkActionBar';
 import EnhancedEmptyState from './EnhancedEmptyState';
 import AssessmentListSkeleton from './AssessmentListSkeleton';
 
@@ -138,6 +138,46 @@ const AssessmentList: React.FC = () => {
     });
   };
 
+  // Custom bulk actions
+  const bulkActions = [
+    {
+      label: 'Add Responses',
+      icon: Users,
+      onClick: () => {
+        // Navigate to bulk response entry
+        console.log('Bulk add responses for:', Array.from(selectedAssessments));
+      },
+      hoverColor: 'hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700'
+    },
+    {
+      label: 'View Analytics',
+      icon: BarChart3,
+      onClick: () => {
+        // Navigate to bulk analytics
+        console.log('Bulk analytics for:', Array.from(selectedAssessments));
+      },
+      hoverColor: 'hover:bg-green-50 hover:border-green-200 hover:text-green-700'
+    },
+    {
+      label: 'Duplicate',
+      icon: Copy,
+      onClick: () => {
+        // Duplicate selected assessments
+        console.log('Duplicate assessments:', Array.from(selectedAssessments));
+      },
+      hoverColor: 'hover:bg-purple-50 hover:border-purple-200 hover:text-purple-700'
+    },
+    {
+      label: 'Archive',
+      icon: Archive,
+      onClick: () => {
+        // Archive selected assessments
+        console.log('Archive assessments:', Array.from(selectedAssessments));
+      },
+      hoverColor: 'hover:bg-gray-50 hover:border-gray-300'
+    }
+  ];
+
   if (isLoading) {
     return <AssessmentListSkeleton />;
   }
@@ -193,12 +233,14 @@ const AssessmentList: React.FC = () => {
         </div>
       )}
 
-      {/* Bulk Action Bar */}
-      <BulkActionBar
+      {/* Standardized Bulk Action Bar */}
+      <StandardBulkActionBar
         selectedCount={selectedAssessments.size}
+        entityName="assessment"
         onClearSelection={handleClearSelection}
-        onBulkDelete={handleBulkDelete}
+        onDelete={handleBulkDelete}
         isDeleting={isDeleting}
+        customActions={bulkActions}
       />
     </div>
   );
