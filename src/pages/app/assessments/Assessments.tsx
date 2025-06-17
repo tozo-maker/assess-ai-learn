@@ -14,13 +14,10 @@ import {
   DSCard,
   DSCardHeader,
   DSCardContent,
-  DSCardTitle,
-  DSCardDescription,
-  DSButton,
-  DSFlexContainer,
-  DSSpacer,
   DSPageTitle,
-  DSBodyText
+  DSBodyText,
+  DSButton,
+  DSFlexContainer
 } from '@/components/ui/design-system';
 
 import AssessmentList from '@/components/assessments/AssessmentList';
@@ -34,15 +31,15 @@ const Assessments: React.FC = () => {
         <DSPageContainer>
           <Breadcrumbs />
           
-          {/* Page Header - Standardized */}
+          {/* Page Header - Standardized with Design System */}
           <DSCard className="mb-8">
             <DSCardHeader>
               <DSFlexContainer justify="between" align="center" className="flex-col md:flex-row gap-4">
                 <div>
-                  <DSPageTitle className="text-3xl font-bold text-gray-900 mb-2">
+                  <DSPageTitle className="mb-2">
                     Assessments
                   </DSPageTitle>
-                  <DSBodyText className="text-gray-600">
+                  <DSBodyText>
                     Manage and analyze student assessments to track learning progress
                   </DSBodyText>
                 </div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -6,6 +5,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { assessmentService } from '@/services/assessment-service';
 import { Assessment } from '@/types/assessment';
+
+import { 
+  DSContentGrid,
+  DSSpacer
+} from '@/components/ui/design-system';
 
 import EnhancedAssessmentCard from './EnhancedAssessmentCard';
 import EnhancedAssessmentFilters from './EnhancedAssessmentFilters';
@@ -149,7 +153,7 @@ const AssessmentList: React.FC = () => {
         </div>
         
         {/* Cards Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <DSContentGrid cols={3}>
           {[...Array(6)].map((_, i) => (
             <div key={i} className="bg-white border border-gray-200 rounded-xl p-6">
               <div className="animate-pulse">
@@ -164,7 +168,7 @@ const AssessmentList: React.FC = () => {
               </div>
             </div>
           ))}
-        </div>
+        </DSContentGrid>
       </div>
     );
   }
@@ -199,6 +203,8 @@ const AssessmentList: React.FC = () => {
         filteredCount={filteredAssessments?.length || 0}
       />
 
+      <DSSpacer size="md" />
+
       {/* Assessment Grid or Empty State */}
       {!filteredAssessments?.length ? (
         <EnhancedEmptyState 
@@ -206,7 +212,7 @@ const AssessmentList: React.FC = () => {
           onClearFilters={clearAllFilters}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <DSContentGrid cols={3}>
           {filteredAssessments.map((assessment) => (
             <EnhancedAssessmentCard
               key={assessment.id}
@@ -217,7 +223,7 @@ const AssessmentList: React.FC = () => {
               onDelete={() => handleDelete(assessment.id)}
             />
           ))}
-        </div>
+        </DSContentGrid>
       )}
 
       {/* Bulk Action Bar */}

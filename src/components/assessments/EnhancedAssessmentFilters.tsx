@@ -1,8 +1,16 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, X, ChevronDown, SlidersHorizontal } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Search, X, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { 
+  DSCard,
+  DSCardHeader,
+  DSCardContent,
+  DSInput,
+  DSButton,
+  DSFlexContainer,
+  DSBodyText,
+  DSHelpText
+} from '@/components/ui/design-system';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -77,37 +85,37 @@ const EnhancedAssessmentFilters: React.FC<EnhancedAssessmentFiltersProps> = ({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <DSCard>
       {/* Main Filter Bar */}
-      <div className="p-6">
+      <DSCardHeader>
         {/* Top Row */}
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between mb-4">
+        <DSFlexContainer justify="between" align="center" className="flex-col lg:flex-row gap-4 mb-4">
           {/* Search */}
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
+            <DSInput
               placeholder="Search assessments by title, subject, or type..."
               value={filters.search}
               onChange={(e) => updateFilter('search', e.target.value)}
-              className="pl-10 h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500/20"
+              className="pl-10"
             />
             {filters.search && (
-              <Button
+              <DSButton
                 variant="ghost"
                 size="sm"
                 onClick={() => updateFilter('search', '')}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
               >
                 <X className="h-3 w-3" />
-              </Button>
+              </DSButton>
             )}
           </div>
 
           {/* Filter Controls */}
-          <div className="flex items-center gap-3">
+          <DSFlexContainer gap="sm" align="center">
             <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
               <CollapsibleTrigger asChild>
-                <Button variant="outline" className="gap-2 h-11 border-gray-300 hover:bg-gray-50">
+                <DSButton variant="secondary" className="gap-2">
                   <SlidersHorizontal className="h-4 w-4" />
                   Advanced Filters
                   {activeFilterCount > 0 && (
@@ -116,34 +124,33 @@ const EnhancedAssessmentFilters: React.FC<EnhancedAssessmentFiltersProps> = ({
                     </Badge>
                   )}
                   <ChevronDown className={`h-4 w-4 transition-transform ${isAdvancedOpen ? 'rotate-180' : ''}`} />
-                </Button>
+                </DSButton>
               </CollapsibleTrigger>
             </Collapsible>
 
             {hasActiveFilters && (
-              <Button
+              <DSButton
                 variant="ghost"
                 onClick={clearAllFilters}
-                className="h-11 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               >
                 <X className="h-4 w-4 mr-2" />
                 Clear All
-              </Button>
+              </DSButton>
             )}
-          </div>
-        </div>
+          </DSFlexContainer>
+        </DSFlexContainer>
 
         {/* Results Summary */}
-        <div className="flex items-center justify-between text-sm">
-          <div className="text-gray-600">
+        <DSFlexContainer justify="between" align="center">
+          <DSHelpText>
             Showing <span className="font-medium text-gray-900">{filteredCount}</span> of{' '}
             <span className="font-medium text-gray-900">{totalCount}</span> assessments
-          </div>
-        </div>
+          </DSHelpText>
+        </DSFlexContainer>
 
         {/* Active Filter Chips */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
+          <DSFlexContainer gap="sm" className="flex-wrap mt-4 pt-4 border-t border-gray-100">
             {Object.entries(filters).map(([key, value]) => {
               const label = getFilterLabel(key as keyof FilterValues, value);
               if (!label) return null;
@@ -162,14 +169,14 @@ const EnhancedAssessmentFilters: React.FC<EnhancedAssessmentFiltersProps> = ({
                 </Badge>
               );
             })}
-          </div>
+          </DSFlexContainer>
         )}
-      </div>
+      </DSCardHeader>
 
       {/* Advanced Filters */}
       <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
         <CollapsibleContent>
-          <div className="border-t border-gray-200 bg-gray-50/50 p-6">
+          <DSCardContent className="border-t border-gray-200 bg-gray-50/50">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Subject Filter */}
               <div className="space-y-2">
@@ -177,7 +184,7 @@ const EnhancedAssessmentFilters: React.FC<EnhancedAssessmentFiltersProps> = ({
                 <Select value={filters.subject || 'all'} onValueChange={(value) => 
                   updateFilter('subject', value === 'all' ? '' : value)
                 }>
-                  <SelectTrigger className="border-gray-300">
+                  <SelectTrigger>
                     <SelectValue placeholder="All subjects" />
                   </SelectTrigger>
                   <SelectContent>
@@ -197,7 +204,7 @@ const EnhancedAssessmentFilters: React.FC<EnhancedAssessmentFiltersProps> = ({
                 <Select value={filters.type || 'all'} onValueChange={(value) => 
                   updateFilter('type', value === 'all' ? '' : value)
                 }>
-                  <SelectTrigger className="border-gray-300">
+                  <SelectTrigger>
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
                   <SelectContent>
@@ -217,7 +224,7 @@ const EnhancedAssessmentFilters: React.FC<EnhancedAssessmentFiltersProps> = ({
                 <Select value={filters.status || 'all'} onValueChange={(value) => 
                   updateFilter('status', value === 'all' ? '' : value)
                 }>
-                  <SelectTrigger className="border-gray-300">
+                  <SelectTrigger>
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent>
@@ -237,7 +244,7 @@ const EnhancedAssessmentFilters: React.FC<EnhancedAssessmentFiltersProps> = ({
                 <Select value={filters.gradeLevel || 'all'} onValueChange={(value) => 
                   updateFilter('gradeLevel', value === 'all' ? '' : value)
                 }>
-                  <SelectTrigger className="border-gray-300">
+                  <SelectTrigger>
                     <SelectValue placeholder="All grades" />
                   </SelectTrigger>
                   <SelectContent>
@@ -251,10 +258,10 @@ const EnhancedAssessmentFilters: React.FC<EnhancedAssessmentFiltersProps> = ({
                 </Select>
               </div>
             </div>
-          </div>
+          </DSCardContent>
         </CollapsibleContent>
       </Collapsible>
-    </div>
+    </DSCard>
   );
 };
 
