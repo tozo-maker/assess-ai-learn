@@ -4,14 +4,25 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { Slot } from "@radix-ui/react-slot"
 
+// Design system constants
+export const designSystem = {
+  colors: {
+    primary: {
+      border: "border-blue-500"
+    }
+  }
+}
+
 const DSPageContainer = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+  React.HTMLAttributes<HTMLDivElement> & {
+    fullWidth?: boolean
+  }
+>(({ className, fullWidth, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "container mx-auto px-4 sm:px-6 lg:px-8",
+      fullWidth ? "w-full px-4 sm:px-6 lg:px-8" : "container mx-auto px-4 sm:px-6 lg:px-8",
       className
     )}
     {...props}
@@ -95,7 +106,7 @@ const DSCardFooter = React.forwardRef<
 DSCardFooter.displayName = "DSCardFooter"
 
 const DSCardTitle = React.forwardRef<
-  HTMLParagraphElement,
+  HTMLHeadingElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
   <h3
@@ -246,8 +257,11 @@ DSFormField.displayName = "DSFormField"
 
 const DSStatusBadge = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { variant?: 'success' | 'warning' | 'danger' | 'info' | 'neutral' }
->(({ className, variant = 'neutral', ...props }, ref) => {
+  React.HTMLAttributes<HTMLDivElement> & { 
+    variant?: 'success' | 'warning' | 'danger' | 'info' | 'neutral'
+    size?: 'sm' | 'md' | 'lg'
+  }
+>(({ className, variant = 'neutral', size = 'md', ...props }, ref) => {
   let badgeColorClasses = 'bg-gray-100 text-gray-700';
 
   switch (variant) {
@@ -268,12 +282,19 @@ const DSStatusBadge = React.forwardRef<
       break;
   }
 
+  const sizeClasses = {
+    sm: 'px-2 py-0.5 text-xs',
+    md: 'px-2.5 py-0.5 text-xs',
+    lg: 'px-3 py-1 text-sm'
+  }[size];
+
   return (
     <div
       ref={ref}
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+        "inline-flex items-center rounded-full font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
         badgeColorClasses,
+        sizeClasses,
         className
       )}
       {...props}
@@ -451,6 +472,9 @@ const DSSectionHeader = React.forwardRef<
 ))
 DSSectionHeader.displayName = "DSSectionHeader"
 
+// Add DSSubsectionHeader as an alias for DSSectionHeader
+const DSSubsectionHeader = DSSectionHeader;
+
 const DSBodyText = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
@@ -482,6 +506,7 @@ const DSHelpText = React.forwardRef<
 DSHelpText.displayName = "DSHelpText"
 
 export {
+  designSystem,
   DSPageContainer,
   DSSection,
   DSCard,
@@ -501,6 +526,7 @@ export {
   DSFlexContainer,
   DSPageTitle,
   DSSectionHeader,
+  DSSubsectionHeader,
   DSBodyText,
   DSHelpText
 }
