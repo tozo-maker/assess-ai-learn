@@ -10,20 +10,12 @@ import {
   Trash2, 
   Clock,
   CheckCircle,
+  AlertCircle,
   BookOpen,
   Target
 } from 'lucide-react';
-import { 
-  DSCard,
-  DSCardHeader,
-  DSCardContent,
-  DSCardFooter,
-  DSButton,
-  DSStatusBadge,
-  DSFlexContainer,
-  DSBodyText,
-  DSHelpText
-} from '@/components/ui/design-system';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
@@ -56,20 +48,29 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
     if (isDraft) {
       return { 
         status: 'Draft', 
-        variant: 'warning' as const, 
-        icon: Clock
+        variant: 'secondary' as const, 
+        icon: Clock,
+        color: 'text-amber-600',
+        bgColor: 'bg-amber-50',
+        borderColor: 'border-amber-200'
       };
     } else if (isActive) {
       return { 
         status: 'Active', 
-        variant: 'success' as const, 
-        icon: CheckCircle
+        variant: 'default' as const, 
+        icon: CheckCircle,
+        color: 'text-green-600',
+        bgColor: 'bg-green-50',
+        borderColor: 'border-green-200'
       };
     } else {
       return { 
         status: 'Completed', 
-        variant: 'neutral' as const, 
-        icon: CheckCircle
+        variant: 'outline' as const, 
+        icon: CheckCircle,
+        color: 'text-gray-600',
+        bgColor: 'bg-gray-50',
+        borderColor: 'border-gray-200'
       };
     }
   };
@@ -99,19 +100,20 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
   };
 
   return (
-    <DSCard className={`
-      group relative transition-all duration-200 hover:shadow-lg
-      ${isSelected ? 'ring-2 ring-blue-500 shadow-md' : 'hover:ring-1 hover:ring-gray-200'}
+    <div className={`
+      group relative bg-white rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:shadow-blue-100/50
+      ${isSelected ? 'border-blue-500 shadow-md shadow-blue-100/50' : 'border-gray-100 hover:border-blue-200'}
+      ${statusConfig.bgColor} hover:bg-white
     `}>
       {/* Selection Overlay */}
       {isSelected && (
-        <div className="absolute inset-0 bg-blue-50/30 rounded-lg pointer-events-none" />
+        <div className="absolute inset-0 bg-blue-50/30 rounded-xl pointer-events-none" />
       )}
       
       {/* Card Header */}
-      <DSCardHeader className="pb-4">
-        <DSFlexContainer justify="between" align="start">
-          <DSFlexContainer gap="sm" align="start" className="flex-1">
+      <div className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start gap-3 flex-1">
             <Checkbox
               checked={isSelected}
               onCheckedChange={onSelect}
@@ -119,41 +121,43 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
             />
             
             <div className="flex-1 min-w-0">
-              <DSFlexContainer gap="sm" align="center" className="mb-3">
-                <div className="p-2 rounded-lg bg-gray-50 border border-gray-200">
-                  <SubjectIcon className="h-4 w-4 text-blue-600" />
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`p-2 rounded-lg ${statusConfig.bgColor} ${statusConfig.borderColor} border`}>
+                  <SubjectIcon className={`h-4 w-4 ${statusConfig.color}`} />
                 </div>
-                <DSStatusBadge variant={statusConfig.variant} size="sm">
-                  <StatusIcon className="mr-1.5 h-3 w-3" />
-                  {statusConfig.status}
-                </DSStatusBadge>
-              </DSFlexContainer>
+                <div className="flex items-center gap-2">
+                  <StatusIcon className={`h-4 w-4 ${statusConfig.color}`} />
+                  <Badge variant={statusConfig.variant} className="text-xs font-medium">
+                    {statusConfig.status}
+                  </Badge>
+                </div>
+              </div>
               
               <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-blue-700 transition-colors">
                 {assessment.title}
               </h3>
               
-              <DSFlexContainer gap="sm" align="center" className="text-sm text-gray-600 mb-3">
+              <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                 <span className="font-medium">{assessment.subject}</span>
                 <span>•</span>
                 <span>Grade {assessment.grade_level}</span>
                 <span>•</span>
                 <span className="capitalize">{assessment.assessment_type}</span>
-              </DSFlexContainer>
+              </div>
             </div>
-          </DSFlexContainer>
+          </div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <DSButton 
+              <Button 
                 variant="ghost" 
                 size="sm" 
-                className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
+                className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-gray-100"
               >
                 <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                 </svg>
-              </DSButton>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem asChild>
@@ -185,58 +189,58 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </DSFlexContainer>
-      </DSCardHeader>
+        </div>
 
-      {/* Assessment Info */}
-      <DSCardContent className="py-4">
-        <DSFlexContainer gap="lg" align="center" className="text-sm mb-3">
-          <DSFlexContainer gap="sm" align="center" className="text-gray-600">
-            <Calendar className="h-4 w-4" />
-            <span>{formatDate(assessment.assessment_date)}</span>
-          </DSFlexContainer>
-          <DSFlexContainer gap="sm" align="center" className="text-gray-600">
-            <Target className="h-4 w-4" />
-            <span>Max: {assessment.max_score} pts</span>
-          </DSFlexContainer>
-        </DSFlexContainer>
+        {/* Assessment Info */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-1.5 text-gray-600">
+              <Calendar className="h-4 w-4" />
+              <span>{formatDate(assessment.assessment_date)}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-gray-600">
+              <Target className="h-4 w-4" />
+              <span>Max: {assessment.max_score} pts</span>
+            </div>
+          </div>
 
-        {assessment.description && (
-          <DSHelpText className="line-clamp-2 leading-relaxed">
-            {assessment.description}
-          </DSHelpText>
-        )}
-      </DSCardContent>
+          {assessment.description && (
+            <p className="text-sm text-gray-700 line-clamp-2 leading-relaxed">
+              {assessment.description}
+            </p>
+          )}
+        </div>
+      </div>
 
       {/* Card Footer */}
-      <DSCardFooter className="pt-4">
-        <DSFlexContainer justify="between" align="center">
-          <DSFlexContainer gap="sm">
-            <DSButton variant="secondary" size="sm" asChild>
+      <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 rounded-b-xl">
+        <div className="flex items-center justify-between">
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" asChild className="h-8 text-xs hover:bg-blue-50 hover:border-blue-200">
               <Link to={`/app/assessments/${assessment.id}`}>
                 <FileText className="mr-1.5 h-3 w-3" />
                 Details
               </Link>
-            </DSButton>
-            <DSButton size="sm" asChild>
+            </Button>
+            <Button size="sm" asChild className="h-8 text-xs bg-blue-600 hover:bg-blue-700">
               <Link to={`/app/assessments/${assessment.id}/responses`}>
                 <Users className="mr-1.5 h-3 w-3" />
                 Add Data
               </Link>
-            </DSButton>
-          </DSFlexContainer>
+            </Button>
+          </div>
           
           {!assessment.is_draft && (
-            <DSButton variant="ghost" size="sm" asChild>
+            <Button variant="ghost" size="sm" asChild className="h-8 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50">
               <Link to={`/app/assessments/${assessment.id}/analysis`}>
                 <BarChart3 className="mr-1.5 h-3 w-3" />
                 Analysis
               </Link>
-            </DSButton>
+            </Button>
           )}
-        </DSFlexContainer>
-      </DSCardFooter>
-    </DSCard>
+        </div>
+      </div>
+    </div>
   );
 };
 
