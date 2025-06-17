@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -178,6 +177,7 @@ const Students: React.FC = () => {
             <DSCardContent className="p-6">
               {(showFilters || filters.search || filters.gradeLevel || filters.performanceLevel) && (
                 <StudentFilters
+                  values={filters}
                   onFiltersChange={setFilters}
                   totalStudents={students.length}
                   filteredCount={filteredStudents.length}

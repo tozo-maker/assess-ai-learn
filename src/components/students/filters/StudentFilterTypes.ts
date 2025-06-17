@@ -8,6 +8,7 @@ export interface StudentFilterValues {
 }
 
 export interface StudentFiltersProps {
+  values: StudentFilterValues;
   onFiltersChange: (filters: StudentFilterValues) => void;
   totalStudents: number;
   filteredCount: number;

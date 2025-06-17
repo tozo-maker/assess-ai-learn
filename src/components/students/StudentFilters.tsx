@@ -1,15 +1,15 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Filter } from 'lucide-react';
 import UnifiedFilterSection from '@/components/common/filters/UnifiedFilterSection';
-import { getEmptyFilters } from '@/components/common/filters/UnifiedFilterTypes';
 import { gradeLevelOptions, performanceLevelOptions } from '@/types/student';
 import {
   StudentFilterValues,
   StudentFiltersProps
 } from './filters/StudentFilterTypes';
 
-const StudentFilters: React.FC<StudentFiltersProps> = ({
+const StudentFilters: React.FC<StudentFiltersProps & { values: StudentFilterValues }> = ({
+  values,
   onFiltersChange,
   totalStudents,
   filteredCount
@@ -51,18 +51,14 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
     }
   ];
 
-  const [filters, setFilters] = useState<StudentFilterValues>(() => 
-    getEmptyFilters(filterConfigs) as StudentFilterValues
-  );
-
-  const handleFiltersChange = (newFilters: StudentFilterValues) => {
-    setFilters(newFilters);
-    onFiltersChange(newFilters);
-  };
-
   const handleClearFilters = () => {
-    const emptyFilters = getEmptyFilters(filterConfigs) as StudentFilterValues;
-    setFilters(emptyFilters);
+    const emptyFilters: StudentFilterValues = {
+      search: '',
+      gradeLevel: '',
+      performanceLevel: '',
+      needsAttention: null,
+      hasParentContact: null
+    };
     onFiltersChange(emptyFilters);
   };
 
@@ -71,8 +67,8 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
       title="Filters"
       icon={<Filter className="h-4 w-4" />}
       filterConfigs={filterConfigs}
-      values={filters}
-      onFiltersChange={handleFiltersChange}
+      values={values}
+      onFiltersChange={onFiltersChange}
       onClearFilters={handleClearFilters}
       layout="inline"
       showResultsCount={true}
