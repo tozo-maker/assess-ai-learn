@@ -1,7 +1,6 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, Eye, Mail, TrendingDown, Clock, ChevronRight } from 'lucide-react';
+import { AlertCircle, Eye, Mail, TrendingDown, Clock, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   DSCard,
   DSCardHeader,
@@ -13,6 +12,7 @@ import {
   DSFlexContainer,
   DSStatusBadge
 } from '@/components/ui/design-system';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { studentService } from '@/services/student-service';
 import { StudentWithPerformance } from '@/types/student';
 
@@ -115,6 +115,8 @@ const AlertCard: React.FC<AlertProps> = ({
 };
 
 export const StudentsAlertSystem: React.FC = () => {
+  const [isExpanded, setIsExpanded] = useState(true);
+  
   const { data: students = [] } = useQuery({
     queryKey: ['students'],
     queryFn: studentService.getStudents,
@@ -191,55 +193,71 @@ export const StudentsAlertSystem: React.FC = () => {
 
   return (
     <DSCard className="mb-8 border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50 to-orange-50">
-      <DSCardHeader className="p-6 border-b border-amber-200 bg-white/50">
-        <DSFlexContainer align="center" justify="between">
-          <DSFlexContainer align="center" gap="sm">
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <AlertCircle className="h-6 w-6 text-amber-600" />
-            </div>
-            <div>
-              <DSSubsectionHeader className="text-lg font-semibold text-gray-900">
-                Student Alerts
-              </DSSubsectionHeader>
-              <DSHelpText className="text-sm">
-                {alerts.length} students require attention
-                {highPriorityCount > 0 && (
-                  <span className="ml-2 text-red-600 font-medium">
-                    • {highPriorityCount} high priority
-                  </span>
-                )}
-                {mediumPriorityCount > 0 && (
-                  <span className="ml-2 text-amber-600 font-medium">
-                    • {mediumPriorityCount} medium priority
-                  </span>
-                )}
-              </DSHelpText>
-            </div>
-          </DSFlexContainer>
-          
-          <DSButton variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
-            View All Alerts
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </DSButton>
-        </DSFlexContainer>
-      </DSCardHeader>
-      
-      <DSCardContent className="p-6">
-        <div className="space-y-4 max-h-96 overflow-y-auto">
-          {alerts.slice(0, 5).map((alert, index) => (
-            <AlertCard key={`${alert.student.id}-${alert.type}-${index}`} {...alert} />
-          ))}
-          
-          {alerts.length > 5 && (
-            <div className="text-center py-4 border-t border-gray-200">
-              <DSButton variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
-                View {alerts.length - 5} more alerts
+      <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+        <DSCardHeader className="p-6 border-b border-amber-200 bg-white/50">
+          <DSFlexContainer align="center" justify="between">
+            <DSFlexContainer align="center" gap="sm">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <AlertCircle className="h-6 w-6 text-amber-600" />
+              </div>
+              <div>
+                <DSSubsectionHeader className="text-lg font-semibold text-gray-900">
+                  Student Alerts
+                </DSSubsectionHeader>
+                <DSHelpText className="text-sm">
+                  {alerts.length} students require attention
+                  {highPriorityCount > 0 && (
+                    <span className="ml-2 text-red-600 font-medium">
+                      • {highPriorityCount} high priority
+                    </span>
+                  )}
+                  {mediumPriorityCount > 0 && (
+                    <span className="ml-2 text-amber-600 font-medium">
+                      • {mediumPriorityCount} medium priority
+                    </span>
+                  )}
+                </DSHelpText>
+              </div>
+            </DSFlexContainer>
+            
+            <div className="flex items-center gap-2">
+              <DSButton variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
+                View All Alerts
                 <ChevronRight className="h-4 w-4 ml-1" />
               </DSButton>
+              
+              <CollapsibleTrigger asChild>
+                <DSButton variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
+                  {isExpanded ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </DSButton>
+              </CollapsibleTrigger>
             </div>
-          )}
-        </div>
-      </DSCardContent>
+          </DSFlexContainer>
+        </DSCardHeader>
+        
+        <CollapsibleContent>
+          <DSCardContent className="p-6">
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {alerts.slice(0, 5).map((alert, index) => (
+                <AlertCard key={`${alert.student.id}-${alert.type}-${index}`} {...alert} />
+              ))}
+              
+              {alerts.length > 5 && (
+                <div className="text-center py-4 border-t border-gray-200">
+                  <DSButton variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
+                    View {alerts.length - 5} more alerts
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </DSButton>
+                </div>
+              )}
+            </div>
+          </DSCardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </DSCard>
   );
 };
