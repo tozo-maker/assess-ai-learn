@@ -1,7 +1,7 @@
+
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Upload, Grid, List, Users, Filter } from 'lucide-react';
 
 // Layout Components
 import AppLayout from '@/components/layout/AppLayout';
@@ -12,24 +12,23 @@ import {
   DSPageContainer,
   DSSection,
   DSCard,
-  DSCardHeader,
   DSCardContent,
-  DSButton,
-  DSFlexContainer,
   DSSpacer,
-  DSPageTitle,
-  DSBodyText,
-  DSHelpText
+  DSBodyText
 } from '@/components/ui/design-system';
 
+// Page Components
+import StudentsPageHeader from '@/components/students/StudentsPageHeader';
+import StudentsViewControls from '@/components/students/StudentsViewControls';
+import StudentsGrid from '@/components/students/StudentsGrid';
+import StudentsEmptyState from '@/components/students/StudentsEmptyState';
+
 // Enhanced Components
-import EnhancedStudentCardRedesigned from '@/components/students/EnhancedStudentCardRedesigned';
 import StudentFilters, { StudentFilterValues } from '@/components/students/StudentFilters';
 import BulkActionsToolbar from '@/components/students/BulkActionsToolbar';
 import StudentsOverviewMetrics from '@/components/students/StudentsOverviewMetrics';
 import StudentsAlertSystem from '@/components/students/StudentsAlertSystem';
 import { studentService } from '@/services/student-service';
-import { StudentWithPerformance } from '@/types/student';
 
 const Students: React.FC = () => {
   const navigate = useNavigate();
@@ -99,10 +98,6 @@ const Students: React.FC = () => {
     navigate('/app/students/add');
   };
 
-  const handleBulkImport = () => {
-    navigate('/app/students/import');
-  };
-
   const handleSelectStudent = (studentId: string, checked: boolean) => {
     if (checked) {
       setSelectedStudents(prev => [...prev, studentId]);
@@ -166,42 +161,11 @@ const Students: React.FC = () => {
         <DSPageContainer>
           <Breadcrumbs />
           
-          {/* Enhanced Page Header */}
-          <DSCard className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-l-blue-500">
-            <DSCardHeader className="p-8">
-              <DSFlexContainer justify="between" align="center" className="flex-col lg:flex-row gap-6">
-                <div className="text-center lg:text-left">
-                  <DSPageTitle className="text-4xl font-bold text-gray-900 mb-3">
-                    Students
-                  </DSPageTitle>
-                  <DSBodyText className="text-lg text-gray-600 max-w-2xl">
-                    Manage your students and track their learning progress with comprehensive insights and analytics
-                  </DSBodyText>
-                  <DSHelpText className="mt-2 text-sm">
-                    {students.length} total students • {filteredStudents.length} currently shown
-                  </DSHelpText>
-                </div>
-                <DSFlexContainer gap="sm" className="flex-col sm:flex-row">
-                  <DSButton 
-                    variant="secondary" 
-                    onClick={handleBulkImport}
-                    className="whitespace-nowrap"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Import Students
-                  </DSButton>
-                  <DSButton 
-                    variant="primary"
-                    onClick={handleAddStudent}
-                    className="whitespace-nowrap"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Student
-                  </DSButton>
-                </DSFlexContainer>
-              </DSFlexContainer>
-            </DSCardHeader>
-          </DSCard>
+          {/* Page Header */}
+          <StudentsPageHeader 
+            totalStudents={students.length}
+            filteredCount={filteredStudents.length}
+          />
 
           {/* Overview Metrics */}
           <StudentsOverviewMetrics />
@@ -209,23 +173,9 @@ const Students: React.FC = () => {
           {/* Alert System */}
           <StudentsAlertSystem />
 
-          {/* Enhanced Filters */}
+          {/* Filters */}
           <DSCard className="mb-6">
             <DSCardContent className="p-6">
-              <DSFlexContainer justify="between" align="center" className="mb-4">
-                <DSBodyText className="font-medium text-gray-700">
-                  Filter & Search Students
-                </DSBodyText>
-                <DSButton
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  <Filter className="h-4 w-4 mr-2" />
-                  {showFilters ? 'Hide Filters' : 'Show Filters'}
-                </DSButton>
-              </DSFlexContainer>
-              
               {(showFilters || filters.search || filters.gradeLevel || filters.performanceLevel) && (
                 <StudentFilters
                   onFiltersChange={setFilters}
@@ -249,109 +199,34 @@ const Students: React.FC = () => {
             </div>
           )}
 
-          {/* Enhanced View Controls */}
-          <DSCard className="mb-6">
-            <DSCardContent className="p-4 bg-gradient-to-r from-gray-50 to-gray-100">
-              <DSFlexContainer justify="between" align="center">
-                <DSFlexContainer align="center" gap="md">
-                  <input
-                    type="checkbox"
-                    checked={isAllSelected}
-                    ref={(checkbox) => {
-                      if (checkbox) {
-                        (checkbox as any).indeterminate = isIndeterminate;
-                      }
-                    }}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="h-4 w-4 text-[#2563eb] border-gray-300 rounded focus:ring-[#2563eb]"
-                  />
-                  <DSBodyText className="font-medium text-gray-700">
-                    Select All
-                  </DSBodyText>
-                  <DSHelpText className="hidden sm:block">
-                    ({filteredStudents.length} students)
-                  </DSHelpText>
-                </DSFlexContainer>
-                
-                {/* Enhanced View Toggle */}
-                <DSFlexContainer gap="xs" className="border border-gray-300 rounded-lg p-1 bg-white shadow-sm">
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`
-                      p-2 rounded-md text-sm transition-all duration-200 flex items-center gap-2
-                      ${viewMode === 'list'
-                        ? 'bg-[#2563eb] text-white shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                      }
-                    `}
-                  >
-                    <List className="h-4 w-4" />
-                    <span className="hidden sm:inline">List</span>
-                  </button>
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`
-                      p-2 rounded-md text-sm transition-all duration-200 flex items-center gap-2
-                      ${viewMode === 'grid'
-                        ? 'bg-[#2563eb] text-white shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                      }
-                    `}
-                  >
-                    <Grid className="h-4 w-4" />
-                    <span className="hidden sm:inline">Grid</span>
-                  </button>
-                </DSFlexContainer>
-              </DSFlexContainer>
-            </DSCardContent>
-          </DSCard>
+          {/* View Controls */}
+          <StudentsViewControls
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            isAllSelected={isAllSelected}
+            isIndeterminate={isIndeterminate}
+            onSelectAll={handleSelectAll}
+            filteredCount={filteredStudents.length}
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+          />
 
           <DSSpacer size="lg" />
 
-          {/* Enhanced Student Grid/List with 3-column horizontal layout */}
+          {/* Students Grid/List */}
           {filteredStudents.length > 0 ? (
-            <div className={`
-              ${viewMode === 'grid' 
-                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
-                : 'space-y-6'
-              }
-            `}>
-              {filteredStudents.map((student) => (
-                <EnhancedStudentCardRedesigned
-                  key={student.id}
-                  student={student}
-                  onStudentClick={handleStudentClick}
-                  onSelect={handleSelectStudent}
-                  isSelected={selectedStudents.includes(student.id)}
-                  viewMode={viewMode}
-                />
-              ))}
-            </div>
+            <StudentsGrid
+              students={filteredStudents}
+              viewMode={viewMode}
+              selectedStudents={selectedStudents}
+              onStudentClick={handleStudentClick}
+              onSelectStudent={handleSelectStudent}
+            />
           ) : (
-            <DSCard className="border-2 border-dashed border-gray-300">
-              <DSCardContent>
-                <div className="text-center py-16">
-                  <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center mb-6">
-                    <Users className="h-10 w-10 text-blue-600" />
-                  </div>
-                  <DSPageTitle className="text-2xl text-gray-900 mb-3">
-                    {students.length === 0 ? 'No students found' : 'No students match your filters'}
-                  </DSPageTitle>
-                  <DSBodyText className="text-gray-600 mb-8 max-w-md mx-auto">
-                    {students.length === 0 
-                      ? 'Get started by adding your first student to begin tracking their learning journey' 
-                      : 'Try adjusting your search terms or filters to find the students you\'re looking for'
-                    }
-                  </DSBodyText>
-                  {students.length === 0 && (
-                    <DSButton onClick={handleAddStudent} size="lg">
-                      <Plus className="mr-2 h-5 w-5" />
-                      Add Your First Student
-                    </DSButton>
-                  )}
-                </div>
-              </DSCardContent>
-            </DSCard>
+            <StudentsEmptyState
+              totalStudents={students.length}
+              onAddStudent={handleAddStudent}
+            />
           )}
         </DSPageContainer>
       </DSSection>
