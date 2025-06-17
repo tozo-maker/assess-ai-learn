@@ -129,7 +129,7 @@ const EnhancedStudentCardRedesigned: React.FC<EnhancedStudentCardRedesignedProps
     return (
       <DSCard 
         className={`
-          relative min-h-[300px] transition-all duration-300 hover:shadow-xl group cursor-pointer
+          relative transition-all duration-300 hover:shadow-xl group cursor-pointer
           ${config.borderColor} border-l-4
           ${isSelected ? `ring-4 ${config.ringColor} shadow-lg ${config.bgColor}` : `hover:shadow-lg hover:-translate-y-1 ${config.bgColor}/30`}
         `}
@@ -166,130 +166,136 @@ const EnhancedStudentCardRedesigned: React.FC<EnhancedStudentCardRedesignedProps
           </div>
         )}
 
-        <DSCardContent className="p-6 h-full flex flex-col">
-          {/* Student Avatar with Performance Ring */}
-          <DSFlexContainer justify="center" className="mb-6">
-            <div className="relative">
-              <div className={`w-20 h-20 rounded-full p-1 ${config.color}`}>
-                <div className="w-full h-full bg-white rounded-full flex items-center justify-center shadow-inner">
-                  <div className="text-xl font-bold text-gray-700">
-                    {student.first_name[0]}{student.last_name[0]}
+        <DSCardContent className="p-6">
+          {/* Horizontal Layout */}
+          <DSFlexContainer align="start" gap="lg" className="h-full">
+            {/* Left: Avatar with Performance Ring */}
+            <div className="flex-shrink-0">
+              <div className="relative">
+                <div className={`w-16 h-16 rounded-full p-1 ${config.color}`}>
+                  <div className="w-full h-full bg-white rounded-full flex items-center justify-center shadow-inner">
+                    <div className="text-lg font-bold text-gray-700">
+                      {student.first_name[0]}{student.last_name[0]}
+                    </div>
                   </div>
                 </div>
+                
+                {/* Performance score overlay */}
+                {performance.score && (
+                  <div className={`absolute -bottom-1 -right-1 ${config.color} text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg`}>
+                    {Math.round(performance.score)}
+                  </div>
+                )}
               </div>
-              
-              {/* Performance score overlay */}
-              {performance.score && (
-                <div className={`absolute -bottom-2 -right-2 ${config.color} text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg`}>
-                  {Math.round(performance.score)}
+            </div>
+
+            {/* Right: Student Info */}
+            <div className="flex-1 min-w-0">
+              <div className="mb-3">
+                <DSSubsectionHeader className="text-lg font-bold text-gray-900 mb-1 leading-tight truncate">
+                  {student.first_name} {student.last_name}
+                </DSSubsectionHeader>
+                
+                <DSFlexContainer align="center" gap="md" className="mb-2">
+                  <Badge className={`text-xs ${config.textColor} ${config.bgColor} border-transparent font-semibold`}>
+                    Grade {student.grade_level}
+                  </Badge>
+                  
+                  {student.student_id && (
+                    <DSHelpText className="text-xs">ID: {student.student_id}</DSHelpText>
+                  )}
+                </DSFlexContainer>
+
+                {/* Performance Status - Compact */}
+                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${config.bgColor} border ${config.borderColor.replace('border-l-', 'border-')}`}>
+                  <div className={`text-sm font-bold ${config.textColor}`}>
+                    {config.status}
+                  </div>
+                  {performance.score && (
+                    <div className="text-lg font-black text-gray-900">
+                      {Math.round(performance.score)}%
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </DSFlexContainer>
-
-          {/* Student Info */}
-          <div className="text-center mb-4 flex-grow">
-            <DSSubsectionHeader className="text-lg font-bold text-gray-900 mb-2 leading-tight">
-              {student.first_name} {student.last_name}
-            </DSSubsectionHeader>
-            
-            <Badge className={`mb-3 ${config.textColor} ${config.bgColor} border-transparent font-semibold`}>
-              Grade {student.grade_level}
-            </Badge>
-            
-            {student.student_id && (
-              <DSHelpText className="text-xs mb-3">ID: {student.student_id}</DSHelpText>
-            )}
-
-            {/* Performance Status - More Prominent */}
-            <div className={`mb-4 p-3 rounded-lg ${config.bgColor} border ${config.borderColor.replace('border-l-', 'border-')}`}>
-              <DSHelpText className="text-xs font-medium uppercase tracking-wide mb-1">Performance</DSHelpText>
-              <div className={`text-lg font-bold ${config.textColor}`}>
-                {config.status}
               </div>
-              {performance.score && (
-                <div className="text-2xl font-black text-gray-900 mt-1">
-                  {Math.round(performance.score)}%
+
+              {/* Stats Row */}
+              <DSFlexContainer justify="between" align="center" className="mb-3 pt-3 border-t border-gray-100">
+                <div className="text-center">
+                  <DSFlexContainer justify="center" align="center" gap="xs" className="mb-1">
+                    <BookOpen className="h-3 w-3 text-gray-400" />
+                    <DSHelpText className="text-xs font-medium">Tests</DSHelpText>
+                  </DSFlexContainer>
+                  <DSBodyText className="text-sm font-bold text-gray-900">
+                    {performance.assessmentCount}
+                  </DSBodyText>
                 </div>
-              )}
-            </div>
-          </div>
+                
+                <div className="text-center">
+                  <DSFlexContainer justify="center" align="center" gap="xs" className="mb-1">
+                    <Calendar className="h-3 w-3 text-gray-400" />
+                    <DSHelpText className="text-xs font-medium">Last</DSHelpText>
+                  </DSFlexContainer>
+                  <DSBodyText className="text-xs font-bold text-gray-900">
+                    {performance.lastAssessment 
+                      ? new Date(performance.lastAssessment).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                      : 'None'
+                    }
+                  </DSBodyText>
+                </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 gap-4 mb-4 pt-4 border-t border-gray-100">
-            <div className="text-center">
-              <DSFlexContainer justify="center" align="center" gap="xs" className="mb-1">
-                <BookOpen className="h-4 w-4 text-gray-400" />
-                <DSHelpText className="text-xs font-medium">Tests</DSHelpText>
+                {/* Contact indicators */}
+                <DSFlexContainer gap="xs">
+                  {student.parent_email && (
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Mail className="h-3 w-3 text-blue-600" />
+                    </div>
+                  )}
+                  {student.parent_phone && (
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                      <Phone className="h-3 w-3 text-green-600" />
+                    </div>
+                  )}
+                </DSFlexContainer>
               </DSFlexContainer>
-              <DSBodyText className="text-lg font-bold text-gray-900">
-                {performance.assessmentCount}
-              </DSBodyText>
-            </div>
-            
-            <div className="text-center">
-              <DSFlexContainer justify="center" align="center" gap="xs" className="mb-1">
-                <Calendar className="h-4 w-4 text-gray-400" />
-                <DSHelpText className="text-xs font-medium">Last</DSHelpText>
-              </DSFlexContainer>
-              <DSBodyText className="text-sm font-bold text-gray-900">
-                {performance.lastAssessment 
-                  ? new Date(performance.lastAssessment).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                  : 'None'
-                }
-              </DSBodyText>
-            </div>
-          </div>
 
-          {/* Contact indicators */}
-          <DSFlexContainer justify="center" gap="md" className="mb-4">
-            {student.parent_email && (
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center shadow-sm">
-                <Mail className="h-4 w-4 text-blue-600" />
-              </div>
-            )}
-            {student.parent_phone && (
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center shadow-sm">
-                <Phone className="h-4 w-4 text-green-600" />
-              </div>
-            )}
-          </DSFlexContainer>
-
-          {/* Quick actions - Enhanced visibility */}
-          <div className={`transition-all duration-300 ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-70 translate-y-1'}`}>
-            <DSFlexContainer justify="center" gap="sm">
-              <DSButton 
-                variant="ghost" 
-                size="sm" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStudentClick(student.id);
-                }}
-                className="text-xs bg-white shadow-sm hover:shadow-md"
-              >
-                <Eye className="h-3 w-3 mr-1" />
-                View
-              </DSButton>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+              {/* Quick actions */}
+              <div className={`transition-all duration-300 ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-70 translate-y-1'}`}>
+                <DSFlexContainer justify="end" gap="xs">
                   <DSButton 
                     variant="ghost" 
                     size="sm" 
-                    className="h-8 w-8 p-0 bg-white shadow-sm hover:shadow-md"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStudentClick(student.id);
+                    }}
+                    className="text-xs bg-white shadow-sm hover:shadow-md px-3 py-1"
                   >
-                    <MoreHorizontal className="h-3 w-3" />
+                    <Eye className="h-3 w-3 mr-1" />
+                    View
                   </DSButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-white shadow-lg border">
-                  <DropdownMenuItem>
-                    <Mail className="mr-2 h-4 w-4" />
-                    Email Parent
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </DSFlexContainer>
-          </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <DSButton 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-7 w-7 p-0 bg-white shadow-sm hover:shadow-md"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreHorizontal className="h-3 w-3" />
+                      </DSButton>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-white shadow-lg border">
+                      <DropdownMenuItem>
+                        <Mail className="mr-2 h-4 w-4" />
+                        Email Parent
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </DSFlexContainer>
+              </div>
+            </div>
+          </DSFlexContainer>
         </DSCardContent>
       </DSCard>
     );
