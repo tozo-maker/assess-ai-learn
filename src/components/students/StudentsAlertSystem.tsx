@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AlertCircle, Eye, Mail, TrendingDown, Clock, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
@@ -115,7 +116,7 @@ const AlertCard: React.FC<AlertProps> = ({
 };
 
 export const StudentsAlertSystem: React.FC = () => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   
   const { data: students = [] } = useQuery({
     queryKey: ['students'],
