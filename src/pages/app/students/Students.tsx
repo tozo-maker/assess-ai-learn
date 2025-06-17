@@ -1,7 +1,8 @@
+
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Upload, Grid, List } from 'lucide-react';
+import { Plus, Upload, Grid, List, Users } from 'lucide-react';
 
 // Layout Components
 import AppLayout from '@/components/layout/AppLayout';
@@ -18,13 +19,17 @@ import {
   DSFlexContainer,
   DSSpacer,
   DSPageTitle,
-  DSBodyText
+  DSBodyText,
+  DSContentGrid,
+  DSGridItem
 } from '@/components/ui/design-system';
 
 // Enhanced Components
 import EnhancedStudentCard from '@/components/students/EnhancedStudentCard';
 import StudentFilters, { StudentFilterValues } from '@/components/students/StudentFilters';
 import BulkActionsToolbar from '@/components/students/BulkActionsToolbar';
+import StudentsOverviewMetrics from '@/components/students/StudentsOverviewMetrics';
+import StudentsAlertSystem from '@/components/students/StudentsAlertSystem';
 import { studentService } from '@/services/student-service';
 import { StudentWithPerformance } from '@/types/student';
 
@@ -152,7 +157,7 @@ const Students: React.FC = () => {
         <DSSection>
           <DSPageContainer>
             <Breadcrumbs />
-            <div className="flex items-center justify-center py-12">
+            <div className="flex items-center justify-center py-16">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2563eb]"></div>
               <span className="ml-3 text-gray-600">Loading students...</span>
             </div>
@@ -199,6 +204,12 @@ const Students: React.FC = () => {
               </DSFlexContainer>
             </DSCardHeader>
           </DSCard>
+
+          {/* Overview Metrics */}
+          <StudentsOverviewMetrics />
+
+          {/* Alert System */}
+          <StudentsAlertSystem />
 
           {/* Filters */}
           <DSCard className="mb-6">
@@ -282,7 +293,7 @@ const Students: React.FC = () => {
           {filteredStudents.length > 0 ? (
             <div className={`
               ${viewMode === 'grid' 
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' 
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' 
                 : 'space-y-4'
               }
             `}>
@@ -300,9 +311,9 @@ const Students: React.FC = () => {
           ) : (
             <DSCard>
               <DSCardContent>
-                <div className="text-center py-12">
-                  <div className="mx-auto w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                    <Plus className="h-6 w-6 text-blue-600" />
+                <div className="text-center py-16">
+                  <div className="mx-auto w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                    <Users className="h-8 w-8 text-blue-600" />
                   </div>
                   <DSPageTitle className="text-xl text-gray-900 mb-2">
                     {students.length === 0 ? 'No students found' : 'No students match your filters'}

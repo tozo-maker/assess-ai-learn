@@ -1,7 +1,5 @@
+
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, Mail, Phone, Eye, MoreHorizontal, TrendingUp, TrendingDown } from 'lucide-react';
 import { StudentWithPerformance } from '@/types/student';
 import {
@@ -10,6 +8,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import {
+  DSCard,
+  DSCardContent,
+  DSButton,
+  DSSubsectionHeader,
+  DSBodyText,
+  DSHelpText,
+  DSFlexContainer,
+  DSStatusBadge
+} from '@/components/ui/design-system';
 
 interface EnhancedStudentCardProps {
   student: StudentWithPerformance;
@@ -77,23 +86,23 @@ const EnhancedStudentCard: React.FC<EnhancedStudentCardProps> = ({
   const getPerformanceBadgeVariant = (level: string | null) => {
     switch (level) {
       case 'Above Average':
-        return 'default';
+        return 'success';
       case 'Below Average':
-        return 'destructive';
+        return 'danger';
       case 'Average':
-        return 'secondary';
+        return 'info';
       default:
-        return 'outline';
+        return 'neutral';
     }
   };
 
   if (viewMode === 'grid') {
     return (
-      <Card className={`transition-all duration-200 hover:shadow-md ${isSelected ? 'ring-2 ring-[#2563eb]' : ''} h-fit`}>
-        <CardContent className="p-4">
-          <div className="flex flex-col space-y-3">
+      <DSCard className={`transition-all duration-200 hover:shadow-lg ${isSelected ? 'ring-2 ring-[#2563eb] shadow-lg' : ''}`}>
+        <DSCardContent className="p-6">
+          <div className="space-y-4">
             {/* Header with checkbox and actions */}
-            <div className="flex items-center justify-between">
+            <DSFlexContainer justify="between" align="center">
               <input
                 type="checkbox"
                 checked={isSelected}
@@ -102,9 +111,9 @@ const EnhancedStudentCard: React.FC<EnhancedStudentCardProps> = ({
               />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <DSButton variant="ghost" size="sm" className="h-8 w-8 p-0">
                     <MoreHorizontal className="h-4 w-4" />
-                  </Button>
+                  </DSButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => onStudentClick(student.id)}>
@@ -117,30 +126,30 @@ const EnhancedStudentCard: React.FC<EnhancedStudentCardProps> = ({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
+            </DSFlexContainer>
 
             {/* Avatar and attention indicator */}
-            <div className="flex justify-center">
+            <DSFlexContainer justify="center">
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center text-lg font-semibold text-blue-600">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center text-xl font-semibold text-blue-600 shadow-sm">
                   {student.first_name[0]}{student.last_name[0]}
                 </div>
                 {getNeedsAttention() && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center shadow-sm">
                     <AlertCircle className="h-3 w-3 text-white" />
                   </div>
                 )}
               </div>
-            </div>
+            </DSFlexContainer>
 
             {/* Student name and grade */}
-            <div className="text-center space-y-2">
-              <h3 
+            <div className="text-center space-y-3">
+              <DSSubsectionHeader 
                 className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-[#2563eb] transition-colors line-clamp-2"
                 onClick={() => onStudentClick(student.id)}
               >
                 {student.first_name} {student.last_name}
-              </h3>
+              </DSSubsectionHeader>
               <Badge className={`text-xs font-medium ${getGradeLevelColor(student.grade_level)}`}>
                 Grade {student.grade_level}
               </Badge>
@@ -148,74 +157,74 @@ const EnhancedStudentCard: React.FC<EnhancedStudentCardProps> = ({
 
             {/* Student ID */}
             {student.student_id && (
-              <p className="text-sm text-gray-600 text-center">ID: {student.student_id}</p>
+              <DSHelpText className="text-center">ID: {student.student_id}</DSHelpText>
             )}
 
             {/* Performance summary */}
-            <div className="flex flex-col items-center space-y-2">
-              <Badge variant={getPerformanceBadgeVariant(getPerformanceLevel())}>
+            <DSFlexContainer direction="col" align="center" gap="sm">
+              <DSStatusBadge variant={getPerformanceBadgeVariant(getPerformanceLevel())}>
                 {getPerformanceLevel() || "Not assessed"}
-              </Badge>
+              </DSStatusBadge>
               
               {getAverageScore() && (
-                <div className="flex items-center gap-1 text-sm">
-                  <span className="text-gray-600">Avg:</span>
+                <DSFlexContainer align="center" gap="xs" className="text-sm">
+                  <DSBodyText className="text-gray-600">Avg:</DSBodyText>
                   <span className="font-medium">{Math.round(getAverageScore()!)}%</span>
                   {getAverageScore()! >= 80 ? (
                     <TrendingUp className="h-3 w-3 text-green-500" />
                   ) : (
                     <TrendingDown className="h-3 w-3 text-red-500" />
                   )}
-                </div>
+                </DSFlexContainer>
               )}
-            </div>
+            </DSFlexContainer>
 
             {/* Contact info indicators */}
-            <div className="flex justify-center gap-3 text-sm text-gray-500">
+            <DSFlexContainer justify="center" gap="md" className="text-sm text-gray-500">
               {student.parent_email && (
-                <div className="flex items-center gap-1">
+                <DSFlexContainer align="center" gap="xs">
                   <Mail className="h-3 w-3" />
-                </div>
+                </DSFlexContainer>
               )}
               {student.parent_phone && (
-                <div className="flex items-center gap-1">
+                <DSFlexContainer align="center" gap="xs">
                   <Phone className="h-3 w-3" />
-                </div>
+                </DSFlexContainer>
               )}
-            </div>
+            </DSFlexContainer>
 
             {/* Assessment stats */}
-            <div className="text-center pt-2 border-t border-gray-100">
-              <div className="flex justify-between text-sm">
-                <div>
-                  <p className="text-gray-600">Assessments</p>
-                  <p className="font-medium">{getAssessmentCount()}</p>
+            <div className="pt-4 border-t border-gray-100">
+              <DSFlexContainer justify="between" className="text-sm">
+                <div className="text-center">
+                  <DSHelpText>Assessments</DSHelpText>
+                  <DSBodyText className="font-medium">{getAssessmentCount()}</DSBodyText>
                 </div>
                 {getLastAssessmentDate() && (
-                  <div>
-                    <p className="text-gray-600">Last</p>
-                    <p className="font-medium text-xs">
+                  <div className="text-center">
+                    <DSHelpText>Last</DSHelpText>
+                    <DSBodyText className="font-medium text-xs">
                       {new Date(getLastAssessmentDate()!).toLocaleDateString('en-US', { 
                         month: 'short', 
                         day: 'numeric' 
                       })}
-                    </p>
+                    </DSBodyText>
                   </div>
                 )}
-              </div>
+              </DSFlexContainer>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </DSCardContent>
+      </DSCard>
     );
   }
 
   return (
-    <Card className={`transition-all duration-200 hover:shadow-md ${isSelected ? 'ring-2 ring-[#2563eb]' : ''}`}>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
+    <DSCard className={`transition-all duration-200 hover:shadow-lg ${isSelected ? 'ring-2 ring-[#2563eb] shadow-lg' : ''}`}>
+      <DSCardContent className="p-6">
+        <DSFlexContainer align="start" justify="between">
           {/* Student Info Section */}
-          <div className="flex items-start space-x-4 flex-1">
+          <DSFlexContainer align="start" gap="md" className="flex-1">
             <input
               type="checkbox"
               checked={isSelected}
@@ -225,7 +234,7 @@ const EnhancedStudentCard: React.FC<EnhancedStudentCardProps> = ({
             
             {/* Avatar */}
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center text-lg font-semibold text-blue-600">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center text-lg font-semibold text-blue-600 shadow-sm">
                 {student.first_name[0]}{student.last_name[0]}
               </div>
               {getNeedsAttention() && (
@@ -237,81 +246,81 @@ const EnhancedStudentCard: React.FC<EnhancedStudentCardProps> = ({
 
             {/* Student Details */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-2">
-                <h3 
+              <DSFlexContainer align="center" gap="md" className="mb-2">
+                <DSSubsectionHeader 
                   className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-[#2563eb] transition-colors"
                   onClick={() => onStudentClick(student.id)}
                 >
                   {student.first_name} {student.last_name}
-                </h3>
+                </DSSubsectionHeader>
                 <Badge className={`text-xs font-medium ${getGradeLevelColor(student.grade_level)}`}>
                   Grade {student.grade_level}
                 </Badge>
-              </div>
+              </DSFlexContainer>
               
               {student.student_id && (
-                <p className="text-sm text-gray-600 mb-2">ID: {student.student_id}</p>
+                <DSHelpText className="mb-2">ID: {student.student_id}</DSHelpText>
               )}
 
               {/* Contact Info */}
-              <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
+              <DSFlexContainer align="center" gap="lg" className="text-sm text-gray-500 mb-3">
                 {student.parent_email && (
-                  <div className="flex items-center gap-1">
+                  <DSFlexContainer align="center" gap="xs">
                     <Mail className="h-3 w-3" />
                     <span>Parent contact</span>
-                  </div>
+                  </DSFlexContainer>
                 )}
                 {student.parent_phone && (
-                  <div className="flex items-center gap-1">
+                  <DSFlexContainer align="center" gap="xs">
                     <Phone className="h-3 w-3" />
                     <span>Phone on file</span>
-                  </div>
+                  </DSFlexContainer>
                 )}
-              </div>
+              </DSFlexContainer>
 
               {/* Performance Summary */}
-              <div className="flex items-center gap-3">
-                <Badge variant={getPerformanceBadgeVariant(getPerformanceLevel())}>
+              <DSFlexContainer align="center" gap="md">
+                <DSStatusBadge variant={getPerformanceBadgeVariant(getPerformanceLevel())}>
                   {getPerformanceLevel() || "Not assessed"}
-                </Badge>
+                </DSStatusBadge>
                 
                 {getAverageScore() && (
-                  <div className="flex items-center gap-1 text-sm">
-                    <span className="text-gray-600">Avg:</span>
+                  <DSFlexContainer align="center" gap="xs" className="text-sm">
+                    <DSBodyText className="text-gray-600">Avg:</DSBodyText>
                     <span className="font-medium">{Math.round(getAverageScore()!)}%</span>
                     {getAverageScore()! >= 80 ? (
                       <TrendingUp className="h-3 w-3 text-green-500" />
                     ) : (
                       <TrendingDown className="h-3 w-3 text-red-500" />
                     )}
-                  </div>
+                  </DSFlexContainer>
                 )}
-              </div>
+              </DSFlexContainer>
             </div>
-          </div>
+          </DSFlexContainer>
 
           {/* Assessment Info & Actions */}
-          <div className="text-right flex flex-col items-end gap-2">
-            <div className="text-sm">
-              <p className="text-gray-600">Assessments</p>
-              <p className="font-medium">{getAssessmentCount()}</p>
+          <DSFlexContainer direction="col" align="end" gap="sm">
+            <div className="text-right text-sm">
+              <DSHelpText>Assessments</DSHelpText>
+              <DSBodyText className="font-medium">{getAssessmentCount()}</DSBodyText>
             </div>
             
             {getLastAssessmentDate() && (
-              <div className="text-sm">
-                <p className="text-gray-600">Last Assessment</p>
-                <p className="font-medium">
+              <div className="text-right text-sm">
+                <DSHelpText>Last Assessment</DSHelpText>
+                <DSBodyText className="font-medium">
                   {new Date(getLastAssessmentDate()!).toLocaleDateString()}
-                </p>
+                </DSBodyText>
               </div>
             )}
 
             {/* Action Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <DSButton variant="ghost" size="sm" className="h-8 w-8 p-0">
                   <MoreHorizontal className="h-4 w-4" />
-                </Button>
+                </DSButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => onStudentClick(student.id)}>
@@ -324,10 +333,10 @@ const EnhancedStudentCard: React.FC<EnhancedStudentCardProps> = ({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+          </DSFlexContainer>
+        </DSFlexContainer>
+      </DSCardContent>
+    </DSCard>
   );
 };
 
