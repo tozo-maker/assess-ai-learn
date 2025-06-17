@@ -1,176 +1,204 @@
 
 import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
-import { Slot } from "@radix-ui/react-slot"
 
-// Design system constants
+// Core Design System Foundation
 export const designSystem = {
+  // Spacing System (base unit: 4px)
+  spacing: {
+    xs: "4px",    // 4px
+    sm: "8px",    // 8px  
+    md: "16px",   // 16px
+    lg: "24px",   // 24px
+    xl: "32px",   // 32px
+    "2xl": "48px", // 48px
+    "3xl": "64px"  // 64px
+  },
+  
+  // Color System
   colors: {
     primary: {
-      border: "border-blue-500"
+      bg: "bg-[#2563eb]",
+      text: "text-[#2563eb]",
+      border: "border-[#2563eb]",
+      hover: "hover:bg-[#1d4ed8]",
+      light: "bg-[#dbeafe]",
+      ring: "ring-[#2563eb]/20"
+    },
+    success: {
+      bg: "bg-[#10b981]",
+      text: "text-[#10b981]",
+      border: "border-[#10b981]",
+      hover: "hover:bg-[#059669]",
+      light: "bg-[#d1fae5]",
+      ring: "ring-[#10b981]/20"
+    },
+    warning: {
+      bg: "bg-[#f59e0b]",
+      text: "text-[#f59e0b]",
+      border: "border-[#f59e0b]",
+      hover: "hover:bg-[#d97706]",
+      light: "bg-[#fef3c7]",
+      ring: "ring-[#f59e0b]/20"
+    },
+    danger: {
+      bg: "bg-[#ef4444]",
+      text: "text-[#ef4444]",
+      border: "border-[#ef4444]",
+      hover: "hover:bg-[#dc2626]",
+      light: "bg-[#fee2e2]",
+      ring: "ring-[#ef4444]/20"
+    },
+    info: {
+      bg: "bg-[#3b82f6]",
+      text: "text-[#3b82f6]",
+      border: "border-[#3b82f6]",
+      hover: "hover:bg-[#2563eb]",
+      light: "bg-[#dbeafe]",
+      ring: "ring-[#3b82f6]/20"
+    },
+    neutral: {
+      bg: "bg-[#6b7280]",
+      text: "text-[#6b7280]",
+      border: "border-[#6b7280]",
+      hover: "hover:bg-[#4b5563]",
+      light: "bg-[#f3f4f6]",
+      ring: "ring-[#6b7280]/20"
     }
+  },
+
+  // Transition System
+  transitions: {
+    fast: "duration-150",
+    normal: "duration-200",
+    slow: "duration-300",
+    slower: "duration-500"
   }
-}
+} as const;
 
-const DSPageContainer = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & {
-    fullWidth?: boolean
-  }
->(({ className, fullWidth, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      fullWidth ? "w-full px-4 sm:px-6 lg:px-8" : "container mx-auto px-4 sm:px-6 lg:px-8",
-      className
-    )}
-    {...props}
-  />
-))
-DSPageContainer.displayName = "DSPageContainer"
-
-const DSSection = React.forwardRef<
-  HTMLElement,
-  React.HTMLAttributes<HTMLElement>
+// Typography Components
+export const DSPageTitle = React.forwardRef<
+  HTMLHeadingElement,
+  React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
-  <section
+  <h1
     ref={ref}
     className={cn(
-      "py-12 md:py-16 lg:py-20",
+      "text-3xl font-bold text-gray-900 leading-tight tracking-tight",
       className
     )}
     {...props}
   />
 ))
-DSSection.displayName = "DSSection"
+DSPageTitle.displayName = "DSPageTitle"
 
-const DSCard = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
+export const DSSectionHeader = React.forwardRef<
+  HTMLHeadingElement,
+  React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
-  <div
+  <h2
     ref={ref}
     className={cn(
-      "rounded-md border bg-card text-card-foreground shadow-sm",
+      "text-2xl font-semibold text-gray-800 leading-tight",
       className
     )}
     {...props}
   />
 ))
-DSCard.displayName = "DSCard"
+DSSectionHeader.displayName = "DSSectionHeader"
 
-const DSCardHeader = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "flex flex-col space-y-1.5 p-6",
-      className
-    )}
-    {...props}
-  />
-))
-DSCardHeader.displayName = "DSCardHeader"
-
-const DSCardContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "p-6 pt-0",
-      className
-    )}
-    {...props}
-  />
-))
-DSCardContent.displayName = "DSCardContent"
-
-const DSCardFooter = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "flex items-center p-6 pt-0",
-      className
-    )}
-    {...props}
-  />
-))
-DSCardFooter.displayName = "DSCardFooter"
-
-const DSCardTitle = React.forwardRef<
+export const DSSubsectionHeader = React.forwardRef<
   HTMLHeadingElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
     className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
+      "text-xl font-medium text-gray-700 leading-tight",
       className
     )}
     {...props}
   />
 ))
-DSCardTitle.displayName = "DSCardTitle"
+DSSubsectionHeader.displayName = "DSSubsectionHeader"
 
-const DSCardDescription = React.forwardRef<
+export const DSBodyText = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn(
+      "text-base text-gray-600 leading-6",
+      className
+    )}
     {...props}
   />
 ))
-DSCardDescription.displayName = "DSCardDescription"
+DSBodyText.displayName = "DSBodyText"
 
-// Enhanced Button Component with proper asChild handling
-const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-  {
-    variants: {
-      variant: {
-        primary: "bg-semantic-primary hover:bg-blue-700 text-white shadow",
-        secondary: "border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 shadow-sm",
-        ghost: "hover:bg-gray-100 text-gray-700",
-        danger: "bg-semantic-danger hover:bg-red-700 text-white shadow",
-        warning: "bg-semantic-warning hover:bg-amber-600 text-white shadow",
-        success: "bg-semantic-success hover:bg-green-700 text-white shadow",
-      },
-      size: {
-        sm: "h-8 px-3 text-xs",
-        md: "h-10 px-4 py-2",
-        lg: "h-12 px-6 py-3 text-base",
-        icon: "h-10 w-10",
-      },
-    },
-    defaultVariants: {
-      variant: "primary",
-      size: "md",
-    },
-  }
-)
+export const DSHelpText = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn(
+      "text-sm text-gray-500 leading-5",
+      className
+    )}
+    {...props}
+  />
+))
+DSHelpText.displayName = "DSHelpText"
 
-export interface DSButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean
+export const DSCaptionText = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn(
+      "text-xs text-gray-400 leading-4",
+      className
+    )}
+    {...props}
+  />
+))
+DSCaptionText.displayName = "DSCaptionText"
+
+// Button Component
+interface DSButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  asChild?: boolean;
 }
 
-const DSButton = React.forwardRef<HTMLButtonElement, DSButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
+export const DSButton = React.forwardRef<HTMLButtonElement, DSButtonProps>(
+  ({ className, variant = 'primary', size = 'md', ...props }, ref) => {
+    const variants = {
+      primary: `${designSystem.colors.primary.bg} text-white ${designSystem.colors.primary.hover} ${designSystem.colors.primary.ring}`,
+      secondary: "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 ring-[#2563eb]/20",
+      ghost: "text-gray-700 hover:bg-gray-100 hover:text-gray-900 ring-[#2563eb]/20",
+      danger: `${designSystem.colors.danger.bg} text-white ${designSystem.colors.danger.hover} ${designSystem.colors.danger.ring}`
+    };
+
+    const sizes = {
+      sm: "h-8 px-3 text-sm",
+      md: "h-10 px-4 text-base", 
+      lg: "h-12 px-6 text-lg"
+    };
+
     return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+      <button
+        className={cn(
+          "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium",
+          "transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+          "disabled:pointer-events-none disabled:opacity-50",
+          variants[variant],
+          sizes[size],
+          className
+        )}
         ref={ref}
         {...props}
       />
@@ -179,151 +207,132 @@ const DSButton = React.forwardRef<HTMLButtonElement, DSButtonProps>(
 )
 DSButton.displayName = "DSButton"
 
-const DSInput = React.forwardRef<
-  HTMLInputElement,
-  React.InputHTMLAttributes<HTMLInputElement> & {
-    error?: boolean
-    helpText?: string
-  }
->(({ className, type, error, helpText, ...props }, ref) => {
-  return (
-    <div className="w-full">
-      <input
-        type={type}
-        className={cn(
-          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          error && "border-red-500 focus-visible:ring-red-500",
-          className
-        )}
-        ref={ref}
-        {...props}
-      />
-      {helpText && (
-        <p className={cn("text-sm mt-1", error ? "text-red-500" : "text-muted-foreground")}>
-          {helpText}
-        </p>
-      )}
-    </div>
-  )
-})
-DSInput.displayName = "DSInput"
-
-const DSTextarea = React.forwardRef<
-  HTMLTextAreaElement,
-  React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
-    error?: boolean
-    helpText?: string
-  }
->(({ className, error, helpText, ...props }, ref) => {
-  return (
-    <div className="w-full">
-      <textarea
-        className={cn(
-          "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          error && "border-red-500 focus-visible:ring-red-500",
-          className
-        )}
-        ref={ref}
-        {...props}
-      />
-      {helpText && (
-        <p className={cn("text-sm mt-1", error ? "text-red-500" : "text-muted-foreground")}>
-          {helpText}
-        </p>
-      )}
-    </div>
-  )
-})
-DSTextarea.displayName = "DSTextarea"
-
-const DSFormField = React.forwardRef<
+// Card Components
+export const DSCard = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & {
-    label?: string
-    required?: boolean
-  }
->(({ className, label, required, children, ...props }, ref) => (
-  <div ref={ref} className={cn("space-y-2", className)} {...props}>
-    {label && (
-      <label className="text-sm font-medium text-gray-700">
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </label>
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "bg-white rounded-lg shadow-sm border border-gray-200",
+      "transition-shadow duration-200 hover:shadow-md",
+      className
     )}
-    {children}
-  </div>
+    {...props}
+  />
 ))
-DSFormField.displayName = "DSFormField"
+DSCard.displayName = "DSCard"
 
-const DSStatusBadge = React.forwardRef<
+export const DSCardHeader = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { 
-    variant?: 'success' | 'warning' | 'danger' | 'info' | 'neutral'
-    size?: 'sm' | 'md' | 'lg'
-  }
->(({ className, variant = 'neutral', size = 'md', ...props }, ref) => {
-  let badgeColorClasses = 'bg-gray-100 text-gray-700';
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("p-6 border-b border-gray-200", className)}
+    {...props}
+  />
+))
+DSCardHeader.displayName = "DSCardHeader"
 
-  switch (variant) {
-    case 'success':
-      badgeColorClasses = 'bg-green-100 text-green-700';
-      break;
-    case 'warning':
-      badgeColorClasses = 'bg-yellow-100 text-yellow-700';
-      break;
-    case 'danger':
-      badgeColorClasses = 'bg-red-100 text-red-700';
-      break;
-    case 'info':
-      badgeColorClasses = 'bg-blue-100 text-blue-700';
-      break;
-    case 'neutral':
-      badgeColorClasses = 'bg-gray-100 text-gray-700';
-      break;
-  }
+export const DSCardTitle = React.forwardRef<
+  HTMLHeadingElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    className={cn(
+      "text-xl font-medium text-gray-700 leading-none tracking-tight",
+      className
+    )}
+    {...props}
+  />
+))
+DSCardTitle.displayName = "DSCardTitle"
 
-  const sizeClasses = {
-    sm: 'px-2 py-0.5 text-xs',
-    md: 'px-2.5 py-0.5 text-xs',
-    lg: 'px-3 py-1 text-sm'
-  }[size];
+export const DSCardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn(
+      "text-sm text-gray-600 leading-5",
+      className
+    )}
+    {...props}
+  />
+))
+DSCardDescription.displayName = "DSCardDescription"
 
-  return (
-    <div
-      ref={ref}
-      className={cn(
-        "inline-flex items-center rounded-full font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-        badgeColorClasses,
-        sizeClasses,
-        className
-      )}
-      {...props}
-    />
-  );
-});
-DSStatusBadge.displayName = "DSStatusBadge";
-
-const DSContentGrid = React.forwardRef<
+export const DSCardContent = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & {
-    cols?: number
-  }
->(({ className, cols = 1, ...props }, ref) => {
-  const gridColsClass = {
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("p-6", className)} {...props} />
+))
+DSCardContent.displayName = "DSCardContent"
+
+export const DSCardFooter = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("p-6 border-t border-gray-200 bg-gray-50", className)}
+    {...props}
+  />
+))
+DSCardFooter.displayName = "DSCardFooter"
+
+// Layout Components
+export const DSPageContainer = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { fullWidth?: boolean }
+>(({ className, fullWidth = false, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      fullWidth ? "w-full px-4 sm:px-6 lg:px-8" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+      className
+    )}
+    {...props}
+  />
+))
+DSPageContainer.displayName = "DSPageContainer"
+
+export const DSSection = React.forwardRef<
+  HTMLElement,
+  React.HTMLAttributes<HTMLElement>
+>(({ className, ...props }, ref) => (
+  <section
+    ref={ref}
+    className={cn("py-12 md:py-16 lg:py-20", className)}
+    {...props}
+  />
+))
+DSSection.displayName = "DSSection"
+
+export const DSContentGrid = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { cols?: 1 | 2 | 3 | 4 | 6 | 12 }
+>(({ className, cols = 12, ...props }, ref) => {
+  const gridCols = {
     1: "grid-cols-1",
-    2: "grid-cols-1 md:grid-cols-2",
-    3: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3", 
-    4: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
-    5: "grid-cols-1 md:grid-cols-3 lg:grid-cols-5",
-    6: "grid-cols-1 md:grid-cols-3 lg:grid-cols-6"
-  }[cols] || "grid-cols-1"
+    2: "grid-cols-1 md:grid-cols-2", 
+    3: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+    4: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
+    6: "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6",
+    12: "grid-cols-12"
+  };
 
   return (
     <div
       ref={ref}
       className={cn(
-        "grid gap-6",
-        gridColsClass,
+        "grid gap-6 lg:gap-8 items-stretch",
+        gridCols[cols],
         className
       )}
       {...props}
@@ -332,108 +341,105 @@ const DSContentGrid = React.forwardRef<
 })
 DSContentGrid.displayName = "DSContentGrid"
 
-const DSGridItem = React.forwardRef<
+export const DSGridItem = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & {
-    span?: number
-  }
->(({ className, span, ...props }, ref) => {
-  const spanClass = span ? {
-    1: "",
-    2: "col-span-2",
-    3: "col-span-3",
-    4: "col-span-4",
-    5: "col-span-5",
-    6: "col-span-6"
-  }[span] || "" : ""
+  React.HTMLAttributes<HTMLDivElement> & { span?: 1 | 2 | 3 | 4 | 6 | 12 }
+>(({ className, span = 1, ...props }, ref) => {
+  const spanCols = {
+    1: "col-span-1",
+    2: "col-span-1 md:col-span-2",
+    3: "col-span-1 md:col-span-2 lg:col-span-3", 
+    4: "col-span-1 md:col-span-2 lg:col-span-4",
+    6: "col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-6",
+    12: "col-span-full"
+  };
 
   return (
     <div
       ref={ref}
-      className={cn(
-        spanClass,
-        className
-      )}
+      className={cn(spanCols[span], className)}
       {...props}
     />
   )
 })
 DSGridItem.displayName = "DSGridItem"
 
-const DSSpacer = React.forwardRef<
+export const DSSpacer = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & {
-    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
-  }
+  React.HTMLAttributes<HTMLDivElement> & { size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' }
 >(({ className, size = 'md', ...props }, ref) => {
-  const sizeClass = {
-    'xs': "h-1",
-    'sm': "h-2", 
-    'md': "h-4",
-    'lg': "h-6",
-    'xl': "h-8",
-    '2xl': "h-12",
-    '3xl': "h-16"
-  }[size]
+  const spacerSizes = {
+    xs: "h-2",     // 8px
+    sm: "h-4",     // 16px  
+    md: "h-8",     // 32px
+    lg: "h-12",    // 48px
+    xl: "h-16",    // 64px
+    '2xl': "h-24", // 96px
+    '3xl': "h-32"  // 128px
+  };
 
   return (
     <div
       ref={ref}
-      className={cn(
-        sizeClass,
-        className
-      )}
+      className={cn(spacerSizes[size], className)}
       {...props}
     />
   )
 })
 DSSpacer.displayName = "DSSpacer"
 
-const DSFlexContainer = React.forwardRef<
+export const DSFlexContainer = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
-    justify?: 'start' | 'end' | 'center' | 'between' | 'around' | 'evenly'
-    align?: 'start' | 'end' | 'center' | 'baseline' | 'stretch'
-    gap?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
-    direction?: 'row' | 'col'
+    direction?: 'row' | 'col';
+    align?: 'start' | 'center' | 'end' | 'stretch';
+    justify?: 'start' | 'center' | 'end' | 'between' | 'around';
+    gap?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   }
->(({ className, justify, align, gap, direction = 'row', ...props }, ref) => {
-  const justifyClass = justify ? {
-    'start': "justify-start",
-    'end': "justify-end", 
-    'center': "justify-center",
-    'between': "justify-between",
-    'around': "justify-around",
-    'evenly': "justify-evenly"
-  }[justify] : ""
-
-  const alignClass = align ? {
-    'start': "items-start",
-    'end': "items-end",
-    'center': "items-center", 
-    'baseline': "items-baseline",
-    'stretch': "items-stretch"
-  }[align] : ""
-
-  const gapClass = gap ? {
-    'xs': "gap-1",
-    'sm': "gap-2",
-    'md': "gap-4", 
-    'lg': "gap-6",
-    'xl': "gap-8"
-  }[gap] : ""
-
-  const directionClass = direction === 'col' ? "flex-col" : "flex-row"
+>(({ 
+  className, 
+  direction = 'row', 
+  align = 'start', 
+  justify = 'start',
+  gap = 'md',
+  ...props 
+}, ref) => {
+  const flexClasses = {
+    direction: {
+      row: "flex-row",
+      col: "flex-col"
+    },
+    align: {
+      start: "items-start",
+      center: "items-center", 
+      end: "items-end",
+      stretch: "items-stretch"
+    },
+    justify: {
+      start: "justify-start",
+      center: "justify-center",
+      end: "justify-end", 
+      between: "justify-between",
+      around: "justify-around"
+    },
+    gap: {
+      xs: "gap-2",
+      sm: "gap-3", 
+      md: "gap-4",
+      lg: "gap-6",
+      xl: "gap-8"
+    }
+  };
 
   return (
     <div
       ref={ref}
       className={cn(
         "flex",
-        directionClass,
-        justifyClass,
-        alignClass,
-        gapClass,
+        flexClasses.direction[direction],
+        flexClasses.align[align],
+        flexClasses.justify[justify],
+        flexClasses.gap[gap],
         className
       )}
       {...props}
@@ -442,91 +448,136 @@ const DSFlexContainer = React.forwardRef<
 })
 DSFlexContainer.displayName = "DSFlexContainer"
 
-const DSPageTitle = React.forwardRef<
-  HTMLHeadingElement,
-  React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
-  <h1
+// Form Components
+export const DSInput = React.forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean; helpText?: string }
+>(({ className, type, error, helpText, ...props }, ref) => {
+  return (
+    <div className="space-y-1">
+      <input
+        type={type}
+        className={cn(
+          "flex h-10 sm:h-12 w-full rounded-md border px-3 py-2 text-base transition-colors",
+          "file:border-0 file:bg-transparent file:text-sm file:font-medium",
+          "placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          error
+            ? `${designSystem.colors.danger.border} ${designSystem.colors.danger.text} focus-visible:${designSystem.colors.danger.ring}`
+            : `border-gray-300 focus-visible:${designSystem.colors.primary.border} focus-visible:${designSystem.colors.primary.ring}`,
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+      {helpText && (
+        <DSHelpText className={error ? designSystem.colors.danger.text : ""}>
+          {helpText}
+        </DSHelpText>
+      )}
+    </div>
+  )
+})
+DSInput.displayName = "DSInput"
+
+export const DSLabel = React.forwardRef<
+  HTMLLabelElement,
+  React.LabelHTMLAttributes<HTMLLabelElement> & { required?: boolean }
+>(({ className, children, required, ...props }, ref) => (
+  <label
     ref={ref}
     className={cn(
-      "scroll-m-20 text-2xl font-semibold tracking-tight",
+      "text-sm font-medium text-gray-700 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
       className
     )}
     {...props}
-  />
+  >
+    {children}
+    {required && <span className={designSystem.colors.danger.text + " ml-1"}>*</span>}
+  </label>
 ))
-DSPageTitle.displayName = "DSPageTitle"
+DSLabel.displayName = "DSLabel"
 
-const DSSectionHeader = React.forwardRef<
-  HTMLHeadingElement,
-  React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
-  <h2
-    ref={ref}
-    className={cn(
-      "scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0",
-      className
-    )}
-    {...props}
-  />
-))
-DSSectionHeader.displayName = "DSSectionHeader"
+export const DSTextarea = React.forwardRef<
+  HTMLTextAreaElement,
+  React.TextareaHTMLAttributes<HTMLTextAreaElement> & { error?: boolean; helpText?: string }
+>(({ className, error, helpText, ...props }, ref) => {
+  return (
+    <div className="space-y-1">
+      <textarea
+        className={cn(
+          "flex min-h-[80px] w-full rounded-md border px-3 py-2 text-base transition-colors",
+          "placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          error
+            ? `${designSystem.colors.danger.border} ${designSystem.colors.danger.text} focus-visible:${designSystem.colors.danger.ring}`
+            : `border-gray-300 focus-visible:${designSystem.colors.primary.border} focus-visible:${designSystem.colors.primary.ring}`,
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+      {helpText && (
+        <DSHelpText className={error ? designSystem.colors.danger.text : ""}>
+          {helpText}
+        </DSHelpText>
+      )}
+    </div>
+  )
+})
+DSTextarea.displayName = "DSTextarea"
 
-// Add DSSubsectionHeader as an alias for DSSectionHeader
-const DSSubsectionHeader = DSSectionHeader;
+// Form Field Component
+export const DSFormField: React.FC<{
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+  className?: string;
+}> = ({ label, required, children, className }) => {
+  return (
+    <div className={cn("space-y-2", className)}>
+      <DSLabel required={required}>{label}</DSLabel>
+      {children}
+    </div>
+  );
+};
 
-const DSBodyText = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <p
-    ref={ref}
-    className={cn(
-      "text-lg text-muted-foreground",
-      className
-    )}
-    {...props}
-  />
-))
-DSBodyText.displayName = "DSBodyText"
-
-const DSHelpText = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <p
-    ref={ref}
-    className={cn(
-      "text-sm text-muted-foreground",
-      className
-    )}
-    {...props}
-  />
-))
-DSHelpText.displayName = "DSHelpText"
-
-export {
-  designSystem,
-  DSPageContainer,
-  DSSection,
-  DSCard,
-  DSCardHeader,
-  DSCardContent,
-  DSCardFooter,
-  DSCardTitle,
-  DSCardDescription,
-  DSButton,
-  DSInput,
-  DSTextarea,
-  DSFormField,
-  DSStatusBadge,
-  DSContentGrid,
-  DSGridItem,
-  DSSpacer,
-  DSFlexContainer,
-  DSPageTitle,
-  DSSectionHeader,
-  DSSubsectionHeader,
-  DSBodyText,
-  DSHelpText
+// Status Badge Component
+interface DSStatusBadgeProps {
+  variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+  size?: 'sm' | 'md' | 'lg';
+  children: React.ReactNode;
+  className?: string;
 }
+
+export const DSStatusBadge: React.FC<DSStatusBadgeProps> = ({
+  variant,
+  size = 'md',
+  children,
+  className
+}) => {
+  const variantStyles = {
+    success: `${designSystem.colors.success.light} ${designSystem.colors.success.text}`,
+    warning: `${designSystem.colors.warning.light} ${designSystem.colors.warning.text}`,
+    danger: `${designSystem.colors.danger.light} ${designSystem.colors.danger.text}`,
+    info: `${designSystem.colors.info.light} ${designSystem.colors.info.text}`,
+    neutral: `${designSystem.colors.neutral.light} ${designSystem.colors.neutral.text}`
+  };
+
+  const sizeStyles = {
+    sm: "px-2 py-1 text-xs",
+    md: "px-3 py-1 text-sm", 
+    lg: "px-4 py-2 text-base"
+  };
+
+  return (
+    <span className={cn(
+      "inline-flex items-center rounded-full font-medium",
+      variantStyles[variant],
+      sizeStyles[size],
+      className
+    )}>
+      {children}
+    </span>
+  );
+};
