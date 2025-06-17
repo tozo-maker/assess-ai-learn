@@ -1,8 +1,7 @@
-
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Upload, Grid, List, Users } from 'lucide-react';
+import { Plus, Upload, Grid, List, Users, Filter } from 'lucide-react';
 
 // Layout Components
 import AppLayout from '@/components/layout/AppLayout';
@@ -20,8 +19,7 @@ import {
   DSSpacer,
   DSPageTitle,
   DSBodyText,
-  DSContentGrid,
-  DSGridItem
+  DSHelpText
 } from '@/components/ui/design-system';
 
 // Enhanced Components
@@ -37,6 +35,7 @@ const Students: React.FC = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<StudentFilterValues>({
     search: '',
     gradeLevel: '',
@@ -54,7 +53,6 @@ const Students: React.FC = () => {
   const filteredStudents = useMemo(() => {
     let filtered = students;
 
-    // Search filter
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
       filtered = filtered.filter(student => 
@@ -65,12 +63,10 @@ const Students: React.FC = () => {
       );
     }
 
-    // Grade level filter
     if (filters.gradeLevel) {
       filtered = filtered.filter(student => student.grade_level === filters.gradeLevel);
     }
 
-    // Performance level filter
     if (filters.performanceLevel) {
       filtered = filtered.filter(student => {
         if (!student.performance || Array.isArray(student.performance)) {
@@ -80,7 +76,6 @@ const Students: React.FC = () => {
       });
     }
 
-    // Needs attention filter
     if (filters.needsAttention !== null) {
       filtered = filtered.filter(student => {
         if (!student.performance || Array.isArray(student.performance)) {
@@ -90,7 +85,6 @@ const Students: React.FC = () => {
       });
     }
 
-    // Parent contact filter
     if (filters.hasParentContact !== null) {
       filtered = filtered.filter(student => {
         const hasContact = !!(student.parent_email || student.parent_phone);
@@ -135,17 +129,14 @@ const Students: React.FC = () => {
 
   const handleBulkEmail = () => {
     console.log('Bulk email for students:', selectedStudents);
-    // TODO: Implement bulk email functionality
   };
 
   const handleBulkReport = () => {
     console.log('Bulk report for students:', selectedStudents);
-    // TODO: Implement bulk report functionality
   };
 
   const handleBulkDelete = () => {
     console.log('Bulk delete for students:', selectedStudents);
-    // TODO: Implement bulk delete functionality
   };
 
   const isAllSelected = selectedStudents.length === filteredStudents.length && filteredStudents.length > 0;
@@ -157,9 +148,11 @@ const Students: React.FC = () => {
         <DSSection>
           <DSPageContainer>
             <Breadcrumbs />
-            <div className="flex items-center justify-center py-16">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2563eb]"></div>
-              <span className="ml-3 text-gray-600">Loading students...</span>
+            <div className="flex items-center justify-center py-24">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#2563eb] mx-auto mb-4"></div>
+                <DSBodyText className="text-gray-600">Loading students...</DSBodyText>
+              </div>
             </div>
           </DSPageContainer>
         </DSSection>
@@ -169,26 +162,30 @@ const Students: React.FC = () => {
 
   return (
     <AppLayout>
-      <DSSection>
+      <DSSection className="py-8">
         <DSPageContainer>
           <Breadcrumbs />
           
-          {/* Page Header */}
-          <DSCard className="mb-8">
-            <DSCardHeader className="p-6">
-              <DSFlexContainer justify="between" align="center" className="flex-col md:flex-row gap-4">
-                <div>
-                  <DSPageTitle className="text-3xl font-bold text-gray-900 mb-2">
+          {/* Enhanced Page Header */}
+          <DSCard className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-l-blue-500">
+            <DSCardHeader className="p-8">
+              <DSFlexContainer justify="between" align="center" className="flex-col lg:flex-row gap-6">
+                <div className="text-center lg:text-left">
+                  <DSPageTitle className="text-4xl font-bold text-gray-900 mb-3">
                     Students
                   </DSPageTitle>
-                  <DSBodyText className="text-gray-600">
-                    Manage your students and track their learning progress
+                  <DSBodyText className="text-lg text-gray-600 max-w-2xl">
+                    Manage your students and track their learning progress with comprehensive insights and analytics
                   </DSBodyText>
+                  <DSHelpText className="mt-2 text-sm">
+                    {students.length} total students • {filteredStudents.length} currently shown
+                  </DSHelpText>
                 </div>
                 <DSFlexContainer gap="sm" className="flex-col sm:flex-row">
                   <DSButton 
                     variant="secondary" 
                     onClick={handleBulkImport}
+                    className="whitespace-nowrap"
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     Import Students
@@ -196,6 +193,7 @@ const Students: React.FC = () => {
                   <DSButton 
                     variant="primary"
                     onClick={handleAddStudent}
+                    className="whitespace-nowrap"
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Student
@@ -211,14 +209,30 @@ const Students: React.FC = () => {
           {/* Alert System */}
           <StudentsAlertSystem />
 
-          {/* Filters */}
+          {/* Enhanced Filters */}
           <DSCard className="mb-6">
             <DSCardContent className="p-6">
-              <StudentFilters
-                onFiltersChange={setFilters}
-                totalStudents={students.length}
-                filteredCount={filteredStudents.length}
-              />
+              <DSFlexContainer justify="between" align="center" className="mb-4">
+                <DSBodyText className="font-medium text-gray-700">
+                  Filter & Search Students
+                </DSBodyText>
+                <DSButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  {showFilters ? 'Hide Filters' : 'Show Filters'}
+                </DSButton>
+              </DSFlexContainer>
+              
+              {(showFilters || filters.search || filters.gradeLevel || filters.performanceLevel) && (
+                <StudentFilters
+                  onFiltersChange={setFilters}
+                  totalStudents={students.length}
+                  filteredCount={filteredStudents.length}
+                />
+              )}
             </DSCardContent>
           </DSCard>
 
@@ -235,11 +249,11 @@ const Students: React.FC = () => {
             </div>
           )}
 
-          {/* View Controls */}
+          {/* Enhanced View Controls */}
           <DSCard className="mb-6">
-            <DSCardContent className="p-4 bg-gray-50">
+            <DSCardContent className="p-4 bg-gradient-to-r from-gray-50 to-gray-100">
               <DSFlexContainer justify="between" align="center">
-                <div className="flex items-center gap-4">
+                <DSFlexContainer align="center" gap="md">
                   <input
                     type="checkbox"
                     checked={isAllSelected}
@@ -251,36 +265,41 @@ const Students: React.FC = () => {
                     onChange={(e) => handleSelectAll(e.target.checked)}
                     className="h-4 w-4 text-[#2563eb] border-gray-300 rounded focus:ring-[#2563eb]"
                   />
-                  <span className="text-sm font-medium text-gray-600">
-                    Select All ({filteredStudents.length} students)
-                  </span>
-                </div>
+                  <DSBodyText className="font-medium text-gray-700">
+                    Select All
+                  </DSBodyText>
+                  <DSHelpText className="hidden sm:block">
+                    ({filteredStudents.length} students)
+                  </DSHelpText>
+                </DSFlexContainer>
                 
-                {/* View Toggle */}
-                <DSFlexContainer gap="xs" className="border border-gray-300 rounded-md p-1 bg-white">
+                {/* Enhanced View Toggle */}
+                <DSFlexContainer gap="xs" className="border border-gray-300 rounded-lg p-1 bg-white shadow-sm">
                   <button
                     onClick={() => setViewMode('list')}
                     className={`
-                      p-2 rounded text-sm transition-colors duration-200
+                      p-2 rounded-md text-sm transition-all duration-200 flex items-center gap-2
                       ${viewMode === 'list'
-                        ? 'bg-[#2563eb] text-white'
+                        ? 'bg-[#2563eb] text-white shadow-sm'
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                       }
                     `}
                   >
                     <List className="h-4 w-4" />
+                    <span className="hidden sm:inline">List</span>
                   </button>
                   <button
                     onClick={() => setViewMode('grid')}
                     className={`
-                      p-2 rounded text-sm transition-colors duration-200
+                      p-2 rounded-md text-sm transition-all duration-200 flex items-center gap-2
                       ${viewMode === 'grid'
-                        ? 'bg-[#2563eb] text-white'
+                        ? 'bg-[#2563eb] text-white shadow-sm'
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                       }
                     `}
                   >
                     <Grid className="h-4 w-4" />
+                    <span className="hidden sm:inline">Grid</span>
                   </button>
                 </DSFlexContainer>
               </DSFlexContainer>
@@ -289,11 +308,11 @@ const Students: React.FC = () => {
 
           <DSSpacer size="lg" />
 
-          {/* Student List/Grid */}
+          {/* Enhanced Student List/Grid */}
           {filteredStudents.length > 0 ? (
             <div className={`
               ${viewMode === 'grid' 
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' 
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6' 
                 : 'space-y-4'
               }
             `}>
@@ -309,25 +328,25 @@ const Students: React.FC = () => {
               ))}
             </div>
           ) : (
-            <DSCard>
+            <DSCard className="border-2 border-dashed border-gray-300">
               <DSCardContent>
                 <div className="text-center py-16">
-                  <div className="mx-auto w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                    <Users className="h-8 w-8 text-blue-600" />
+                  <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center mb-6">
+                    <Users className="h-10 w-10 text-blue-600" />
                   </div>
-                  <DSPageTitle className="text-xl text-gray-900 mb-2">
+                  <DSPageTitle className="text-2xl text-gray-900 mb-3">
                     {students.length === 0 ? 'No students found' : 'No students match your filters'}
                   </DSPageTitle>
-                  <DSBodyText className="text-gray-600 mb-6">
+                  <DSBodyText className="text-gray-600 mb-8 max-w-md mx-auto">
                     {students.length === 0 
-                      ? 'Get started by adding your first student' 
-                      : 'Try adjusting your search terms or filters'
+                      ? 'Get started by adding your first student to begin tracking their learning journey' 
+                      : 'Try adjusting your search terms or filters to find the students you\'re looking for'
                     }
                   </DSBodyText>
                   {students.length === 0 && (
-                    <DSButton onClick={handleAddStudent}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Student
+                    <DSButton onClick={handleAddStudent} size="lg">
+                      <Plus className="mr-2 h-5 w-5" />
+                      Add Your First Student
                     </DSButton>
                   )}
                 </div>

@@ -24,6 +24,7 @@ interface MetricCardProps {
     isPositive: boolean;
   };
   status?: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+  sparklineData?: number[];
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({
@@ -32,47 +33,83 @@ const MetricCard: React.FC<MetricCardProps> = ({
   description,
   icon,
   trend,
-  status = 'neutral'
+  status = 'neutral',
+  sparklineData
 }) => {
+  const statusConfig = {
+    success: { bgColor: 'bg-green-50', iconBg: 'bg-green-100', iconColor: 'text-green-600', badge: 'success' as const },
+    warning: { bgColor: 'bg-amber-50', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', badge: 'warning' as const },
+    danger: { bgColor: 'bg-red-50', iconBg: 'bg-red-100', iconColor: 'text-red-600', badge: 'danger' as const },
+    info: { bgColor: 'bg-blue-50', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', badge: 'info' as const },
+    neutral: { bgColor: 'bg-gray-50', iconBg: 'bg-gray-100', iconColor: 'text-gray-600', badge: 'neutral' as const }
+  };
+
+  const config = statusConfig[status];
+
   return (
-    <DSCard className="relative overflow-hidden">
+    <DSCard className={`relative overflow-hidden border-l-4 ${
+      status === 'success' ? 'border-l-green-500' :
+      status === 'warning' ? 'border-l-amber-500' :
+      status === 'danger' ? 'border-l-red-500' :
+      status === 'info' ? 'border-l-blue-500' :
+      'border-l-gray-300'
+    } ${config.bgColor} transition-all duration-200 hover:shadow-md`}>
       <DSCardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
-          <div className="p-2 rounded-lg bg-gray-50">
-            <div className="text-gray-600">
+          <div className={`p-3 rounded-xl ${config.iconBg} shadow-sm`}>
+            <div className={`${config.iconColor}`}>
               {icon}
             </div>
           </div>
           {status !== 'neutral' && (
-            <DSStatusBadge variant={status} size="sm">
-              {status === 'warning' ? 'Attention' : status === 'danger' ? 'Critical' : 'Good'}
+            <DSStatusBadge variant={config.badge} size="sm">
+              {status === 'warning' ? 'Needs Attention' : 
+               status === 'danger' ? 'Critical' : 
+               status === 'success' ? 'Excellent' : 'Good'}
             </DSStatusBadge>
           )}
         </div>
         
-        <DSSubsectionHeader className="text-sm font-medium text-gray-600 mb-1">
+        <DSHelpText className="mb-2 font-medium tracking-wide uppercase text-xs">
           {title}
-        </DSSubsectionHeader>
+        </DSHelpText>
         
-        <div className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="text-3xl font-bold text-gray-900 mb-3 leading-none">
           {value}
         </div>
+
+        {/* Sparkline visualization */}
+        {sparklineData && sparklineData.length > 0 && (
+          <div className="mb-3 h-8 flex items-end space-x-1">
+            {sparklineData.map((point, index) => (
+              <div
+                key={index}
+                className={`flex-1 rounded-sm ${
+                  point > 75 ? 'bg-green-300' :
+                  point > 50 ? 'bg-blue-300' :
+                  point > 25 ? 'bg-amber-300' : 'bg-red-300'
+                }`}
+                style={{ height: `${Math.max(point, 10)}%` }}
+              />
+            ))}
+          </div>
+        )}
         
         {trend && (
-          <div className={`flex items-center gap-1 text-sm ${
+          <div className={`flex items-center gap-2 text-sm font-medium ${
             trend.isPositive ? 'text-green-600' : 'text-red-600'
           }`}>
             {trend.isPositive ? (
-              <TrendingUp className="h-3 w-3" />
+              <TrendingUp className="h-4 w-4" />
             ) : (
-              <TrendingDown className="h-3 w-3" />
+              <TrendingDown className="h-4 w-4" />
             )}
             <span>{trend.value}</span>
           </div>
         )}
         
-        {description && (
-          <DSHelpText className="mt-1">
+        {description && !trend && (
+          <DSHelpText className="mt-1 text-xs leading-relaxed">
             {description}
           </DSHelpText>
         )}
@@ -87,7 +124,7 @@ export const StudentsOverviewMetrics: React.FC = () => {
     queryFn: studentService.getStudents,
   });
 
-  // Calculate metrics
+  // Calculate enhanced metrics
   const totalStudents = students.length;
   
   const studentsWithPerformance = students.filter(student => 
@@ -113,6 +150,13 @@ export const StudentsOverviewMetrics: React.FC = () => {
     return total + (performance?.assessment_count || 0);
   }, 0);
 
+  // Generate sample sparkline data (in real app, this would come from API)
+  const generateSparklineData = (baseValue: number) => {
+    return Array.from({ length: 7 }, (_, i) => 
+      Math.max(10, baseValue + (Math.random() - 0.5) * 20)
+    );
+  };
+
   const getPerformanceStatus = () => {
     if (averageScore >= 85) return 'success';
     if (averageScore >= 70) return 'info';
@@ -127,57 +171,63 @@ export const StudentsOverviewMetrics: React.FC = () => {
   };
 
   return (
-    <DSContentGrid cols={4} className="mb-8">
-      <DSGridItem span={1}>
-        <MetricCard
-          title="Total Students"
-          value={totalStudents}
-          description="Active students in your class"
-          icon={<Users className="h-5 w-5" />}
-          trend={{
-            value: "2 new this month",
-            isPositive: true
-          }}
-        />
-      </DSGridItem>
-      
-      <DSGridItem span={1}>
-        <MetricCard
-          title="Class Average"
-          value={`${averageScore}%`}
-          description="Overall performance score"
-          icon={<TrendingUp className="h-5 w-5" />}
-          status={getPerformanceStatus()}
-          trend={{
-            value: "5% from last month",
-            isPositive: averageScore >= 75
-          }}
-        />
-      </DSGridItem>
-      
-      <DSGridItem span={1}>
-        <MetricCard
-          title="Need Attention"
-          value={studentsNeedingAttention}
-          description="Students requiring support"
-          icon={<AlertCircle className="h-5 w-5" />}
-          status={getAttentionStatus()}
-        />
-      </DSGridItem>
-      
-      <DSGridItem span={1}>
-        <MetricCard
-          title="Total Assessments"
-          value={recentAssessments}
-          description="Completed this semester"
-          icon={<BookOpen className="h-5 w-5" />}
-          trend={{
-            value: "12 this month",
-            isPositive: true
-          }}
-        />
-      </DSGridItem>
-    </DSContentGrid>
+    <div className="mb-8">
+      <DSContentGrid cols={4} className="gap-6">
+        <DSGridItem span={1}>
+          <MetricCard
+            title="Total Students"
+            value={totalStudents}
+            description="Active students in your class"
+            icon={<Users className="h-6 w-6" />}
+            trend={{
+              value: "2 new this month",
+              isPositive: true
+            }}
+            sparklineData={generateSparklineData(80)}
+          />
+        </DSGridItem>
+        
+        <DSGridItem span={1}>
+          <MetricCard
+            title="Class Average"
+            value={`${averageScore}%`}
+            description="Overall performance score"
+            icon={<TrendingUp className="h-6 w-6" />}
+            status={getPerformanceStatus()}
+            trend={{
+              value: "5% from last month",
+              isPositive: averageScore >= 75
+            }}
+            sparklineData={generateSparklineData(averageScore)}
+          />
+        </DSGridItem>
+        
+        <DSGridItem span={1}>
+          <MetricCard
+            title="Need Attention"
+            value={studentsNeedingAttention}
+            description="Students requiring support"
+            icon={<AlertCircle className="h-6 w-6" />}
+            status={getAttentionStatus()}
+            sparklineData={generateSparklineData(Math.max(10, 100 - studentsNeedingAttention * 10))}
+          />
+        </DSGridItem>
+        
+        <DSGridItem span={1}>
+          <MetricCard
+            title="Total Assessments"
+            value={recentAssessments}
+            description="Completed this semester"
+            icon={<BookOpen className="h-6 w-6" />}
+            trend={{
+              value: "12 this month",
+              isPositive: true
+            }}
+            sparklineData={generateSparklineData(70)}
+          />
+        </DSGridItem>
+      </DSContentGrid>
+    </div>
   );
 };
 
