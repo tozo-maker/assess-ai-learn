@@ -12,8 +12,7 @@ import {
   CheckCircle,
   AlertCircle,
   BookOpen,
-  Target,
-  MoreVertical
+  Target
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -69,9 +68,9 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
         status: 'Completed', 
         variant: 'outline' as const, 
         icon: CheckCircle,
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-50',
-        borderColor: 'border-blue-200'
+        color: 'text-gray-600',
+        bgColor: 'bg-gray-50',
+        borderColor: 'border-gray-200'
       };
     }
   };
@@ -102,104 +101,50 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
 
   return (
     <div className={`
-      group relative bg-white rounded-xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5
-      ${isSelected 
-        ? 'border-blue-500 shadow-lg shadow-blue-100/50 ring-2 ring-blue-500/20' 
-        : 'border-gray-200 hover:border-gray-300'
-      }
+      group relative bg-white rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:shadow-blue-100/50
+      ${isSelected ? 'border-blue-500 shadow-md shadow-blue-100/50' : 'border-gray-100 hover:border-blue-200'}
+      ${statusConfig.bgColor} hover:bg-white
     `}>
-      {/* Selection Checkbox */}
-      <div className="absolute top-4 left-4 z-10">
-        <Checkbox
-          checked={isSelected}
-          onCheckedChange={onSelect}
-          className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-        />
-      </div>
-
-      {/* Status Badge */}
-      <div className="absolute top-4 right-4 z-10">
-        <Badge variant={statusConfig.variant} className="gap-1">
-          <StatusIcon className="h-3 w-3" />
-          {statusConfig.status}
-        </Badge>
-      </div>
+      {/* Selection Overlay */}
+      {isSelected && (
+        <div className="absolute inset-0 bg-blue-50/30 rounded-xl pointer-events-none" />
+      )}
       
-      {/* Card Content */}
-      <div className="p-6 pt-16">
-        {/* Subject Icon & Info */}
-        <div className="flex items-start gap-4 mb-4">
-          <div className={`
-            p-3 rounded-xl border transition-colors
-            ${statusConfig.bgColor} ${statusConfig.borderColor}
-          `}>
-            <SubjectIcon className={`h-6 w-6 ${statusConfig.color}`} />
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-700 transition-colors">
-              {assessment.title}
-            </h3>
+      {/* Card Header */}
+      <div className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start gap-3 flex-1">
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={onSelect}
+              className="mt-1 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+            />
             
-            <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
-              <span className="font-medium px-2 py-1 bg-gray-100 rounded-md">
-                {assessment.subject}
-              </span>
-              <span className="px-2 py-1 bg-gray-100 rounded-md">
-                Grade {assessment.grade_level}
-              </span>
-              <span className="capitalize px-2 py-1 bg-gray-100 rounded-md">
-                {assessment.assessment_type}
-              </span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`p-2 rounded-lg ${statusConfig.bgColor} ${statusConfig.borderColor} border`}>
+                  <SubjectIcon className={`h-4 w-4 ${statusConfig.color}`} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <StatusIcon className={`h-4 w-4 ${statusConfig.color}`} />
+                  <Badge variant={statusConfig.variant} className="text-xs font-medium">
+                    {statusConfig.status}
+                  </Badge>
+                </div>
+              </div>
+              
+              <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-blue-700 transition-colors">
+                {assessment.title}
+              </h3>
+              
+              <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                <span className="font-medium">{assessment.subject}</span>
+                <span>•</span>
+                <span>Grade {assessment.grade_level}</span>
+                <span>•</span>
+                <span className="capitalize">{assessment.assessment_type}</span>
+              </div>
             </div>
-          </div>
-        </div>
-
-        {/* Assessment Details */}
-        <div className="space-y-3 mb-4">
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2 text-gray-600">
-              <Calendar className="h-4 w-4" />
-              <span>{formatDate(assessment.assessment_date)}</span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-600">
-              <Target className="h-4 w-4" />
-              <span>{assessment.max_score} points</span>
-            </div>
-          </div>
-
-          {assessment.description && (
-            <p className="text-sm text-gray-700 line-clamp-2 leading-relaxed">
-              {assessment.description}
-            </p>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              asChild 
-              className="h-8 text-xs hover:bg-blue-50 hover:border-blue-200"
-            >
-              <Link to={`/app/assessments/${assessment.id}`}>
-                <FileText className="mr-1.5 h-3 w-3" />
-                View
-              </Link>
-            </Button>
-            
-            <Button 
-              size="sm" 
-              asChild 
-              className="h-8 text-xs bg-blue-600 hover:bg-blue-700"
-            >
-              <Link to={`/app/assessments/${assessment.id}/responses`}>
-                <Users className="mr-1.5 h-3 w-3" />
-                Add Data
-              </Link>
-            </Button>
           </div>
           
           <DropdownMenu>
@@ -207,9 +152,11 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-gray-100"
               >
-                <MoreVertical className="h-4 w-4" />
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                </svg>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -225,14 +172,12 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
                   Add Responses
                 </Link>
               </DropdownMenuItem>
-              {!assessment.is_draft && (
-                <DropdownMenuItem asChild>
-                  <Link to={`/app/assessments/${assessment.id}/analysis`} className="flex items-center">
-                    <BarChart3 className="mr-2 h-4 w-4" />
-                    View Analysis
-                  </Link>
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem asChild>
+                <Link to={`/app/assessments/${assessment.id}/analysis`} className="flex items-center">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  View Analysis
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onEdit} className="flex items-center">
                 <Pencil className="mr-2 h-4 w-4" />
@@ -244,6 +189,55 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+
+        {/* Assessment Info */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-1.5 text-gray-600">
+              <Calendar className="h-4 w-4" />
+              <span>{formatDate(assessment.assessment_date)}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-gray-600">
+              <Target className="h-4 w-4" />
+              <span>Max: {assessment.max_score} pts</span>
+            </div>
+          </div>
+
+          {assessment.description && (
+            <p className="text-sm text-gray-700 line-clamp-2 leading-relaxed">
+              {assessment.description}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Card Footer */}
+      <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 rounded-b-xl">
+        <div className="flex items-center justify-between">
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" asChild className="h-8 text-xs hover:bg-blue-50 hover:border-blue-200">
+              <Link to={`/app/assessments/${assessment.id}`}>
+                <FileText className="mr-1.5 h-3 w-3" />
+                Details
+              </Link>
+            </Button>
+            <Button size="sm" asChild className="h-8 text-xs bg-blue-600 hover:bg-blue-700">
+              <Link to={`/app/assessments/${assessment.id}/responses`}>
+                <Users className="mr-1.5 h-3 w-3" />
+                Add Data
+              </Link>
+            </Button>
+          </div>
+          
+          {!assessment.is_draft && (
+            <Button variant="ghost" size="sm" asChild className="h-8 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+              <Link to={`/app/assessments/${assessment.id}/analysis`}>
+                <BarChart3 className="mr-1.5 h-3 w-3" />
+                Analysis
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
     </div>

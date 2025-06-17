@@ -1,17 +1,16 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Users, BarChart3, Copy, Archive } from 'lucide-react';
 
 import { useToast } from '@/hooks/use-toast';
 import { assessmentService } from '@/services/assessment-service';
 import { Assessment } from '@/types/assessment';
 
 import EnhancedAssessmentCard from './EnhancedAssessmentCard';
-import UnifiedAssessmentFilterBar from './UnifiedAssessmentFilterBar';
-import StandardBulkActionBar from '@/components/common/StandardBulkActionBar';
+import EnhancedAssessmentFilters from './EnhancedAssessmentFilters';
+import BulkActionBar from './BulkActionBar';
 import EnhancedEmptyState from './EnhancedEmptyState';
-import AssessmentListSkeleton from './AssessmentListSkeleton';
 
 interface FilterValues {
   search: string;
@@ -138,65 +137,53 @@ const AssessmentList: React.FC = () => {
     });
   };
 
-  // Custom bulk actions
-  const bulkActions = [
-    {
-      label: 'Add Responses',
-      icon: Users,
-      onClick: () => {
-        // Navigate to bulk response entry
-        console.log('Bulk add responses for:', Array.from(selectedAssessments));
-      },
-      hoverColor: 'hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700'
-    },
-    {
-      label: 'View Analytics',
-      icon: BarChart3,
-      onClick: () => {
-        // Navigate to bulk analytics
-        console.log('Bulk analytics for:', Array.from(selectedAssessments));
-      },
-      hoverColor: 'hover:bg-green-50 hover:border-green-200 hover:text-green-700'
-    },
-    {
-      label: 'Duplicate',
-      icon: Copy,
-      onClick: () => {
-        // Duplicate selected assessments
-        console.log('Duplicate assessments:', Array.from(selectedAssessments));
-      },
-      hoverColor: 'hover:bg-purple-50 hover:border-purple-200 hover:text-purple-700'
-    },
-    {
-      label: 'Archive',
-      icon: Archive,
-      onClick: () => {
-        // Archive selected assessments
-        console.log('Archive assessments:', Array.from(selectedAssessments));
-      },
-      hoverColor: 'hover:bg-gray-50 hover:border-gray-300'
-    }
-  ];
-
   if (isLoading) {
-    return <AssessmentListSkeleton />;
+    return (
+      <div className="space-y-6">
+        {/* Filter Skeleton */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <div className="animate-pulse">
+            <div className="h-11 bg-gray-200 rounded-lg w-full max-w-md mb-4"></div>
+            <div className="h-6 bg-gray-200 rounded w-48"></div>
+          </div>
+        </div>
+        
+        {/* Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-white border border-gray-200 rounded-xl p-6">
+              <div className="animate-pulse">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-5 w-5 bg-gray-200 rounded"></div>
+                  <div className="h-6 bg-gray-200 rounded w-24"></div>
+                </div>
+                <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (error) {
     return (
       <div className="bg-white border border-red-200 rounded-xl p-8 text-center">
-        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="text-red-600 mb-4">
+          <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Unable to load assessments</h3>
-        <p className="text-gray-600 mb-4">There was a problem loading your assessments. Please try again.</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Assessments</h3>
+        <p className="text-gray-600 mb-4">There was a problem loading your assessments.</p>
         <button 
           onClick={() => refetch()} 
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Retry
+          Try Again
         </button>
       </div>
     );
@@ -204,8 +191,8 @@ const AssessmentList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Unified Filter Bar */}
-      <UnifiedAssessmentFilterBar
+      {/* Enhanced Filters */}
+      <EnhancedAssessmentFilters
         filters={filters}
         onFiltersChange={setFilters}
         totalCount={assessments?.length || 0}
@@ -233,14 +220,12 @@ const AssessmentList: React.FC = () => {
         </div>
       )}
 
-      {/* Standardized Bulk Action Bar */}
-      <StandardBulkActionBar
+      {/* Bulk Action Bar */}
+      <BulkActionBar
         selectedCount={selectedAssessments.size}
-        entityName="assessment"
         onClearSelection={handleClearSelection}
-        onDelete={handleBulkDelete}
+        onBulkDelete={handleBulkDelete}
         isDeleting={isDeleting}
-        customActions={bulkActions}
       />
     </div>
   );
