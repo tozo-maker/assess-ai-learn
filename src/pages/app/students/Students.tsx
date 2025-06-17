@@ -309,11 +309,11 @@ const Students: React.FC = () => {
 
           <DSSpacer size="lg" />
 
-          {/* Enhanced Student Grid/List with better responsive layout */}
+          {/* Enhanced Student Grid/List with 3-column grid layout */}
           {filteredStudents.length > 0 ? (
             <div className={`
               ${viewMode === 'grid' 
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8' 
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8' 
                 : 'space-y-6'
               }
             `}>
