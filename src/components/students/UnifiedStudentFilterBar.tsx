@@ -99,9 +99,9 @@ const UnifiedStudentFilterBar: React.FC<UnifiedStudentFilterBarProps> = ({
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
       {/* Main Filter Bar */}
       <div className="p-4 space-y-4">
-        {/* Top Row: Search, Quick Filters, View Controls */}
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
-          {/* Search */}
+        {/* Top Row: Search on left, Controls on right */}
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+          {/* Search - Left Side */}
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
@@ -112,7 +112,7 @@ const UnifiedStudentFilterBar: React.FC<UnifiedStudentFilterBarProps> = ({
             />
           </div>
 
-          {/* Quick Actions */}
+          {/* Controls - Right Side */}
           <div className="flex items-center gap-3">
             {/* Advanced Filters Toggle */}
             <Collapsible open={isFiltersExpanded} onOpenChange={setIsFiltersExpanded}>
