@@ -56,18 +56,27 @@ const OptimizedDashboardLayout: React.FC<OptimizedDashboardLayoutProps> = ({
 
         <DSSpacer size="2xl" />
 
-        {/* Main Content - Activity & Insights */}
+        {/* Main Content - Activity, Additional Tools & Insights */}
         <div>
           <DSSectionHeader className="mb-6">Recent Activity & AI Insights</DSSectionHeader>
-          {activityAndInsights}
-        </div>
-
-        <DSSpacer size="2xl" />
-
-        {/* Additional Tools */}
-        <div>
-          <DSSectionHeader className="mb-6">Additional Tools</DSSectionHeader>
-          {additionalTools}
+          <DSContentGrid cols={3}>
+            <DSGridItem span={1}>
+              {/* Recent Activity Feed goes here */}
+              {React.cloneElement(activityAndInsights as React.ReactElement, { 
+                renderActivityOnly: true 
+              })}
+            </DSGridItem>
+            <DSGridItem span={1}>
+              {/* Additional Tools moved here */}
+              {additionalTools}
+            </DSGridItem>
+            <DSGridItem span={1}>
+              {/* AI Insights goes here */}
+              {React.cloneElement(activityAndInsights as React.ReactElement, { 
+                renderInsightsOnly: true 
+              })}
+            </DSGridItem>
+          </DSContentGrid>
         </div>
 
         <DSSpacer size="3xl" />

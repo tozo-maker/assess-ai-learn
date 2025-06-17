@@ -1,4 +1,3 @@
-
 import React from 'react';
 import EnhancedWelcomeSection from './EnhancedWelcomeSection';
 import EnhancedAlertCard from './EnhancedAlertCard';
@@ -35,6 +34,78 @@ interface DashboardContentRefinedProps {
     };
   };
 }
+
+// Component to handle the new layout structure
+const ActivityAndInsightsWrapper: React.FC<{
+  renderActivityOnly?: boolean;
+  renderInsightsOnly?: boolean;
+  recentAssessments: number;
+  totalStudents: number;
+  studentsNeedingAttention: number;
+  students: any[];
+}> = ({ 
+  renderActivityOnly, 
+  renderInsightsOnly, 
+  recentAssessments, 
+  totalStudents, 
+  studentsNeedingAttention,
+  students 
+}) => {
+  if (renderActivityOnly) {
+    return (
+      <LazyContainer>
+        <LazyWrapper>
+          <LazyActivityFeedEnhanced 
+            recentAssessments={recentAssessments}
+            totalStudents={totalStudents}
+            studentsNeedingAttention={studentsNeedingAttention}
+          />
+        </LazyWrapper>
+      </LazyContainer>
+    );
+  }
+  
+  if (renderInsightsOnly) {
+    return (
+      <LazyContainer>
+        <LazyWrapper>
+          <LazyRecentInsightsEnhanced 
+            students={students}
+            communications={[]}
+          />
+        </LazyWrapper>
+      </LazyContainer>
+    );
+  }
+
+  // Fallback for backward compatibility
+  return (
+    <DSContentGrid cols={3}>
+      <DSGridItem span={2}>
+        <LazyContainer>
+          <LazyWrapper>
+            <LazyActivityFeedEnhanced 
+              recentAssessments={recentAssessments}
+              totalStudents={totalStudents}
+              studentsNeedingAttention={studentsNeedingAttention}
+            />
+          </LazyWrapper>
+        </LazyContainer>
+      </DSGridItem>
+      
+      <DSGridItem span={1}>
+        <LazyContainer>
+          <LazyWrapper>
+            <LazyRecentInsightsEnhanced 
+              students={students}
+              communications={[]}
+            />
+          </LazyWrapper>
+        </LazyContainer>
+      </DSGridItem>
+    </DSContentGrid>
+  );
+};
 
 const DashboardContentRefined: React.FC<DashboardContentRefinedProps> = ({ data }) => {
   const { students, assessments, metrics, teacher } = data;
@@ -192,30 +263,12 @@ const DashboardContentRefined: React.FC<DashboardContentRefinedProps> = ({ data 
   );
 
   const activityAndInsights = (
-    <DSContentGrid cols={3}>
-      <DSGridItem span={2}>
-        <LazyContainer>
-          <LazyWrapper>
-            <LazyActivityFeedEnhanced 
-              recentAssessments={metrics.recentAssessments}
-              totalStudents={metrics.totalStudents}
-              studentsNeedingAttention={metrics.studentsNeedingAttention}
-            />
-          </LazyWrapper>
-        </LazyContainer>
-      </DSGridItem>
-      
-      <DSGridItem span={1}>
-        <LazyContainer>
-          <LazyWrapper>
-            <LazyRecentInsightsEnhanced 
-              students={students}
-              communications={[]}
-            />
-          </LazyWrapper>
-        </LazyContainer>
-      </DSGridItem>
-    </DSContentGrid>
+    <ActivityAndInsightsWrapper
+      recentAssessments={metrics.recentAssessments}
+      totalStudents={metrics.totalStudents}
+      studentsNeedingAttention={metrics.studentsNeedingAttention}
+      students={students}
+    />
   );
 
   const additionalTools = (
