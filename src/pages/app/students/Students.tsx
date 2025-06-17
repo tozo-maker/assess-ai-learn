@@ -172,17 +172,15 @@ const Students: React.FC = () => {
           {/* Alert System */}
           <StudentsAlertSystem />
 
-          {/* Filters */}
+          {/* Filters - Always visible */}
           <DSCard className="mb-6">
             <DSCardContent className="p-6">
-              {(showFilters || filters.search || filters.gradeLevel || filters.performanceLevel) && (
-                <StudentFilters
-                  values={filters}
-                  onFiltersChange={setFilters}
-                  totalStudents={students.length}
-                  filteredCount={filteredStudents.length}
-                />
-              )}
+              <StudentFilters
+                values={filters}
+                onFiltersChange={setFilters}
+                totalStudents={students.length}
+                filteredCount={filteredStudents.length}
+              />
             </DSCardContent>
           </DSCard>
 
