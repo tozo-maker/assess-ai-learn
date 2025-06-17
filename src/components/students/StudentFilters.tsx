@@ -1,17 +1,12 @@
 
 import React, { useState } from 'react';
-import StudentSearchInput from './filters/StudentSearchInput';
-import FilterToggleButton from './filters/FilterToggleButton';
-import ClearFiltersButton from './filters/ClearFiltersButton';
-import FilterResultsCount from './filters/FilterResultsCount';
-import ExpandedFiltersGrid from './filters/ExpandedFiltersGrid';
-import ActiveFilterChips from './filters/ActiveFilterChips';
+import { Filter } from 'lucide-react';
+import UnifiedFilterSection from '@/components/common/filters/UnifiedFilterSection';
+import { getEmptyFilters } from '@/components/common/filters/UnifiedFilterTypes';
+import { gradeLevelOptions, performanceLevelOptions } from '@/types/student';
 import {
   StudentFilterValues,
-  StudentFiltersProps,
-  getEmptyFilters,
-  hasActiveFilters,
-  getActiveFilterCount
+  StudentFiltersProps
 } from './filters/StudentFilterTypes';
 
 const StudentFilters: React.FC<StudentFiltersProps> = ({
@@ -19,70 +14,73 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
   totalStudents,
   filteredCount
 }) => {
-  const [filters, setFilters] = useState<StudentFilterValues>(getEmptyFilters());
-  const [isExpanded, setIsExpanded] = useState(false);
+  const filterConfigs = [
+    {
+      key: 'search',
+      label: 'Search',
+      type: 'search' as const,
+      placeholder: 'Search students by name, ID, or grade...'
+    },
+    {
+      key: 'gradeLevel',
+      label: 'Grade Level',
+      type: 'select' as const,
+      options: gradeLevelOptions.map(grade => ({
+        label: `Grade ${grade}`,
+        value: grade
+      }))
+    },
+    {
+      key: 'performanceLevel',
+      label: 'Performance Level',
+      type: 'select' as const,
+      options: performanceLevelOptions.map(level => ({
+        label: level,
+        value: level
+      }))
+    },
+    {
+      key: 'needsAttention',
+      label: 'Needs Attention',
+      type: 'boolean' as const
+    },
+    {
+      key: 'hasParentContact',
+      label: 'Has Parent Contact',
+      type: 'boolean' as const
+    }
+  ];
 
-  const updateFilter = (key: keyof StudentFilterValues, value: any) => {
-    // Convert "all" back to empty string for internal logic
-    const processedValue = value === "all" ? "" : value;
-    const newFilters = { ...filters, [key]: processedValue };
+  const [filters, setFilters] = useState<StudentFilterValues>(() => 
+    getEmptyFilters(filterConfigs) as StudentFilterValues
+  );
+
+  const handleFiltersChange = (newFilters: StudentFilterValues) => {
     setFilters(newFilters);
     onFiltersChange(newFilters);
   };
 
-  const clearFilters = () => {
-    const emptyFilters = getEmptyFilters();
+  const handleClearFilters = () => {
+    const emptyFilters = getEmptyFilters(filterConfigs) as StudentFilterValues;
     setFilters(emptyFilters);
     onFiltersChange(emptyFilters);
   };
 
-  const activeFilters = hasActiveFilters(filters);
-  const activeFilterCount = getActiveFilterCount(filters);
-
   return (
-    <div className="space-y-4">
-      {/* Quick Search */}
-      <StudentSearchInput
-        value={filters.search}
-        onChange={(value) => updateFilter('search', value)}
-      />
-
-      {/* Filter Toggle */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <FilterToggleButton
-            isExpanded={isExpanded}
-            onToggle={() => setIsExpanded(!isExpanded)}
-            activeFilterCount={activeFilterCount}
-          />
-          
-          <ClearFiltersButton
-            onClear={clearFilters}
-            hasActiveFilters={activeFilters}
-          />
-        </div>
-
-        <FilterResultsCount
-          filteredCount={filteredCount}
-          totalStudents={totalStudents}
-        />
-      </div>
-
-      {/* Expanded Filters */}
-      {isExpanded && (
-        <ExpandedFiltersGrid
-          filters={filters}
-          onFilterUpdate={updateFilter}
-        />
-      )}
-
-      {/* Active Filter Chips */}
-      <ActiveFilterChips
-        filters={filters}
-        onFilterUpdate={updateFilter}
-        hasActiveFilters={activeFilters}
-      />
-    </div>
+    <UnifiedFilterSection
+      title="Filters"
+      icon={<Filter className="h-4 w-4" />}
+      filterConfigs={filterConfigs}
+      values={filters}
+      onFiltersChange={handleFiltersChange}
+      onClearFilters={handleClearFilters}
+      layout="inline"
+      showResultsCount={true}
+      totalCount={totalStudents}
+      filteredCount={filteredCount}
+      collapsible={true}
+      defaultExpanded={false}
+    />
   );
 };
 

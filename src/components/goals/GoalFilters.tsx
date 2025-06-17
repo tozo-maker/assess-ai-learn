@@ -1,17 +1,10 @@
-
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Filter } from 'lucide-react';
+import UnifiedFilterSection from '@/components/common/filters/UnifiedFilterSection';
 import GoalCategories from './GoalCategories';
-import GoalSearchInput from './filters/GoalSearchInput';
-import GoalStatusFilter from './filters/GoalStatusFilter';
-import GoalPriorityFilter from './filters/GoalPriorityFilter';
-import GoalSortSelect from './filters/GoalSortSelect';
-import GoalClearFiltersButton from './filters/GoalClearFiltersButton';
 import {
   GoalFilters,
-  GoalFiltersProps,
-  hasActiveGoalFilters
+  GoalFiltersProps
 } from './filters/GoalFilterTypes';
 
 const GoalFiltersComponent: React.FC<GoalFiltersProps> = ({ 
@@ -19,54 +12,72 @@ const GoalFiltersComponent: React.FC<GoalFiltersProps> = ({
   onFiltersChange, 
   onClearFilters 
 }) => {
+  const filterConfigs = [
+    {
+      key: 'search',
+      label: 'Search',
+      type: 'search' as const,
+      placeholder: 'Search goals...'
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select' as const,
+      options: [
+        { label: 'Active', value: 'active' },
+        { label: 'Completed', value: 'completed' },
+        { label: 'Paused', value: 'paused' }
+      ]
+    },
+    {
+      key: 'priority',
+      label: 'Priority',
+      type: 'select' as const,
+      options: [
+        { label: 'High Priority', value: 'High' },
+        { label: 'Medium Priority', value: 'Medium' },
+        { label: 'Low Priority', value: 'Low' }
+      ]
+    },
+    {
+      key: 'sortBy',
+      label: 'Sort By',
+      type: 'select' as const,
+      options: [
+        { label: 'Date Created', value: 'created_at' },
+        { label: 'Target Date', value: 'target_date' },
+        { label: 'Progress', value: 'progress' },
+        { label: 'Priority', value: 'priority' },
+        { label: 'Title', value: 'title' }
+      ]
+    }
+  ];
+
   const updateFilter = (key: keyof GoalFilters, value: any) => {
     onFiltersChange({ ...filters, [key]: value });
   };
 
-  const activeFilters = hasActiveGoalFilters(filters);
-
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters
-          </CardTitle>
-          <GoalClearFiltersButton 
-            hasActiveFilters={activeFilters}
-            onClearFilters={onClearFilters}
-          />
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <GoalSearchInput
-          value={filters.search}
-          onChange={(value) => updateFilter('search', value)}
-        />
-
-        <GoalStatusFilter
-          value={filters.status}
-          onChange={(value) => updateFilter('status', value)}
-        />
-
-        <GoalPriorityFilter
-          value={filters.priority}
-          onChange={(value) => updateFilter('priority', value)}
-        />
-
+    <div className="space-y-4">
+      <UnifiedFilterSection
+        title="Filters"
+        icon={<Filter className="h-5 w-5" />}
+        filterConfigs={filterConfigs}
+        values={filters}
+        onFiltersChange={onFiltersChange}
+        onClearFilters={onClearFilters}
+        layout="card"
+      />
+      
+      {/* Keep the specialized GoalCategories component for now */}
+      <div className="mt-4">
         <GoalCategories
           selectedCategories={filters.categories}
           onCategoryChange={(categories) => updateFilter('categories', categories)}
           mode="filter"
         />
-
-        <GoalSortSelect
-          value={filters.sortBy}
-          onChange={(value) => updateFilter('sortBy', value)}
-        />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
