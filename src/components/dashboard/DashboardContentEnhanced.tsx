@@ -6,10 +6,10 @@ import EnhancedMetricCard from './EnhancedMetricCard';
 import {
   LazyWrapper,
   LazyContainer,
-  LazyActivityFeed,
-  LazyRecentInsights,
-  LazySecondaryWidgets
-} from '@/components/common/LazyComponents';
+  LazyActivityFeedEnhanced,
+  LazyRecentInsightsEnhanced,
+  LazySecondaryWidgetsEnhanced
+} from '@/components/common/LazyComponentsEnhanced';
 import {
   DSSection,
   DSPageContainer,
@@ -173,7 +173,7 @@ const DashboardContentEnhanced: React.FC<DashboardContentEnhancedProps> = ({ dat
             <DSGridItem span={2}>
               <LazyContainer>
                 <LazyWrapper>
-                  <LazyActivityFeed 
+                  <LazyActivityFeedEnhanced 
                     recentAssessments={metrics.recentAssessments}
                     totalStudents={metrics.totalStudents}
                     studentsNeedingAttention={metrics.studentsNeedingAttention}
@@ -185,7 +185,7 @@ const DashboardContentEnhanced: React.FC<DashboardContentEnhancedProps> = ({ dat
             <DSGridItem span={1}>
               <LazyContainer>
                 <LazyWrapper>
-                  <LazyRecentInsights 
+                  <LazyRecentInsightsEnhanced 
                     students={students}
                     communications={[]}
                   />
@@ -202,7 +202,7 @@ const DashboardContentEnhanced: React.FC<DashboardContentEnhancedProps> = ({ dat
           <DSSectionHeader className="mb-6">Additional Tools</DSSectionHeader>
           <LazyContainer>
             <LazyWrapper>
-              <LazySecondaryWidgets 
+              <LazySecondaryWidgetsEnhanced 
                 assessments={assessments}
                 students={students}
                 metrics={{
