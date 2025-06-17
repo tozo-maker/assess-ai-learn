@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -31,7 +30,7 @@ import { StudentWithPerformance } from '@/types/student';
 
 const Students: React.FC = () => {
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [filters, setFilters] = useState<StudentFilterValues>({
     search: '',
