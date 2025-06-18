@@ -14,8 +14,7 @@ import {
   Target,
   MoreVertical
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { DSCard, DSCardContent, DSButton, DSStatusBadge, DSFlexContainer } from '@/components/ui/design-system';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
@@ -48,21 +47,21 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
     if (isDraft) {
       return { 
         status: 'Draft', 
-        variant: 'secondary' as const, 
+        variant: 'warning' as const, 
         icon: Clock,
         className: 'bg-amber-50 text-amber-700 border-amber-200'
       };
     } else if (isActive) {
       return { 
         status: 'Active', 
-        variant: 'default' as const, 
+        variant: 'success' as const, 
         icon: CheckCircle,
         className: 'bg-green-50 text-green-700 border-green-200'
       };
     } else {
       return { 
         status: 'Completed', 
-        variant: 'outline' as const, 
+        variant: 'info' as const, 
         icon: CheckCircle,
         className: 'bg-blue-50 text-blue-700 border-blue-200'
       };
@@ -94,17 +93,16 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
   };
 
   return (
-    <div className={`
-      group relative bg-white rounded-xl border-2 transition-all duration-300 
+    <DSCard className={`
+      group relative transition-all duration-300 hover:shadow-lg
       ${isSelected 
         ? 'border-blue-500 shadow-lg shadow-blue-100/50 bg-gradient-to-br from-blue-50/50 to-indigo-50/50' 
-        : 'border-gray-200 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-100/30'
+        : 'border-blue-100 hover:border-blue-300 hover:shadow-blue-100/30'
       }
     `}>
-      {/* Card Header */}
-      <div className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-start gap-3 flex-1">
+      <DSCardContent className="p-6">
+        <DSFlexContainer direction="row" justify="between" align="start" className="mb-4">
+          <DSFlexContainer direction="row" align="start" gap="sm" className="flex-1 min-w-0">
             <Checkbox
               checked={isSelected}
               onCheckedChange={onSelect}
@@ -112,41 +110,41 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
             />
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-3">
+              <DSFlexContainer direction="row" align="center" gap="sm" className="mb-3">
                 <div className="p-2 rounded-lg bg-blue-50 border border-blue-200">
                   <SubjectIcon className="h-4 w-4 text-blue-600" />
                 </div>
-                <div className="flex items-center gap-2">
+                <DSFlexContainer direction="row" align="center" gap="sm">
                   <StatusIcon className="h-4 w-4 text-gray-500" />
-                  <Badge className={statusConfig.className}>
+                  <DSStatusBadge variant={statusConfig.variant} size="sm">
                     {statusConfig.status}
-                  </Badge>
-                </div>
-              </div>
+                  </DSStatusBadge>
+                </DSFlexContainer>
+              </DSFlexContainer>
               
               <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-700 transition-colors">
                 {assessment.title}
               </h3>
               
-              <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
+              <DSFlexContainer direction="row" align="center" gap="sm" className="text-sm text-gray-600 mb-3">
                 <span className="font-medium text-blue-600">{assessment.subject}</span>
                 <span className="text-gray-400">•</span>
                 <span>Grade {assessment.grade_level}</span>
                 <span className="text-gray-400">•</span>
                 <span className="capitalize">{assessment.assessment_type}</span>
-              </div>
+              </DSFlexContainer>
             </div>
-          </div>
+          </DSFlexContainer>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
+              <DSButton 
                 variant="ghost" 
                 size="sm" 
                 className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-blue-50"
               >
                 <MoreVertical className="h-4 w-4" />
-              </Button>
+              </DSButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem asChild>
@@ -178,20 +176,20 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
+        </DSFlexContainer>
 
         {/* Assessment Info */}
         <div className="space-y-3">
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-1.5 text-gray-600">
+          <DSFlexContainer direction="row" align="center" gap="md" className="text-sm">
+            <DSFlexContainer direction="row" align="center" gap="sm" className="text-gray-600">
               <Calendar className="h-4 w-4" />
               <span>{formatDate(assessment.assessment_date)}</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-gray-600">
+            </DSFlexContainer>
+            <DSFlexContainer direction="row" align="center" gap="sm" className="text-gray-600">
               <Target className="h-4 w-4" />
               <span>Max: {assessment.max_score} pts</span>
-            </div>
-          </div>
+            </DSFlexContainer>
+          </DSFlexContainer>
 
           {assessment.description && (
             <p className="text-sm text-gray-700 line-clamp-2 leading-relaxed">
@@ -199,37 +197,37 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
             </p>
           )}
         </div>
-      </div>
+      </DSCardContent>
 
       {/* Card Footer */}
-      <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-blue-50/30 border-t border-gray-100 rounded-b-xl">
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" asChild className="h-8 text-xs hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700">
+      <div className="px-6 py-4 bg-gradient-to-r from-blue-50/30 to-indigo-50/20 border-t border-blue-100 rounded-b-xl">
+        <DSFlexContainer direction="row" justify="between" align="center">
+          <DSFlexContainer direction="row" gap="sm">
+            <DSButton variant="secondary" size="sm" asChild className="h-8 text-xs hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700">
               <Link to={`/app/assessments/${assessment.id}`}>
                 <FileText className="mr-1.5 h-3 w-3" />
                 Details
               </Link>
-            </Button>
-            <Button size="sm" asChild className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white">
+            </DSButton>
+            <DSButton variant="primary" size="sm" asChild className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white">
               <Link to={`/app/assessments/${assessment.id}/responses`}>
                 <Users className="mr-1.5 h-3 w-3" />
                 Add Data
               </Link>
-            </Button>
-          </div>
+            </DSButton>
+          </DSFlexContainer>
           
           {!assessment.is_draft && (
-            <Button variant="ghost" size="sm" asChild className="h-8 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+            <DSButton variant="ghost" size="sm" asChild className="h-8 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50">
               <Link to={`/app/assessments/${assessment.id}/analysis`}>
                 <BarChart3 className="mr-1.5 h-3 w-3" />
                 Analysis
               </Link>
-            </Button>
+            </DSButton>
           )}
-        </div>
+        </DSFlexContainer>
       </div>
-    </div>
+    </DSCard>
   );
 };
 
