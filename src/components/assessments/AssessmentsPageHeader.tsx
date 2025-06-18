@@ -42,15 +42,15 @@ const AssessmentsPageHeader: React.FC<AssessmentsPageHeaderProps> = ({
           className="lg:flex-row"
         >
           <div className="text-center lg:text-left">
-            <h1 className="text-4xl font-bold text-gray-900 mb-3">
+            <DSPageTitle className="mb-3">
               Assessments
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mb-2">
+            </DSPageTitle>
+            <DSBodyText className="max-w-2xl mb-2">
               Manage and analyze student assessments to track learning progress and identify opportunities for improvement.
-            </p>
-            <p className="text-sm text-gray-500">
+            </DSBodyText>
+            <DSHelpText>
               {totalAssessments} total assessments • {filteredCount} currently shown
-            </p>
+            </DSHelpText>
           </div>
           
           <DSFlexContainer direction="col" gap="sm" className="sm:flex-row">

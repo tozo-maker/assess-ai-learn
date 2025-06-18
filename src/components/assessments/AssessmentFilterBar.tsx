@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, Grid3X3, List, X, ChevronDown } from 'lucide-react';
+import { Search, Filter, Grid3X3, List, X, ChevronDown, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -33,6 +34,9 @@ interface AssessmentFilterBarProps {
   filteredCount: number;
   viewMode?: 'grid' | 'list';
   onViewModeChange?: (mode: 'grid' | 'list') => void;
+  selectedCount?: number;
+  onSelectAll?: (checked: boolean) => void;
+  showBulkActions?: boolean;
 }
 
 const AssessmentFilterBar: React.FC<AssessmentFilterBarProps> = ({
@@ -41,7 +45,10 @@ const AssessmentFilterBar: React.FC<AssessmentFilterBarProps> = ({
   totalCount,
   filteredCount,
   viewMode = 'grid',
-  onViewModeChange
+  onViewModeChange,
+  selectedCount = 0,
+  onSelectAll,
+  showBulkActions = false
 }) => {
   const [filtersExpanded, setFiltersExpanded] = useState(false);
 
@@ -74,7 +81,7 @@ const AssessmentFilterBar: React.FC<AssessmentFilterBarProps> = ({
   return (
     <Card className="mb-6 border-blue-200 bg-gradient-to-r from-blue-50/50 to-white">
       <CardContent className="p-6 space-y-4">
-        {/* Search and View Controls */}
+        {/* Search and Controls Row */}
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -87,6 +94,23 @@ const AssessmentFilterBar: React.FC<AssessmentFilterBarProps> = ({
           </div>
           
           <div className="flex items-center gap-3">
+            {/* Selection Controls */}
+            {showBulkActions && (
+              <div className="flex items-center gap-3 px-3 py-2 bg-blue-50/50 rounded-lg border border-blue-200">
+                <Checkbox
+                  checked={selectedCount > 0}
+                  onCheckedChange={onSelectAll}
+                  className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                />
+                <div className="flex items-center gap-2 text-sm">
+                  <Users className="h-4 w-4 text-blue-600" />
+                  <span className="text-gray-700">
+                    {selectedCount > 0 ? `${selectedCount} selected` : 'Select all'}
+                  </span>
+                </div>
+              </div>
+            )}
+
             <Collapsible open={filtersExpanded} onOpenChange={setFiltersExpanded}>
               <CollapsibleTrigger asChild>
                 <Button 
@@ -140,6 +164,11 @@ const AssessmentFilterBar: React.FC<AssessmentFilterBarProps> = ({
         <div className="flex justify-between items-center text-sm text-gray-600">
           <span>
             Showing <span className="font-medium text-blue-600">{filteredCount}</span> of {totalCount} assessments
+            {selectedCount > 0 && (
+              <span className="ml-2">
+                • <span className="font-medium text-blue-600">{selectedCount}</span> selected
+              </span>
+            )}
           </span>
           {hasActiveFilters && (
             <Button

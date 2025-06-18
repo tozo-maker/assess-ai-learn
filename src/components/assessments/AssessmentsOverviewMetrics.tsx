@@ -54,7 +54,8 @@ const AssessmentsOverviewMetrics: React.FC = () => {
       icon: FileText,
       trend: { value: '+12%', positive: true },
       color: 'blue',
-      sparkline: [20, 25, 30, 28, 35, 40, 45]
+      sparkline: [20, 25, 30, 28, 35, 40, 45],
+      status: 'Active'
     },
     {
       title: 'Completed',
@@ -62,7 +63,8 @@ const AssessmentsOverviewMetrics: React.FC = () => {
       icon: CheckCircle,
       trend: { value: '+8%', positive: true },
       color: 'green',
-      sparkline: [15, 18, 22, 25, 28, 30, 35]
+      sparkline: [15, 18, 22, 25, 28, 30, 35],
+      status: 'Completed'
     },
     {
       title: 'Draft',
@@ -70,7 +72,8 @@ const AssessmentsOverviewMetrics: React.FC = () => {
       icon: Clock,
       trend: { value: '-3%', positive: false },
       color: 'amber',
-      sparkline: [10, 8, 6, 4, 3, 2, 1]
+      sparkline: [10, 8, 6, 4, 3, 2, 1],
+      status: 'Pending'
     },
     {
       title: 'Avg. Score',
@@ -78,7 +81,8 @@ const AssessmentsOverviewMetrics: React.FC = () => {
       icon: TrendingUp,
       trend: { value: '+5%', positive: true },
       color: 'purple',
-      sparkline: [65, 70, 68, 75, 78, 80, 85]
+      sparkline: [65, 70, 68, 75, 78, 80, 85],
+      status: 'Good'
     }
   ];
 
@@ -91,25 +95,29 @@ const AssessmentsOverviewMetrics: React.FC = () => {
             border: 'border-l-blue-500',
             bg: 'from-blue-50/80 to-blue-100/50',
             icon: 'bg-blue-100 text-blue-600',
-            sparkline: 'bg-blue-200'
+            sparkline: 'bg-blue-200',
+            badge: 'bg-blue-50 text-blue-700 border-blue-200'
           },
           green: {
             border: 'border-l-green-500',
             bg: 'from-green-50/80 to-green-100/50',
             icon: 'bg-green-100 text-green-600',
-            sparkline: 'bg-green-200'
+            sparkline: 'bg-green-200',
+            badge: 'bg-green-50 text-green-700 border-green-200'
           },
           amber: {
             border: 'border-l-amber-500',
             bg: 'from-amber-50/80 to-amber-100/50',
             icon: 'bg-amber-100 text-amber-600',
-            sparkline: 'bg-amber-200'
+            sparkline: 'bg-amber-200',
+            badge: 'bg-amber-50 text-amber-700 border-amber-200'
           },
           purple: {
             border: 'border-l-purple-500',
             bg: 'from-purple-50/80 to-purple-100/50',
             icon: 'bg-purple-100 text-purple-600',
-            sparkline: 'bg-purple-200'
+            sparkline: 'bg-purple-200',
+            badge: 'bg-purple-50 text-purple-700 border-purple-200'
           }
         };
         
@@ -125,21 +133,29 @@ const AssessmentsOverviewMetrics: React.FC = () => {
                 <div className={`p-2 rounded-lg ${colors.icon}`}>
                   <Icon className="h-5 w-5" />
                 </div>
-                <Badge 
-                  variant={metric.trend.positive ? "default" : "destructive"}
-                  className="text-xs"
-                >
-                  {metric.trend.value}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge 
+                    variant={metric.trend.positive ? "default" : "destructive"}
+                    className="text-xs"
+                  >
+                    {metric.trend.value}
+                  </Badge>
+                  <Badge 
+                    variant="outline"
+                    className={`text-xs border ${colors.badge}`}
+                  >
+                    {metric.status}
+                  </Badge>
+                </div>
               </div>
               
-              <div className="space-y-1">
+              <div className="space-y-1 mb-4">
                 <p className="text-2xl font-bold text-gray-900">{metric.value}</p>
                 <p className="text-sm text-gray-600">{metric.title}</p>
               </div>
 
               {/* Mini Sparkline */}
-              <div className="mt-4 h-8 flex items-end space-x-1">
+              <div className="h-8 flex items-end space-x-1">
                 {metric.sparkline.map((value, idx) => (
                   <div
                     key={idx}

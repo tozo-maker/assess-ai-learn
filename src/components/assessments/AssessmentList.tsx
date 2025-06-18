@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -70,6 +71,14 @@ const AssessmentList: React.FC = () => {
       newSelected.delete(assessmentId);
     }
     setSelectedAssessments(newSelected);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked && filteredAssessments) {
+      setSelectedAssessments(new Set(filteredAssessments.map(a => a.id)));
+    } else {
+      setSelectedAssessments(new Set());
+    }
   };
 
   const handleClearSelection = () => {
@@ -175,12 +184,15 @@ const AssessmentList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Filter Bar */}
+      {/* Filter Bar with Selection Controls */}
       <AssessmentFilterBar
         filters={filters}
         onFiltersChange={setFilters}
         totalCount={assessments?.length || 0}
         filteredCount={filteredAssessments?.length || 0}
+        selectedCount={selectedAssessments.size}
+        onSelectAll={handleSelectAll}
+        showBulkActions={true}
       />
 
       {/* Assessment Grid or Empty State */}
