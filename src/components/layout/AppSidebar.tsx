@@ -26,8 +26,8 @@ import {
   Settings,
   Mail,
   Target,
-  Palette,
   BookOpen,
+  Palette,
   TestTube,
   Menu
 } from "lucide-react";
@@ -50,14 +50,19 @@ const navigationItems = [
     icon: FileText,
   },
   {
+    title: "Goals",
+    url: "/app/goals",
+    icon: Target,
+  },
+  {
+    title: "Skills",
+    url: "/app/skills",
+    icon: BookOpen,
+  },
+  {
     title: "Insights",
     url: "/app/insights/class",
     icon: Lightbulb,
-  },
-  {
-    title: "Goals",
-    url: "/app/students",
-    icon: Target,
   },
   {
     title: "Reports",
@@ -68,11 +73,6 @@ const navigationItems = [
     title: "Communications",
     url: "/app/communications/progress-reports",
     icon: Mail,
-  },
-  {
-    title: "Skills",
-    url: "/app/skills",
-    icon: BookOpen,
   },
   {
     title: "Design System",
@@ -90,6 +90,13 @@ const navigationItems = [
     icon: Settings,
   },
 ];
+
+const isActiveRoute = (currentPath: string, itemUrl: string): boolean => {
+  if (itemUrl === '/app/dashboard') {
+    return currentPath === itemUrl;
+  }
+  return currentPath.startsWith(itemUrl);
+};
 
 export default function AppSidebar() {
   const location = useLocation();
@@ -119,8 +126,7 @@ export default function AppSidebar() {
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton 
                 asChild
-                isActive={location.pathname === item.url || 
-                  (item.url !== '/app/dashboard' && location.pathname.startsWith(item.url))}
+                isActive={isActiveRoute(location.pathname, item.url)}
               >
                 <Link to={item.url}>
                   <item.icon />
@@ -162,8 +168,7 @@ export function AppMobileSidebar() {
               to={item.url}
               className={cn(
                 "flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                location.pathname === item.url || 
-                (item.url !== '/app/dashboard' && location.pathname.startsWith(item.url))
+                isActiveRoute(location.pathname, item.url)
                   ? "bg-blue-100 text-blue-700"
                   : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
               )}
