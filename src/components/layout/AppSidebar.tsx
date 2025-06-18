@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Home,
@@ -14,15 +15,18 @@ import {
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  DSSidebar,
-  DSSidebarNav,
-  DSSidebarNavItem,
-  DSSidebarBottom,
-  DSSidebarSettings,
-  DSSidebarHelp,
-  DSSidebarLogout,
-  designSystem
-} from '@/components/ui/design-system';
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
+} from '@/components/ui/sidebar';
 
 const navigation = [
   {
@@ -76,43 +80,91 @@ const settingsNavigation = [
 ];
 
 const AppSidebar: React.FC = () => {
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     navigate('/login');
   };
 
   return (
-    <DSSidebar>
-      <DSSidebarNav>
-        {navigation.map((item) => (
-          <DSSidebarNavItem key={item.title} to={item.url} as={NavLink}>
-            <item.icon className="h-4 w-4 mr-2" strokeWidth="2" />
-            {item.title}
-          </DSSidebarNavItem>
-        ))}
-      </DSSidebarNav>
+    <Sidebar>
+      <SidebarHeader>
+        <div className="flex items-center gap-2 px-4 py-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <Brain className="h-4 w-4" />
+          </div>
+          <span className="font-semibold text-lg">LearnSpark AI</span>
+        </div>
+      </SidebarHeader>
+      
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navigation.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink 
+                      to={item.url}
+                      className={({ isActive }) => 
+                        isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
+                      }
+                    >
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-      <DSSidebarBottom>
-        <DSSidebarSettings>
-          {settingsNavigation.map((item) => (
-            <DSSidebarNavItem key={item.title} to={item.url} as={NavLink}>
-              <item.icon className="h-4 w-4 mr-2" strokeWidth="2" />
-              {item.title}
-            </DSSidebarNavItem>
-          ))}
-        </DSSidebarSettings>
-        <DSSidebarHelp>
-          Need help? <a href="mailto:support@learnspark.ai" className={designSystem.link}>Contact support</a>
-        </DSSidebarHelp>
-        <DSSidebarLogout onClick={handleLogout}>
-          <LogOut className="h-4 w-4 mr-2" strokeWidth="2" />
-          Log Out
-        </DSSidebarLogout>
-      </DSSidebarBottom>
-    </DSSidebar>
+        <SidebarSeparator />
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Settings</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {settingsNavigation.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink 
+                      to={item.url}
+                      className={({ isActive }) => 
+                        isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
+                      }
+                    >
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <div className="px-4 py-2 space-y-2">
+          <p className="text-xs text-muted-foreground">
+            Need help? <a href="mailto:support@learnspark.ai" className="text-primary hover:underline">Contact support</a>
+          </p>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={handleLogout} className="w-full justify-start">
+                <LogOut className="h-4 w-4" />
+                <span>Log Out</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </div>
+      </SidebarFooter>
+    </Sidebar>
   );
 };
 
