@@ -2,11 +2,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Upload } from 'lucide-react';
-import { 
-  DSCard, 
-  DSCardHeader, 
-  DSButton, 
-  DSFlexContainer 
+import {
+  DSCard,
+  DSCardHeader,
+  DSButton,
+  DSFlexContainer,
+  DSPageTitle,
+  DSBodyText,
+  DSHelpText
 } from '@/components/ui/design-system';
 
 interface AssessmentsPageHeaderProps {
@@ -29,21 +32,20 @@ const AssessmentsPageHeader: React.FC<AssessmentsPageHeaderProps> = ({
   };
 
   return (
-    <DSCard className="mb-8">
-      <DSCardHeader className="p-6">
-        <DSFlexContainer justify="between" align="center" className="flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+    <DSCard className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-l-blue-500">
+      <DSCardHeader className="p-8">
+        <DSFlexContainer justify="between" align="center" className="flex-col lg:flex-row gap-6">
+          <div className="text-center lg:text-left">
+            <DSPageTitle className="text-4xl font-bold text-gray-900 mb-3">
               Assessments
-            </h1>
-            <p className="text-gray-600">
-              Manage and analyze student assessments to track learning progress and identify opportunities for improvement.
-            </p>
-            <p className="mt-2 text-sm text-gray-500">
+            </DSPageTitle>
+            <DSBodyText className="text-lg text-gray-600 max-w-2xl">
+              Manage and analyze student assessments to track learning progress and identify opportunities for improvement
+            </DSBodyText>
+            <DSHelpText className="mt-2 text-sm">
               {totalAssessments} total assessments • {filteredCount} currently shown
-            </p>
+            </DSHelpText>
           </div>
-          
           <DSFlexContainer gap="sm" className="flex-col sm:flex-row">
             <DSButton 
               variant="secondary" 
