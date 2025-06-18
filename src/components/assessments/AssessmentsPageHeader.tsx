@@ -29,17 +29,17 @@ const AssessmentsPageHeader: React.FC<AssessmentsPageHeaderProps> = ({
   };
 
   return (
-    <DSCard className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-l-blue-500">
-      <DSCardHeader className="p-8">
-        <DSFlexContainer justify="between" align="center" className="flex-col lg:flex-row gap-6">
-          <div className="text-center lg:text-left">
-            <h1 className="text-4xl font-bold text-gray-900 mb-3">
+    <DSCard className="mb-8">
+      <DSCardHeader className="p-6">
+        <DSFlexContainer justify="between" align="center" className="flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Assessments
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl">
+            <p className="text-gray-600">
               Manage and analyze student assessments to track learning progress and identify opportunities for improvement.
             </p>
-            <p className="mt-2 text-sm">
+            <p className="mt-2 text-sm text-gray-500">
               {totalAssessments} total assessments • {filteredCount} currently shown
             </p>
           </div>
