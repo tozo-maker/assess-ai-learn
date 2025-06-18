@@ -61,6 +61,12 @@ const ProgressReportGenerator: React.FC = () => {
     setIsGenerating(true);
 
     try {
+      // Get current user for teacher_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       let successCount = 0;
       let failCount = 0;
 
@@ -113,11 +119,12 @@ const ProgressReportGenerator: React.FC = () => {
               continue;
             }
 
-            // Create communication record
+            // Create communication record with teacher_id
             const { error: commError } = await supabase
               .from('parent_communications')
               .insert({
                 student_id: studentId,
+                teacher_id: user.id,
                 communication_type: 'progress_report',
                 subject: `Progress Report for ${student.first_name} ${student.last_name}`,
                 content: `Progress report generated on ${new Date().toLocaleDateString()}`,

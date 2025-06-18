@@ -91,7 +91,7 @@ const InsightsActionPanel: React.FC<InsightsActionPanelProps> = ({
               <DSFlexContainer gap="sm" className="flex-wrap">
                 <DSButton 
                   size="sm" 
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => onViewStudents(insight.students)}
                 >
                   <Users className="h-4 w-4 mr-2" />
@@ -100,7 +100,7 @@ const InsightsActionPanel: React.FC<InsightsActionPanelProps> = ({
                 
                 <DSButton 
                   size="sm" 
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => onCreateGoal(insight.students)}
                 >
                   <Target className="h-4 w-4 mr-2" />
@@ -109,7 +109,7 @@ const InsightsActionPanel: React.FC<InsightsActionPanelProps> = ({
                 
                 <DSButton 
                   size="sm" 
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => onScheduleAssessment(insight.students)}
                 >
                   <BookOpen className="h-4 w-4 mr-2" />
@@ -118,7 +118,7 @@ const InsightsActionPanel: React.FC<InsightsActionPanelProps> = ({
                 
                 <DSButton 
                   size="sm" 
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => navigate('/app/communications/progress-reports')}
                 >
                   Generate Reports

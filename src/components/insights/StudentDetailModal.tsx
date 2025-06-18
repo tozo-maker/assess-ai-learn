@@ -120,7 +120,7 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
                       {performance?.assessment_count || 0}
                     </TableCell>
                     <TableCell>
-                      <DSFlexContainer direction="column" gap="xs">
+                      <DSFlexContainer direction="col" gap="xs">
                         {student.parent_email && (
                           <div className="flex items-center gap-1 text-sm">
                             <Mail className="h-3 w-3" />
@@ -141,7 +141,7 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
                       <DSFlexContainer gap="xs">
                         <DSButton 
                           size="sm" 
-                          variant="outline"
+                          variant="secondary"
                           onClick={() => {
                             navigate(`/app/students/${student.id}`);
                             onOpenChange(false);
@@ -160,7 +160,7 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
           
           <DSFlexContainer justify="end" gap="sm" className="pt-4 border-t">
             <DSButton 
-              variant="outline" 
+              variant="secondary" 
               onClick={() => onOpenChange(false)}
             >
               Close
