@@ -9,9 +9,6 @@ import { AssessmentRoutes } from './AssessmentRoutes';
 import { InsightRoutes } from './InsightRoutes';
 import { ReportsRoutes } from './ReportsRoutes';
 import { SettingsRoutes } from './SettingsRoutes';
-import { GoalsRoutes } from './GoalsRoutes';
-import { SkillsRoutes } from './SkillsRoutes';
-import { UtilityRoutes } from './UtilityRoutes';
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -49,12 +46,6 @@ const AppRoutes = () => {
       {/* Assessment Management Routes */}
       {AssessmentRoutes()}
 
-      {/* Goals Management Routes */}
-      {GoalsRoutes()}
-
-      {/* Skills Management Routes */}
-      {SkillsRoutes()}
-
       {/* Insights Routes */}
       {InsightRoutes()}
 
@@ -63,9 +54,6 @@ const AppRoutes = () => {
 
       {/* Settings & Audit Routes */}
       {SettingsRoutes()}
-
-      {/* Utility Routes (Design System, Testing) */}
-      {UtilityRoutes()}
 
       {/* Global fallback for non-app routes */}
       <Route path="*" element={<Navigate to="/" replace />} />
