@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Upload, FileText } from 'lucide-react';
+import { Plus, Upload } from 'lucide-react';
 import { 
   DSCard, 
   DSCardHeader, 
@@ -37,29 +37,27 @@ const AssessmentsPageHeader: React.FC<AssessmentsPageHeaderProps> = ({
         <DSFlexContainer 
           direction="col" 
           gap="lg" 
-          className="lg:flex-row lg:justify-between lg:items-center"
+          justify="between"
+          align="center"
+          className="lg:flex-row"
         >
-          <DSFlexContainer align="start" gap="md" className="text-center lg:text-left">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <FileText className="h-8 w-8 text-blue-600" />
-            </div>
-            <div>
-              <DSPageTitle className="mb-3">
-                Assessments
-              </DSPageTitle>
-              <DSBodyText className="max-w-2xl mb-2">
-                Manage and analyze student assessments to track learning progress and identify opportunities for improvement.
-              </DSBodyText>
-              <DSHelpText>
-                {totalAssessments} total assessments • {filteredCount} currently shown
-              </DSHelpText>
-            </div>
-          </DSFlexContainer>
+          <div className="text-center lg:text-left">
+            <h1 className="text-4xl font-bold text-gray-900 mb-3">
+              Assessments
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mb-2">
+              Manage and analyze student assessments to track learning progress and identify opportunities for improvement.
+            </p>
+            <p className="text-sm text-gray-500">
+              {totalAssessments} total assessments • {filteredCount} currently shown
+            </p>
+          </div>
           
           <DSFlexContainer direction="col" gap="sm" className="sm:flex-row">
             <DSButton 
               variant="secondary" 
               onClick={handleBulkImport}
+              className="whitespace-nowrap"
             >
               <Upload className="mr-2 h-4 w-4" />
               Batch Import
@@ -67,6 +65,7 @@ const AssessmentsPageHeader: React.FC<AssessmentsPageHeaderProps> = ({
             <DSButton 
               variant="primary"
               onClick={handleAddAssessment}
+              className="whitespace-nowrap"
             >
               <Plus className="mr-2 h-4 w-4" />
               Add Assessment
