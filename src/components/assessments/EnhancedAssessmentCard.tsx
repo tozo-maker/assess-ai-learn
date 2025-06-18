@@ -10,9 +10,9 @@ import {
   Trash2, 
   Clock,
   CheckCircle,
-  AlertCircle,
   BookOpen,
-  Target
+  Target,
+  MoreVertical
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -50,27 +50,21 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
         status: 'Draft', 
         variant: 'secondary' as const, 
         icon: Clock,
-        color: 'text-amber-600',
-        bgColor: 'bg-amber-50',
-        borderColor: 'border-amber-200'
+        className: 'bg-amber-50 text-amber-700 border-amber-200'
       };
     } else if (isActive) {
       return { 
         status: 'Active', 
         variant: 'default' as const, 
         icon: CheckCircle,
-        color: 'text-green-600',
-        bgColor: 'bg-green-50',
-        borderColor: 'border-green-200'
+        className: 'bg-green-50 text-green-700 border-green-200'
       };
     } else {
       return { 
         status: 'Completed', 
         variant: 'outline' as const, 
         icon: CheckCircle,
-        color: 'text-gray-600',
-        bgColor: 'bg-gray-50',
-        borderColor: 'border-gray-200'
+        className: 'bg-blue-50 text-blue-700 border-blue-200'
       };
     }
   };
@@ -101,15 +95,12 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
 
   return (
     <div className={`
-      group relative bg-white rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:shadow-blue-100/50
-      ${isSelected ? 'border-blue-500 shadow-md shadow-blue-100/50' : 'border-gray-100 hover:border-blue-200'}
-      ${statusConfig.bgColor} hover:bg-white
+      group relative bg-white rounded-xl border-2 transition-all duration-300 
+      ${isSelected 
+        ? 'border-blue-500 shadow-lg shadow-blue-100/50 bg-gradient-to-br from-blue-50/50 to-indigo-50/50' 
+        : 'border-gray-200 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-100/30'
+      }
     `}>
-      {/* Selection Overlay */}
-      {isSelected && (
-        <div className="absolute inset-0 bg-blue-50/30 rounded-xl pointer-events-none" />
-      )}
-      
       {/* Card Header */}
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
@@ -121,27 +112,27 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
             />
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`p-2 rounded-lg ${statusConfig.bgColor} ${statusConfig.borderColor} border`}>
-                  <SubjectIcon className={`h-4 w-4 ${statusConfig.color}`} />
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-2 rounded-lg bg-blue-50 border border-blue-200">
+                  <SubjectIcon className="h-4 w-4 text-blue-600" />
                 </div>
                 <div className="flex items-center gap-2">
-                  <StatusIcon className={`h-4 w-4 ${statusConfig.color}`} />
-                  <Badge variant={statusConfig.variant} className="text-xs font-medium">
+                  <StatusIcon className="h-4 w-4 text-gray-500" />
+                  <Badge className={statusConfig.className}>
                     {statusConfig.status}
                   </Badge>
                 </div>
               </div>
               
-              <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-blue-700 transition-colors">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-700 transition-colors">
                 {assessment.title}
               </h3>
               
-              <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-                <span className="font-medium">{assessment.subject}</span>
-                <span>•</span>
+              <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
+                <span className="font-medium text-blue-600">{assessment.subject}</span>
+                <span className="text-gray-400">•</span>
                 <span>Grade {assessment.grade_level}</span>
-                <span>•</span>
+                <span className="text-gray-400">•</span>
                 <span className="capitalize">{assessment.assessment_type}</span>
               </div>
             </div>
@@ -152,11 +143,9 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-gray-100"
+                className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-blue-50"
               >
-                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                </svg>
+                <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -213,16 +202,16 @@ const EnhancedAssessmentCard: React.FC<EnhancedAssessmentCardProps> = ({
       </div>
 
       {/* Card Footer */}
-      <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 rounded-b-xl">
+      <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-blue-50/30 border-t border-gray-100 rounded-b-xl">
         <div className="flex items-center justify-between">
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" asChild className="h-8 text-xs hover:bg-blue-50 hover:border-blue-200">
+            <Button variant="outline" size="sm" asChild className="h-8 text-xs hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700">
               <Link to={`/app/assessments/${assessment.id}`}>
                 <FileText className="mr-1.5 h-3 w-3" />
                 Details
               </Link>
             </Button>
-            <Button size="sm" asChild className="h-8 text-xs bg-blue-600 hover:bg-blue-700">
+            <Button size="sm" asChild className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white">
               <Link to={`/app/assessments/${assessment.id}/responses`}>
                 <Users className="mr-1.5 h-3 w-3" />
                 Add Data

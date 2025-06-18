@@ -8,7 +8,7 @@ import { assessmentService } from '@/services/assessment-service';
 import { Assessment } from '@/types/assessment';
 
 import EnhancedAssessmentCard from './EnhancedAssessmentCard';
-import EnhancedAssessmentFilters from './EnhancedAssessmentFilters';
+import UnifiedAssessmentFilterBar from './UnifiedAssessmentFilterBar';
 import BulkActionBar from './BulkActionBar';
 import EnhancedEmptyState from './EnhancedEmptyState';
 
@@ -191,8 +191,8 @@ const AssessmentList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Enhanced Filters */}
-      <EnhancedAssessmentFilters
+      {/* Unified Filter Bar */}
+      <UnifiedAssessmentFilterBar
         filters={filters}
         onFiltersChange={setFilters}
         totalCount={assessments?.length || 0}
