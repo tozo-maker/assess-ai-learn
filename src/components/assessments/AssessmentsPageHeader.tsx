@@ -6,10 +6,7 @@ import {
   DSCard, 
   DSCardHeader, 
   DSButton, 
-  DSFlexContainer, 
-  DSPageTitle, 
-  DSBodyText, 
-  DSHelpText 
+  DSFlexContainer 
 } from '@/components/ui/design-system';
 
 interface AssessmentsPageHeaderProps {
@@ -36,15 +33,15 @@ const AssessmentsPageHeader: React.FC<AssessmentsPageHeaderProps> = ({
       <DSCardHeader className="p-8">
         <DSFlexContainer justify="between" align="center" className="flex-col lg:flex-row gap-6">
           <div className="text-center lg:text-left">
-            <DSPageTitle className="text-4xl font-bold text-gray-900 mb-3">
+            <h1 className="text-4xl font-bold text-gray-900 mb-3">
               Assessments
-            </DSPageTitle>
-            <DSBodyText className="text-lg text-gray-600 max-w-2xl">
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl">
               Manage and analyze student assessments to track learning progress and identify opportunities for improvement.
-            </DSBodyText>
-            <DSHelpText className="mt-2 text-sm">
+            </p>
+            <p className="mt-2 text-sm">
               {totalAssessments} total assessments • {filteredCount} currently shown
-            </DSHelpText>
+            </p>
           </div>
           
           <DSFlexContainer gap="sm" className="flex-col sm:flex-row">
