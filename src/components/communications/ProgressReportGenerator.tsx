@@ -61,57 +61,97 @@ const ProgressReportGenerator: React.FC = () => {
     setIsGenerating(true);
 
     try {
+      let successCount = 0;
+      let failCount = 0;
+
       // Generate report for each selected student
       for (const studentId of selectedStudents) {
         const student = students?.find(s => s.id === studentId);
         if (!student) continue;
 
-        const reportData = {
-          student: {
-            first_name: student.first_name,
-            last_name: student.last_name,
-            grade_level: student.grade_level,
-            student_id: student.student_id
-          },
-          options: reportOptions,
-          generated_at: new Date().toISOString()
-        };
+        try {
+          if (format === 'pdf') {
+            console.log(`Generating PDF for student: ${studentId}`);
+            
+            const { data, error } = await supabase.functions.invoke('generate-progress-pdf', {
+              body: { student_id: studentId }
+            });
 
-        if (format === 'pdf') {
-          const { data, error } = await supabase.functions.invoke('generate-progress-pdf', {
-            body: {
-              student_id: studentId,
-              report_data: reportData
+            if (error) {
+              console.error(`PDF generation error for ${student.first_name}:`, error);
+              failCount++;
+              continue;
             }
-          });
 
-          if (error) throw error;
+            if (data?.pdf_url) {
+              console.log('PDF generated successfully, creating download link');
+              
+              // Create download link
+              const link = document.createElement('a');
+              link.href = data.pdf_url;
+              link.download = `${student.first_name}_${student.last_name}_Progress_Report.pdf`;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              
+              successCount++;
+            } else {
+              console.error('No PDF URL returned');
+              failCount++;
+            }
+          } else if (format === 'email') {
+            console.log(`Sending email for student: ${studentId}`);
+            
+            // Generate progress report data first
+            const { data: reportData, error: reportError } = await supabase.functions.invoke('generate-progress-report', {
+              body: { student_id: studentId }
+            });
 
-          if (data?.pdf_url) {
-            const link = document.createElement('a');
-            link.href = data.pdf_url;
-            link.download = `${student.first_name}_${student.last_name}_Progress_Report.pdf`;
-            link.click();
+            if (reportError) {
+              console.error(`Progress report generation error for ${student.first_name}:`, reportError);
+              failCount++;
+              continue;
+            }
+
+            // Create communication record
+            const { error: commError } = await supabase
+              .from('parent_communications')
+              .insert({
+                student_id: studentId,
+                communication_type: 'progress_report',
+                subject: `Progress Report for ${student.first_name} ${student.last_name}`,
+                content: `Progress report generated on ${new Date().toLocaleDateString()}`,
+                parent_email: student.parent_email || 'parent@example.com'
+              });
+
+            if (commError) {
+              console.error(`Communication record creation error for ${student.first_name}:`, commError);
+              failCount++;
+            } else {
+              successCount++;
+            }
           }
-        } else if (format === 'email') {
-          const { data, error } = await supabase.functions.invoke('send-parent-communication', {
-            body: {
-              student_id: studentId,
-              communication_type: 'progress_report',
-              subject: `Progress Report for ${student.first_name} ${student.last_name}`,
-              report_data: reportData,
-              parent_email: student.parent_email || 'parent@example.com'
-            }
-          });
-
-          if (error) throw error;
+        } catch (error) {
+          console.error(`Error processing ${student.first_name}:`, error);
+          failCount++;
         }
       }
 
-      toast({
-        title: "Reports generated successfully",
-        description: `${format === 'pdf' ? 'PDF downloads' : 'Emails'} have been generated for ${selectedStudents.length} students.`,
-      });
+      // Show results
+      if (successCount > 0) {
+        toast({
+          title: "Reports generated successfully",
+          description: `${format === 'pdf' ? 'PDF downloads' : 'Email communications'} created for ${successCount} students.${failCount > 0 ? ` ${failCount} failed.` : ''}`,
+        });
+      }
+
+      if (failCount > 0 && successCount === 0) {
+        toast({
+          title: "Report generation failed",
+          description: "There was an error generating the progress reports. Please check the console for details.",
+          variant: "destructive"
+        });
+      }
 
     } catch (error) {
       console.error('Error generating reports:', error);

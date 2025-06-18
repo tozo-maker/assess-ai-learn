@@ -61,6 +61,9 @@ const AddStudent = () => {
       grade_level: '5th',
       learning_goals: '',
       special_considerations: '',
+      parent_name: '',
+      parent_email: '',
+      parent_phone: '',
     },
   });
 
@@ -83,6 +86,9 @@ const AddStudent = () => {
         student_id: values.student_id || undefined,
         learning_goals: values.learning_goals || undefined,
         special_considerations: values.special_considerations || undefined,
+        parent_name: values.parent_name || undefined,
+        parent_email: values.parent_email || undefined,
+        parent_phone: values.parent_phone || undefined,
       };
       
       return studentService.createStudent(studentData);
@@ -133,7 +139,7 @@ const AddStudent = () => {
             <DSCardContent className="p-8">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                  {/* Basic Information Section - Following Design System */}
+                  {/* Basic Information Section */}
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900 mb-6">Basic Information</h2>
                     <DSContentGrid cols={2}>
@@ -212,7 +218,56 @@ const AddStudent = () => {
 
                   <DSSpacer size="lg" />
 
-                  {/* Learning Information Section - Following Design System */}
+                  {/* Parent Information Section */}
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-6">Parent/Guardian Information</h2>
+                    <DSContentGrid cols={2}>
+                      <FormField
+                        control={form.control}
+                        name="parent_name"
+                        render={({ field }) => (
+                          <DSFormField label="Parent/Guardian Name">
+                            <DSInput 
+                              placeholder="Enter parent/guardian name" 
+                              {...field} 
+                              helpText="Primary contact person"
+                            />
+                          </DSFormField>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="parent_email"
+                        render={({ field }) => (
+                          <DSFormField label="Parent Email">
+                            <DSInput 
+                              type="email"
+                              placeholder="parent@example.com" 
+                              {...field} 
+                              helpText="For progress reports and communications"
+                            />
+                          </DSFormField>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="parent_phone"
+                        render={({ field }) => (
+                          <DSFormField label="Parent Phone">
+                            <DSInput 
+                              placeholder="(555) 123-4567" 
+                              {...field} 
+                              helpText="Emergency contact number"
+                            />
+                          </DSFormField>
+                        )}
+                      />
+                    </DSContentGrid>
+                  </div>
+
+                  <DSSpacer size="lg" />
+
+                  {/* Learning Information Section */}
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900 mb-6">Learning Information</h2>
                     <div className="space-y-6">
@@ -249,7 +304,7 @@ const AddStudent = () => {
 
                   <DSSpacer size="xl" />
 
-                  {/* Form Actions - Following Design System */}
+                  {/* Form Actions */}
                   <div className="flex justify-end pt-6 border-t border-gray-200">
                     <DSFlexContainer gap="sm">
                       <DSButton
