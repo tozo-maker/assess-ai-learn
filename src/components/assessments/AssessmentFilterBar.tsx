@@ -1,7 +1,10 @@
 
 import React, { useState } from 'react';
 import { Search, Filter, Grid3X3, List, X, ChevronDown } from 'lucide-react';
-import { DSCard, DSCardContent, DSInput, DSButton, DSFlexContainer, DSStatusBadge } from '@/components/ui/design-system';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -23,7 +26,7 @@ interface FilterValues {
   gradeLevel: string;
 }
 
-interface UnifiedAssessmentFilterBarProps {
+interface AssessmentFilterBarProps {
   filters: FilterValues;
   onFiltersChange: (filters: FilterValues) => void;
   totalCount: number;
@@ -32,7 +35,7 @@ interface UnifiedAssessmentFilterBarProps {
   onViewModeChange?: (mode: 'grid' | 'list') => void;
 }
 
-const UnifiedAssessmentFilterBar: React.FC<UnifiedAssessmentFilterBarProps> = ({
+const AssessmentFilterBar: React.FC<AssessmentFilterBarProps> = ({
   filters,
   onFiltersChange,
   totalCount,
@@ -69,13 +72,13 @@ const UnifiedAssessmentFilterBar: React.FC<UnifiedAssessmentFilterBarProps> = ({
   const gradeLevelOptions = ['K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
 
   return (
-    <DSCard className="mb-6 border-blue-100 bg-gradient-to-r from-blue-50/50 to-white">
-      <DSCardContent className="p-6 space-y-4">
+    <Card className="mb-6 border-blue-200 bg-gradient-to-r from-blue-50/50 to-white">
+      <CardContent className="p-6 space-y-4">
         {/* Search and View Controls */}
-        <DSFlexContainer direction="row" gap="md" className="flex-col lg:flex-row">
+        <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <DSInput
+            <Input
               placeholder="Search assessments by title, subject, or type..."
               value={filters.search}
               onChange={(e) => updateFilter('search', e.target.value)}
@@ -83,29 +86,29 @@ const UnifiedAssessmentFilterBar: React.FC<UnifiedAssessmentFilterBarProps> = ({
             />
           </div>
           
-          <DSFlexContainer direction="row" align="center" gap="sm">
+          <div className="flex items-center gap-3">
             <Collapsible open={filtersExpanded} onOpenChange={setFiltersExpanded}>
               <CollapsibleTrigger asChild>
-                <DSButton 
-                  variant="secondary" 
+                <Button 
+                  variant="outline" 
                   className="border-blue-200 hover:bg-blue-50 hover:border-blue-300"
                 >
                   <Filter className="mr-2 h-4 w-4" />
                   Filters
                   <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${filtersExpanded ? 'rotate-180' : ''}`} />
                   {hasActiveFilters && (
-                    <DSStatusBadge variant="info" size="sm" className="ml-2">
+                    <Badge variant="default" className="ml-2 bg-blue-600">
                       {activeFilters.length}
-                    </DSStatusBadge>
+                    </Badge>
                   )}
-                </DSButton>
+                </Button>
               </CollapsibleTrigger>
             </Collapsible>
 
             {onViewModeChange && (
               <div className="flex border border-blue-200 rounded-lg overflow-hidden">
-                <DSButton
-                  variant={viewMode === 'grid' ? 'primary' : 'ghost'}
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => onViewModeChange('grid')}
                   className={`rounded-none h-10 w-10 p-0 ${
@@ -115,9 +118,9 @@ const UnifiedAssessmentFilterBar: React.FC<UnifiedAssessmentFilterBarProps> = ({
                   }`}
                 >
                   <Grid3X3 className="h-4 w-4" />
-                </DSButton>
-                <DSButton
-                  variant={viewMode === 'list' ? 'primary' : 'ghost'}
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => onViewModeChange('list')}
                   className={`rounded-none h-10 w-10 p-0 ${
@@ -127,28 +130,28 @@ const UnifiedAssessmentFilterBar: React.FC<UnifiedAssessmentFilterBarProps> = ({
                   }`}
                 >
                   <List className="h-4 w-4" />
-                </DSButton>
+                </Button>
               </div>
             )}
-          </DSFlexContainer>
-        </DSFlexContainer>
+          </div>
+        </div>
 
         {/* Results Summary */}
-        <DSFlexContainer direction="row" justify="between" align="center" className="text-sm text-gray-600">
+        <div className="flex justify-between items-center text-sm text-gray-600">
           <span>
             Showing <span className="font-medium text-blue-600">{filteredCount}</span> of {totalCount} assessments
           </span>
           {hasActiveFilters && (
-            <DSButton
+            <Button
               variant="ghost"
               size="sm"
               onClick={clearAllFilters}
               className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8"
             >
               Clear all filters
-            </DSButton>
+            </Button>
           )}
-        </DSFlexContainer>
+        </div>
 
         {/* Expandable Filters */}
         <Collapsible open={filtersExpanded} onOpenChange={setFiltersExpanded}>
@@ -215,12 +218,11 @@ const UnifiedAssessmentFilterBar: React.FC<UnifiedAssessmentFilterBarProps> = ({
 
         {/* Active Filter Chips */}
         {hasActiveFilters && (
-          <DSFlexContainer direction="row" gap="sm" className="flex-wrap pt-2 border-t border-blue-100">
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-blue-100">
             {activeFilters.map(([key, value]) => (
-              <DSStatusBadge 
+              <Badge 
                 key={key} 
-                variant="info" 
-                size="sm"
+                variant="secondary"
                 className="bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 cursor-pointer"
               >
                 {key === 'gradeLevel' ? `Grade ${value}` : value}
@@ -230,13 +232,13 @@ const UnifiedAssessmentFilterBar: React.FC<UnifiedAssessmentFilterBarProps> = ({
                 >
                   <X className="h-3 w-3" />
                 </button>
-              </DSStatusBadge>
+              </Badge>
             ))}
-          </DSFlexContainer>
+          </div>
         )}
-      </DSCardContent>
-    </DSCard>
+      </CardContent>
+    </Card>
   );
 };
 
-export default UnifiedAssessmentFilterBar;
+export default AssessmentFilterBar;

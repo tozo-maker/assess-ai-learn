@@ -1,17 +1,18 @@
 
 import React from 'react';
-import { DSPageContainer, DSSection } from '@/components/ui/design-system';
 import AssessmentsOverviewMetrics from './AssessmentsOverviewMetrics';
+import AssessmentsAlertSystem from './AssessmentsAlertSystem';
 import AssessmentList from './AssessmentList';
 
 const AssessmentsMainContent: React.FC = () => {
   return (
-    <DSPageContainer className="pb-12">
-      <DSSection className="py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+      <div className="py-8 space-y-8">
         <AssessmentsOverviewMetrics />
+        <AssessmentsAlertSystem />
         <AssessmentList />
-      </DSSection>
-    </DSPageContainer>
+      </div>
+    </div>
   );
 };
 
