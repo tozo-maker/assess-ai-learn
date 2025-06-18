@@ -1,133 +1,199 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { 
+  BookOpen, 
   Brain, 
-  BookOpenCheck, 
-  ListChecks, 
-  User
+  Target, 
+  TrendingUp,
+  Calendar,
+  Award,
+  AlertCircle
 } from 'lucide-react';
-import { StudentWithPerformance } from '@/types/student';
-import PerformanceSummaryCard from './PerformanceSummaryCard';
-import StudentActionsCard from './StudentActionsCard';
-import AssessmentsTabContent from '@/components/communications/AssessmentsTabContent';
-import InsightsTabContent from '@/components/communications/InsightsTabContent';
-import GoalsTabContent from '@/components/communications/GoalsTabContent';
+import { assessmentService } from '@/services/assessment-service';
+import UniversalLoadingState from '@/components/common/UniversalLoadingState';
+import EnhancedEmptyState from '@/components/common/EnhancedEmptyState';
+import { useNavigate } from 'react-router-dom';
 
 interface StudentProfileTabsProps {
-  student: StudentWithPerformance | null;
   studentId: string;
-  performanceData: {
-    averageScore: number;
-    assessmentsCompleted: number;
-    needsAttention: boolean;
-  };
-  studentAssessmentsData: any;
-  assessmentsLoading: boolean;
-  studentGoals: any[];
-  goalsLoading: boolean;
-  onEditClick: () => void;
-  onDelete: () => void;
-  onViewAssessments: () => void;
-  onRefreshInsights: () => void;
 }
 
-const StudentProfileTabs: React.FC<StudentProfileTabsProps> = ({
-  student,
-  studentId,
-  performanceData,
-  studentAssessmentsData,
-  assessmentsLoading,
-  studentGoals,
-  goalsLoading,
-  onEditClick,
-  onDelete,
-  onViewAssessments,
-  onRefreshInsights
-}) => {
+const StudentProfileTabs: React.FC<StudentProfileTabsProps> = ({ studentId }) => {
+  const [activeTab, setActiveTab] = useState('assessments');
+  const navigate = useNavigate();
+
+  const { data: studentResponses, isLoading: responsesLoading } = useQuery({
+    queryKey: ['student-responses', studentId],
+    queryFn: () => assessmentService.getStudentResponsesByStudent(studentId),
+  });
+
+  const handleCreateGoal = () => {
+    navigate('/app/students/goals', { state: { studentId } });
+  };
+
+  const handleCreateAssessment = () => {
+    navigate('/app/assessments/add', { state: { preselectedStudent: studentId } });
+  };
+
+  const getScoreColor = (score: number, maxScore: number) => {
+    const percentage = (score / maxScore) * 100;
+    if (percentage >= 90) return 'bg-green-100 text-green-800';
+    if (percentage >= 80) return 'bg-blue-100 text-blue-800';
+    if (percentage >= 70) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-red-100 text-red-800';
+  };
+
+  if (responsesLoading) {
+    return <UniversalLoadingState type="table" message="Loading student data..." />;
+  }
+
   return (
-    <Tabs defaultValue="details">
-      <TabsList className="grid w-full grid-cols-4">
-        <TabsTrigger value="details">
-          <User className="h-4 w-4 mr-2" />
-          Details
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="assessments" className="flex items-center gap-2">
+          <BookOpen className="h-4 w-4" />
+          <span className="hidden sm:inline">Assessments</span>
         </TabsTrigger>
-        <TabsTrigger value="assessments">
-          <ListChecks className="h-4 w-4 mr-2" />
-          Assessments
+        <TabsTrigger value="insights" className="flex items-center gap-2">
+          <Brain className="h-4 w-4" />
+          <span className="hidden sm:inline">Insights</span>
         </TabsTrigger>
-        <TabsTrigger value="insights">
-          <Brain className="h-4 w-4 mr-2" />
-          Insights
-        </TabsTrigger>
-        <TabsTrigger value="goals">
-          <BookOpenCheck className="h-4 w-4 mr-2" />
-          Goals
+        <TabsTrigger value="goals" className="flex items-center gap-2">
+          <Target className="h-4 w-4" />
+          <span className="hidden sm:inline">Goals</span>
         </TabsTrigger>
       </TabsList>
 
-      {/* Details Tab */}
-      <TabsContent value="details" className="space-y-6">
-        <PerformanceSummaryCard performanceData={performanceData} />
-        <StudentActionsCard onEditClick={onEditClick} onDelete={onDelete} />
-      </TabsContent>
-
-      {/* Assessments Tab */}
-      <TabsContent value="assessments">
+      <TabsContent value="assessments" className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>Assessments Overview</CardTitle>
-            <CardDescription>Assessment performance and history for {student?.first_name} {student?.last_name}</CardDescription>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                Assessment History
+              </CardTitle>
+              <Button onClick={handleCreateAssessment} size="sm">
+                Add Assessment
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <AssessmentsTabContent 
-              assessments={studentAssessmentsData?.assessments || []}
-              isLoading={assessmentsLoading}
-              studentId={studentId || ''}
-              studentName={student ? `${student.first_name} ${student.last_name}` : ''}
-            />
+            {!studentResponses || studentResponses.length === 0 ? (
+              <EnhancedEmptyState
+                icon={BookOpen}
+                title="No assessments found"
+                description="This student hasn't taken any assessments yet. Create an assessment to start tracking their progress."
+                actionLabel="Create Assessment"
+                onAction={handleCreateAssessment}
+              />
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Assessment</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>Score</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {studentResponses.map((response) => {
+                    const assessment = response.assessment;
+                    const percentage = assessment ? 
+                      Math.round((response.score / assessment.max_score) * 100) : 0;
+                    
+                    return (
+                      <TableRow key={response.id}>
+                        <TableCell className="font-medium">
+                          {assessment?.title || 'Unknown Assessment'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {assessment?.subject || 'N/A'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={assessment ? getScoreColor(response.score, assessment.max_score) : ''}>
+                            {response.score}/{assessment?.max_score || 100} ({percentage}%)
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(response.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Award className="h-4 w-4 text-green-500" />
+                            <span className="text-sm">Completed</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </TabsContent>
 
-      {/* Insights Tab */}
-      <TabsContent value="insights">
+      <TabsContent value="insights" className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-blue-600" />
-              AI-Powered Learning Insights
+              <Brain className="h-5 w-5" />
+              Performance Insights
             </CardTitle>
-            <CardDescription>
-              Comprehensive analysis of {student?.first_name}'s learning patterns and recommendations
-            </CardDescription>
           </CardHeader>
           <CardContent>
-            <InsightsTabContent 
-              insights={studentAssessmentsData?.insights || []}
-              isLoading={assessmentsLoading}
-              onViewAssessments={onViewAssessments}
-              studentId={studentId}
-              assessments={studentAssessmentsData?.assessments || []}
-              onInsightsUpdated={onRefreshInsights}
+            <EnhancedEmptyState
+              icon={Brain}
+              title="AI insights coming soon"
+              description="Advanced performance insights and recommendations will be available once we have more assessment data for this student."
+              actionLabel="Add Assessment"
+              onAction={handleCreateAssessment}
+              secondaryActionLabel="View All Insights"
+              onSecondaryAction={() => navigate('/app/insights/individual')}
             />
           </CardContent>
         </Card>
       </TabsContent>
 
-      {/* Goals Tab */}
-      <TabsContent value="goals">
+      <TabsContent value="goals" className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>Learning Goals Management</CardTitle>
-            <CardDescription>Create, track, and manage learning objectives for {student?.first_name} {student?.last_name}</CardDescription>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Learning Goals
+              </CardTitle>
+              <Button onClick={handleCreateGoal} size="sm">
+                Create Goal
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <GoalsTabContent 
-              goals={studentGoals} 
-              studentId={studentId}
-              studentName={student ? `${student.first_name} ${student.last_name}` : ''}
+            <EnhancedEmptyState
+              icon={Target}
+              title="No learning goals set"
+              description="Set personalized learning goals to track this student's progress and achievements over time."
+              actionLabel="Create First Goal"
+              onAction={handleCreateGoal}
+              secondaryActionLabel="Browse Goal Templates"
+              onSecondaryAction={() => navigate('/app/goals')}
             />
           </CardContent>
         </Card>
