@@ -16,7 +16,7 @@ import {
   TrendingUp,
   Users,
   X,
-  MarkAsRead
+  CheckCheck
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -181,7 +181,7 @@ const NotificationCenter: React.FC = () => {
                     onClick={() => markAllAsReadMutation.mutate()}
                     disabled={markAllAsReadMutation.isPending}
                   >
-                    <MarkAsRead className="h-4 w-4" />
+                    <CheckCheck className="h-4 w-4" />
                   </Button>
                 )}
                 <Button

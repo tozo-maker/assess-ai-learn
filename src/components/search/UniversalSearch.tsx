@@ -113,7 +113,7 @@ const UniversalSearch: React.FC<UniversalSearchProps> = ({
             subtitle: goal.student ? `${goal.student.first_name} ${goal.student.last_name}` : 'Class Goal',
             description: goal.description,
             url: `/app/goals/${goal.id}`,
-            metadata: { status: goal.status, priority: goal.priority }
+            metadata: { status: goal.status }
           });
         });
       }
