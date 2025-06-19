@@ -30,7 +30,10 @@ class TemplateService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      template_type: item.template_type as EmailTemplate['template_type']
+    }));
   }
 
   async getTemplateById(id: string): Promise<EmailTemplate | null> {
@@ -41,7 +44,10 @@ class TemplateService {
       .single();
 
     if (error) throw error;
-    return data;
+    return data ? {
+      ...data,
+      template_type: data.template_type as EmailTemplate['template_type']
+    } : null;
   }
 
   async createTemplate(template: Omit<EmailTemplate, 'id' | 'created_at' | 'updated_at' | 'teacher_id'>): Promise<EmailTemplate> {
@@ -58,7 +64,10 @@ class TemplateService {
       .single();
 
     if (error) throw error;
-    return data;
+    return {
+      ...data,
+      template_type: data.template_type as EmailTemplate['template_type']
+    };
   }
 
   async updateTemplate(id: string, updates: Partial<EmailTemplate>): Promise<EmailTemplate> {
@@ -70,7 +79,10 @@ class TemplateService {
       .single();
 
     if (error) throw error;
-    return data;
+    return {
+      ...data,
+      template_type: data.template_type as EmailTemplate['template_type']
+    };
   }
 
   async deleteTemplate(id: string): Promise<void> {

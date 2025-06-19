@@ -187,7 +187,7 @@ const EnhancedExportDialog: React.FC<EnhancedExportDialogProps> = ({
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="personal-info"
-                        checke2d={exportConfig.includePersonalInfo}
+                        checked={exportConfig.includePersonalInfo}
                         onCheckedChange={(checked) => 
                           setExportConfig(prev => ({ ...prev, includePersonalInfo: !!checked }))
                         }

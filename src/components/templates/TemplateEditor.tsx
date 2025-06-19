@@ -79,7 +79,10 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
       if (template) {
         savedTemplate = await templateService.updateTemplate(template.id, formData);
       } else {
-        savedTemplate = await templateService.createTemplate(formData);
+        savedTemplate = await templateService.createTemplate({
+          ...formData,
+          variables: {}
+        });
       }
 
       toast({
@@ -112,7 +115,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
     if (!formData.subject || !formData.content) return null;
     
     const rendered = templateService.renderTemplate(
-      { ...formData } as EmailTemplate,
+      { ...formData, variables: {} } as EmailTemplate,
       previewVariables
     );
 
