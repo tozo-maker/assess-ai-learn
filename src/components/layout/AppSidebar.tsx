@@ -1,6 +1,17 @@
+
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarHeader,
+} from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
   Users,
@@ -8,7 +19,8 @@ import {
   Target,
   HelpCircle,
   TestTube,
-  BarChart3
+  BarChart3,
+  GraduationCap
 } from 'lucide-react';
 
 const AppSidebar: React.FC = () => {
@@ -16,42 +28,114 @@ const AppSidebar: React.FC = () => {
   
   const navigation = [
     { name: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
+  ];
+
+  const coreFeatures = [
     { name: 'Students', href: '/app/students', icon: Users },
     { name: 'Assessments', href: '/app/assessments', icon: FileText },
     { name: 'Goals', href: '/app/goals', icon: Target },
-    { name: 'Reports', href: '/app/reports', icon: BarChart3 }, // Added Reports
+  ];
+
+  const reporting = [
+    { name: 'Reports', href: '/app/reports', icon: BarChart3 },
+  ];
+
+  const system = [
     { name: 'Testing', href: '/app/testing', icon: TestTube },
     { name: 'Help', href: '/app/help', icon: HelpCircle },
   ];
 
+  const isActive = (href: string) => {
+    if (href === '/app/dashboard') {
+      return location.pathname === href;
+    }
+    return location.pathname.startsWith(href);
+  };
+
   return (
-    <div className="flex flex-col h-full bg-gray-50 border-r py-4">
-      <div className="px-6 py-2">
-        <Link to="/app/dashboard" className="flex items-center text-lg font-semibold">
-          LearnSpark AI
+    <Sidebar>
+      <SidebarHeader>
+        <Link to="/app/dashboard" className="flex items-center space-x-2 px-2 py-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2563eb]">
+            <GraduationCap className="h-5 w-5 text-white" />
+          </div>
+          <span className="font-bold text-lg text-gray-900">LearnSpark AI</span>
         </Link>
-      </div>
-      <nav className="flex-1 px-2">
-        <ul className="space-y-2">
-          {navigation.map((item) => (
-            <li key={item.name}>
-              <Link
-                to={item.href}
-                className={cn(
-                  'flex items-center px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200',
-                  location.pathname === item.href
-                    ? 'bg-gray-200 text-gray-900'
-                    : 'text-gray-700'
-                )}
-              >
-                <item.icon className="h-4 w-4 mr-2" />
-                {item.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </div>
+      </SidebarHeader>
+      
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navigation.map((item) => (
+                <SidebarMenuItem key={item.name}>
+                  <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                    <Link to={item.href}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.name}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Core Features</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {coreFeatures.map((item) => (
+                <SidebarMenuItem key={item.name}>
+                  <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                    <Link to={item.href}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.name}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Reporting</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {reporting.map((item) => (
+                <SidebarMenuItem key={item.name}>
+                  <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                    <Link to={item.href}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.name}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>System</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {system.map((item) => (
+                <SidebarMenuItem key={item.name}>
+                  <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                    <Link to={item.href}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.name}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
   );
 };
 
