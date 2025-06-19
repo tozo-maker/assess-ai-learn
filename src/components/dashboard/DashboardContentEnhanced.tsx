@@ -165,27 +165,23 @@ const DashboardContentEnhanced: React.FC<DashboardContentEnhancedProps> = ({ dat
 
         <DSSpacer size="2xl" />
 
-        {/* Recent Activity - Full Width */}
+        {/* Recent Activity & AI Insights - Side by Side */}
         <div>
-          <DSSectionHeader className="mb-6">Recent Activity</DSSectionHeader>
-          <LazyContainer>
-            <LazyWrapper>
-              <LazyActivityFeedEnhanced 
-                recentAssessments={metrics.recentAssessments}
-                totalStudents={metrics.totalStudents}
-                studentsNeedingAttention={metrics.studentsNeedingAttention}
-              />
-            </LazyWrapper>
-          </LazyContainer>
-        </div>
-
-        <DSSpacer size="2xl" />
-
-        {/* AI Insights - Full Width with 4 Columns */}
-        <div>
-          <DSSectionHeader className="mb-6">AI Insights</DSSectionHeader>
-          <DSContentGrid cols={4}>
-            <DSGridItem span={4}>
+          <DSSectionHeader className="mb-6">Recent Activity & AI Insights</DSSectionHeader>
+          <DSContentGrid cols={2}>
+            <DSGridItem span={1}>
+              <LazyContainer>
+                <LazyWrapper>
+                  <LazyActivityFeedEnhanced 
+                    recentAssessments={metrics.recentAssessments}
+                    totalStudents={metrics.totalStudents}
+                    studentsNeedingAttention={metrics.studentsNeedingAttention}
+                  />
+                </LazyWrapper>
+              </LazyContainer>
+            </DSGridItem>
+            
+            <DSGridItem span={1}>
               <LazyContainer>
                 <LazyWrapper>
                   <LazyRecentInsightsEnhanced 
