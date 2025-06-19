@@ -50,6 +50,11 @@ const navigation = [
     icon: Target,
   },
   {
+    title: 'Skills',
+    url: '/app/skills',
+    icon: Award,
+  },
+  {
     title: 'Insights',
     url: '/app/insights/class',
     icon: Brain,
@@ -58,11 +63,6 @@ const navigation = [
     title: 'Communications',
     url: '/app/communications/progress-reports',
     icon: Mail,
-  },
-  {
-    title: 'Skills',
-    url: '/app/skills',
-    icon: Award,
   },
 ];
 

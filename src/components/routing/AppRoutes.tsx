@@ -9,6 +9,9 @@ import { AssessmentRoutes } from './AssessmentRoutes';
 import { InsightRoutes } from './InsightRoutes';
 import { ReportsRoutes } from './ReportsRoutes';
 import { SettingsRoutes } from './SettingsRoutes';
+import { GoalRoutes } from './GoalRoutes';
+import { SkillRoutes } from './SkillRoutes';
+import { HelpRoutes } from './HelpRoutes';
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -46,11 +49,20 @@ const AppRoutes = () => {
       {/* Assessment Management Routes */}
       {AssessmentRoutes()}
 
+      {/* Goals Management Routes */}
+      {GoalRoutes()}
+
+      {/* Skills Management Routes */}
+      {SkillRoutes()}
+
       {/* Insights Routes */}
       {InsightRoutes()}
 
       {/* Reports & Communications Routes */}
       {ReportsRoutes()}
+
+      {/* Help & Support Routes */}
+      {HelpRoutes()}
 
       {/* Settings & Audit Routes */}
       {SettingsRoutes()}
