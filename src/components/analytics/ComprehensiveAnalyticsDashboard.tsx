@@ -1,12 +1,13 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { StudentWithPerformance, normalizeStudentPerformance } from '@/types/student';
 import { getPerformanceData } from '@/components/students/StudentPerformanceConfig';
+import InsightToGoalConverter from '@/components/insights/InsightToGoalConverter';
 import { 
   TrendingUp, 
   Users, 
@@ -15,12 +16,14 @@ import {
   AlertTriangle,
   CheckCircle,
   Calendar,
-  Brain
+  Brain,
+  Lightbulb
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ComprehensiveAnalyticsDashboard: React.FC = () => {
   // Fetch comprehensive analytics data
-  const { data: analyticsData, isLoading } = useQuery({
+  const { data: analyticsData, isLoading, refetch } = useQuery({
     queryKey: ['comprehensive-analytics'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -47,12 +50,13 @@ const ComprehensiveAnalyticsDashboard: React.FC = () => {
         .select('*')
         .eq('teacher_id', user.id);
 
-      // Fetch recent AI insights
+      // Fetch recent AI insights with student names
       const { data: insights } = await supabase
         .from('assessment_analysis')
         .select(`
           *,
-          assessment:assessments(title, subject)
+          assessment:assessments(title, subject),
+          student:students(first_name, last_name)
         `)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -117,6 +121,11 @@ const ComprehensiveAnalyticsDashboard: React.FC = () => {
   const totalAssessments = assessments.length;
   const completedGoals = goals.filter(g => g.status === 'completed').length;
   const activeGoals = goals.filter(g => g.status === 'active').length;
+
+  // Get actionable insights (those with recommendations)
+  const actionableInsights = insights.filter(insight => 
+    insight.recommendations && insight.recommendations.length > 0
+  );
 
   return (
     <div className="space-y-6">
@@ -216,6 +225,40 @@ const ComprehensiveAnalyticsDashboard: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* AI-Powered Insights to Goals Conversion */}
+      {actionableInsights.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <Lightbulb className="h-5 w-5 text-orange-500" />
+              Convert AI Insights to Goals
+            </h2>
+            <Badge variant="secondary">
+              {actionableInsights.length} actionable insights
+            </Badge>
+          </div>
+          
+          {actionableInsights.slice(0, 3).map((insight) => (
+            <InsightToGoalConverter
+              key={insight.id}
+              insight={insight}
+              studentName={insight.student ? `${insight.student.first_name} ${insight.student.last_name}` : undefined}
+              onGoalCreated={refetch}
+            />
+          ))}
+          
+          {actionableInsights.length > 3 && (
+            <div className="text-center">
+              <Button variant="outline" asChild>
+                <Link to="/app/insights">
+                  View All {actionableInsights.length} Actionable Insights
+                </Link>
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* AI Insights Summary */}
       <Card>

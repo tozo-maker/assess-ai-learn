@@ -6,12 +6,12 @@ import {
   LayoutDashboard,
   Users,
   FileText,
-  Lightbulb,
-  Mail,
+  Target,
   BarChart3,
   Settings,
   HelpCircle,
-  GraduationCap
+  GraduationCap,
+  TestTube
 } from 'lucide-react';
 
 interface NavigationItem {
@@ -28,15 +28,16 @@ const navigationItems: NavigationItem[] = [
   // Core features group
   { title: 'Students', href: '/app/students', icon: Users, group: 'core' },
   { title: 'Assessments', href: '/app/assessments', icon: FileText, group: 'core' },
-  { title: 'Insights', href: '/app/insights/class', icon: Lightbulb, group: 'core' },
+  { title: 'Goals', href: '/app/goals', icon: Target, group: 'core' },
   
-  // Communication & Reports group
-  { title: 'Communications', href: '/app/communications/progress-reports', icon: Mail, group: 'reporting' },
-  { title: 'Reports', href: '/app/reports/progress', icon: BarChart3, group: 'reporting' },
+  // Reports & Analytics
+  { title: 'Reports', href: '/app/reports', icon: BarChart3, group: 'reporting' },
+  
+  // Testing (development only)
+  { title: 'Testing', href: '/app/testing', icon: TestTube, group: 'system' },
   
   // System group
-  { title: 'Settings', href: '/app/settings/profile', icon: Settings, group: 'system' },
-  { title: 'Help', href: '/help', icon: HelpCircle, group: 'system' },
+  { title: 'Help', href: '/app/help', icon: HelpCircle, group: 'system' },
 ];
 
 const Navigation: React.FC = () => {
