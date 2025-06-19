@@ -43,6 +43,20 @@ const SkillsManagement = () => {
     skill.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleSubjectChange = (value: string) => {
+    const subjectValue = value === "all" ? "" : value;
+    setSelectedSubject(subjectValue);
+  };
+
+  const handleGradeLevelChange = (value: string) => {
+    const gradeLevelValue = value === "all" ? "" : value;
+    setSelectedGradeLevel(gradeLevelValue);
+  };
+
+  // Safe values for Select components
+  const safeSubject = selectedSubject || "all";
+  const safeGradeLevel = selectedGradeLevel || "all";
+
   return (
     <PageShell
       title="Skills Management"
@@ -62,24 +76,24 @@ const SkillsManagement = () => {
             />
           </div>
           
-          <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+          <Select value={safeSubject} onValueChange={handleSubjectChange}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="All Subjects" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Subjects</SelectItem>
+              <SelectItem value="all">All Subjects</SelectItem>
               {subjects.map(subject => (
                 <SelectItem key={subject} value={subject}>{subject}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           
-          <Select value={selectedGradeLevel} onValueChange={setSelectedGradeLevel}>
+          <Select value={safeGradeLevel} onValueChange={handleGradeLevelChange}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="All Grade Levels" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Grade Levels</SelectItem>
+              <SelectItem value="all">All Grade Levels</SelectItem>
               {gradeLevels.map(grade => (
                 <SelectItem key={grade} value={grade}>Grade {grade}</SelectItem>
               ))}

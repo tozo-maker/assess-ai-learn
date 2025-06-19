@@ -27,6 +27,26 @@ const SkillsMainContent: React.FC<SkillsMainContentProps> = ({
     });
   };
 
+  const handleGradeLevelChange = (value: string) => {
+    const gradeLevelValue = value === "all" ? "" : value;
+    handleFilterChange('grade_level', gradeLevelValue);
+  };
+
+  const handleSubjectChange = (value: string) => {
+    const subjectValue = value === "all" ? "" : value;
+    handleFilterChange('subject', subjectValue);
+  };
+
+  const handleDifficultyChange = (value: string) => {
+    const difficultyValue = value === "all" ? "" : value;
+    handleFilterChange('difficulty_level', difficultyValue);
+  };
+
+  // Ensure safe values for Select components
+  const safeGradeLevel = filters.grade_level || "all";
+  const safeSubject = filters.subject || "all";
+  const safeDifficulty = filters.difficulty_level || "all";
+
   const getDifficultyColor = (level: number) => {
     switch (level) {
       case 1: return 'bg-green-100 text-green-800';
@@ -113,12 +133,12 @@ const SkillsMainContent: React.FC<SkillsMainContentProps> = ({
                 className="pl-10"
               />
             </div>
-            <Select value={filters.grade_level} onValueChange={(value) => handleFilterChange('grade_level', value)}>
+            <Select value={safeGradeLevel} onValueChange={handleGradeLevelChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Grade Level" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Grades</SelectItem>
+                <SelectItem value="all">All Grades</SelectItem>
                 <SelectItem value="K">Kindergarten</SelectItem>
                 <SelectItem value="1">Grade 1</SelectItem>
                 <SelectItem value="2">Grade 2</SelectItem>
@@ -130,24 +150,24 @@ const SkillsMainContent: React.FC<SkillsMainContentProps> = ({
                 <SelectItem value="8">Grade 8</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={filters.subject} onValueChange={(value) => handleFilterChange('subject', value)}>
+            <Select value={safeSubject} onValueChange={handleSubjectChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Subject" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Subjects</SelectItem>
+                <SelectItem value="all">All Subjects</SelectItem>
                 <SelectItem value="math">Math</SelectItem>
                 <SelectItem value="english">English</SelectItem>
                 <SelectItem value="science">Science</SelectItem>
                 <SelectItem value="history">History</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={filters.difficulty_level} onValueChange={(value) => handleFilterChange('difficulty_level', value)}>
+            <Select value={safeDifficulty} onValueChange={handleDifficultyChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Difficulty" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Levels</SelectItem>
+                <SelectItem value="all">All Levels</SelectItem>
                 <SelectItem value="1">Beginner</SelectItem>
                 <SelectItem value="2">Intermediate</SelectItem>
                 <SelectItem value="3">Advanced</SelectItem>
