@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { RealtimeProvider } from '@/components/realtime/RealtimeProvider';
 import { ProtectedRoute } from '@/components/routing/RouteGuards';
 import DashboardPage from '@/pages/app/Dashboard';
 import LoginPage from '@/pages/auth/Login';
@@ -22,60 +23,62 @@ function App() {
     <Router>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Toaster />
-          <Routes>
-            {/* Authentication Routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
+          <RealtimeProvider>
+            <Toaster />
+            <Routes>
+              {/* Authentication Routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
 
-            {/* Main App Routes */}
-            <Route
-              path="/app"
-              element={
-                <ProtectedRoute>
-                  <Navigate to="/app/dashboard" replace />
-                </ProtectedRoute>
-              }
-            />
+              {/* Main App Routes */}
+              <Route
+                path="/app"
+                element={
+                  <ProtectedRoute>
+                    <Navigate to="/app/dashboard" replace />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/app/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/app/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Feature Routes */}
-            {StudentRoutes()}
-            {AssessmentRoutes()}
-            {GoalRoutes()}
-            {ReportsRoutes()}
+              {/* Feature Routes */}
+              {StudentRoutes()}
+              {AssessmentRoutes()}
+              {GoalRoutes()}
+              {ReportsRoutes()}
 
-            {/* Testing Routes */}
-            <Route
-              path="/app/testing"
-              element={
-                <ProtectedRoute>
-                  <TestingPage />
-                </ProtectedRoute>
-              }
-            />
+              {/* Testing Routes */}
+              <Route
+                path="/app/testing"
+                element={
+                  <ProtectedRoute>
+                    <TestingPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Help Routes */}
-            <Route
-              path="/app/help"
-              element={
-                <ProtectedRoute>
-                  <HelpPage />
-                </ProtectedRoute>
-              }
-            />
+              {/* Help Routes */}
+              <Route
+                path="/app/help"
+                element={
+                  <ProtectedRoute>
+                    <HelpPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Redirect root to login */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-          </Routes>
+              {/* Redirect root to login */}
+              <Route path="/" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </RealtimeProvider>
         </AuthProvider>
       </QueryClientProvider>
     </Router>
