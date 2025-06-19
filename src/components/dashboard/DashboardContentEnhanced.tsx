@@ -1,4 +1,3 @@
-
 import React from 'react';
 import EnhancedWelcomeSection from './EnhancedWelcomeSection';
 import EnhancedAlertCard from './EnhancedAlertCard';
@@ -166,23 +165,27 @@ const DashboardContentEnhanced: React.FC<DashboardContentEnhancedProps> = ({ dat
 
         <DSSpacer size="2xl" />
 
-        {/* Main Content Grid */}
+        {/* Recent Activity - Full Width */}
         <div>
-          <DSSectionHeader className="mb-6">Recent Activity & Insights</DSSectionHeader>
-          <DSContentGrid cols={3}>
-            <DSGridItem span={2}>
-              <LazyContainer>
-                <LazyWrapper>
-                  <LazyActivityFeedEnhanced 
-                    recentAssessments={metrics.recentAssessments}
-                    totalStudents={metrics.totalStudents}
-                    studentsNeedingAttention={metrics.studentsNeedingAttention}
-                  />
-                </LazyWrapper>
-              </LazyContainer>
-            </DSGridItem>
-            
-            <DSGridItem span={1}>
+          <DSSectionHeader className="mb-6">Recent Activity</DSSectionHeader>
+          <LazyContainer>
+            <LazyWrapper>
+              <LazyActivityFeedEnhanced 
+                recentAssessments={metrics.recentAssessments}
+                totalStudents={metrics.totalStudents}
+                studentsNeedingAttention={metrics.studentsNeedingAttention}
+              />
+            </LazyWrapper>
+          </LazyContainer>
+        </div>
+
+        <DSSpacer size="2xl" />
+
+        {/* AI Insights - Full Width with 4 Columns */}
+        <div>
+          <DSSectionHeader className="mb-6">AI Insights</DSSectionHeader>
+          <DSContentGrid cols={4}>
+            <DSGridItem span={4}>
               <LazyContainer>
                 <LazyWrapper>
                   <LazyRecentInsightsEnhanced 
