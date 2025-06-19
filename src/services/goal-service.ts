@@ -4,9 +4,13 @@ import { Goal } from '@/hooks/useGoalsData';
 
 class GoalService {
   async getGoals(): Promise<Goal[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data, error } = await supabase
       .from('goals')
       .select('*')
+      .eq('teacher_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -14,10 +18,14 @@ class GoalService {
   }
 
   async getGoalById(id: string): Promise<Goal | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data, error } = await supabase
       .from('goals')
       .select('*')
       .eq('id', id)
+      .eq('teacher_id', user.id)
       .single();
 
     if (error) throw error;
@@ -25,14 +33,14 @@ class GoalService {
   }
 
   async createGoal(goal: Omit<Goal, 'id' | 'created_at' | 'updated_at' | 'teacher_id'>): Promise<Goal> {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) throw new Error('User not authenticated');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase
       .from('goals')
       .insert({
         ...goal,
-        teacher_id: user.user.id
+        teacher_id: user.id
       })
       .select()
       .single();
@@ -60,6 +68,21 @@ class GoalService {
       .eq('id', id);
 
     if (error) throw error;
+  }
+
+  async getGoalsByStudentId(studentId: string): Promise<Goal[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('goals')
+      .select('*')
+      .eq('student_id', studentId)
+      .eq('teacher_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []) as Goal[];
   }
 }
 

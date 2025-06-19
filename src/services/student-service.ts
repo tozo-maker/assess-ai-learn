@@ -1,15 +1,18 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Student, StudentPerformance, StudentWithPerformance, normalizeStudentPerformance } from "@/types/student";
 
 export const studentService = {
   async getStudents(): Promise<StudentWithPerformance[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data: students, error } = await supabase
       .from('students')
       .select(`
         *,
         performance:student_performance(*)
       `)
+      .eq('teacher_id', user.id)
       .order('last_name');
     
     if (error) {
@@ -17,11 +20,13 @@ export const studentService = {
       throw error;
     }
     
-    // Normalize the performance data for each student
     return (students || []).map(student => normalizeStudentPerformance(student as StudentWithPerformance));
   },
   
   async getStudentById(id: string): Promise<StudentWithPerformance | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data, error } = await supabase
       .from('students')
       .select(`
@@ -29,6 +34,7 @@ export const studentService = {
         performance:student_performance(*)
       `)
       .eq('id', id)
+      .eq('teacher_id', user.id)
       .single();
     
     if (error) {
@@ -36,14 +42,19 @@ export const studentService = {
       throw error;
     }
     
-    // Normalize the performance data
     return data ? normalizeStudentPerformance(data as StudentWithPerformance) : null;
   },
   
-  async createStudent(student: Omit<Student, 'id' | 'created_at' | 'updated_at'>): Promise<Student> {
+  async createStudent(student: Omit<Student, 'id' | 'created_at' | 'updated_at' | 'teacher_id'>): Promise<Student> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data, error } = await supabase
       .from('students')
-      .insert([student])
+      .insert([{
+        ...student,
+        teacher_id: user.id
+      }])
       .select()
       .single();
     
@@ -125,12 +136,16 @@ export const studentService = {
   },
   
   async searchStudents(query: string): Promise<StudentWithPerformance[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data, error } = await supabase
       .from('students')
       .select(`
         *,
         performance:student_performance(*)
       `)
+      .eq('teacher_id', user.id)
       .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,student_id.ilike.%${query}%`)
       .order('last_name');
     
@@ -139,7 +154,6 @@ export const studentService = {
       throw error;
     }
     
-    // Normalize the performance data for each student
     return (data || []).map(student => normalizeStudentPerformance(student as StudentWithPerformance));
   },
   
@@ -148,18 +162,21 @@ export const studentService = {
     needs_attention?: boolean;
     performance_level?: string;
   }): Promise<StudentWithPerformance[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     let query = supabase
       .from('students')
       .select(`
         *,
         performance:student_performance(*)
-      `);
+      `)
+      .eq('teacher_id', user.id);
     
     if (filters.grade_level) {
       query = query.eq('grade_level', filters.grade_level);
     }
     
-    // First get the students
     const { data: students, error } = await query.order('last_name');
     
     if (error) {
@@ -167,12 +184,10 @@ export const studentService = {
       throw error;
     }
     
-    // Normalize the performance data for each student
     const normalizedStudents = (students || []).map(student => 
       normalizeStudentPerformance(student as StudentWithPerformance)
     );
     
-    // Then filter by performance attributes in JS
     let filteredStudents = normalizedStudents;
     
     if (filters.needs_attention !== undefined) {
@@ -197,19 +212,22 @@ export const studentService = {
   },
   
   async getStudentMetrics() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data: students, error } = await supabase
       .from('students')
       .select(`
         *,
         performance:student_performance(*)
-      `);
+      `)
+      .eq('teacher_id', user.id);
     
     if (error) {
       console.error("Error fetching student metrics:", error);
       throw error;
     }
     
-    // Normalize the performance data for each student
     const normalizedStudents = (students || []).map(student => 
       normalizeStudentPerformance(student as StudentWithPerformance)
     );
@@ -239,24 +257,20 @@ export const studentService = {
              student.performance.average_score !== undefined;
     });
     
-    if (studentsWithScores && studentsWithScores.length > 0) {
-      const sum = studentsWithScores.reduce(
-        (acc, student) => {
-          if (!student.performance || Array.isArray(student.performance)) {
-            return acc;
-          }
-          return acc + (student.performance.average_score || 0);
-        }, 
-        0
-      );
-      averagePerformance = Math.round((sum / studentsWithScores.length) * 100) / 100;
+    if (studentsWithScores.length > 0) {
+      averagePerformance = studentsWithScores.reduce((sum, student) => {
+        if (!student.performance || Array.isArray(student.performance)) {
+          return sum;
+        }
+        return sum + (student.performance.average_score || 0);
+      }, 0) / studentsWithScores.length;
     }
     
     return {
       totalStudents,
       studentsNeedingAttention,
       aboveAverageCount,
-      averagePerformance: averagePerformance ? `${averagePerformance}%` : "N/A"
+      averagePerformance: Math.round(averagePerformance * 10) / 10
     };
   }
 };
