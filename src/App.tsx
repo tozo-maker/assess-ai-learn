@@ -1,40 +1,83 @@
-
 import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/sonner';
+import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { DesignSystemProvider } from '@/contexts/DesignSystemContext';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import AppRoutes from '@/components/routing/AppRoutes';
-import './App.css';
+import { ProtectedRoute } from '@/components/routing/RouteGuards';
+import DashboardPage from '@/pages/app/Dashboard';
+import LoginPage from '@/pages/auth/Login';
+import SignupPage from '@/pages/auth/Signup';
+import TestingPage from '@/pages/app/Testing';
+import HelpPage from '@/pages/app/Help';
+import { StudentRoutes } from '@/components/routing/StudentRoutes';
+import { AssessmentRoutes } from '@/components/routing/AssessmentRoutes';
+import { GoalRoutes } from '@/components/routing/GoalRoutes';
+import { ReportsRoutes } from '@/components/routing/ReportsRoutes';
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <DesignSystemProvider>
+    <Router>
+      <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <BrowserRouter>
-            <SidebarProvider>
-              <div className="App min-h-screen flex w-full">
-                <AppRoutes />
-                <Toaster />
-              </div>
-            </SidebarProvider>
-          </BrowserRouter>
+          <Toaster />
+          <Routes>
+            {/* Authentication Routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+
+            {/* Main App Routes */}
+            <Route
+              path="/app"
+              element={
+                <ProtectedRoute>
+                  <Navigate to="/app/dashboard" replace />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/app/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Feature Routes */}
+            {StudentRoutes()}
+            {AssessmentRoutes()}
+            {GoalRoutes()}
+            {ReportsRoutes()}
+
+            {/* Testing Routes */}
+            <Route
+              path="/app/testing"
+              element={
+                <ProtectedRoute>
+                  <TestingPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Help Routes */}
+            <Route
+              path="/app/help"
+              element={
+                <ProtectedRoute>
+                  <HelpPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Redirect root to login */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+          </Routes>
         </AuthProvider>
-      </DesignSystemProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </Router>
   );
 }
 
