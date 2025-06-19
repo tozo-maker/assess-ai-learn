@@ -12,10 +12,13 @@ const GoalSortSelect: React.FC<GoalSortSelectProps> = ({
   value,
   onChange
 }) => {
+  // Ensure we have a valid value, default to "created_at" if empty
+  const safeValue = value || "created_at";
+
   return (
     <div className="space-y-2">
       <Label className="text-sm font-medium">Sort By</Label>
-      <Select value={value} onValueChange={onChange}>
+      <Select value={safeValue} onValueChange={onChange}>
         <SelectTrigger>
           <SelectValue placeholder="Default" />
         </SelectTrigger>

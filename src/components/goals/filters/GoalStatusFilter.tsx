@@ -12,10 +12,13 @@ const GoalStatusFilter: React.FC<GoalStatusFilterProps> = ({
   value,
   onChange
 }) => {
+  // Ensure we have a valid value, default to "all" if empty
+  const safeValue = value || "all";
+
   return (
     <div className="space-y-2">
       <Label className="text-sm font-medium">Status</Label>
-      <Select value={value} onValueChange={onChange}>
+      <Select value={safeValue} onValueChange={(newValue) => onChange(newValue === "all" ? "" : newValue)}>
         <SelectTrigger>
           <SelectValue placeholder="All statuses" />
         </SelectTrigger>
