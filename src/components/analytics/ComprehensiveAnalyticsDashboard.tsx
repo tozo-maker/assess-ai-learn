@@ -280,7 +280,7 @@ const ComprehensiveAnalyticsDashboard: React.FC = () => {
                   <div className="text-2xl font-bold text-red-600">
                     {studentsWithScores.filter(s => (s.performance?.average_score || 0) < 70).length}
                   </div>
-                  <p className="text-sm text-gray-600">Below Average (<70%)</p>
+                  <p className="text-sm text-gray-600">Below Average (&lt;70%)</p>
                 </div>
               </div>
             </div>

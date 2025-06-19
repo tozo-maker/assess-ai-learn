@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -8,7 +9,7 @@ import DashboardPage from '@/pages/app/Dashboard';
 import LoginPage from '@/pages/auth/Login';
 import SignupPage from '@/pages/auth/Signup';
 import TestingPage from '@/pages/app/Testing';
-import HelpPage from '@/pages/app/Help';
+import HelpPage from '@/pages/app/help/Help';
 import { StudentRoutes } from '@/components/routing/StudentRoutes';
 import { AssessmentRoutes } from '@/components/routing/AssessmentRoutes';
 import { GoalRoutes } from '@/components/routing/GoalRoutes';
