@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
+import { StudentWithPerformance, normalizeStudentPerformance } from '@/types/student';
+import { getPerformanceData } from '@/components/students/StudentPerformanceConfig';
 import { 
   TrendingUp, 
   Users, 
@@ -55,7 +57,16 @@ const ComprehensiveAnalyticsDashboard: React.FC = () => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      return { students: students || [], assessments: assessments || [], goals: goals || [], insights: insights || [] };
+      const normalizedStudents = (students || []).map(student => 
+        normalizeStudentPerformance(student as StudentWithPerformance)
+      );
+
+      return { 
+        students: normalizedStudents, 
+        assessments: assessments || [], 
+        goals: goals || [], 
+        insights: insights || [] 
+      };
     }
   });
 
@@ -84,22 +95,28 @@ const ComprehensiveAnalyticsDashboard: React.FC = () => {
 
   const { students, assessments, goals, insights } = analyticsData;
 
-  // Calculate metrics
+  // Calculate metrics using the helper function
+  const studentsNeedingAttention = students.filter(s => {
+    const performanceData = getPerformanceData(s);
+    return performanceData.needsAttention;
+  }).length;
+
+  const studentsWithScores = students.filter(s => {
+    const performanceData = getPerformanceData(s);
+    return performanceData.score !== null;
+  });
+
+  const averageClassScore = studentsWithScores.length > 0 
+    ? studentsWithScores.reduce((sum, s) => {
+        const performanceData = getPerformanceData(s);
+        return sum + (performanceData.score || 0);
+      }, 0) / studentsWithScores.length
+    : 0;
+
   const totalStudents = students.length;
-  const studentsNeedingAttention = students.filter(s => 
-    Array.isArray(s.performance) ? false : s.performance?.needs_attention
-  ).length;
   const totalAssessments = assessments.length;
   const completedGoals = goals.filter(g => g.status === 'completed').length;
   const activeGoals = goals.filter(g => g.status === 'active').length;
-
-  // Calculate average scores
-  const studentsWithScores = students.filter(s => 
-    !Array.isArray(s.performance) && s.performance?.average_score
-  );
-  const averageClassScore = studentsWithScores.length > 0 
-    ? studentsWithScores.reduce((sum, s) => sum + (s.performance?.average_score || 0), 0) / studentsWithScores.length
-    : 0;
 
   return (
     <div className="space-y-6">
@@ -263,14 +280,18 @@ const ComprehensiveAnalyticsDashboard: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <div className="text-2xl font-bold text-green-600">
-                    {studentsWithScores.filter(s => (s.performance?.average_score || 0) >= 85).length}
+                    {studentsWithScores.filter(s => {
+                      const performanceData = getPerformanceData(s);
+                      return (performanceData.score || 0) >= 85;
+                    }).length}
                   </div>
                   <p className="text-sm text-gray-600">Above Average (85%+)</p>
                 </div>
                 <div className="text-center p-4 bg-yellow-50 rounded-lg">
                   <div className="text-2xl font-bold text-yellow-600">
                     {studentsWithScores.filter(s => {
-                      const score = s.performance?.average_score || 0;
+                      const performanceData = getPerformanceData(s);
+                      const score = performanceData.score || 0;
                       return score >= 70 && score < 85;
                     }).length}
                   </div>
@@ -278,7 +299,10 @@ const ComprehensiveAnalyticsDashboard: React.FC = () => {
                 </div>
                 <div className="text-center p-4 bg-red-50 rounded-lg">
                   <div className="text-2xl font-bold text-red-600">
-                    {studentsWithScores.filter(s => (s.performance?.average_score || 0) < 70).length}
+                    {studentsWithScores.filter(s => {
+                      const performanceData = getPerformanceData(s);
+                      return (performanceData.score || 0) < 70;
+                    }).length}
                   </div>
                   <p className="text-sm text-gray-600">Below Average (&lt;70%)</p>
                 </div>
