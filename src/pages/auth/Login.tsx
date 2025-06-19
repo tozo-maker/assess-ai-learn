@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -28,18 +29,8 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const { signIn, isLoading, user } = useAuth();
+  const { signIn, isLoading } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  // If user is already logged in, redirect to dashboard
-  React.useEffect(() => {
-    if (user) {
-      const from = (location.state as any)?.from || '/app/dashboard';
-      console.log('Login: User already logged in, redirecting to:', from);
-      navigate(from, { replace: true });
-    }
-  }, [user, navigate, location]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -59,13 +50,12 @@ const Login = () => {
         remember: data.remember
       });
       
-      // After successful login, navigate to the intended page or dashboard
-      const from = (location.state as any)?.from || '/app/dashboard';
-      console.log('Login: Sign in successful, redirecting to:', from);
-      navigate(from, { replace: true });
+      // Navigate to dashboard after successful login
+      console.log('Login: Sign in successful, redirecting to dashboard');
+      navigate('/app/dashboard', { replace: true });
     } catch (error) {
       console.error('Login: Sign in failed:', error);
-      // Error is handled by the auth context
+      // Error is handled by the auth context and will show in UI
     }
   };
 
@@ -152,7 +142,7 @@ const Login = () => {
                   <div className="text-center">
                     <p className="text-sm text-gray-600">
                       Don't have an account?{' '}
-                      <Link to="/auth/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+                      <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
                         Create one now
                       </Link>
                     </p>

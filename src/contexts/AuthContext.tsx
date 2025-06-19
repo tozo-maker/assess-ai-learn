@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,6 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -38,43 +40,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    console.log('AuthContext: Setting up auth state listener');
+    let mounted = true;
+    
+    console.log('AuthContext: Initializing auth state listener');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        
         console.log('AuthContext: Auth state changed:', event, session?.user?.id);
+        
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
-          // Defer profile fetching to avoid blocking auth state changes
+        if (session?.user && event !== 'TOKEN_REFRESHED') {
+          // Only fetch profile for significant auth events, not token refresh
           setTimeout(() => {
-            fetchProfile(session.user.id);
+            if (mounted) {
+              fetchProfile(session.user.id);
+            }
           }, 0);
-        } else {
+        } else if (!session) {
           setProfile(null);
         }
         
-        setIsLoading(false);
+        if (!initialized) {
+          setIsLoading(false);
+          setInitialized(true);
+        }
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
       console.log('AuthContext: Initial session check:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
         setTimeout(() => {
-          fetchProfile(session.user.id);
+          if (mounted) {
+            fetchProfile(session.user.id);
+          }
         }, 0);
       }
       
       setIsLoading(false);
+      setInitialized(true);
     });
 
     return () => {
+      mounted = false;
       console.log('AuthContext: Cleaning up auth state listener');
       subscription.unsubscribe();
     };

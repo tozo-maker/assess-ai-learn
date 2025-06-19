@@ -29,11 +29,11 @@ function App() {
               <div className="min-h-screen flex w-full">
                 <Toaster />
                 <Routes>
-                  {/* Authentication Routes */}
+                  {/* Public Routes */}
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/signup" element={<SignupPage />} />
 
-                  {/* Main App Routes */}
+                  {/* Protected App Routes */}
                   <Route
                     path="/app"
                     element={
@@ -80,6 +80,9 @@ function App() {
 
                   {/* Redirect root to login */}
                   <Route path="/" element={<Navigate to="/login" replace />} />
+                  
+                  {/* Catch all redirect to login */}
+                  <Route path="*" element={<Navigate to="/login" replace />} />
                 </Routes>
               </div>
             </SidebarProvider>
