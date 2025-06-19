@@ -1,3 +1,4 @@
+
 import React from 'react';
 import EnhancedWelcomeSection from './EnhancedWelcomeSection';
 import EnhancedAlertCard from './EnhancedAlertCard';
@@ -169,9 +170,9 @@ const DashboardContentEnhanced: React.FC<DashboardContentEnhancedProps> = ({ dat
         <div>
           <DSSectionHeader className="mb-6">Recent Activity & AI Insights</DSSectionHeader>
           <DSContentGrid cols={2}>
-            <DSGridItem span={1}>
-              <LazyContainer className="h-full">
-                <LazyWrapper className="h-full">
+            <DSGridItem span={1} className="h-full">
+              <LazyContainer>
+                <LazyWrapper>
                   <LazyActivityFeedEnhanced 
                     recentAssessments={metrics.recentAssessments}
                     totalStudents={metrics.totalStudents}
@@ -181,9 +182,9 @@ const DashboardContentEnhanced: React.FC<DashboardContentEnhancedProps> = ({ dat
               </LazyContainer>
             </DSGridItem>
             
-            <DSGridItem span={1}>
-              <LazyContainer className="h-full">
-                <LazyWrapper className="h-full">
+            <DSGridItem span={1} className="h-full">
+              <LazyContainer>
+                <LazyWrapper>
                   <LazyRecentInsightsEnhanced 
                     students={students}
                     communications={[]}
