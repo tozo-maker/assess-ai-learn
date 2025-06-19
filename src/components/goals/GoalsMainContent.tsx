@@ -37,6 +37,15 @@ const GoalsMainContent: React.FC<GoalsMainContentProps> = ({
     });
   };
 
+  const handleStatusChange = (value: string) => {
+    // Convert "all" back to empty string for filtering logic
+    const statusValue = value === "all" ? "" : value;
+    handleFilterChange('status', statusValue);
+  };
+
+  // Ensure we have a safe value for the Select component
+  const safeStatusValue = filters.status || "all";
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -110,12 +119,12 @@ const GoalsMainContent: React.FC<GoalsMainContentProps> = ({
                 />
               </div>
             </div>
-            <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
+            <Select value={safeStatusValue} onValueChange={handleStatusChange}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
                 <SelectItem value="paused">Paused</SelectItem>
