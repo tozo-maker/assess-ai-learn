@@ -170,8 +170,8 @@ const DashboardContentEnhanced: React.FC<DashboardContentEnhancedProps> = ({ dat
           <DSSectionHeader className="mb-6">Recent Activity & AI Insights</DSSectionHeader>
           <DSContentGrid cols={2}>
             <DSGridItem span={1}>
-              <LazyContainer>
-                <LazyWrapper>
+              <LazyContainer className="h-full">
+                <LazyWrapper className="h-full">
                   <LazyActivityFeedEnhanced 
                     recentAssessments={metrics.recentAssessments}
                     totalStudents={metrics.totalStudents}
@@ -182,8 +182,8 @@ const DashboardContentEnhanced: React.FC<DashboardContentEnhancedProps> = ({ dat
             </DSGridItem>
             
             <DSGridItem span={1}>
-              <LazyContainer>
-                <LazyWrapper>
+              <LazyContainer className="h-full">
+                <LazyWrapper className="h-full">
                   <LazyRecentInsightsEnhanced 
                     students={students}
                     communications={[]}
