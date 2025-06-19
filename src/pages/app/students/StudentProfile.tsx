@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -11,7 +12,7 @@ import UniversalLoadingState from '@/components/common/UniversalLoadingState';
 import EnhancedErrorState from '@/components/common/EnhancedErrorState';
 
 const StudentProfile: React.FC = () => {
-  const { studentId } = useParams<{ studentId: string }>();
+  const { id: studentId } = useParams<{ id: string }>();
 
   const { data: student, isLoading, error, refetch } = useQuery({
     queryKey: ['student', studentId],
