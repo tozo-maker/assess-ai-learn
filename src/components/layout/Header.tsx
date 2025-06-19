@@ -1,128 +1,78 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  DSButton,
-  DSFlexContainer,
-  designSystem
-} from '@/components/ui/design-system';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, Settings, User, GraduationCap } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import NotificationWidget from '@/components/notifications/NotificationWidget';
-import GlobalSearch from '@/components/navigation/GlobalSearch';
-import MobileNavigation from '@/components/layout/MobileNavigation';
+import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { Search, Plus } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import RealtimeNotificationBell from '@/components/realtime/RealtimeNotificationBell';
+import { useRealtime } from '@/components/realtime/RealtimeProvider';
 
-const Header = () => {
-  const { user, profile, signOut } = useAuth();
+const Header: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isConnected } = useRealtime();
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Sign out error:', error);
+  const getQuickActionForRoute = () => {
+    const path = location.pathname;
+    
+    if (path.includes('/students')) {
+      return {
+        label: 'Add Student',
+        action: () => navigate('/app/students/add'),
+        icon: Plus
+      };
     }
+    
+    if (path.includes('/assessments')) {
+      return {
+        label: 'Create Assessment',
+        action: () => navigate('/app/assessments/add'),
+        icon: Plus
+      };
+    }
+    
+    if (path.includes('/goals')) {
+      return {
+        label: 'Create Goal',
+        action: () => navigate('/app/goals/add'),
+        icon: Plus
+      };
+    }
+    
+    return null;
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  const quickAction = getQuickActionForRoute();
 
   return (
-    <>
-      {/* Mobile Navigation Component */}
-      <MobileNavigation />
-      
-      {/* Desktop Header - Design System Compliant */}
-      <header className="hidden md:block sticky top-0 z-50 w-full border-b border-gray-200 bg-white">
-        <div className="flex h-16 items-center justify-between px-8 ml-64">
-          {/* Global Search */}
-          <div className="flex-1 max-w-2xl">
-            <GlobalSearch />
+    <header className="border-b border-gray-200 bg-white px-4 py-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <SidebarTrigger />
+          <div className="flex items-center gap-2">
+            <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+            <span className="text-xs text-gray-500">
+              {isConnected ? 'Live updates enabled' : 'Connecting...'}
+            </span>
           </div>
-
-          {/* Right side - Notifications and User menu */}
-          <DSFlexContainer gap="md">
-            {/* Notification Widget */}
-            <NotificationWidget />
-
-            {/* User menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <DSButton 
-                  variant="ghost" 
-                  className={`relative h-8 w-8 rounded-full transition-all ${designSystem.transitions.normal}`}
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || 'User'} />
-                    <AvatarFallback className={`${designSystem.colors.primary.bg} text-white`}>
-                      {profile?.full_name ? getInitials(profile.full_name) : <User className="h-4 w-4" />}
-                    </AvatarFallback>
-                  </Avatar>
-                </DSButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-white border border-gray-200 shadow-lg" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none text-gray-900">
-                      {profile?.full_name || 'Teacher'}
-                    </p>
-                    <p className="text-xs leading-none text-gray-500">
-                      {user?.email}
-                    </p>
-                    {profile?.school && (
-                      <p className="text-xs leading-none text-gray-500">
-                        {profile.school}
-                      </p>
-                    )}
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link 
-                    to="/app/settings/profile" 
-                    className={`cursor-pointer transition-colors ${designSystem.transitions.normal}`}
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile Settings</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link 
-                    to="/app/settings/notifications" 
-                    className={`cursor-pointer transition-colors ${designSystem.transitions.normal}`}
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Preferences</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={handleSignOut} 
-                  className={`cursor-pointer transition-colors ${designSystem.transitions.normal} ${designSystem.colors.danger.text}`}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign Out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </DSFlexContainer>
         </div>
-      </header>
-    </>
+
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm">
+            <Search className="h-4 w-4" />
+          </Button>
+          
+          {quickAction && (
+            <Button size="sm" onClick={quickAction.action}>
+              <quickAction.icon className="h-4 w-4 mr-2" />
+              {quickAction.label}
+            </Button>
+          )}
+          
+          <RealtimeNotificationBell />
+        </div>
+      </div>
+    </header>
   );
 };
 

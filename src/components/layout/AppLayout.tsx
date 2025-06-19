@@ -1,29 +1,32 @@
 
 import React from 'react';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import AppSidebar from './AppSidebar';
 import Header from './Header';
-import Navigation from './Navigation';
+import { BulkOperationsProvider } from '@/components/bulk/BulkOperationsProvider';
+import { RealtimeProvider } from '@/components/realtime/RealtimeProvider';
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  showBreadcrumbs?: boolean;
 }
 
-const AppLayout: React.FC<AppLayoutProps> = ({ children, showBreadcrumbs = true }) => {
+const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen flex w-full bg-gray-50">
-      {/* Desktop Navigation Sidebar */}
-      <div className="hidden md:block">
-        <Navigation />
-      </div>
-      
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-screen md:ml-64">
-        <Header />
-        <main className="flex-1 py-8 px-6 md:px-8 mb-16 md:mb-0">
-          {children}
-        </main>
-      </div>
-    </div>
+    <RealtimeProvider>
+      <BulkOperationsProvider>
+        <SidebarProvider>
+          <div className="min-h-screen flex w-full">
+            <AppSidebar />
+            <div className="flex-1 flex flex-col">
+              <Header />
+              <main className="flex-1 overflow-auto">
+                {children}
+              </main>
+            </div>
+          </div>
+        </SidebarProvider>
+      </BulkOperationsProvider>
+    </RealtimeProvider>
   );
 };
 
