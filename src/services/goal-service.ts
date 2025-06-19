@@ -10,7 +10,7 @@ class GoalService {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as Goal[];
   }
 
   async getGoalById(id: string): Promise<Goal | null> {
@@ -21,7 +21,7 @@ class GoalService {
       .single();
 
     if (error) throw error;
-    return data;
+    return data as Goal;
   }
 
   async createGoal(goal: Omit<Goal, 'id' | 'created_at' | 'updated_at' | 'teacher_id'>): Promise<Goal> {
@@ -38,7 +38,7 @@ class GoalService {
       .single();
 
     if (error) throw error;
-    return data;
+    return data as Goal;
   }
 
   async updateGoal(id: string, updates: Partial<Goal>): Promise<Goal> {
@@ -50,7 +50,7 @@ class GoalService {
       .single();
 
     if (error) throw error;
-    return data;
+    return data as Goal;
   }
 
   async deleteGoal(id: string): Promise<void> {
