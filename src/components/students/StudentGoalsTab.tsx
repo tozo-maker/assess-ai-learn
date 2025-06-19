@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +24,7 @@ const StudentGoalsTab: React.FC<StudentGoalsTabProps> = ({ studentId }) => {
     title: '',
     description: '',
     target_date: '',
-    priority: 'medium'
+    priority: 'medium' as 'low' | 'medium' | 'high'
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -99,7 +98,7 @@ const StudentGoalsTab: React.FC<StudentGoalsTabProps> = ({ studentId }) => {
       title: formData.title,
       description: formData.description || undefined,
       target_date: formData.target_date || undefined,
-      priority: formData.priority as 'low' | 'medium' | 'high',
+      priority: formData.priority,
       student_id: studentId,
       progress_percentage: 0,
       status: 'active'
@@ -125,7 +124,7 @@ const StudentGoalsTab: React.FC<StudentGoalsTabProps> = ({ studentId }) => {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority?: string) => {
     switch (priority) {
       case 'high': return 'bg-red-100 text-red-800';
       case 'medium': return 'bg-yellow-100 text-yellow-800';
@@ -256,7 +255,7 @@ const StudentGoalsTab: React.FC<StudentGoalsTabProps> = ({ studentId }) => {
                           {new Date(goal.target_date).toLocaleDateString()}
                         </span>
                       )}
-                      <Badge className={getPriorityColor(goal.priority || 'medium')} variant="secondary">
+                      <Badge className={getPriorityColor(goal.priority)} variant="secondary">
                         <Flag className="h-3 w-3 mr-1" />
                         {goal.priority || 'medium'} priority
                       </Badge>
