@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Target, Lightbulb, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Goal } from '@/types/goals';
 
 interface Student {
   id: string;
@@ -27,16 +28,6 @@ interface Insight {
   student_id: string;
   priority: 'low' | 'medium' | 'high';
   suggested_actions?: string[];
-}
-
-interface Goal {
-  student_id: string;
-  teacher_id: string;
-  title: string;
-  description: string;
-  target_date: string;
-  status: 'active' | 'completed' | 'paused';
-  progress_percentage: number;
 }
 
 interface InsightToActionConverterProps {
@@ -127,19 +118,19 @@ ${actions.map(action => `• ${action}`).join('\n')}
     setIsCreating(true);
 
     try {
-      const newGoal: Goal = {
+      const goalInsertData = {
         student_id: selectedStudentId,
         teacher_id: teacherId,
         title: goalData.title!,
         description: goalData.description!,
         target_date: goalData.target_date!,
-        status: goalData.status as 'active' | 'completed' | 'paused',
+        status: goalData.status || 'active',
         progress_percentage: goalData.progress_percentage || 0
       };
 
       const { data, error } = await supabase
         .from('goals')
-        .insert(newGoal)
+        .insert(goalInsertData)
         .select()
         .single();
 
@@ -147,12 +138,18 @@ ${actions.map(action => `• ${action}`).join('\n')}
         throw new Error(error.message);
       }
 
+      // Cast the database response to match our Goal type
+      const createdGoal: Goal = {
+        ...data,
+        status: data.status as 'active' | 'completed' | 'paused' | 'cancelled'
+      };
+
       toast({
         title: "Goal Created",
         description: "Successfully created goal from insights."
       });
 
-      onGoalCreated(data);
+      onGoalCreated(createdGoal);
       onClose();
     } catch (error) {
       console.error('Goal creation error:', error);
@@ -304,7 +301,10 @@ ${actions.map(action => `• ${action}`).join('\n')}
                 <Label htmlFor="status">Status</Label>
                 <Select 
                   value={goalData.status || 'active'} 
-                  onValueChange={(value) => setGoalData(prev => ({ ...prev, status: value as 'active' | 'completed' | 'paused' }))}
+                  onValueChange={(value) => setGoalData(prev => ({ 
+                    ...prev, 
+                    status: value as 'active' | 'completed' | 'paused' | 'cancelled'
+                  }))}
                 >
                   <SelectTrigger>
                     <SelectValue />
