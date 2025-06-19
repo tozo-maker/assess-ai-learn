@@ -202,7 +202,7 @@ const StudentGoalsTab: React.FC<StudentGoalsTabProps> = ({ studentId }) => {
                 
                 <div>
                   <Label htmlFor="priority">Priority</Label>
-                  <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
+                  <Select value={formData.priority} onValueChange={(value: 'low' | 'medium' | 'high') => setFormData({ ...formData, priority: value })}>
                     <SelectTrigger id="priority">
                       <SelectValue />
                     </SelectTrigger>
