@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface EmailTemplate {
@@ -32,7 +31,9 @@ class TemplateService {
     if (error) throw error;
     return (data || []).map(item => ({
       ...item,
-      template_type: item.template_type as EmailTemplate['template_type']
+      template_type: item.template_type as EmailTemplate['template_type'],
+      variables: (item.variables as Record<string, any>) || {},
+      is_default: item.is_default || false
     }));
   }
 
@@ -46,7 +47,9 @@ class TemplateService {
     if (error) throw error;
     return data ? {
       ...data,
-      template_type: data.template_type as EmailTemplate['template_type']
+      template_type: data.template_type as EmailTemplate['template_type'],
+      variables: (data.variables as Record<string, any>) || {},
+      is_default: data.is_default || false
     } : null;
   }
 
@@ -66,7 +69,9 @@ class TemplateService {
     if (error) throw error;
     return {
       ...data,
-      template_type: data.template_type as EmailTemplate['template_type']
+      template_type: data.template_type as EmailTemplate['template_type'],
+      variables: (data.variables as Record<string, any>) || {},
+      is_default: data.is_default || false
     };
   }
 
@@ -81,7 +86,9 @@ class TemplateService {
     if (error) throw error;
     return {
       ...data,
-      template_type: data.template_type as EmailTemplate['template_type']
+      template_type: data.template_type as EmailTemplate['template_type'],
+      variables: (data.variables as Record<string, any>) || {},
+      is_default: data.is_default || false
     };
   }
 
