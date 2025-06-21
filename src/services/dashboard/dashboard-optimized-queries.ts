@@ -1,15 +1,16 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-export const dashboardOptimizedQueries = {
-  private currentRequest: AbortController | null = null,
+// Use a module-level variable instead of private property
+let currentRequest: AbortController | null = null;
 
+export const dashboardOptimizedQueries = {
   async getDashboardData(teacherId: string) {
     // Cancel any existing request
     this.cancelCurrentRequest();
     
     // Create new abort controller
-    this.currentRequest = new AbortController();
+    currentRequest = new AbortController();
     
     try {
       // Note: Since we don't have get_dashboard_data RPC, use fallback approach
@@ -99,9 +100,9 @@ export const dashboardOptimizedQueries = {
   },
 
   cancelCurrentRequest() {
-    if (this.currentRequest) {
-      this.currentRequest.abort();
-      this.currentRequest = null;
+    if (currentRequest) {
+      currentRequest.abort();
+      currentRequest = null;
     }
   }
 };
