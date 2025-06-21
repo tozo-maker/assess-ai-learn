@@ -1,106 +1,167 @@
 
-import { dashboardQueryService } from './dashboard-query-service';
-import { dashboardMetricsCalculator, DashboardMetrics, DashboardAlert } from './dashboard-metrics-calculator';
+import { supabase } from '@/integrations/supabase/client';
 
-interface DashboardData {
-  students: any[];
-  assessments: any[];
-  metrics: DashboardMetrics;
-  alerts: DashboardAlert[];
-  teacher: { name: string; firstName: string };
-}
-
-class OptimizedDashboardService {
-  private static instance: OptimizedDashboardService;
-  private activeRequests = new Map<string, Promise<DashboardData>>();
-
-  static getInstance(): OptimizedDashboardService {
-    if (!OptimizedDashboardService.instance) {
-      OptimizedDashboardService.instance = new OptimizedDashboardService();
-    }
-    return OptimizedDashboardService.instance;
-  }
-
-  async getDashboardData(teacherId: string): Promise<DashboardData> {
-    // Request deduplication - if same request is in progress, return existing promise
-    if (this.activeRequests.has(teacherId)) {
-      return this.activeRequests.get(teacherId)!;
-    }
-
-    const requestPromise = this.fetchDashboardData(teacherId);
-    this.activeRequests.set(teacherId, requestPromise);
-
+export const optimizedDashboardService = {
+  async getDashboardData(teacherId: string) {
     try {
-      const result = await requestPromise;
-      return result;
-    } finally {
-      this.activeRequests.delete(teacherId);
-    }
-  }
+      console.log('Fetching optimized dashboard data for teacher:', teacherId);
 
-  private async fetchDashboardData(teacherId: string): Promise<DashboardData> {
-    try {
-      // Parallel execution of all queries for better performance
-      const [studentsResult, assessmentsResult, performanceResult, teacherResult] = await Promise.allSettled([
-        dashboardQueryService.getStudentsWithPerformance(teacherId),
-        dashboardQueryService.getAssessmentsWithStats(teacherId),
-        dashboardQueryService.getPerformanceMetrics(teacherId),
-        dashboardQueryService.getTeacherProfile(teacherId)
+      // Parallel fetch all dashboard data
+      const [
+        studentsResult,
+        assessmentsResult,
+        goalsResult,
+        notificationsResult,
+        teacherProfileResult
+      ] = await Promise.all([
+        // Students with performance data
+        supabase
+          .from('students')
+          .select(`
+            *,
+            student_performance (
+              assessment_count,
+              average_score,
+              performance_level,
+              needs_attention,
+              last_assessment_date
+            )
+          `)
+          .eq('teacher_id', teacherId)
+          .order('last_name', { ascending: true }),
+
+        // Recent assessments
+        supabase
+          .from('assessments')
+          .select('*')
+          .eq('teacher_id', teacherId)
+          .order('created_at', { ascending: false })
+          .limit(10),
+
+        // Active goals
+        supabase
+          .from('goals')
+          .select(`
+            *,
+            students!inner (
+              id,
+              first_name,
+              last_name,
+              grade_level
+            )
+          `)
+          .eq('students.teacher_id', teacherId)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(5),
+
+        // Recent notifications
+        supabase
+          .from('notifications')
+          .select('*')
+          .eq('teacher_id', teacherId)
+          .eq('is_read', false)
+          .order('created_at', { ascending: false })
+          .limit(5),
+
+        // Teacher profile
+        supabase
+          .from('teacher_profiles')
+          .select('*')
+          .eq('id', teacherId)
+          .single()
       ]);
 
-      // Safe extraction with fallbacks and proper type checking
-      const students = studentsResult.status === 'fulfilled' && Array.isArray(studentsResult.value) 
-        ? studentsResult.value 
-        : [];
-      
-      const assessments = assessmentsResult.status === 'fulfilled' && Array.isArray(assessmentsResult.value)
-        ? assessmentsResult.value 
-        : [];
-      
-      const performance = performanceResult.status === 'fulfilled' && Array.isArray(performanceResult.value)
-        ? performanceResult.value 
-        : [];
-      
-      const teacher = teacherResult.status === 'fulfilled' && teacherResult.value && typeof teacherResult.value === 'object'
-        ? teacherResult.value as { full_name?: string }
-        : { full_name: 'Teacher' };
+      // Handle errors
+      if (studentsResult.error) throw studentsResult.error;
+      if (assessmentsResult.error) throw assessmentsResult.error;
+      if (goalsResult.error) throw goalsResult.error;
+      if (notificationsResult.error) throw notificationsResult.error;
 
-      // Log any failed requests for debugging
-      [studentsResult, assessmentsResult, performanceResult, teacherResult].forEach((result, index) => {
-        if (result.status === 'rejected') {
-          const queries = ['students', 'assessments', 'performance', 'teacher'];
-          console.error(`Dashboard query failed for ${queries[index]}:`, result.reason);
-        }
+      const students = studentsResult.data || [];
+      const assessments = assessmentsResult.data || [];
+      const goals = goalsResult.data || [];
+      const notifications = notificationsResult.data || [];
+      const teacherProfile = teacherProfileResult.data;
+
+      // Calculate metrics
+      const totalStudents = students.length;
+      const totalAssessments = assessments.length;
+      
+      // Students needing attention
+      const studentsNeedingAttention = students.filter(
+        s => s.student_performance?.[0]?.needs_attention
+      ).length;
+
+      // Average performance
+      const studentsWithScores = students.filter(
+        s => s.student_performance?.[0]?.average_score != null
+      );
+      
+      const averagePerformance = studentsWithScores.length > 0
+        ? studentsWithScores.reduce((sum, s) => 
+            sum + (s.student_performance[0].average_score || 0), 0
+          ) / studentsWithScores.length
+        : 0;
+
+      // Recent activity count
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const recentAssessments = assessments.filter(
+        a => new Date(a.created_at) > thirtyDaysAgo
+      ).length;
+
+      // Goals progress
+      const completedGoals = goals.filter(g => g.progress_percentage >= 100).length;
+      const activeGoalsCount = goals.length;
+
+      console.log('Dashboard data compiled successfully:', {
+        totalStudents,
+        totalAssessments,
+        studentsNeedingAttention,
+        averagePerformance: Math.round(averagePerformance),
+        recentAssessments,
+        activeGoalsCount,
+        completedGoals,
+        unreadNotifications: notifications.length
       });
 
-      const metrics = dashboardMetricsCalculator.calculateMetrics(students, assessments, performance);
-      const alerts = dashboardMetricsCalculator.generateAlerts(metrics, students.length);
-
       return {
+        teacher: teacherProfile || { 
+          full_name: 'Teacher',
+          firstName: 'Teacher'
+        },
         students,
         assessments,
-        metrics,
-        alerts,
-        teacher: {
-          name: teacher.full_name || 'Teacher',
-          firstName: (teacher.full_name || 'Teacher').split(' ')[0]
+        goals,
+        notifications,
+        metrics: {
+          totalStudents,
+          totalAssessments,
+          studentsNeedingAttention,
+          averagePerformance: Math.round(averagePerformance),
+          recentAssessments,
+          activeGoalsCount,
+          completedGoals,
+          unreadNotifications: notifications.length,
+          performanceDistribution: {
+            excellent: students.filter(s => (s.student_performance?.[0]?.average_score || 0) >= 90).length,
+            good: students.filter(s => {
+              const score = s.student_performance?.[0]?.average_score || 0;
+              return score >= 80 && score < 90;
+            }).length,
+            satisfactory: students.filter(s => {
+              const score = s.student_performance?.[0]?.average_score || 0;
+              return score >= 70 && score < 80;
+            }).length,
+            needsImprovement: students.filter(s => (s.student_performance?.[0]?.average_score || 0) < 70).length
+          }
         }
       };
     } catch (error) {
-      console.error('Dashboard data fetch failed:', error);
+      console.error('Optimized dashboard service error:', error);
       throw error;
     }
   }
-
-  invalidateCache(teacherId?: string): void {
-    dashboardQueryService.invalidateCache(teacherId);
-    if (teacherId) {
-      this.activeRequests.delete(teacherId);
-    } else {
-      this.activeRequests.clear();
-    }
-  }
-}
-
-export const optimizedDashboardService = OptimizedDashboardService.getInstance();
-export type { DashboardData };
+};

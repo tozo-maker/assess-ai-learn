@@ -1,144 +1,91 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-interface OptimizedDashboardData {
-  students: any[];
-  assessments: any[];
-  performance: any[];
-  teacher: any;
-  metrics: {
-    totalStudents: number;
-    totalAssessments: number;
-    recentAssessments: number;
-    studentsNeedingAttention: number;
-    averagePerformance: number;
-  };
-}
+export const dashboardOptimizedQueries = {
+  async getDashboardData(teacherId: string) {
+    return await supabase.rpc('get_dashboard_data', { 
+      teacher_id: teacherId 
+    }).then(({ data, error }) => {
+      if (error) {
+        // Fallback to individual queries if RPC fails
+        console.warn('RPC failed, using fallback queries:', error);
+        return this.getFallbackDashboardData(teacherId);
+      }
+      return data;
+    });
+  },
 
-class DashboardOptimizedQueries {
-  private static instance: DashboardOptimizedQueries;
-  private abortController: AbortController | null = null;
-
-  static getInstance(): DashboardOptimizedQueries {
-    if (!DashboardOptimizedQueries.instance) {
-      DashboardOptimizedQueries.instance = new DashboardOptimizedQueries();
-    }
-    return DashboardOptimizedQueries.instance;
-  }
-
-  async getDashboardData(teacherId: string): Promise<OptimizedDashboardData> {
-    // Cancel any existing request
-    if (this.abortController) {
-      this.abortController.abort();
-    }
-    
-    this.abortController = new AbortController();
-    
-    try {
-      // Single optimized query combining students with performance
-      const studentsQuery = supabase
+  async getFallbackDashboardData(teacherId: string) {
+    // Individual optimized queries as fallback
+    const [studentsData, assessmentsData, goalsData] = await Promise.all([
+      supabase
         .from('students')
         .select(`
-          id,
-          first_name,
-          last_name,
-          grade_level,
-          parent_email,
-          created_at,
+          id, first_name, last_name, grade_level,
           student_performance (
-            average_score,
-            performance_level,
-            needs_attention,
-            assessment_count
+            assessment_count, average_score, performance_level, needs_attention
           )
         `)
-        .eq('teacher_id', teacherId)
-        .order('last_name');
-
-      // Optimized assessments query with response count
-      const assessmentsQuery = supabase
+        .eq('teacher_id', teacherId),
+      
+      supabase
         .from('assessments')
-        .select(`
-          id,
-          title,
-          subject,
-          assessment_date,
-          max_score,
-          created_at
-        `)
+        .select('id, title, created_at, assessment_date')
         .eq('teacher_id', teacherId)
-        .order('assessment_date', { ascending: false })
-        .limit(20);
+        .order('created_at', { ascending: false })
+        .limit(5),
+      
+      supabase
+        .from('goals')
+        .select(`
+          id, title, status, progress_percentage,
+          students!inner(first_name, last_name)
+        `)
+        .eq('students.teacher_id', teacherId)
+        .eq('status', 'active')
+        .limit(5)
+    ]);
 
-      // Teacher profile query
-      const teacherQuery = supabase
-        .from('teacher_profiles')
-        .select('full_name, school, subjects, grade_levels')
-        .eq('id', teacherId)
-        .maybeSingle();
+    return {
+      students: studentsData.data || [],
+      assessments: assessmentsData.data || [],
+      goals: goalsData.data || [],
+      metrics: this.calculateMetrics(studentsData.data || [])
+    };
+  },
 
-      // Execute queries in parallel
-      const [studentsResult, assessmentsResult, teacherResult] = await Promise.all([
-        studentsQuery,
-        assessmentsQuery,
-        teacherQuery
-      ]);
+  calculateMetrics(students: any[]) {
+    const totalStudents = students.length;
+    const studentsNeedingAttention = students.filter(
+      s => s.student_performance?.[0]?.needs_attention
+    ).length;
+    
+    const studentsWithScores = students.filter(
+      s => s.student_performance?.[0]?.average_score != null
+    );
+    
+    const averagePerformance = studentsWithScores.length > 0
+      ? studentsWithScores.reduce((sum, s) => 
+          sum + (s.student_performance[0].average_score || 0), 0
+        ) / studentsWithScores.length
+      : 0;
 
-      if (studentsResult.error) throw studentsResult.error;
-      if (assessmentsResult.error) throw assessmentsResult.error;
-      if (teacherResult.error && teacherResult.error.code !== 'PGRST116') throw teacherResult.error;
-
-      const students = studentsResult.data || [];
-      const assessments = assessmentsResult.data || [];
-      const teacher = teacherResult.data || { full_name: 'Teacher' };
-
-      // Calculate metrics efficiently
-      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      const recentAssessments = assessments.filter(a => 
-        a.assessment_date && new Date(a.assessment_date) >= oneWeekAgo
-      ).length;
-
-      const studentsWithPerformance = students.filter(s => 
-        s.student_performance && s.student_performance.length > 0
-      );
-
-      const studentsNeedingAttention = studentsWithPerformance.filter(s => 
-        s.student_performance[0]?.needs_attention
-      ).length;
-
-      const averagePerformance = studentsWithPerformance.length > 0
-        ? studentsWithPerformance.reduce((sum, s) => 
-            sum + (s.student_performance[0]?.average_score || 0), 0
-          ) / studentsWithPerformance.length
-        : 0;
-
-      return {
-        students,
-        assessments,
-        performance: studentsWithPerformance.map(s => s.student_performance[0]).filter(Boolean),
-        teacher,
-        metrics: {
-          totalStudents: students.length,
-          totalAssessments: assessments.length,
-          recentAssessments,
-          studentsNeedingAttention,
-          averagePerformance
-        }
-      };
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request was cancelled');
+    return {
+      totalStudents,
+      studentsNeedingAttention,
+      averagePerformance: Math.round(averagePerformance),
+      performanceDistribution: {
+        excellent: students.filter(s => (s.student_performance?.[0]?.average_score || 0) >= 90).length,
+        good: students.filter(s => {
+          const score = s.student_performance?.[0]?.average_score || 0;
+          return score >= 80 && score < 90;
+        }).length,
+        satisfactory: students.filter(s => {
+          const score = s.student_performance?.[0]?.average_score || 0;
+          return score >= 70 && score < 80;
+        }).length,
+        needsImprovement: students.filter(s => (s.student_performance?.[0]?.average_score || 0) < 70).length
       }
-      throw error;
-    }
+    };
   }
-
-  cancelCurrentRequest(): void {
-    if (this.abortController) {
-      this.abortController.abort();
-      this.abortController = null;
-    }
-  }
-}
-
-export const dashboardOptimizedQueries = DashboardOptimizedQueries.getInstance();
+};
