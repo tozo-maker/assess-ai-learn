@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import * as z from 'z';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,20 +50,18 @@ const Login = () => {
         remember: data.remember
       });
       
-      // Navigate to dashboard after successful login
       console.log('Login: Sign in successful, redirecting to dashboard');
       navigate('/app/dashboard', { replace: true });
     } catch (error) {
       console.error('Login: Sign in failed:', error);
-      // Error is handled by the auth context and will show in UI
     }
   };
 
   return (
     <PublicLayout showNavigation={false}>
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
             <p className="mt-2 text-gray-600">Sign in to your LearnSpark AI account</p>
           </div>

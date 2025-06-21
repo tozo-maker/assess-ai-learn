@@ -1,6 +1,6 @@
 
 import React from 'react';
-import Header from './Header';
+import PublicHeader from './PublicHeader';
 
 interface PublicLayoutProps {
   children: React.ReactNode;
@@ -10,7 +10,7 @@ interface PublicLayoutProps {
 const PublicLayout: React.FC<PublicLayoutProps> = ({ children, showNavigation = true }) => {
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+      {showNavigation && <PublicHeader />}
       {children}
     </div>
   );

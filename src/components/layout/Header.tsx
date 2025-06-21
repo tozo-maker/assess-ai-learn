@@ -6,11 +6,18 @@ import { Search, Plus } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import RealtimeNotificationBell from '@/components/realtime/RealtimeNotificationBell';
 import { useRealtime } from '@/components/realtime/RealtimeProvider';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isConnected } = useRealtime();
+  const { user } = useAuth();
+
+  // Don't render authenticated header if user is not logged in
+  if (!user) {
+    return null;
+  }
 
   const getQuickActionForRoute = () => {
     const path = location.pathname;
