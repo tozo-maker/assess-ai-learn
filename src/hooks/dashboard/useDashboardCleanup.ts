@@ -5,7 +5,13 @@ import { dashboardOptimizedQueries } from '@/services/dashboard/dashboard-optimi
 export const useDashboardCleanup = () => {
   useEffect(() => {
     return () => {
-      dashboardOptimizedQueries.cancelCurrentRequest();
+      try {
+        if (dashboardOptimizedQueries.cancelCurrentRequest) {
+          dashboardOptimizedQueries.cancelCurrentRequest();
+        }
+      } catch (error) {
+        console.warn('Error during dashboard cleanup:', error);
+      }
     };
   }, []);
 };

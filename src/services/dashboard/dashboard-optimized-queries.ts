@@ -2,17 +2,26 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export const dashboardOptimizedQueries = {
+  private currentRequest: AbortController | null = null,
+
   async getDashboardData(teacherId: string) {
-    return await supabase.rpc('get_dashboard_data', { 
-      teacher_id: teacherId 
-    }).then(({ data, error }) => {
-      if (error) {
-        // Fallback to individual queries if RPC fails
-        console.warn('RPC failed, using fallback queries:', error);
-        return this.getFallbackDashboardData(teacherId);
+    // Cancel any existing request
+    this.cancelCurrentRequest();
+    
+    // Create new abort controller
+    this.currentRequest = new AbortController();
+    
+    try {
+      // Note: Since we don't have get_dashboard_data RPC, use fallback approach
+      console.warn('Using fallback dashboard data approach');
+      return await this.getFallbackDashboardData(teacherId);
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        console.log('Dashboard request was cancelled');
+        return null;
       }
-      return data;
-    });
+      throw error;
+    }
   },
 
   async getFallbackDashboardData(teacherId: string) {
@@ -87,5 +96,12 @@ export const dashboardOptimizedQueries = {
         needsImprovement: students.filter(s => (s.student_performance?.[0]?.average_score || 0) < 70).length
       }
     };
+  },
+
+  cancelCurrentRequest() {
+    if (this.currentRequest) {
+      this.currentRequest.abort();
+      this.currentRequest = null;
+    }
   }
 };

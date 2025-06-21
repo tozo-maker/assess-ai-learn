@@ -16,3 +16,13 @@ export interface AuthUser {
   email: string;
   profile?: TeacherProfile;
 }
+
+export interface SignUpData {
+  email: string;
+  password: string;
+  full_name: string;
+  school: string;
+  grade_levels: string[];
+  subjects: string[];
+  years_experience?: number;
+}
