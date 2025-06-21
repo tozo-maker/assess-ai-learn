@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { StudentResponse, StudentResponseFormData } from '@/types/assessment';
+import { StudentResponse, StudentResponseFormData, ErrorType } from '@/types/assessment';
 
 export const studentResponseService = {
   async createStudentResponses(responses: StudentResponseFormData[]): Promise<StudentResponse[]> {
@@ -16,7 +16,10 @@ export const studentResponseService = {
       throw new Error(`Failed to create student responses: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      error_type: item.error_type as ErrorType
+    }));
   },
 
   async getStudentResponses(assessmentId: string, studentId?: string): Promise<StudentResponse[]> {
@@ -44,7 +47,10 @@ export const studentResponseService = {
       throw new Error(`Failed to fetch student responses: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      error_type: item.error_type as ErrorType
+    }));
   },
 
   async updateStudentResponse(id: string, updates: Partial<StudentResponseFormData>): Promise<StudentResponse> {
@@ -59,7 +65,10 @@ export const studentResponseService = {
       throw new Error(`Failed to update student response: ${error.message}`);
     }
 
-    return data;
+    return {
+      ...data,
+      error_type: data.error_type as ErrorType
+    };
   },
 
   async deleteStudentResponse(id: string): Promise<void> {

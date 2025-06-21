@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
 
+import AssessmentSubmissionWorkflow from './AssessmentSubmissionWorkflow';
 import { gradeLevelOptions } from '@/types/student';
 import { useToast } from '@/hooks/use-toast';
 import { assessmentService } from '@/services/assessment-service';

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -175,7 +174,7 @@ const AssessmentSubmissionWorkflow: React.FC<AssessmentSubmissionWorkflowProps> 
                        status === 'error' ? 'Failed' : 'Pending'}
                     </Badge>
                     
-                    {status !== 'completed' && status !== 'submitting' && (
+                    {status === 'pending' || status === 'error' ? (
                       <Button
                         size="sm"
                         variant="outline"
@@ -184,7 +183,7 @@ const AssessmentSubmissionWorkflow: React.FC<AssessmentSubmissionWorkflowProps> 
                       >
                         Analyze
                       </Button>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               );
