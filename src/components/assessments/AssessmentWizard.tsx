@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -71,6 +71,9 @@ type AssessmentWizardValues = z.infer<typeof basicInfoSchema> & z.infer<typeof a
 
 const AssessmentWizard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('basic-info');
+  const [showSubmissionWorkflow, setShowSubmissionWorkflow] = useState(false);
+  const [createdAssessmentId, setCreatedAssessmentId] = useState<string | null>(null);
+  const [availableStudents, setAvailableStudents] = useState<any[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -153,6 +156,29 @@ const AssessmentWizard: React.FC = () => {
     }
   };
 
+  // Fetch students when component mounts
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('students')
+          .select('id, first_name, last_name, grade_level')
+          .eq('teacher_id', user.id)
+          .order('last_name', { ascending: true });
+
+        if (error) throw error;
+        setAvailableStudents(data || []);
+      } catch (error) {
+        console.error('Error fetching students:', error);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+
   const onSubmit = async (data: AssessmentWizardValues) => {
     try {
       // Get current user
@@ -202,7 +228,10 @@ const AssessmentWizard: React.FC = () => {
         description: "Your assessment has been created successfully",
       });
       
-      navigate(`/app/assessments/${assessment.id}`);
+      // Store assessment ID and show submission workflow
+      setCreatedAssessmentId(assessment.id);
+      setShowSubmissionWorkflow(true);
+      
     } catch (error) {
       console.error('Error creating assessment:', error);
       toast({
@@ -212,6 +241,26 @@ const AssessmentWizard: React.FC = () => {
       });
     }
   };
+
+  const handleWorkflowComplete = () => {
+    if (createdAssessmentId) {
+      navigate(`/app/assessments/${createdAssessmentId}/insights`);
+    }
+  };
+
+  // Show submission workflow after assessment creation
+  if (showSubmissionWorkflow && createdAssessmentId) {
+    return (
+      <div className="w-full max-w-4xl mx-auto">
+        <AssessmentSubmissionWorkflow
+          assessmentId={createdAssessmentId}
+          assessmentTitle={form.watch('title')}
+          students={availableStudents}
+          onComplete={handleWorkflowComplete}
+        />
+      </div>
+    );
+  }
 
   return (
     <DSCard className="w-full max-w-4xl mx-auto">

@@ -1,116 +1,91 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Target, Lightbulb, ArrowRight } from 'lucide-react';
+import { Target, Plus, Calendar, Lightbulb, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Goal } from '@/types/goals';
+
+interface Insight {
+  id: string;
+  student_id: string;
+  strengths: string[];
+  growth_areas: string[];
+  recommendations: string[];
+  overall_summary: string;
+}
 
 interface Student {
   id: string;
   first_name: string;
   last_name: string;
-  grade_level: string;
-}
-
-interface Insight {
-  id: string;
-  type: 'strength' | 'growth_area' | 'pattern' | 'recommendation';
-  title: string;
-  description: string;
-  student_id: string;
-  priority: 'low' | 'medium' | 'high';
-  suggested_actions?: string[];
 }
 
 interface InsightToActionConverterProps {
   insights: Insight[];
   students: Student[];
-  teacherId: string;
-  onGoalCreated: (goal: Goal) => void;
-  onClose: () => void;
+  onGoalCreated?: (goalId: string) => void;
 }
 
 const InsightToActionConverter: React.FC<InsightToActionConverterProps> = ({
   insights,
   students,
-  teacherId,
-  onGoalCreated,
-  onClose
+  onGoalCreated
 }) => {
-  const [selectedInsights, setSelectedInsights] = useState<string[]>([]);
-  const [goalData, setGoalData] = useState<Partial<Goal>>({
-    title: '',
-    description: '',
-    target_date: '',
-    status: 'active',
-    progress_percentage: 0
-  });
-  const [selectedStudentId, setSelectedStudentId] = useState<string>('');
+  const [selectedInsights, setSelectedInsights] = useState<Set<string>>(new Set());
+  const [goalTitle, setGoalTitle] = useState('');
+  const [goalDescription, setGoalDescription] = useState('');
+  const [targetDate, setTargetDate] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const actionableInsights = insights.filter(
-    insight => insight.type === 'growth_area' || insight.type === 'recommendation'
-  );
-
-  const handleInsightSelect = (insightId: string) => {
-    setSelectedInsights(prev => {
-      if (prev.includes(insightId)) {
-        return prev.filter(id => id !== insightId);
-      } else {
-        return [...prev, insightId];
+  const handleInsightSelection = (insightId: string, checked: boolean) => {
+    const newSelected = new Set(selectedInsights);
+    if (checked) {
+      newSelected.add(insightId);
+    } else {
+      newSelected.delete(insightId);
+    }
+    setSelectedInsights(newSelected);
+    
+    // Auto-generate goal content based on selected insights
+    if (newSelected.size > 0) {
+      const selectedInsightObjects = insights.filter(i => newSelected.has(i.id));
+      const allGrowthAreas = selectedInsightObjects.flatMap(i => i.growth_areas);
+      const allRecommendations = selectedInsightObjects.flatMap(i => i.recommendations);
+      
+      if (!goalTitle) {
+        setGoalTitle(`Improve ${allGrowthAreas[0] || 'Performance'}`);
       }
-    });
-  };
-
-  const generateGoalFromInsights = () => {
-    const selected = actionableInsights.filter(insight => 
-      selectedInsights.includes(insight.id)
-    );
-    
-    if (selected.length === 0) return;
-
-    // Generate title based on selected insights
-    const titles = selected.map(insight => insight.title);
-    const generatedTitle = titles.length === 1 
-      ? `Improve ${titles[0]}`
-      : `Multi-area Development Plan`;
-
-    // Generate description with action items
-    const descriptions = selected.map(insight => insight.description);
-    const actions = selected.flatMap(insight => insight.suggested_actions || []);
-    
-    const generatedDescription = `
-Goal based on assessment insights:
-
-Key Areas:
-${descriptions.map(desc => `• ${desc}`).join('\n')}
-
-Suggested Actions:
-${actions.map(action => `• ${action}`).join('\n')}
-    `.trim();
-
-    setGoalData(prev => ({
-      ...prev,
-      title: generatedTitle,
-      description: generatedDescription
-    }));
+      
+      if (!goalDescription) {
+        const description = `Based on assessment insights:\n\nFocus Areas:\n${allGrowthAreas.slice(0, 3).map(area => `• ${area}`).join('\n')}\n\nRecommended Actions:\n${allRecommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}`;
+        setGoalDescription(description);
+      }
+    }
   };
 
   const handleCreateGoal = async () => {
-    if (!selectedStudentId || !goalData.title || !goalData.description || !goalData.target_date) {
+    if (!goalTitle.trim()) {
       toast({
         variant: "destructive",
-        title: "Missing Information",
-        description: "Please fill in all required fields."
+        title: "Goal Title Required",
+        description: "Please enter a title for the learning goal."
+      });
+      return;
+    }
+
+    if (selectedInsights.size === 0) {
+      toast({
+        variant: "destructive",
+        title: "Select Insights",
+        description: "Please select at least one insight to base the goal on."
       });
       return;
     }
@@ -118,45 +93,56 @@ ${actions.map(action => `• ${action}`).join('\n')}
     setIsCreating(true);
 
     try {
-      const goalInsertData = {
-        student_id: selectedStudentId,
-        teacher_id: teacherId,
-        title: goalData.title!,
-        description: goalData.description!,
-        target_date: goalData.target_date!,
-        status: goalData.status || 'active',
-        progress_percentage: goalData.progress_percentage || 0
-      };
-
-      const { data, error } = await supabase
-        .from('goals')
-        .insert(goalInsertData)
-        .select()
-        .single();
-
-      if (error) {
-        throw new Error(error.message);
+      // Get current user for teacher_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
       }
 
-      // Cast the database response to match our Goal type
-      const createdGoal: Goal = {
-        ...data,
-        status: data.status as 'active' | 'completed' | 'paused' | 'cancelled'
-      };
+      // Create goals for each student associated with selected insights
+      const selectedInsightObjects = insights.filter(i => selectedInsights.has(i.id));
+      const studentIds = [...new Set(selectedInsightObjects.map(i => i.student_id))];
 
-      toast({
-        title: "Goal Created",
-        description: "Successfully created goal from insights."
-      });
+      const goalPromises = studentIds.map(studentId => 
+        supabase.from('goals').insert({
+          student_id: studentId,
+          teacher_id: user.id,
+          title: goalTitle,
+          description: goalDescription,
+          target_date: targetDate || null,
+          status: 'active',
+          progress_percentage: 0
+        }).select().single()
+      );
 
-      onGoalCreated(createdGoal);
-      onClose();
+      const results = await Promise.all(goalPromises);
+      const successfulGoals = results.filter(r => !r.error);
+
+      if (successfulGoals.length > 0) {
+        toast({
+          title: "Goals Created Successfully",
+          description: `Created ${successfulGoals.length} learning goal(s) based on insights.`
+        });
+
+        // Call callback with first created goal ID
+        if (onGoalCreated && successfulGoals[0]?.data?.id) {
+          onGoalCreated(successfulGoals[0].data.id);
+        }
+
+        // Reset form
+        setSelectedInsights(new Set());
+        setGoalTitle('');
+        setGoalDescription('');
+        setTargetDate('');
+      } else {
+        throw new Error('Failed to create any goals');
+      }
     } catch (error) {
       console.error('Goal creation error:', error);
       toast({
         variant: "destructive",
-        title: "Creation Failed",
-        description: "Failed to create goal. Please try again."
+        title: "Goal Creation Failed",
+        description: error instanceof Error ? error.message : "Failed to create learning goals"
       });
     } finally {
       setIsCreating(false);
@@ -168,177 +154,142 @@ ${actions.map(action => `• ${action}`).join('\n')}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Lightbulb className="h-5 w-5" />
-            Convert Insights to Goals
+            <Target className="h-5 w-5" />
+            Convert Insights to Learning Goals
           </CardTitle>
+          <p className="text-sm text-gray-600">
+            Select insights to automatically create targeted learning goals
+          </p>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600 mb-4">
-            Select assessment insights to convert into actionable learning goals for your students.
-          </p>
-
-          {actionableInsights.length === 0 ? (
-            <Alert>
-              <AlertDescription>
-                No actionable insights available. Generate assessment analysis first to create goals.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <div className="space-y-4">
-              <h3 className="font-medium">Available Insights</h3>
-              <div className="space-y-2">
-                {actionableInsights.map(insight => {
-                  const student = students.find(s => s.id === insight.student_id);
-                  const isSelected = selectedInsights.includes(insight.id);
-
-                  return (
-                    <div
-                      key={insight.id}
-                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                        isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => handleInsightSelect(insight.id)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium">{insight.title}</h4>
-                            <Badge variant={insight.priority === 'high' ? 'destructive' : 'outline'}>
-                              {insight.priority}
-                            </Badge>
-                            <Badge variant="outline">
-                              {insight.type.replace('_', ' ')}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600">{insight.description}</p>
-                          {student && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              Student: {student.first_name} {student.last_name}
+          <div className="space-y-4">
+            {/* Insight Selection */}
+            <div>
+              <h3 className="font-medium mb-3 flex items-center gap-2">
+                <Lightbulb className="h-4 w-4" />
+                Available Insights ({insights.length})
+              </h3>
+              
+              {insights.length === 0 ? (
+                <Alert>
+                  <AlertDescription>
+                    No insights available. Complete some assessments to generate AI insights.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {insights.map(insight => {
+                    const student = students.find(s => s.id === insight.student_id);
+                    const isSelected = selectedInsights.has(insight.id);
+                    
+                    return (
+                      <div 
+                        key={insight.id}
+                        className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                          isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                        }`}
+                        onClick={() => handleInsightSelection(insight.id, !isSelected)}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="font-medium">
+                              {student?.first_name} {student?.last_name}
                             </p>
-                          )}
+                            <p className="text-sm text-gray-600">{insight.overall_summary}</p>
+                          </div>
+                          {isSelected && <CheckCircle className="h-5 w-5 text-blue-600" />}
                         </div>
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleInsightSelect(insight.id)}
-                          className="mt-1"
-                        />
+                        
+                        {insight.growth_areas.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-500 mb-1">Growth Areas:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {insight.growth_areas.slice(0, 2).map((area, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {area}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {selectedInsights.length > 0 && (
-                <Button onClick={generateGoalFromInsights} variant="outline">
-                  <ArrowRight className="h-4 w-4 mr-2" />
-                  Generate Goal Template
-                </Button>
+                    );
+                  })}
+                </div>
               )}
             </div>
-          )}
+
+            {/* Goal Creation Form */}
+            {selectedInsights.size > 0 && (
+              <div className="border-t pt-4">
+                <h3 className="font-medium mb-3 flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create Learning Goal
+                </h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Goal Title *</label>
+                    <Input
+                      placeholder="Enter goal title..."
+                      value={goalTitle}
+                      onChange={(e) => setGoalTitle(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Description</label>
+                    <Textarea
+                      placeholder="Describe the goal and action steps..."
+                      value={goalDescription}
+                      onChange={(e) => setGoalDescription(e.target.value)}
+                      rows={4}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1 flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Target Date
+                    </label>
+                    <Input
+                      type="date"
+                      value={targetDate}
+                      onChange={(e) => setTargetDate(e.target.value)}
+                    />
+                  </div>
+                  
+                  <Alert>
+                    <AlertDescription>
+                      This goal will be created for {[...new Set(insights.filter(i => selectedInsights.has(i.id)).map(i => i.student_id))].length} student(s) based on the selected insights.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      onClick={handleCreateGoal}
+                      disabled={isCreating || !goalTitle.trim()}
+                    >
+                      {isCreating ? 'Creating...' : 'Create Learning Goal'}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setSelectedInsights(new Set());
+                        setGoalTitle('');
+                        setGoalDescription('');
+                        setTargetDate('');
+                      }}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
-
-      {(goalData.title || goalData.description) && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              Goal Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="student">Select Student *</Label>
-              <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a student" />
-                </SelectTrigger>
-                <SelectContent>
-                  {students.map(student => (
-                    <SelectItem key={student.id} value={student.id}>
-                      {student.first_name} {student.last_name} (Grade {student.grade_level})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="title">Goal Title *</Label>
-              <Input
-                id="title"
-                value={goalData.title || ''}
-                onChange={(e) => setGoalData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter goal title"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="description">Goal Description *</Label>
-              <Textarea
-                id="description"
-                value={goalData.description || ''}
-                onChange={(e) => setGoalData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Describe the goal and action steps"
-                className="min-h-[120px]"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="target_date">Target Date *</Label>
-                <Input
-                  id="target_date"
-                  type="date"
-                  value={goalData.target_date || ''}
-                  onChange={(e) => setGoalData(prev => ({ ...prev, target_date: e.target.value }))}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select 
-                  value={goalData.status || 'active'} 
-                  onValueChange={(value) => setGoalData(prev => ({ 
-                    ...prev, 
-                    status: value as 'active' | 'completed' | 'paused' | 'cancelled'
-                  }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="paused">Paused</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="flex items-center justify-between">
-        <Button variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        
-        <Button 
-          onClick={handleCreateGoal}
-          disabled={isCreating || !selectedStudentId || !goalData.title}
-          className="flex items-center gap-2"
-        >
-          {isCreating ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Target className="h-4 w-4" />
-          )}
-          Create Goal
-        </Button>
-      </div>
     </div>
   );
 };

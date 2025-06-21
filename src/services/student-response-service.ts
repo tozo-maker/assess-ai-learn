@@ -1,54 +1,102 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { StudentResponse, StudentResponseFormData } from '@/types/assessment';
 
-export interface StudentResponseWithAssessment {
-  id: string;
-  student_id: string;
-  assessment_id: string;
-  score: number;
-  created_at: string;
-  assessment?: {
-    id: string;
-    title: string;
-    subject: string;
-    max_score: number;
-  };
-}
-
-class StudentResponseService {
-  async getStudentResponsesByStudent(studentId: string): Promise<StudentResponseWithAssessment[]> {
-    console.log('Fetching responses for student:', studentId);
+export const studentResponseService = {
+  async createStudentResponses(responses: StudentResponseFormData[]): Promise<StudentResponse[]> {
+    console.log('Creating student responses:', responses.length);
     
     const { data, error } = await supabase
       .from('student_responses')
+      .insert(responses)
+      .select();
+
+    if (error) {
+      console.error('Error creating student responses:', error);
+      throw new Error(`Failed to create student responses: ${error.message}`);
+    }
+
+    return data || [];
+  },
+
+  async getStudentResponses(assessmentId: string, studentId?: string): Promise<StudentResponse[]> {
+    let query = supabase
+      .from('student_responses')
       .select(`
-        id,
-        student_id,
-        assessment_id,
-        score,
-        created_at,
-        assessments:assessment_id (
-          id,
-          title,
-          subject,
+        *,
+        assessment_items (
+          question_text,
+          item_number,
+          knowledge_type,
+          difficulty_level,
           max_score
         )
       `)
-      .eq('student_id', studentId)
-      .order('created_at', { ascending: false });
+      .eq('assessment_id', assessmentId);
 
-    if (error) {
-      console.error('Error fetching student responses:', error);
-      throw error;
+    if (studentId) {
+      query = query.eq('student_id', studentId);
     }
 
-    return (data || []).map(response => ({
-      ...response,
-      assessment: Array.isArray(response.assessments) 
-        ? response.assessments[0] 
-        : response.assessments
-    }));
-  }
-}
+    const { data, error } = await query.order('created_at', { ascending: false });
 
-export const studentResponseService = new StudentResponseService();
+    if (error) {
+      throw new Error(`Failed to fetch student responses: ${error.message}`);
+    }
+
+    return data || [];
+  },
+
+  async updateStudentResponse(id: string, updates: Partial<StudentResponseFormData>): Promise<StudentResponse> {
+    const { data, error } = await supabase
+      .from('student_responses')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to update student response: ${error.message}`);
+    }
+
+    return data;
+  },
+
+  async deleteStudentResponse(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('student_responses')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(`Failed to delete student response: ${error.message}`);
+    }
+  },
+
+  async submitAssessmentForAnalysis(assessmentId: string, studentId: string): Promise<void> {
+    console.log('Submitting assessment for AI analysis:', { assessmentId, studentId });
+    
+    // Get student responses for this assessment
+    const responses = await this.getStudentResponses(assessmentId, studentId);
+    
+    if (responses.length === 0) {
+      throw new Error('No responses found for this assessment');
+    }
+
+    // Format responses for analysis
+    const analysisRequest = {
+      assessmentId,
+      studentId,
+      responses: responses.map(r => ({
+        itemId: r.assessment_item_id,
+        score: Number(r.score),
+        maxScore: Number(r.assessment_items?.max_score || 0),
+        errorType: r.error_type || undefined
+      }))
+    };
+
+    // Import the analysis service dynamically to avoid circular dependencies
+    const { assessmentAnalysisService } = await import('./assessment-analysis-service');
+    await assessmentAnalysisService.generateAnalysis(analysisRequest);
+  }
+};
