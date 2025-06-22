@@ -17,6 +17,7 @@ export interface ParentCommunication {
 
 export interface CommunicationFormData {
   student_id: string;
+  teacher_id: string;
   communication_type: 'progress_report' | 'assessment_summary' | 'goal_update' | 'general' | 'ai_insight';
   subject: string;
   content: string;
