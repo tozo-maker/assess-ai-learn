@@ -11,6 +11,7 @@ export interface ParentCommunication {
   sent_at?: string;
   parent_email?: string;
   pdf_url?: string;
+  email_status?: 'sent' | 'pending' | 'failed';
   created_at: string;
 }
 

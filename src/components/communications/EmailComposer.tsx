@@ -18,6 +18,8 @@ interface EmailComposerProps {
   templateType?: 'progress_report' | 'achievement' | 'concern_alert' | 'custom' | 'bulk_announcement';
 }
 
+type EmailType = 'progress_report' | 'achievement' | 'concern_alert' | 'custom' | 'bulk_announcement';
+
 const EmailComposer: React.FC<EmailComposerProps> = ({
   preselectedStudents = [],
   templateType = 'custom'
@@ -25,7 +27,7 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
   const [selectedStudents, setSelectedStudents] = useState<string[]>(preselectedStudents);
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
-  const [emailType, setEmailType] = useState(templateType);
+  const [emailType, setEmailType] = useState<EmailType>(templateType);
   const { toast } = useToast();
 
   const { data: students = [], isLoading } = useQuery({
@@ -89,6 +91,10 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
     setSelectedStudents([]);
   };
 
+  const handleEmailTypeChange = (value: string) => {
+    setEmailType(value as EmailType);
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -113,7 +119,7 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
           {/* Email Type Selection */}
           <div>
             <label className="block text-sm font-medium mb-2">Email Type</label>
-            <Select value={emailType} onValueChange={setEmailType}>
+            <Select value={emailType} onValueChange={handleEmailTypeChange}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
