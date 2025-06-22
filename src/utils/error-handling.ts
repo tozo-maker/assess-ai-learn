@@ -43,10 +43,20 @@ export const handleError = (error: unknown, context?: string): AppError => {
   }
   
   if (error instanceof Error) {
-    return new AppError(error.message, 'UNKNOWN_ERROR', 500, { originalError: error.name });
+    return {
+      ...error,
+      code: 'UNKNOWN_ERROR',
+      statusCode: 500,
+      context: { originalError: error.name }
+    } as AppError;
   }
   
-  return new AppError('An unknown error occurred', 'UNKNOWN_ERROR', 500);
+  return {
+    name: 'AppError',
+    message: 'An unknown error occurred',
+    code: 'UNKNOWN_ERROR',
+    statusCode: 500
+  } as AppError;
 };
 
 export const useErrorHandler = () => {

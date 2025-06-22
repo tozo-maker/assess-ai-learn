@@ -38,24 +38,24 @@ export const testAssessmentFlow = async (
     
     // Step 2: Create Assessment Items
     console.log('Testing Step 2: Assessment Items Creation');
-    await assessmentService.createAssessmentItems([
+    const itemsData = [
       {
-        assessment_id: assessment.id,
-        item_number: 1,
         question_text: 'What is 2 + 2?',
-        knowledge_type: 'procedural',
-        difficulty_level: 'easy',
+        item_number: 1,
+        knowledge_type: 'procedural' as const,
+        difficulty_level: 'easy' as const,
         max_score: 50,
       },
       {
-        assessment_id: assessment.id,
-        item_number: 2,
         question_text: 'Explain your reasoning',
-        knowledge_type: 'conceptual',
-        difficulty_level: 'medium',
+        item_number: 2,
+        knowledge_type: 'conceptual' as const,
+        difficulty_level: 'medium' as const,
         max_score: 50,
       }
-    ], assessment.id);
+    ];
+    
+    await assessmentService.createAssessmentItems(itemsData, assessment.id);
     
     results.push({
       step: 'Assessment Items Creation',

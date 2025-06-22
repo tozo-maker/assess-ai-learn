@@ -25,7 +25,7 @@ const ScoringSetupForm: React.FC<ScoringSetupFormProps> = ({ form }) => {
               {...field}
               onChange={(e) => field.onChange(parseInt(e.target.value))}
               error={!!form.formState.errors.max_score}
-              helpText={form.formState.errors.max_score?.message || "Total points possible for this assessment"}
+              helpText={form.formState.errors.max_score?.message as string || "Total points possible for this assessment"}
             />
           </DSFormField>
         )}

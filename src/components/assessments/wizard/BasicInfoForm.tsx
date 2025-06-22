@@ -23,7 +23,7 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ form }) => {
               placeholder="Enter assessment title" 
               {...field} 
               error={!!form.formState.errors.title}
-              helpText={form.formState.errors.title?.message}
+              helpText={form.formState.errors.title?.message as string}
             />
           </DSFormField>
         )}
@@ -53,7 +53,7 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ form }) => {
                 placeholder="Enter subject (e.g., Math, Reading)" 
                 {...field} 
                 error={!!form.formState.errors.subject}
-                helpText={form.formState.errors.subject?.message}
+                helpText={form.formState.errors.subject?.message as string}
               />
             </DSFormField>
           )}
