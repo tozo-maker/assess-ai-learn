@@ -179,7 +179,6 @@ const AssessmentSubmissionWorkflow: React.FC<AssessmentSubmissionWorkflowProps> 
                         size="sm"
                         variant="outline"
                         onClick={() => handleSubmitForStudent(student.id)}
-                        disabled={status === 'submitting'}
                       >
                         Analyze
                       </Button>
