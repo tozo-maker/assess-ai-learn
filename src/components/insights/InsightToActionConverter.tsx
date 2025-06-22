@@ -1,15 +1,11 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Target, Plus, Calendar, Lightbulb, CheckCircle } from 'lucide-react';
+import { Target } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import InsightSelection from './forms/InsightSelection';
+import GoalCreationForm from './forms/GoalCreationForm';
 
 interface Insight {
   id: string;
@@ -43,7 +39,6 @@ const InsightToActionConverter: React.FC<InsightToActionConverterProps> = ({
   const [targetDate, setTargetDate] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const handleInsightSelection = (insightId: string, checked: boolean) => {
     const newSelected = new Set(selectedInsights);
@@ -129,11 +124,7 @@ const InsightToActionConverter: React.FC<InsightToActionConverterProps> = ({
           onGoalCreated(successfulGoals[0].data.id);
         }
 
-        // Reset form
-        setSelectedInsights(new Set());
-        setGoalTitle('');
-        setGoalDescription('');
-        setTargetDate('');
+        handleClear();
       } else {
         throw new Error('Failed to create any goals');
       }
@@ -149,6 +140,16 @@ const InsightToActionConverter: React.FC<InsightToActionConverterProps> = ({
     }
   };
 
+  const handleClear = () => {
+    setSelectedInsights(new Set());
+    setGoalTitle('');
+    setGoalDescription('');
+    setTargetDate('');
+  };
+
+  const selectedInsightObjects = insights.filter(i => selectedInsights.has(i.id));
+  const studentCount = [...new Set(selectedInsightObjects.map(i => i.student_id))].length;
+
   return (
     <div className="space-y-6">
       <Card>
@@ -162,130 +163,27 @@ const InsightToActionConverter: React.FC<InsightToActionConverterProps> = ({
           </p>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {/* Insight Selection */}
-            <div>
-              <h3 className="font-medium mb-3 flex items-center gap-2">
-                <Lightbulb className="h-4 w-4" />
-                Available Insights ({insights.length})
-              </h3>
-              
-              {insights.length === 0 ? (
-                <Alert>
-                  <AlertDescription>
-                    No insights available. Complete some assessments to generate AI insights.
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {insights.map(insight => {
-                    const student = students.find(s => s.id === insight.student_id);
-                    const isSelected = selectedInsights.has(insight.id);
-                    
-                    return (
-                      <div 
-                        key={insight.id}
-                        className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                          isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                        }`}
-                        onClick={() => handleInsightSelection(insight.id, !isSelected)}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <p className="font-medium">
-                              {student?.first_name} {student?.last_name}
-                            </p>
-                            <p className="text-sm text-gray-600">{insight.overall_summary}</p>
-                          </div>
-                          {isSelected && <CheckCircle className="h-5 w-5 text-blue-600" />}
-                        </div>
-                        
-                        {insight.growth_areas.length > 0 && (
-                          <div className="mt-2">
-                            <p className="text-xs text-gray-500 mb-1">Growth Areas:</p>
-                            <div className="flex flex-wrap gap-1">
-                              {insight.growth_areas.slice(0, 2).map((area, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                  {area}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+          <div className="space-y-6">
+            <InsightSelection
+              insights={insights}
+              students={students}
+              selectedInsights={selectedInsights}
+              onInsightSelection={handleInsightSelection}
+            />
 
-            {/* Goal Creation Form */}
             {selectedInsights.size > 0 && (
-              <div className="border-t pt-4">
-                <h3 className="font-medium mb-3 flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create Learning Goal
-                </h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Goal Title *</label>
-                    <Input
-                      placeholder="Enter goal title..."
-                      value={goalTitle}
-                      onChange={(e) => setGoalTitle(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Description</label>
-                    <Textarea
-                      placeholder="Describe the goal and action steps..."
-                      value={goalDescription}
-                      onChange={(e) => setGoalDescription(e.target.value)}
-                      rows={4}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-1 flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      Target Date
-                    </label>
-                    <Input
-                      type="date"
-                      value={targetDate}
-                      onChange={(e) => setTargetDate(e.target.value)}
-                    />
-                  </div>
-                  
-                  <Alert>
-                    <AlertDescription>
-                      This goal will be created for {[...new Set(insights.filter(i => selectedInsights.has(i.id)).map(i => i.student_id))].length} student(s) based on the selected insights.
-                    </AlertDescription>
-                  </Alert>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      onClick={handleCreateGoal}
-                      disabled={isCreating || !goalTitle.trim()}
-                    >
-                      {isCreating ? 'Creating...' : 'Create Learning Goal'}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setSelectedInsights(new Set());
-                        setGoalTitle('');
-                        setGoalDescription('');
-                        setTargetDate('');
-                      }}
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              <GoalCreationForm
+                goalTitle={goalTitle}
+                setGoalTitle={setGoalTitle}
+                goalDescription={goalDescription}
+                setGoalDescription={setGoalDescription}
+                targetDate={targetDate}
+                setTargetDate={setTargetDate}
+                isCreating={isCreating}
+                studentCount={studentCount}
+                onCreateGoal={handleCreateGoal}
+                onClear={handleClear}
+              />
             )}
           </div>
         </CardContent>
