@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PageTemplate from '@/components/ui/page-template';
@@ -26,7 +25,6 @@ import StandardLoadingState from '@/components/common/StandardLoadingState';
 import { studentService } from '@/services/student-service';
 import { communicationsService } from '@/services/communications-service';
 import { ProgressReportData } from '@/types/communications';
-import { PDFGenerationOptions } from '@/services/pdf-service';
 
 const ProgressReports = () => {
   const { toast } = useToast();
@@ -70,8 +68,8 @@ const ProgressReports = () => {
 
   // Generate PDF mutation
   const generatePDFMutation = useMutation({
-    mutationFn: ({ studentId, options }: { studentId: string; options?: PDFGenerationOptions }) => 
-      communicationsService.generateProgressReportPDF(studentId, options),
+    mutationFn: (studentId: string) => 
+      communicationsService.generateProgressReportPDF(studentId),
     onSuccess: (pdfUrl) => {
       const link = document.createElement('a');
       link.href = pdfUrl;
@@ -97,8 +95,8 @@ const ProgressReports = () => {
 
   // Bulk PDF generation mutation
   const bulkPDFMutation = useMutation({
-    mutationFn: ({ studentIds, options }: { studentIds: string[]; options?: PDFGenerationOptions }) =>
-      communicationsService.generateBulkProgressReports(studentIds, options),
+    mutationFn: (studentIds: string[]) =>
+      communicationsService.generateBulkProgressReports(studentIds),
     onSuccess: (results) => {
       const { success, failed } = results;
       toast({
@@ -152,8 +150,8 @@ const ProgressReports = () => {
     generateReportMutation.mutate(studentId);
   };
 
-  const handleGeneratePDF = (studentId: string, options?: PDFGenerationOptions) => {
-    generatePDFMutation.mutate({ studentId, options });
+  const handleGeneratePDF = (studentId: string) => {
+    generatePDFMutation.mutate(studentId);
   };
 
   const handleBulkPDFGeneration = async () => {
@@ -166,9 +164,7 @@ const ProgressReports = () => {
       return;
     }
 
-    bulkPDFMutation.mutate({ 
-      studentIds: Array.from(selectedStudents)
-    });
+    bulkPDFMutation.mutate(Array.from(selectedStudents));
   };
 
   const isAllSelected = filteredStudents.length > 0 && 
