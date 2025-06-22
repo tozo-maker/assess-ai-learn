@@ -20,7 +20,9 @@ import {
   HelpCircle,
   TestTube,
   BarChart3,
-  GraduationCap
+  GraduationCap,
+  Mail,
+  MessageSquare
 } from 'lucide-react';
 
 const AppSidebar: React.FC = () => {
@@ -34,6 +36,11 @@ const AppSidebar: React.FC = () => {
     { name: 'Students', href: '/app/students', icon: Users },
     { name: 'Assessments', href: '/app/assessments', icon: FileText },
     { name: 'Goals', href: '/app/goals', icon: Target },
+  ];
+
+  const communications = [
+    { name: 'Communications', href: '/app/communications', icon: MessageSquare },
+    { name: 'Progress Reports', href: '/app/reports/progress-reports', icon: Mail },
   ];
 
   const reporting = [
@@ -86,6 +93,24 @@ const AppSidebar: React.FC = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {coreFeatures.map((item) => (
+                <SidebarMenuItem key={item.name}>
+                  <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                    <Link to={item.href}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.name}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Communications</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {communications.map((item) => (
                 <SidebarMenuItem key={item.name}>
                   <SidebarMenuButton asChild isActive={isActive(item.href)}>
                     <Link to={item.href}>
