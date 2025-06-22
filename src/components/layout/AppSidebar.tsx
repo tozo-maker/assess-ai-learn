@@ -21,7 +21,6 @@ import {
   TestTube,
   BarChart3,
   GraduationCap,
-  Mail,
   MessageSquare
 } from 'lucide-react';
 
@@ -40,11 +39,11 @@ const AppSidebar: React.FC = () => {
 
   const communications = [
     { name: 'Communications', href: '/app/communications', icon: MessageSquare },
-    { name: 'Progress Reports', href: '/app/reports/progress-reports', icon: Mail },
   ];
 
   const reporting = [
     { name: 'Reports', href: '/app/reports', icon: BarChart3 },
+    { name: 'Progress Reports', href: '/app/reports/progress-reports', icon: FileText },
   ];
 
   const system = [
