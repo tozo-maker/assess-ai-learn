@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mail, Send, Users } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { emailService, EmailOptions, BulkEmailOptions } from '@/services/email-service';
+import { emailService, EmailRequest, BulkEmailOptions } from '@/services/email-service';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -41,11 +41,11 @@ const EmailSendButton: React.FC<EmailSendButtonProps> = ({
   const { toast } = useToast();
 
   const emailMutation = useMutation({
-    mutationFn: async (emailData: EmailOptions | BulkEmailOptions) => {
+    mutationFn: async (emailData: EmailRequest | BulkEmailOptions) => {
       if (type === 'bulk') {
         return emailService.sendBulkEmails(emailData as BulkEmailOptions);
       } else {
-        return emailService.sendEmail(emailData as EmailOptions);
+        return emailService.sendEmail(emailData as EmailRequest);
       }
     },
     onSuccess: () => {

@@ -96,12 +96,8 @@ export const communicationsService = {
   async generateBulkProgressReports(studentIds: string[]) {
     // Mock implementation for bulk report generation
     return {
-      success: studentIds.length,
-      failed: 0,
-      reports: studentIds.map(id => ({
-        student_id: id,
-        pdf_url: `mock-pdf-url-${id}.pdf`
-      }))
+      success: studentIds.map(id => ({ student_id: id, pdf_url: `mock-pdf-url-${id}.pdf` })),
+      failed: []
     };
   }
 };
