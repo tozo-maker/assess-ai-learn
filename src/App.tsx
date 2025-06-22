@@ -1,95 +1,51 @@
-
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { RealtimeProvider } from '@/components/realtime/RealtimeProvider';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import { ProtectedRoute } from '@/components/routing/RouteGuards';
-import DashboardPage from '@/pages/app/Dashboard';
-import LoginPage from '@/pages/auth/Login';
-import SignupPage from '@/pages/auth/Signup';
-import TestingPage from '@/pages/app/Testing';
-import HelpPage from '@/pages/app/help/Help';
-import { StudentRoutes } from '@/components/routing/StudentRoutes';
-import { AssessmentRoutes } from '@/components/routing/AssessmentRoutes';
-import { GoalRoutes } from '@/components/routing/GoalRoutes';
-import { ReportsRoutes } from '@/components/routing/ReportsRoutes';
+
+import Landing from '@/pages/Landing';
+import Auth from '@/pages/Auth';
+import AppLayout from '@/components/layout/AppLayout';
+import Dashboard from '@/pages/app/Dashboard';
+import Students from '@/pages/app/Students';
+import StudentDetail from '@/pages/app/StudentDetail';
+import Assessments from '@/pages/app/Assessments';
+import AssessmentWizard from '@/pages/app/AssessmentWizard';
+import AssessmentDetail from '@/pages/app/AssessmentDetail';
+import Insights from '@/pages/app/Insights';
+import Goals from '@/pages/app/Goals';
+import Communications from '@/pages/app/communications/Communications';
+import ProgressReports from '@/pages/app/communications/ProgressReports';
+import Reports from '@/pages/app/Reports';
+import Settings from '@/pages/app/Settings';
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
-    <Router>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <RealtimeProvider>
-            <SidebarProvider>
-              <div className="min-h-screen flex w-full">
-                <Toaster />
-                <Routes>
-                  {/* Public Routes */}
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/signup" element={<SignupPage />} />
-
-                  {/* Protected App Routes */}
-                  <Route
-                    path="/app"
-                    element={
-                      <ProtectedRoute>
-                        <Navigate to="/app/dashboard" replace />
-                      </ProtectedRoute>
-                    }
-                  />
-
-                  <Route
-                    path="/app/dashboard"
-                    element={
-                      <ProtectedRoute>
-                        <DashboardPage />
-                      </ProtectedRoute>
-                    }
-                  />
-
-                  {/* Feature Routes */}
-                  {StudentRoutes()}
-                  {AssessmentRoutes()}
-                  {GoalRoutes()}
-                  {ReportsRoutes()}
-
-                  {/* Testing Routes */}
-                  <Route
-                    path="/app/testing"
-                    element={
-                      <ProtectedRoute>
-                        <TestingPage />
-                      </ProtectedRoute>
-                    }
-                  />
-
-                  {/* Help Routes */}
-                  <Route
-                    path="/app/help"
-                    element={
-                      <ProtectedRoute>
-                        <HelpPage />
-                      </ProtectedRoute>
-                    }
-                  />
-
-                  {/* Redirect root to login */}
-                  <Route path="/" element={<Navigate to="/login" replace />} />
-                  
-                  {/* Catch all redirect to login */}
-                  <Route path="*" element={<Navigate to="/login" replace />} />
-                </Routes>
-              </div>
-            </SidebarProvider>
-          </RealtimeProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/app" element={<AppLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="students" element={<Students />} />
+            <Route path="students/:id" element={<StudentDetail />} />
+            <Route path="assessments" element={<Assessments />} />
+            <Route path="assessments/new" element={<AssessmentWizard />} />
+            <Route path="assessments/:id" element={<AssessmentDetail />} />
+            <Route path="insights" element={<Insights />} />
+            <Route path="goals" element={<Goals />} />
+            <Route path="communications" element={<Communications />} />
+            <Route path="communications/progress-reports" element={<ProgressReports />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
+        <Toaster />
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
