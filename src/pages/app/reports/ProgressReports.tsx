@@ -21,10 +21,18 @@ import BulkSelection from '@/components/reports/BulkSelection';
 import StudentReportCard from '@/components/reports/StudentReportCard';
 import RecentReports from '@/components/reports/RecentReports';
 import ClassReportsTab from '@/components/reports/ClassReportsTab';
+import ReportOptionsCard from '@/components/communications/ReportOptionsCard';
 import StandardLoadingState from '@/components/common/StandardLoadingState';
 import { studentService } from '@/services/student-service';
 import { communicationsService } from '@/services/communications-service';
 import { ProgressReportData } from '@/types/communications';
+
+interface ReportOptions {
+  includeInsights: boolean;
+  includeGoals: boolean;
+  includeRecommendations: boolean;
+  timeframe: 'last-month' | 'last-quarter' | 'all-time';
+}
 
 const ProgressReports = () => {
   const { toast } = useToast();
@@ -35,6 +43,12 @@ const ProgressReports = () => {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [currentReportData, setCurrentReportData] = useState<ProgressReportData | null>(null);
   const [reportType, setReportType] = useState<'individual' | 'class'>('individual');
+  const [reportOptions, setReportOptions] = useState<ReportOptions>({
+    includeInsights: true,
+    includeGoals: true,
+    includeRecommendations: true,
+    timeframe: 'last-month'
+  });
 
   // Fetch students
   const { data: students = [], isLoading: studentsLoading } = useQuery({
@@ -202,6 +216,14 @@ const ProgressReports = () => {
         students={students}
         reports={reports}
         selectedCount={selectedStudents.size}
+      />
+
+      <DSSpacer size="xl" />
+
+      {/* Report Options Configuration */}
+      <ReportOptionsCard
+        reportOptions={reportOptions}
+        onOptionsChange={setReportOptions}
       />
 
       <DSSpacer size="xl" />
