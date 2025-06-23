@@ -12,6 +12,7 @@ import Login from '@/pages/auth/Login';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
 import ResetPassword from '@/pages/auth/ResetPassword';
 import { RealtimeProvider } from '@/components/realtime/RealtimeProvider';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 // Create a client instance
 const queryClient = new QueryClient({
@@ -27,22 +28,24 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <RealtimeProvider>
-          <div className="min-h-screen bg-gray-50">
-            <Toaster />
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/app/dashboard" element={<Dashboard />} />
-              <Route path="/app/students" element={<Students />} />
-              <Route path="/app/goals" element={<Goals />} />
-              <Route path="/app/communications" element={<Communications />} />
-              <Route path="/app/assessments" element={<Assessments />} />
-            </Routes>
-          </div>
-        </RealtimeProvider>
+        <AuthProvider>
+          <RealtimeProvider>
+            <div className="min-h-screen bg-gray-50">
+              <Toaster />
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/app/dashboard" element={<Dashboard />} />
+                <Route path="/app/students" element={<Students />} />
+                <Route path="/app/goals" element={<Goals />} />
+                <Route path="/app/communications" element={<Communications />} />
+                <Route path="/app/assessments" element={<Assessments />} />
+              </Routes>
+            </div>
+          </RealtimeProvider>
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );
