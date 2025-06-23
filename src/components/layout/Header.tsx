@@ -1,82 +1,49 @@
 
 import React from 'react';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Search, Plus } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import RealtimeNotificationBell from '@/components/realtime/RealtimeNotificationBell';
-import { useRealtime } from '@/components/realtime/RealtimeProvider';
-import { useAuth } from '@/contexts/AuthContext';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { isConnected } = useRealtime();
-  const { user } = useAuth();
+  const { toast } = useToast();
 
-  // Don't render authenticated header if user is not logged in
-  if (!user) {
-    return null;
-  }
-
-  const getQuickActionForRoute = () => {
-    const path = location.pathname;
-    
-    if (path.includes('/students')) {
-      return {
-        label: 'Add Student',
-        action: () => navigate('/app/students/add'),
-        icon: Plus
-      };
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/login');
+      toast({
+        title: 'Signed out successfully',
+        description: 'You have been signed out of your account.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error signing out',
+        description: 'There was an error signing out. Please try again.',
+        variant: 'destructive',
+      });
     }
-    
-    if (path.includes('/assessments')) {
-      return {
-        label: 'Create Assessment',
-        action: () => navigate('/app/assessments/add'),
-        icon: Plus
-      };
-    }
-    
-    if (path.includes('/goals')) {
-      return {
-        label: 'Create Goal',
-        action: () => navigate('/app/goals/add'),
-        icon: Plus
-      };
-    }
-    
-    return null;
   };
 
-  const quickAction = getQuickActionForRoute();
-
   return (
-    <header className="border-b border-gray-200 bg-white px-4 py-3">
+    <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <SidebarTrigger />
-          <div className="flex items-center gap-2">
-            <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-            <span className="text-xs text-gray-500">
-              {isConnected ? 'Live updates enabled' : 'Connecting...'}
-            </span>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2563eb]">
+              <span className="text-white font-bold text-sm">LS</span>
+            </div>
+            <span className="font-bold text-xl text-gray-900">LearnSpark AI</span>
           </div>
         </div>
-
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm">
-            <Search className="h-4 w-4" />
-          </Button>
-          
-          {quickAction && (
-            <Button size="sm" onClick={quickAction.action}>
-              <quickAction.icon className="h-4 w-4 mr-2" />
-              {quickAction.label}
-            </Button>
-          )}
-          
+        
+        <div className="flex items-center space-x-4">
           <RealtimeNotificationBell />
+          <Button variant="outline" onClick={handleSignOut}>
+            Sign Out
+          </Button>
         </div>
       </div>
     </header>

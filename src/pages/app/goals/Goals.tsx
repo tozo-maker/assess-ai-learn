@@ -2,7 +2,9 @@
 import React from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import GoalsMainContent from '@/components/goals/GoalsMainContent';
+import AchievementCelebration from '@/components/achievements/AchievementCelebration';
 import { useGoalsData } from '@/hooks/useGoalsData';
+import { useAchievements } from '@/hooks/useAchievements';
 
 const Goals: React.FC = () => {
   const {
@@ -15,6 +17,13 @@ const Goals: React.FC = () => {
     handleUpdateGoal,
     handleDeleteGoal
   } = useGoalsData();
+
+  const {
+    currentAchievement,
+    showCelebration,
+    setShowCelebration,
+    handleDismissAchievement
+  } = useAchievements();
 
   if (isLoading) {
     return (
@@ -37,6 +46,25 @@ const Goals: React.FC = () => {
         onUpdateGoal={handleUpdateGoal}
         onDeleteGoal={handleDeleteGoal}
       />
+      
+      {currentAchievement && showCelebration && (
+        <AchievementCelebration
+          achievement={{
+            id: currentAchievement.id,
+            type: currentAchievement.achievement_type === 'goal_completion' ? 'goal_completion' : 'improvement',
+            title: currentAchievement.achievement_data.title,
+            description: currentAchievement.achievement_data.description,
+            student_name: currentAchievement.student_name || 'Student',
+            score: currentAchievement.achievement_data.score,
+            date: currentAchievement.created_at
+          }}
+          isVisible={showCelebration}
+          onDismiss={() => {
+            handleDismissAchievement(currentAchievement.id);
+            setShowCelebration(false);
+          }}
+        />
+      )}
     </AppLayout>
   );
 };
