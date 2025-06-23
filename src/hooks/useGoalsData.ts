@@ -6,12 +6,6 @@ import { studentService } from '@/services/student-service';
 // Export types from the appropriate modules
 export type { Goal, GoalFilters } from '@/types/goals';
 
-export interface GoalFilters {
-  search: string;
-  status: string;
-  student_id: string;
-}
-
 export const useGoalsData = () => {
   const {
     data: goals,

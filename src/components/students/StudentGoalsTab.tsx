@@ -127,9 +127,9 @@ const StudentGoalsTab: React.FC<StudentGoalsTabProps> = ({ studentId }) => {
 
   const getPriorityColor = (priority?: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
+      case 'High': return 'bg-red-100 text-red-800';
+      case 'Medium': return 'bg-yellow-100 text-yellow-800';
+      case 'Low': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -258,7 +258,7 @@ const StudentGoalsTab: React.FC<StudentGoalsTabProps> = ({ studentId }) => {
                       )}
                       <Badge className={getPriorityColor(goal.priority)} variant="secondary">
                         <Flag className="h-3 w-3 mr-1" />
-                        {goal.priority || 'medium'} priority
+                        {goal.priority || 'Medium'} priority
                       </Badge>
                     </div>
                   </div>
@@ -320,34 +320,6 @@ const StudentGoalsTab: React.FC<StudentGoalsTabProps> = ({ studentId }) => {
       )}
     </div>
   );
-
-  function handleUpdateProgress(goalId: string, progress: number) {
-    updateGoalMutation.mutate({
-      id: goalId,
-      updates: { 
-        progress_percentage: progress,
-        status: progress >= 100 ? 'completed' : 'active'
-      }
-    });
-  }
-
-  function getStatusColor(status: string) {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'active': return 'bg-blue-100 text-blue-800';
-      case 'paused': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  }
-
-  function getPriorityColor(priority?: string) {
-    switch (priority) {
-      case 'High': return 'bg-red-100 text-red-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  }
 };
 
 export default StudentGoalsTab;

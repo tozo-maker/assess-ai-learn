@@ -22,7 +22,6 @@ const Students: React.FC = () => {
   const [filters, setFilters] = useState<StudentFilterValues>({
     search: '',
     gradeLevel: '',
-    subject: '',
     performanceLevel: '',
     needsAttention: false
   });
