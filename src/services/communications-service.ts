@@ -1,103 +1,116 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ParentCommunication, ProgressReportData } from '@/types/communications';
+import { emailService } from './email-service';
+import { pdfService } from './pdf-service';
+import { ProgressReportData } from '@/types/communications';
 
-export const communicationsService = {
-  async getCommunications(): Promise<ParentCommunication[]> {
-    // Mock data for now - replace with actual Supabase query when table is created
-    return [
-      {
-        id: '1',
-        student_id: '1',
-        teacher_id: '1',
-        communication_type: 'progress_report',
-        subject: 'Weekly Progress Report for John Doe',
-        content: 'John has shown excellent progress this week...',
-        parent_email: 'parent@example.com',
-        email_status: 'sent',
-        sent_at: '2024-01-15T10:00:00Z',
-        created_at: '2024-01-15T09:30:00Z'
-      },
-      {
-        id: '2',
-        student_id: '2',
-        teacher_id: '1',
-        communication_type: 'progress_report',
-        subject: 'Great Achievement - Math Assessment',
-        content: 'Congratulations! Your child scored 95% on the recent math assessment.',
-        parent_email: 'parent2@example.com',
-        email_status: 'sent',
-        sent_at: '2024-01-14T14:30:00Z',
-        created_at: '2024-01-14T14:00:00Z'
-      }
-    ];
-  },
+export interface BulkReportResult {
+  success: string[];
+  failed: string[];
+}
 
-  async createCommunication(data: Omit<ParentCommunication, 'id' | 'created_at'>): Promise<ParentCommunication> {
-    // Mock implementation - replace with actual Supabase insert
-    const newCommunication: ParentCommunication = {
-      id: Date.now().toString(),
-      created_at: new Date().toISOString(),
-      ...data
-    };
-    return newCommunication;
-  },
-
+class CommunicationsService {
   async generateProgressReport(studentId: string): Promise<ProgressReportData> {
-    // Mock progress report data - replace with actual implementation
-    return {
-      student: {
-        id: studentId,
-        first_name: 'John',
-        last_name: 'Doe',
-        grade_level: '5th Grade'
-      },
-      performance: {
-        average_score: 85,
-        assessment_count: 12,
-        performance_level: 'Proficient',
-        needs_attention: false
-      },
-      recent_assessments: [
-        {
-          title: 'Math Quiz #5',
-          score: 92,
-          date: '2024-01-15',
-          subject: 'Mathematics'
-        },
-        {
-          title: 'Reading Comprehension',
-          score: 88,
-          date: '2024-01-12',
-          subject: 'English'
-        }
-      ],
-      goals: [],
-      ai_insights: {
-        strengths: ['Strong mathematical reasoning', 'Excellent problem-solving skills'],
-        growth_areas: ['Reading fluency', 'Writing organization'],
-        recommendations: ['Practice daily reading', 'Use graphic organizers for writing']
-      }
-    };
-  },
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-progress-report', {
+        body: { student_id: studentId }
+      });
 
-  async generateProgressReportPDF(studentId: string) {
-    const { data, error } = await supabase.functions.invoke('generate-progress-pdf', {
-      body: { student_id: studentId }
-    });
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data as ProgressReportData;
+    } catch (error) {
+      console.error('Error generating progress report:', error);
+      throw error;
+    }
+  }
+
+  async generateProgressReportPDF(studentId: string): Promise<string> {
+    try {
+      return await pdfService.generateProgressReportPDF(studentId);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      throw error;
+    }
+  }
+
+  async generateBulkProgressReports(studentIds: string[]): Promise<BulkReportResult> {
+    const results: BulkReportResult = {
+      success: [],
+      failed: []
+    };
+
+    for (const studentId of studentIds) {
+      try {
+        await this.generateProgressReportPDF(studentId);
+        results.success.push(studentId);
+      } catch (error) {
+        console.error(`Failed to generate report for student ${studentId}:`, error);
+        results.failed.push(studentId);
+      }
+    }
+
+    return results;
+  }
+
+  async getCommunications() {
+    const { data, error } = await supabase
+      .from('parent_communications')
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) {
       throw new Error(error.message);
     }
 
-    return data?.pdf_url || '';
-  },
-
-  async generateBulkProgressReports(studentIds: string[]) {
-    // Mock implementation for bulk report generation
-    return {
-      success: studentIds.map(id => ({ student_id: id, pdf_url: `mock-pdf-url-${id}.pdf` })),
-      failed: []
-    };
+    return data || [];
   }
-};
+
+  async sendProgressReportEmail(studentId: string, reportData: ProgressReportData) {
+    try {
+      // Get student info for email
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('first_name, last_name, parent_email')
+        .eq('id', studentId)
+        .single();
+
+      if (studentError || !student?.parent_email) {
+        throw new Error('Student not found or no parent email available');
+      }
+
+      // Send email using email service
+      await emailService.sendEmail({
+        recipients: [student.parent_email],
+        subject: `Progress Report for ${student.first_name} ${student.last_name}`,
+        template_type: 'progress_report',
+        template_data: reportData
+      });
+
+      // Save communication record
+      const { error: saveError } = await supabase
+        .from('parent_communications')
+        .insert({
+          student_id: studentId,
+          teacher_id: (await supabase.auth.getUser()).data.user?.id,
+          communication_type: 'progress_report',
+          subject: `Progress Report for ${student.first_name} ${student.last_name}`,
+          content: 'Progress report sent via email',
+          parent_email: student.parent_email,
+          email_status: 'sent'
+        });
+
+      if (saveError) {
+        console.error('Error saving communication record:', saveError);
+      }
+
+    } catch (error) {
+      console.error('Error sending progress report email:', error);
+      throw error;
+    }
+  }
+}
+
+export const communicationsService = new CommunicationsService();

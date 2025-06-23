@@ -1,389 +1,326 @@
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import { 
-  Brain, 
   TrendingUp, 
   TrendingDown, 
+  BarChart3, 
   Target, 
-  FileText, 
-  Calendar,
-  ChevronDown,
-  ChevronRight
+  BookOpen,
+  Clock,
+  Award,
+  AlertTriangle
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import StandardLoadingState from '@/components/common/StandardLoadingState';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+
+interface StudentInsight {
+  id: string;
+  student_id: string;
+  student_name: string;
+  assessment_count: number;
+  average_score: number;
+  performance_trend: 'improving' | 'declining' | 'stable';
+  strengths: string[];
+  growth_areas: string[];
+  recent_scores: Array<{
+    date: string;
+    score: number;
+    assessment_title: string;
+  }>;
+  skill_mastery: Array<{
+    skill_name: string;
+    mastery_level: string;
+    progress_percentage: number;
+  }>;
+  goals: Array<{
+    title: string;
+    status: string;
+    progress: number;
+  }>;
+}
 
 interface StudentInsightsDrillDownProps {
-  studentId: string;
-  studentName: string;
+  insight: StudentInsight;
+  onClose: () => void;
+  onCreateGoal?: (studentId: string, goalData: any) => void;
 }
 
 const StudentInsightsDrillDown: React.FC<StudentInsightsDrillDownProps> = ({
-  studentId,
-  studentName
+  insight,
+  onClose,
+  onCreateGoal
 }) => {
-  const [expandedAnalysis, setExpandedAnalysis] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
 
-  // Fetch detailed insights for the student
-  const { data: analysisData, isLoading } = useQuery({
-    queryKey: ['student-detailed-insights', studentId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('assessment_analysis')
-        .select(`
-          *,
-          assessments (
-            id,
-            title,
-            subject,
-            assessment_date,
-            assessment_type
-          )
-        `)
-        .eq('student_id', studentId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'improving':
+        return <TrendingUp className="h-4 w-4 text-green-600" />;
+      case 'declining':
+        return <TrendingDown className="h-4 w-4 text-red-600" />;
+      default:
+        return <BarChart3 className="h-4 w-4 text-gray-600" />;
     }
-  });
+  };
 
-  // Fetch student goals
-  const { data: goals } = useQuery({
-    queryKey: ['student-goals', studentId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('goals')
-        .select('*')
-        .eq('student_id', studentId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+  const getTrendColor = (trend: string) => {
+    switch (trend) {
+      case 'improving':
+        return 'text-green-600 bg-green-50 border-green-200';
+      case 'declining':
+        return 'text-red-600 bg-red-50 border-red-200';
+      default:
+        return 'text-gray-600 bg-gray-50 border-gray-200';
     }
-  });
+  };
 
-  if (isLoading) {
-    return <StandardLoadingState />;
-  }
-
-  // Aggregate insights across all analyses
-  const allStrengths = analysisData?.flatMap(a => a.strengths || []) || [];
-  const allGrowthAreas = analysisData?.flatMap(a => a.growth_areas || []) || [];
-  const allRecommendations = analysisData?.flatMap(a => a.recommendations || []) || [];
-
-  const uniqueStrengths = [...new Set(allStrengths)];
-  const uniqueGrowthAreas = [...new Set(allGrowthAreas)];
-  const uniqueRecommendations = [...new Set(allRecommendations)];
+  const getMasteryColor = (level: string) => {
+    switch (level.toLowerCase()) {
+      case 'advanced':
+        return 'bg-green-100 text-green-800';
+      case 'proficient':
+        return 'bg-blue-100 text-blue-800';
+      case 'developing':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <Brain className="h-6 w-6" />
-          Detailed Insights: {studentName}
-        </h2>
-        <p className="text-gray-600">
-          Comprehensive analysis based on {analysisData?.length || 0} assessment(s)
-        </p>
-      </div>
-
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="assessments">Assessments</TabsTrigger>
-          <TabsTrigger value="patterns">Patterns</TabsTrigger>
-          <TabsTrigger value="goals">Goals</TabsTrigger>
-        </TabsList>
-
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {/* Strengths */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-green-700">
-                  <TrendingUp className="h-5 w-5" />
-                  Key Strengths ({uniqueStrengths.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {uniqueStrengths.slice(0, 5).map((strength, index) => (
-                    <Badge key={index} variant="secondary" className="bg-green-50 text-green-700 border-green-200 block">
-                      {strength}
-                    </Badge>
-                  ))}
-                  {uniqueStrengths.length === 0 && (
-                    <p className="text-sm text-gray-500">No strengths identified yet.</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Growth Areas */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-700">
-                  <TrendingDown className="h-5 w-5" />
-                  Growth Areas ({uniqueGrowthAreas.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {uniqueGrowthAreas.slice(0, 5).map((area, index) => (
-                    <Badge key={index} variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 block">
-                      {area}
-                    </Badge>
-                  ))}
-                  {uniqueGrowthAreas.length === 0 && (
-                    <p className="text-sm text-gray-500">No growth areas identified yet.</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Active Goals */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-blue-700">
-                  <Target className="h-5 w-5" />
-                  Active Goals ({goals?.filter(g => g.status === 'active').length || 0})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {goals?.filter(g => g.status === 'active').slice(0, 3).map(goal => (
-                    <div key={goal.id} className="p-2 bg-blue-50 rounded border">
-                      <p className="text-sm font-medium">{goal.title}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${goal.progress_percentage}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-gray-600">{goal.progress_percentage}%</span>
-                      </div>
-                    </div>
-                  )) || (
-                    <p className="text-sm text-gray-500">No active goals set.</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">{insight.student_name} - Detailed Insights</h2>
+            <p className="text-gray-600">Comprehensive performance analysis</p>
           </div>
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
+        </div>
 
-          {/* Recommendations */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                AI Recommendations
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3 md:grid-cols-2">
-                {uniqueRecommendations.slice(0, 6).map((recommendation, index) => (
-                  <div key={index} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-sm text-blue-800">{recommendation}</p>
-                  </div>
-                ))}
-                {uniqueRecommendations.length === 0 && (
-                  <p className="text-sm text-gray-500 col-span-2">No recommendations available yet.</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <div className="p-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="performance">Performance</TabsTrigger>
+              <TabsTrigger value="skills">Skills</TabsTrigger>
+              <TabsTrigger value="goals">Goals</TabsTrigger>
+            </TabsList>
 
-        {/* Assessments Tab */}
-        <TabsContent value="assessments" className="space-y-4">
-          {analysisData?.map(analysis => (
-            <Card key={analysis.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg">
-                      {analysis.assessments?.title || 'Assessment'}
-                    </CardTitle>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline">
-                        {analysis.assessments?.subject}
-                      </Badge>
-                      <Badge variant="outline">
-                        {analysis.assessments?.assessment_type}
-                      </Badge>
-                      <span className="text-sm text-gray-500 flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {analysis.assessments?.assessment_date && 
-                          new Date(analysis.assessments.assessment_date).toLocaleDateString()
-                        }
-                      </span>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setExpandedAnalysis(
-                      expandedAnalysis === analysis.id ? null : analysis.id
-                    )}
-                  >
-                    {expandedAnalysis === analysis.id ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </CardHeader>
-              
-              {expandedAnalysis === analysis.id && (
+            <TabsContent value="overview" className="space-y-6">
+              {/* Performance Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Performance Summary
+                  </CardTitle>
+                </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {analysis.overall_summary && (
-                      <div>
-                        <h4 className="font-medium mb-2">Summary</h4>
-                        <p className="text-sm text-gray-700">{analysis.overall_summary}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {insight.average_score}%
                       </div>
-                    )}
-                    
-                    <div className="grid gap-4 md:grid-cols-3">
-                      <div>
-                        <h4 className="font-medium mb-2 text-green-700">Strengths</h4>
-                        <div className="space-y-1">
-                          {analysis.strengths?.map((strength, index) => (
-                            <Badge key={index} variant="secondary" className="bg-green-50 text-green-700 text-xs block">
-                              {strength}
-                            </Badge>
-                          ))}
-                        </div>
+                      <div className="text-sm text-gray-600">Average Score</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-800">
+                        {insight.assessment_count}
                       </div>
-                      
-                      <div>
-                        <h4 className="font-medium mb-2 text-amber-700">Growth Areas</h4>
-                        <div className="space-y-1">
-                          {analysis.growth_areas?.map((area, index) => (
-                            <Badge key={index} variant="outline" className="bg-amber-50 text-amber-700 text-xs block">
-                              {area}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-medium mb-2 text-blue-700">Patterns</h4>
-                        <div className="space-y-1">
-                          {analysis.patterns_observed?.map((pattern, index) => (
-                            <Badge key={index} variant="outline" className="bg-blue-50 text-blue-700 text-xs block">
-                              {pattern}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
+                      <div className="text-sm text-gray-600">Assessments</div>
+                    </div>
+                    <div className="text-center">
+                      <Badge className={`${getTrendColor(insight.performance_trend)} flex items-center gap-1 justify-center`}>
+                        {getTrendIcon(insight.performance_trend)}
+                        {insight.performance_trend}
+                      </Badge>
                     </div>
                   </div>
                 </CardContent>
-              )}
-            </Card>
-          ))}
-          
-          {!analysisData?.length && (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No Assessment Data</h3>
-                <p className="text-gray-600">
-                  Complete some assessments to see detailed analysis here.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+              </Card>
 
-        {/* Patterns Tab */}
-        <TabsContent value="patterns" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Learning Patterns Analysis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {analysisData?.flatMap(a => a.patterns_observed || []).length > 0 ? (
-                  <div className="grid gap-3">
-                    {[...new Set(analysisData.flatMap(a => a.patterns_observed || []))].map((pattern, index) => (
-                      <div key={index} className="p-3 border rounded-lg">
-                        <p className="text-sm">{pattern}</p>
+              {/* Strengths and Growth Areas */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-green-600">
+                      <Award className="h-5 w-5" />
+                      Strengths
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {insight.strengths.map((strength, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-sm">{strength}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-orange-600">
+                      <AlertTriangle className="h-5 w-5" />
+                      Growth Areas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {insight.growth_areas.map((area, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                          <span className="text-sm">{area}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {onCreateGoal && (
+                      <Button 
+                        size="sm" 
+                        className="mt-3"
+                        onClick={() => onCreateGoal(insight.student_id, { 
+                          growth_areas: insight.growth_areas 
+                        })}
+                      >
+                        <Target className="h-4 w-4 mr-2" />
+                        Create Goal
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="performance" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Performance Trend</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={insight.recent_scores}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line 
+                          type="monotone" 
+                          dataKey="score" 
+                          stroke="#2563eb" 
+                          strokeWidth={2}
+                          dot={{ fill: '#2563eb' }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Assessment Scores</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {insight.recent_scores.map((score, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <div className="font-medium">{score.assessment_title}</div>
+                          <div className="text-sm text-gray-600">{score.date}</div>
+                        </div>
+                        <Badge variant="outline" className="text-lg">
+                          {score.score}%
+                        </Badge>
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-gray-500">No learning patterns identified yet. Complete more assessments to see patterns emerge.</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-        {/* Goals Tab */}
-        <TabsContent value="goals" className="space-y-4">
-          <div className="grid gap-4">
-            {goals?.map(goal => (
-              <Card key={goal.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-medium">{goal.title}</h3>
-                      <p className="text-sm text-gray-600">{goal.description}</p>
-                    </div>
-                    <Badge variant={goal.status === 'active' ? 'default' : 'secondary'}>
-                      {goal.status}
-                    </Badge>
+            <TabsContent value="skills" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    Skill Mastery Progress
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {insight.skill_mastery.map((skill, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{skill.skill_name}</span>
+                          <Badge className={getMasteryColor(skill.mastery_level)}>
+                            {skill.mastery_level}
+                          </Badge>
+                        </div>
+                        <Progress value={skill.progress_percentage} className="h-2" />
+                        <div className="text-sm text-gray-600 text-right">
+                          {skill.progress_percentage}% mastery
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  
-                  <div className="flex items-center gap-4 mt-3">
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between text-sm mb-1">
-                        <span>Progress</span>
-                        <span>{goal.progress_percentage}%</span>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="goals" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5" />
+                    Learning Goals
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {insight.goals.map((goal, index) => (
+                      <div key={index} className="p-4 border rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium">{goal.title}</h4>
+                          <Badge variant="outline">{goal.status}</Badge>
+                        </div>
+                        <Progress value={goal.progress} className="h-2" />
+                        <div className="text-sm text-gray-600 mt-1">
+                          {goal.progress}% complete
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all" 
-                          style={{ width: `${goal.progress_percentage}%` }}
-                        />
-                      </div>
-                    </div>
+                    ))}
                     
-                    {goal.target_date && (
-                      <div className="text-sm text-gray-500 flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(goal.target_date).toLocaleDateString()}
+                    {insight.goals.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        <Target className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                        <p>No goals set yet</p>
+                        {onCreateGoal && (
+                          <Button 
+                            className="mt-3"
+                            onClick={() => onCreateGoal(insight.student_id, {})}
+                          >
+                            Create First Goal
+                          </Button>
+                        )}
                       </div>
                     )}
                   </div>
                 </CardContent>
               </Card>
-            )) || (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No Learning Goals</h3>
-                  <p className="text-gray-600">
-                    Create learning goals based on assessment insights to track progress.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
 };
