@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { emailService } from './email-service';
 import { pdfService } from './pdf-service';
 import { ProgressReportData } from '@/types/communications';
+import { CommunicationFormData, ParentCommunication } from '@/types/communications';
 
 export interface BulkReportResult {
   success: string[];
@@ -55,7 +56,7 @@ class CommunicationsService {
     return results;
   }
 
-  async getCommunications() {
+  async getCommunications(): Promise<ParentCommunication[]> {
     const { data, error } = await supabase
       .from('parent_communications')
       .select('*')
@@ -65,7 +66,55 @@ class CommunicationsService {
       throw new Error(error.message);
     }
 
-    return data || [];
+    // Transform database results to match our interface
+    return (data || []).map(item => ({
+      id: item.id,
+      student_id: item.student_id,
+      teacher_id: item.teacher_id,
+      communication_type: item.communication_type as ParentCommunication['communication_type'],
+      subject: item.subject,
+      content: item.content,
+      sent_at: item.sent_at,
+      parent_email: item.parent_email,
+      pdf_url: item.pdf_url,
+      email_status: item.email_status as ParentCommunication['email_status'],
+      created_at: item.created_at
+    })) as ParentCommunication[];
+  }
+
+  async createCommunication(formData: CommunicationFormData): Promise<ParentCommunication> {
+    const { data, error } = await supabase
+      .from('parent_communications')
+      .insert({
+        student_id: formData.student_id,
+        teacher_id: formData.teacher_id,
+        communication_type: formData.communication_type,
+        subject: formData.subject,
+        content: formData.content,
+        parent_email: formData.parent_email,
+        email_status: 'pending'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // Transform database result to match our interface
+    return {
+      id: data.id,
+      student_id: data.student_id,
+      teacher_id: data.teacher_id,
+      communication_type: data.communication_type as ParentCommunication['communication_type'],
+      subject: data.subject,
+      content: data.content,
+      sent_at: data.sent_at,
+      parent_email: data.parent_email,
+      pdf_url: data.pdf_url,
+      email_status: data.email_status as ParentCommunication['email_status'],
+      created_at: data.created_at
+    } as ParentCommunication;
   }
 
   async sendProgressReportEmail(studentId: string, reportData: ProgressReportData) {

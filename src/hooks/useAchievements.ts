@@ -18,6 +18,7 @@ interface Achievement {
   };
   created_at: string;
   dismissed_at?: string;
+  student_name?: string;
 }
 
 export const useAchievements = () => {
@@ -41,7 +42,18 @@ export const useAchievements = () => {
         .limit(10);
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform database results to match our interface
+      return (data || []).map(item => ({
+        id: item.id,
+        goal_id: item.goal_id,
+        student_id: item.student_id,
+        achievement_type: item.achievement_type as Achievement['achievement_type'],
+        achievement_data: item.achievement_data as Achievement['achievement_data'],
+        created_at: item.created_at,
+        dismissed_at: item.dismissed_at,
+        student_name: `${item.students.first_name} ${item.students.last_name}`
+      })) as Achievement[];
     },
     refetchInterval: 30000 // Check for new achievements every 30 seconds
   });
@@ -89,8 +101,17 @@ export const useAchievements = () => {
     },
     onSuccess: (newAchievement) => {
       queryClient.invalidateQueries({ queryKey: ['achievements'] });
-      // Show celebration for new achievement
-      setCurrentAchievement(newAchievement);
+      // Transform and show celebration for new achievement
+      const transformedAchievement: Achievement = {
+        id: newAchievement.id,
+        goal_id: newAchievement.goal_id,
+        student_id: newAchievement.student_id,
+        achievement_type: newAchievement.achievement_type as Achievement['achievement_type'],
+        achievement_data: newAchievement.achievement_data as Achievement['achievement_data'],
+        created_at: newAchievement.created_at,
+        dismissed_at: newAchievement.dismissed_at
+      };
+      setCurrentAchievement(transformedAchievement);
       setShowCelebration(true);
     }
   });
