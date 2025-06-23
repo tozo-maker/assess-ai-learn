@@ -17,7 +17,7 @@ const Assessments: React.FC = () => {
   const filteredCount = assessments.length; // For now, no filtering applied
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="p-6">
       <AssessmentsMainContent 
         assessments={assessments}
         totalAssessments={totalAssessments}

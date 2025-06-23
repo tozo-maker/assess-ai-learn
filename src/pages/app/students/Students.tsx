@@ -20,7 +20,7 @@ const Students: React.FC = () => {
   } = useStudentsData();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="p-6">
       <StudentsMainContent
         students={students}
         filteredStudents={filteredStudents}

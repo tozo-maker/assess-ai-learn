@@ -26,7 +26,7 @@ export const StandardPageLayout: React.FC<StandardPageLayoutProps> = ({
   className = ''
 }) => {
   return (
-    <div className={`content-spacing ${className}`}>
+    <div className={`p-6 space-y-6 ${className}`}>
       {/* Breadcrumbs */}
       {breadcrumbs && (
         <div className="mb-4">
@@ -47,7 +47,7 @@ export const StandardPageLayout: React.FC<StandardPageLayoutProps> = ({
       )}
 
       {/* Page Header */}
-      <div className="page-header">
+      <div className="mb-8">
         <div className="flex justify-between items-start">
           <div className="flex items-start gap-4">
             {icon && (
@@ -56,9 +56,9 @@ export const StandardPageLayout: React.FC<StandardPageLayoutProps> = ({
               </div>
             )}
             <div>
-              <h1 className="page-title">{title}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
               {description && (
-                <p className="page-description">{description}</p>
+                <p className="text-gray-600 mt-2">{description}</p>
               )}
             </div>
           </div>
@@ -71,7 +71,7 @@ export const StandardPageLayout: React.FC<StandardPageLayoutProps> = ({
       </div>
 
       {/* Content */}
-      <div className="content-spacing">
+      <div>
         {children}
       </div>
     </div>
