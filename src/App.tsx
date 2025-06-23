@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import Dashboard from '@/pages/app/Dashboard';
 import Students from '@/pages/app/students/Students';
 import Goals from '@/pages/app/goals/Goals';
@@ -29,22 +30,24 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <RealtimeProvider>
-            <div className="min-h-screen bg-gray-50">
-              <Toaster />
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/app/dashboard" element={<Dashboard />} />
-                <Route path="/app/students" element={<Students />} />
-                <Route path="/app/goals" element={<Goals />} />
-                <Route path="/app/communications" element={<Communications />} />
-                <Route path="/app/assessments" element={<Assessments />} />
-              </Routes>
-            </div>
-          </RealtimeProvider>
+          <SidebarProvider>
+            <RealtimeProvider>
+              <div className="min-h-screen bg-gray-50 w-full">
+                <Toaster />
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/app/dashboard" element={<Dashboard />} />
+                  <Route path="/app/students" element={<Students />} />
+                  <Route path="/app/goals" element={<Goals />} />
+                  <Route path="/app/communications" element={<Communications />} />
+                  <Route path="/app/assessments" element={<Assessments />} />
+                </Routes>
+              </div>
+            </RealtimeProvider>
+          </SidebarProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
