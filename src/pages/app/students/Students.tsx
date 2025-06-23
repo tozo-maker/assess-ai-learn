@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { Users } from 'lucide-react';
@@ -23,7 +22,8 @@ const Students: React.FC = () => {
     search: '',
     gradeLevel: '',
     performanceLevel: '',
-    needsAttention: false
+    needsAttention: null,
+    hasParentContact: null
   });
 
   // Filter students based on current filters
@@ -31,6 +31,8 @@ const Students: React.FC = () => {
     if (filters.search && !student.first_name.toLowerCase().includes(filters.search.toLowerCase()) && 
         !student.last_name.toLowerCase().includes(filters.search.toLowerCase())) return false;
     if (filters.gradeLevel && student.grade_level !== filters.gradeLevel) return false;
+    if (filters.needsAttention !== null && student.needs_attention !== filters.needsAttention) return false;
+    if (filters.hasParentContact !== null && student.has_parent_contact !== filters.hasParentContact) return false;
     // Add more filter logic as needed
     return true;
   });
