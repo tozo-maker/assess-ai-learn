@@ -56,9 +56,9 @@ const DashboardStateHandler: React.FC<DashboardStateHandlerProps> = ({
     return <DashboardEmptyState teacher={data.teacher} />;
   }
 
-  // Show dashboard with data
+  // Show dashboard with data - remove the data prop since DashboardContent doesn't accept it
   console.log('Showing dashboard content with data');
-  return <DashboardContent data={data} />;
+  return <DashboardContent />;
 };
 
 export default DashboardStateHandler;
