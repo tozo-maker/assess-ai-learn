@@ -1,35 +1,36 @@
 
 import React from 'react';
-import AppLayout from '@/components/layout/AppLayout';
-import Breadcrumbs from '@/components/navigation/Breadcrumbs';
-import DashboardErrorBoundary from '@/components/dashboard/DashboardErrorBoundary';
-import DashboardStateHandlerEnhanced from '@/components/dashboard/DashboardStateHandlerEnhanced';
+import DashboardStateHandler from '@/components/dashboard/DashboardStateHandler';
 import { useOptimizedDashboard } from '@/hooks/useOptimizedDashboard';
 
-const Dashboard = () => {
-  const dashboardState = useOptimizedDashboard();
+const Dashboard: React.FC = () => {
+  console.log('Dashboard component render');
   
-  console.log('Enhanced Dashboard render:', { 
-    isInitialLoading: dashboardState.isInitialLoading,
-    hasError: dashboardState.hasError,
-    isEmpty: dashboardState.isEmpty,
-    hasData: dashboardState.hasData,
-    studentsCount: dashboardState.data?.students?.length
+  const {
+    data,
+    isInitialLoading,
+    error,
+    isEmpty,
+    refetch
+  } = useOptimizedDashboard();
+
+  console.log('Dashboard data state:', { 
+    hasData: !!data, 
+    isInitialLoading, 
+    error: !!error, 
+    isEmpty 
   });
 
   return (
-    <AppLayout>
-      <DashboardErrorBoundary>
-        <Breadcrumbs />
-        <DashboardStateHandlerEnhanced
-          isInitialLoading={dashboardState.isInitialLoading}
-          error={dashboardState.error}
-          data={dashboardState.data}
-          isEmpty={dashboardState.isEmpty}
-          refetch={dashboardState.refetch}
-        />
-      </DashboardErrorBoundary>
-    </AppLayout>
+    <div className="min-h-screen bg-gray-50">
+      <DashboardStateHandler
+        isInitialLoading={isInitialLoading}
+        error={error}
+        data={data}
+        isEmpty={isEmpty}
+        refetch={refetch}
+      />
+    </div>
   );
 };
 

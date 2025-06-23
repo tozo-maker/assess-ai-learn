@@ -1,6 +1,5 @@
 
 import React from 'react';
-import AppLayout from '@/components/layout/AppLayout';
 import GoalsMainContent from '@/components/goals/GoalsMainContent';
 import AchievementCelebration from '@/components/achievements/AchievementCelebration';
 import { useGoalsData } from '@/hooks/useGoalsData';
@@ -27,16 +26,14 @@ const Goals: React.FC = () => {
 
   if (isLoading) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </AppLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   return (
-    <AppLayout>
+    <div className="min-h-screen bg-gray-50">
       <GoalsMainContent
         goals={goals}
         filteredGoals={filteredGoals}
@@ -65,7 +62,7 @@ const Goals: React.FC = () => {
           }}
         />
       )}
-    </AppLayout>
+    </div>
   );
 };
 
