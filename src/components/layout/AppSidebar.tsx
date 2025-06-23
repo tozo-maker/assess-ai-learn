@@ -21,7 +21,8 @@ import {
   TestTube,
   BarChart3,
   GraduationCap,
-  MessageSquare
+  MessageSquare,
+  Zap
 } from 'lucide-react';
 
 const AppSidebar: React.FC = () => {
@@ -35,6 +36,7 @@ const AppSidebar: React.FC = () => {
     { name: 'Students', href: '/app/students', icon: Users },
     { name: 'Assessments', href: '/app/assessments', icon: FileText },
     { name: 'Goals', href: '/app/goals', icon: Target },
+    { name: 'Skills', href: '/app/skills', icon: Zap },
   ];
 
   const communications = [

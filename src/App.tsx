@@ -9,6 +9,11 @@ import Students from '@/pages/app/students/Students';
 import Goals from '@/pages/app/goals/Goals';
 import Communications from '@/pages/app/communications/Communications';
 import Assessments from '@/pages/app/assessments/Assessments';
+import Skills from '@/pages/app/skills/Skills';
+import Reports from '@/pages/app/reports/Reports';
+import ProgressReports from '@/pages/app/reports/ProgressReports';
+import Testing from '@/pages/app/Testing';
+import Help from '@/pages/app/help/Help';
 import Login from '@/pages/auth/Login';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
 import ResetPassword from '@/pages/auth/ResetPassword';
@@ -41,9 +46,14 @@ function App() {
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/app/dashboard" element={<Dashboard />} />
                   <Route path="/app/students" element={<Students />} />
-                  <Route path="/app/goals" element={<Goals />} />
-                  <Route path="/app/communications" element={<Communications />} />
                   <Route path="/app/assessments" element={<Assessments />} />
+                  <Route path="/app/goals" element={<Goals />} />
+                  <Route path="/app/skills" element={<Skills />} />
+                  <Route path="/app/communications" element={<Communications />} />
+                  <Route path="/app/reports" element={<Reports />} />
+                  <Route path="/app/reports/progress-reports" element={<ProgressReports />} />
+                  <Route path="/app/testing" element={<Testing />} />
+                  <Route path="/app/help" element={<Help />} />
                 </Routes>
               </div>
             </RealtimeProvider>

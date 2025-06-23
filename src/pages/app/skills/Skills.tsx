@@ -1,6 +1,5 @@
 
 import React from 'react';
-import AppLayout from '@/components/layout/AppLayout';
 import SkillsMainContent from '@/components/skills/SkillsMainContent';
 import { useSkillsData } from '@/hooks/useSkillsData';
 
@@ -15,23 +14,21 @@ const Skills: React.FC = () => {
 
   if (isLoading) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </AppLayout>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   return (
-    <AppLayout>
+    <div className="min-h-screen bg-gray-50">
       <SkillsMainContent
         skills={skills}
         filteredSkills={filteredSkills}
         filters={filters}
         onFiltersChange={setFilters}
       />
-    </AppLayout>
+    </div>
   );
 };
 
