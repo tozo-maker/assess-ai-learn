@@ -1,13 +1,12 @@
 
 import React from 'react';
-import AppLayout from '@/components/layout/AppLayout';
 import HelpMainContent from '@/components/help/HelpMainContent';
 
 const Help: React.FC = () => {
   return (
-    <AppLayout>
+    <div className="min-h-screen bg-gray-50">
       <HelpMainContent />
-    </AppLayout>
+    </div>
   );
 };
 
