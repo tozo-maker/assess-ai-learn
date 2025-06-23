@@ -1,4 +1,3 @@
-
 export interface Goal {
   id: string;
   student_id: string;
@@ -13,6 +12,12 @@ export interface Goal {
   tags?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface GoalFilters {
+  search: string;
+  status: string;
+  student_id: string;
 }
 
 export interface GoalMilestone {

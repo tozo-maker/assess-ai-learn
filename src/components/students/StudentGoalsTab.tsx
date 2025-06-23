@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,7 +25,7 @@ const StudentGoalsTab: React.FC<StudentGoalsTabProps> = ({ studentId }) => {
     title: '',
     description: '',
     target_date: '',
-    priority: 'medium' as 'low' | 'medium' | 'high'
+    priority: 'Medium' as 'Low' | 'Medium' | 'High'
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -52,7 +53,7 @@ const StudentGoalsTab: React.FC<StudentGoalsTabProps> = ({ studentId }) => {
       });
       queryClient.invalidateQueries({ queryKey: ['student-goals', studentId] });
       setShowCreateGoal(false);
-      setFormData({ title: '', description: '', target_date: '', priority: 'medium' });
+      setFormData({ title: '', description: '', target_date: '', priority: 'Medium' });
     },
     onError: (error: any) => {
       toast({
@@ -202,14 +203,14 @@ const StudentGoalsTab: React.FC<StudentGoalsTabProps> = ({ studentId }) => {
                 
                 <div>
                   <Label htmlFor="priority">Priority</Label>
-                  <Select value={formData.priority} onValueChange={(value: 'low' | 'medium' | 'high') => setFormData({ ...formData, priority: value })}>
+                  <Select value={formData.priority} onValueChange={(value: 'Low' | 'Medium' | 'High') => setFormData({ ...formData, priority: value })}>
                     <SelectTrigger id="priority">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="Low">Low</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="High">High</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -319,6 +320,34 @@ const StudentGoalsTab: React.FC<StudentGoalsTabProps> = ({ studentId }) => {
       )}
     </div>
   );
+
+  function handleUpdateProgress(goalId: string, progress: number) {
+    updateGoalMutation.mutate({
+      id: goalId,
+      updates: { 
+        progress_percentage: progress,
+        status: progress >= 100 ? 'completed' : 'active'
+      }
+    });
+  }
+
+  function getStatusColor(status: string) {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'active': return 'bg-blue-100 text-blue-800';
+      case 'paused': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  function getPriorityColor(priority?: string) {
+    switch (priority) {
+      case 'High': return 'bg-red-100 text-red-800';
+      case 'Medium': return 'bg-yellow-100 text-yellow-800';
+      case 'Low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  }
 };
 
 export default StudentGoalsTab;
