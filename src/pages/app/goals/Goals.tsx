@@ -54,8 +54,8 @@ const Goals: React.FC = () => {
       actions={actions}
     >
       <GoalsMainContent 
-        goals={goals || []}
-        students={students || []}
+        goals={goals}
+        students={students}
       />
     </StandardPageLayout>
   );

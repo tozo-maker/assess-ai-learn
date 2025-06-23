@@ -54,7 +54,6 @@ const Dashboard: React.FC = () => {
     >
       <DashboardContentRefined 
         data={data}
-        isLoading={isLoading}
       />
     </StandardPageLayout>
   );

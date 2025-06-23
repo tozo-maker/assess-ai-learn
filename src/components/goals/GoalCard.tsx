@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Calendar, Edit, Trash2, User } from 'lucide-react';
-import { Goal } from '@/hooks/useGoalsData';
+import { Goal } from '@/types/goals';
 
 interface GoalCardProps {
   goal: Goal;

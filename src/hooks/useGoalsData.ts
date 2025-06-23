@@ -3,6 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 import { goalsService } from '@/services/goals-service';
 import { studentService } from '@/services/student-service';
 
+// Export types from the appropriate modules
+export type { Goal, GoalFilters } from '@/types/goals';
+
+export interface GoalFilters {
+  search: string;
+  status: string;
+  student_id: string;
+}
+
 export const useGoalsData = () => {
   const {
     data: goals,
@@ -11,7 +20,7 @@ export const useGoalsData = () => {
     refetch: refetchGoals
   } = useQuery({
     queryKey: ['goals'],
-    queryFn: goalsService.getGoals,
+    queryFn: () => goalsService.getStudentGoals(''), // This will be updated per student
     staleTime: 5 * 60 * 1000,
   });
 
@@ -35,8 +44,8 @@ export const useGoalsData = () => {
   };
 
   return {
-    goals,
-    students,
+    goals: goals || [],
+    students: students || [],
     isLoading,
     error,
     refetch

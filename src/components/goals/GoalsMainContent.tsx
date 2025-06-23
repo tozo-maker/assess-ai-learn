@@ -1,50 +1,66 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Target } from 'lucide-react';
-import { Goal, GoalFilters } from '@/hooks/useGoalsData';
+import { Goal } from '@/types/goals';
+import { GoalFilters } from '@/hooks/useGoalsData';
 import GoalCard from './GoalCard';
 import CreateGoalDialog from './CreateGoalDialog';
 
 interface GoalsMainContentProps {
   goals: Goal[];
-  filteredGoals: Goal[];
-  filters: GoalFilters;
-  onFiltersChange: (filters: GoalFilters) => void;
-  onCreateGoal: (goalData: Omit<Goal, 'id' | 'created_at' | 'updated_at' | 'teacher_id'>) => void;
-  onUpdateGoal: (id: string, updates: Partial<Goal>) => void;
-  onDeleteGoal: (id: string) => void;
+  students: any[];
 }
 
 const GoalsMainContent: React.FC<GoalsMainContentProps> = ({
   goals,
-  filteredGoals,
-  filters,
-  onFiltersChange,
-  onCreateGoal,
-  onUpdateGoal,
-  onDeleteGoal
+  students
 }) => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [filters, setFilters] = useState<GoalFilters>({
+    search: '',
+    status: '',
+    student_id: ''
+  });
 
   const handleFilterChange = (key: keyof GoalFilters, value: string) => {
-    onFiltersChange({
+    setFilters({
       ...filters,
       [key]: value
     });
   };
 
   const handleStatusChange = (value: string) => {
-    // Convert "all" back to empty string for filtering logic
     const statusValue = value === "all" ? "" : value;
     handleFilterChange('status', statusValue);
   };
 
-  // Ensure we have a safe value for the Select component
   const safeStatusValue = filters.status || "all";
+
+  // Filter goals based on current filters
+  const filteredGoals = goals.filter(goal => {
+    if (filters.search && !goal.title.toLowerCase().includes(filters.search.toLowerCase())) return false;
+    if (filters.status && goal.status !== filters.status) return false;
+    if (filters.student_id && goal.student_id !== filters.student_id) return false;
+    return true;
+  });
+
+  const handleCreateGoal = (goalData: Omit<Goal, 'id' | 'created_at' | 'updated_at' | 'teacher_id'>) => {
+    // This would be handled by parent component
+    console.log('Create goal:', goalData);
+  };
+
+  const handleUpdateGoal = (id: string, updates: Partial<Goal>) => {
+    // This would be handled by parent component
+    console.log('Update goal:', id, updates);
+  };
+
+  const handleDeleteGoal = (id: string) => {
+    // This would be handled by parent component
+    console.log('Delete goal:', id);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -141,8 +157,8 @@ const GoalsMainContent: React.FC<GoalsMainContentProps> = ({
             <GoalCard
               key={goal.id}
               goal={goal}
-              onUpdate={onUpdateGoal}
-              onDelete={onDeleteGoal}
+              onUpdate={handleUpdateGoal}
+              onDelete={handleDeleteGoal}
             />
           ))}
         </div>
@@ -175,7 +191,7 @@ const GoalsMainContent: React.FC<GoalsMainContentProps> = ({
       <CreateGoalDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
-        onCreateGoal={onCreateGoal}
+        onCreateGoal={handleCreateGoal}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Goal } from '@/hooks/useGoalsData';
+import { Goal } from '@/types/goals';
 
 class GoalService {
   async getGoals(): Promise<Goal[]> {

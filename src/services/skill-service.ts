@@ -1,6 +1,18 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Skill } from '@/hooks/useSkillsData';
+
+export interface Skill {
+  id: string;
+  name: string;
+  description?: string;
+  category_id: string;
+  grade_level: string;
+  subject: string;
+  curriculum_standard?: string;
+  difficulty_level: number;
+  created_at: string;
+  updated_at: string;
+}
 
 class SkillService {
   async getSkills(): Promise<Skill[]> {

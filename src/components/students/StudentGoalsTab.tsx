@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { goalService } from '@/services/goal-service';
-import { Goal } from '@/hooks/useGoalsData';
+import { Goal } from '@/types/goals';
 import { Target, Plus, Calendar, Flag, CheckCircle } from 'lucide-react';
 
 interface StudentGoalsTabProps {
