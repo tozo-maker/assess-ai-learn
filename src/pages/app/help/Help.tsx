@@ -4,7 +4,7 @@ import HelpMainContent from '@/components/help/HelpMainContent';
 
 const Help: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="p-6">
       <HelpMainContent />
     </div>
   );

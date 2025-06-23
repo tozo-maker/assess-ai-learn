@@ -22,7 +22,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       <AppSidebar />
       <SidebarInset>
         {/* Top Header */}
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
           <SidebarTrigger className="-ml-1" />
           
           {/* Search Bar */}
@@ -52,7 +52,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         </header>
         
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto">
           {children || <Outlet />}
         </main>
       </SidebarInset>

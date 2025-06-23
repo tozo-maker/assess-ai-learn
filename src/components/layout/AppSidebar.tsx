@@ -22,7 +22,8 @@ import {
   BarChart3,
   GraduationCap,
   MessageSquare,
-  Zap
+  Zap,
+  TrendingUp
 } from 'lucide-react';
 
 const AppSidebar: React.FC = () => {
@@ -37,6 +38,13 @@ const AppSidebar: React.FC = () => {
     { name: 'Assessments', href: '/app/assessments', icon: FileText },
     { name: 'Goals', href: '/app/goals', icon: Target },
     { name: 'Skills', href: '/app/skills', icon: Zap },
+  ];
+
+  const insights = [
+    { name: 'Class Insights', href: '/app/insights/class', icon: TrendingUp },
+    { name: 'Individual Insights', href: '/app/insights/individual', icon: Users },
+    { name: 'Skills Insights', href: '/app/insights/skills', icon: Zap },
+    { name: 'Recommendations', href: '/app/insights/recommendations', icon: Target },
   ];
 
   const communications = [
@@ -94,6 +102,24 @@ const AppSidebar: React.FC = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {coreFeatures.map((item) => (
+                <SidebarMenuItem key={item.name}>
+                  <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                    <Link to={item.href}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.name}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>AI Insights</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {insights.map((item) => (
                 <SidebarMenuItem key={item.name}>
                   <SidebarMenuButton asChild isActive={isActive(item.href)}>
                     <Link to={item.href}>
