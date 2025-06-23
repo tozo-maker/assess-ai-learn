@@ -1,16 +1,27 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage
+} from '@/components/ui/breadcrumb';
+
+export interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
 
 interface StandardPageLayoutProps {
   title: string;
   description?: string;
-  icon?: React.ReactNode;
+  breadcrumbs?: BreadcrumbItem[];
   actions?: React.ReactNode;
   backLink?: string;
-  breadcrumbs?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }
@@ -18,59 +29,71 @@ interface StandardPageLayoutProps {
 export const StandardPageLayout: React.FC<StandardPageLayoutProps> = ({
   title,
   description,
-  icon,
+  breadcrumbs,
   actions,
   backLink,
-  breadcrumbs,
   children,
   className = ''
 }) => {
   return (
     <div className={`p-6 space-y-6 ${className}`}>
-      {/* Breadcrumbs */}
-      {breadcrumbs && (
-        <div className="mb-4">
-          {breadcrumbs}
-        </div>
-      )}
-
       {/* Back Link */}
       {backLink && (
         <div className="mb-4">
-          <Link to={backLink}>
-            <Button variant="ghost" size="sm" className="pl-0">
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Back
-            </Button>
+          <Link 
+            to={backLink}
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back
           </Link>
         </div>
       )}
 
+      {/* Breadcrumbs */}
+      {breadcrumbs && breadcrumbs.length > 0 && (
+        <div className="mb-4">
+          <Breadcrumb>
+            <BreadcrumbList>
+              {breadcrumbs.map((item, index) => (
+                <React.Fragment key={index}>
+                  <BreadcrumbItem>
+                    {item.href ? (
+                      <BreadcrumbLink asChild>
+                        <Link to={item.href} className="text-gray-600 hover:text-gray-900">
+                          {item.label}
+                        </Link>
+                      </BreadcrumbLink>
+                    ) : (
+                      <BreadcrumbPage className="text-gray-900 font-medium">
+                        {item.label}
+                      </BreadcrumbPage>
+                    )}
+                  </BreadcrumbItem>
+                  {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+                </React.Fragment>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      )}
+
       {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex justify-between items-start">
-          <div className="flex items-start gap-4">
-            {icon && (
-              <div className="p-3 bg-blue-100 rounded-lg flex-shrink-0">
-                {icon}
-              </div>
-            )}
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
-              {description && (
-                <p className="text-gray-600 mt-2">{description}</p>
-              )}
-            </div>
-          </div>
-          {actions && (
-            <div className="flex gap-3">
-              {actions}
-            </div>
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+          {description && (
+            <p className="text-gray-600 mt-2">{description}</p>
           )}
         </div>
+        {actions && (
+          <div className="flex items-center gap-3">
+            {actions}
+          </div>
+        )}
       </div>
 
-      {/* Content */}
+      {/* Content Area */}
       <div>
         {children}
       </div>

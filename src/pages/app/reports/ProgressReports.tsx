@@ -1,15 +1,7 @@
 
 import React from 'react';
-import PageTemplate from '@/components/ui/page-template';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { FileText } from 'lucide-react';
-import {
-  DSCard,
-  DSCardContent,
-  DSCardHeader,
-  DSCardTitle,
-  DSFlexContainer,
-  DSSpacer
-} from '@/components/ui/design-system';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProgressReportsOverview from '@/components/reports/ProgressReportsOverview';
 import ReportOptionsCard from '@/components/communications/ReportOptionsCard';
@@ -19,6 +11,7 @@ import RecentReports from '@/components/reports/RecentReports';
 import ReportPreviewDialog from '@/components/reports/ReportPreviewDialog';
 import StandardLoadingState from '@/components/common/StandardLoadingState';
 import { useProgressReports } from '@/hooks/useProgressReports';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const ProgressReports = () => {
   const {
@@ -61,101 +54,95 @@ const ProgressReports = () => {
   } = useProgressReports();
 
   const actions = (
-    <DSFlexContainer gap="sm">
-      <FileText className="h-5 w-5 text-[#2563eb]" />
-    </DSFlexContainer>
+    <FileText className="h-5 w-5 text-primary" />
   );
 
   if (studentsLoading) {
     return (
-      <PageTemplate
-        title="Progress Reports" 
-        description="Generate comprehensive student progress reports"
+      <StandardPageLayout 
+        title="Progress Reports"
         actions={actions}
       >
         <StandardLoadingState message="Loading students and reports..." />
-      </PageTemplate>
+      </StandardPageLayout>
     );
   }
 
   return (
-    <PageTemplate 
-      title="Progress Reports" 
-      description="Generate comprehensive student progress reports"
+    <StandardPageLayout 
+      title="Progress Reports"
       actions={actions}
+      breadcrumbs={[
+        { label: 'Reports', href: '/app/reports' },
+        { label: 'Progress Reports' }
+      ]}
     >
-      <DSSpacer size="lg" />
-      
-      {/* Overview Cards */}
-      <ProgressReportsOverview 
-        students={students}
-        reports={reports}
-        selectedCount={selectedStudents.size}
-      />
+      <div className="space-y-8">
+        {/* Overview Cards */}
+        <ProgressReportsOverview 
+          students={students}
+          reports={reports}
+          selectedCount={selectedStudents.size}
+        />
 
-      <DSSpacer size="xl" />
+        {/* Report Options Configuration */}
+        <ReportOptionsCard
+          reportOptions={reportOptions}
+          onOptionsChange={setReportOptions}
+        />
 
-      {/* Report Options Configuration */}
-      <ReportOptionsCard
-        reportOptions={reportOptions}
-        onOptionsChange={setReportOptions}
-      />
+        {/* Report Generation Tabs */}
+        <Tabs value={reportType} onValueChange={(value) => setReportType(value as 'individual' | 'class')}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="individual">Individual Reports</TabsTrigger>
+            <TabsTrigger value="class">Class Reports</TabsTrigger>
+          </TabsList>
 
-      <DSSpacer size="xl" />
+          <TabsContent value="individual" className="space-y-6">
+            <IndividualReportsContent
+              filteredStudents={filteredStudents}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              gradeFilter={gradeFilter}
+              setGradeFilter={setGradeFilter}
+              gradelevels={gradelevels}
+              selectedStudents={selectedStudents}
+              isAllSelected={isAllSelected}
+              isIndeterminate={isIndeterminate}
+              onSelectAll={handleSelectAll}
+              onStudentSelect={handleStudentSelect}
+              onGenerateReport={handleGenerateIndividualReport}
+              onGeneratePDF={handleGeneratePDF}
+              onBulkPDFGeneration={handleBulkPDFGeneration}
+              isGeneratingReport={generateReportMutation.isPending}
+              isGeneratingPDF={generatePDFMutation.isPending}
+              isBulkGenerating={bulkPDFMutation.isPending}
+            />
+          </TabsContent>
 
-      {/* Report Generation Tabs */}
-      <Tabs value={reportType} onValueChange={(value) => setReportType(value as 'individual' | 'class')}>
-        <TabsList className="grid w-full grid-cols-2 mb-8">
-          <TabsTrigger value="individual" className="text-base">Individual Reports</TabsTrigger>
-          <TabsTrigger value="class" className="text-base">Class Reports</TabsTrigger>
-        </TabsList>
+          <TabsContent value="class" className="space-y-6">
+            <ClassReportsTab />
+          </TabsContent>
+        </Tabs>
 
-        <TabsContent value="individual" className="space-y-8">
-          <IndividualReportsContent
-            filteredStudents={filteredStudents}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            gradeFilter={gradeFilter}
-            setGradeFilter={setGradeFilter}
-            gradelevels={gradelevels}
-            selectedStudents={selectedStudents}
-            isAllSelected={isAllSelected}
-            isIndeterminate={isIndeterminate}
-            onSelectAll={handleSelectAll}
-            onStudentSelect={handleStudentSelect}
-            onGenerateReport={handleGenerateIndividualReport}
-            onGeneratePDF={handleGeneratePDF}
-            onBulkPDFGeneration={handleBulkPDFGeneration}
-            isGeneratingReport={generateReportMutation.isPending}
-            isGeneratingPDF={generatePDFMutation.isPending}
-            isBulkGenerating={bulkPDFMutation.isPending}
-          />
-        </TabsContent>
+        {/* Recent Reports */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Reports</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RecentReports reports={reports} />
+          </CardContent>
+        </Card>
 
-        <TabsContent value="class" className="space-y-8">
-          <ClassReportsTab />
-        </TabsContent>
-      </Tabs>
-
-      <DSSpacer size="xl" />
-
-      {/* Recent Reports */}
-      <DSCard>
-        <DSCardHeader>
-          <DSCardTitle>Recent Reports</DSCardTitle>
-        </DSCardHeader>
-        <DSCardContent>
-          <RecentReports reports={reports} />
-        </DSCardContent>
-      </DSCard>
-
-      {/* Report Preview Dialog */}
-      <ReportPreviewDialog
-        open={showReportDialog}
-        onOpenChange={setShowReportDialog}
-        reportData={currentReportData}
-      />
-    </PageTemplate>
+        {/* Report Preview Dialog */}
+        <ReportPreviewDialog
+          open={showReportDialog}
+          onOpenChange={setShowReportDialog}
+          reportData={currentReportData}
+        />
+      </div>
+    </StandardPageLayout>
   );
 };
 
