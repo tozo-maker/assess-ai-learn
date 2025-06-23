@@ -1,68 +1,63 @@
 
 import React from 'react';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { Target } from 'lucide-react';
 import GoalsMainContent from '@/components/goals/GoalsMainContent';
-import AchievementCelebration from '@/components/achievements/AchievementCelebration';
 import { useGoalsData } from '@/hooks/useGoalsData';
-import { useAchievements } from '@/hooks/useAchievements';
+import PageLoadingState from '@/components/common/PageLoadingState';
+import PageErrorState from '@/components/common/PageErrorState';
 
 const Goals: React.FC = () => {
   const {
     goals,
-    filteredGoals,
+    students,
     isLoading,
-    filters,
-    setFilters,
-    handleCreateGoal,
-    handleUpdateGoal,
-    handleDeleteGoal
+    error,
+    refetch
   } = useGoalsData();
 
-  const {
-    currentAchievement,
-    showCelebration,
-    setShowCelebration,
-    handleDismissAchievement
-  } = useAchievements();
+  const actions = (
+    <Target className="h-5 w-5 text-primary" />
+  );
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <StandardPageLayout 
+        title="Learning Goals"
+        actions={actions}
+      >
+        <PageLoadingState message="Loading goals and students..." />
+      </StandardPageLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <StandardPageLayout 
+        title="Learning Goals"
+        actions={actions}
+      >
+        <PageErrorState 
+          error={error}
+          onRetry={refetch}
+          title="Goals Loading Error"
+          description="Failed to load goals data. Please try again."
+        />
+      </StandardPageLayout>
     );
   }
 
   return (
-    <div className="p-6">
-      <GoalsMainContent
-        goals={goals}
-        filteredGoals={filteredGoals}
-        filters={filters}
-        onFiltersChange={setFilters}
-        onCreateGoal={handleCreateGoal}
-        onUpdateGoal={handleUpdateGoal}
-        onDeleteGoal={handleDeleteGoal}
+    <StandardPageLayout 
+      title="Learning Goals"
+      description="Set, track, and achieve learning objectives"
+      actions={actions}
+    >
+      <GoalsMainContent 
+        goals={goals || []}
+        students={students || []}
       />
-      
-      {currentAchievement && showCelebration && (
-        <AchievementCelebration
-          achievement={{
-            id: currentAchievement.id,
-            type: currentAchievement.achievement_type === 'goal_completion' ? 'goal_completion' : 'improvement',
-            title: currentAchievement.achievement_data.title,
-            description: currentAchievement.achievement_data.description,
-            student_name: currentAchievement.student_name || 'Student',
-            score: currentAchievement.achievement_data.score,
-            date: currentAchievement.created_at
-          }}
-          isVisible={showCelebration}
-          onDismiss={() => {
-            handleDismissAchievement(currentAchievement.id);
-            setShowCelebration(false);
-          }}
-        />
-      )}
-    </div>
+    </StandardPageLayout>
   );
 };
 

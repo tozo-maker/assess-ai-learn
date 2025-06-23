@@ -1,36 +1,62 @@
 
 import React from 'react';
-import DashboardStateHandler from '@/components/dashboard/DashboardStateHandler';
-import { useOptimizedDashboard } from '@/hooks/useOptimizedDashboard';
+import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import { BarChart3 } from 'lucide-react';
+import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
+import DashboardContentRefined from '@/components/dashboard/DashboardContentRefined';
+import PageLoadingState from '@/components/common/PageLoadingState';
+import PageErrorState from '@/components/common/PageErrorState';
 
 const Dashboard: React.FC = () => {
-  console.log('Dashboard component render');
-  
-  const {
-    data,
-    isInitialLoading,
-    error,
-    isEmpty,
-    refetch
-  } = useOptimizedDashboard();
+  const { 
+    data, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useOptimizedDashboardData();
 
-  console.log('Dashboard data state:', { 
-    hasData: !!data, 
-    isInitialLoading, 
-    error: !!error, 
-    isEmpty 
-  });
+  const actions = (
+    <BarChart3 className="h-5 w-5 text-primary" />
+  );
+
+  if (isLoading) {
+    return (
+      <StandardPageLayout 
+        title="Dashboard"
+        actions={actions}
+      >
+        <PageLoadingState message="Loading dashboard data..." />
+      </StandardPageLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <StandardPageLayout 
+        title="Dashboard"
+        actions={actions}
+      >
+        <PageErrorState 
+          error={error}
+          onRetry={refetch}
+          title="Dashboard Error"
+          description="Failed to load dashboard data. Please try again."
+        />
+      </StandardPageLayout>
+    );
+  }
 
   return (
-    <div className="p-6">
-      <DashboardStateHandler
-        isInitialLoading={isInitialLoading}
-        error={error}
+    <StandardPageLayout 
+      title="Dashboard"
+      description="Welcome to your educational insights dashboard"
+      actions={actions}
+    >
+      <DashboardContentRefined 
         data={data}
-        isEmpty={isEmpty}
-        refetch={refetch}
+        isLoading={isLoading}
       />
-    </div>
+    </StandardPageLayout>
   );
 };
 
