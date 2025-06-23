@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { Users } from 'lucide-react';
@@ -31,8 +32,21 @@ const Students: React.FC = () => {
     if (filters.search && !student.first_name.toLowerCase().includes(filters.search.toLowerCase()) && 
         !student.last_name.toLowerCase().includes(filters.search.toLowerCase())) return false;
     if (filters.gradeLevel && student.grade_level !== filters.gradeLevel) return false;
-    if (filters.needsAttention !== null && student.needs_attention !== filters.needsAttention) return false;
-    if (filters.hasParentContact !== null && student.has_parent_contact !== filters.hasParentContact) return false;
+    
+    // Handle needs_attention filter - check the performance data
+    if (filters.needsAttention !== null) {
+      const needsAttention = Array.isArray(student.performance) 
+        ? false // If it's an empty array, assume no attention needed
+        : student.performance?.needs_attention || false;
+      if (needsAttention !== filters.needsAttention) return false;
+    }
+    
+    // Handle hasParentContact filter - check if parent contact info exists
+    if (filters.hasParentContact !== null) {
+      const hasParentContact = !!(student.parent_email || student.parent_phone);
+      if (hasParentContact !== filters.hasParentContact) return false;
+    }
+    
     // Add more filter logic as needed
     return true;
   });
