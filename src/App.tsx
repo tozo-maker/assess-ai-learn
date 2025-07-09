@@ -1,5 +1,7 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { initializePerformanceOptimizations } from '@/services/performance-optimization';
+import { setupGlobalErrorHandlers } from '@/utils/error-boundary-helper';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
@@ -14,42 +16,63 @@ import Login from '@/pages/auth/Login';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
 import ResetPassword from '@/pages/auth/ResetPassword';
 
-// App pages
-import Dashboard from '@/pages/app/Dashboard';
-import Students from '@/pages/app/students/Students';
-import AddStudent from '@/pages/app/students/AddStudent';
-import ImportStudents from '@/pages/app/students/ImportStudents';
-import StudentProfile from '@/pages/app/students/StudentProfile';
-import StudentAssessments from '@/pages/app/students/StudentAssessments';
-import Assessments from '@/pages/app/assessments/Assessments';
-import AddAssessment from '@/pages/app/assessments/AddAssessment';
-import EditAssessment from '@/pages/app/assessments/EditAssessment';
-import AssessmentDetails from '@/pages/app/assessments/AssessmentDetails';
-import AddStudentResponses from '@/pages/app/assessments/AddStudentResponses';
-import BatchAssessment from '@/pages/app/assessments/BatchAssessment';
-import Goals from '@/pages/app/goals/Goals';
-import Skills from '@/pages/app/skills/Skills';
-import ClassInsights from '@/pages/app/insights/ClassInsights';
-import IndividualInsights from '@/pages/app/insights/IndividualInsights';
-import SkillsInsights from '@/pages/app/insights/SkillsInsights';
-import Recommendations from '@/pages/app/insights/Recommendations';
-import Communications from '@/pages/app/communications/Communications';
-import Reports from '@/pages/app/reports/Reports';
-import ProgressReports from '@/pages/app/reports/ProgressReports';
-import Testing from '@/pages/app/Testing';
-import Help from '@/pages/app/help/Help';
+// Lazy-loaded app pages for better performance
+import {
+  LazyDashboard,
+  LazyStudents,
+  LazyAddStudent,
+  LazyImportStudents,
+  LazyStudentProfile,
+  LazyStudentAssessments,
+  LazyAssessments,
+  LazyAddAssessment,
+  LazyEditAssessment,
+  LazyAssessmentDetails,
+  LazyAddStudentResponses,
+  LazyBatchAssessment,
+  LazyGoals,
+  LazySkills,
+  LazyClassInsights,
+  LazyIndividualInsights,
+  LazySkillsInsights,
+  LazyRecommendations,
+  LazyCommunications,
+  LazyReports,
+  LazyProgressReports,
+  LazyTesting,
+  LazyHelp,
+  withLazyLoading
+} from '@/components/common/LazyRoutes';
 
-// Create a client instance
+// Create optimized query client instance for better performance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60000, // 1 minute
-      gcTime: 300000, // 5 minutes
+      staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh longer
+      gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache longer
+      refetchOnWindowFocus: false, // Disable automatic refetch on focus
+      refetchOnMount: false, // Don't refetch if data is fresh
+      retry: (failureCount, error: any) => {
+        // Don't retry on auth errors or 400 errors
+        if (error?.status === 401 || error?.status === 403 || error?.status >= 400 && error?.status < 500) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+    },
+    mutations: {
+      retry: 1, // Retry mutations once
     },
   },
 });
 
 function App() {
+  // Initialize performance optimizations on app start
+  useEffect(() => {
+    initializePerformanceOptimizations();
+    setupGlobalErrorHandlers();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -82,42 +105,42 @@ function App() {
                       <AppLayout>
                         <Routes>
                           {/* Dashboard */}
-                          <Route path="dashboard" element={<Dashboard />} />
+                          <Route path="dashboard" element={withLazyLoading(LazyDashboard)({})} />
                           
                           {/* Students */}
-                          <Route path="students" element={<Students />} />
-                          <Route path="students/add" element={<AddStudent />} />
-                          <Route path="students/import" element={<ImportStudents />} />
-                          <Route path="students/:id" element={<StudentProfile />} />
-                          <Route path="students/:id/assessments" element={<StudentAssessments />} />
+                          <Route path="students" element={withLazyLoading(LazyStudents)({})} />
+                          <Route path="students/add" element={withLazyLoading(LazyAddStudent)({})} />
+                          <Route path="students/import" element={withLazyLoading(LazyImportStudents)({})} />
+                          <Route path="students/:id" element={withLazyLoading(LazyStudentProfile)({})} />
+                          <Route path="students/:id/assessments" element={withLazyLoading(LazyStudentAssessments)({})} />
                           
                           {/* Assessments */}
-                          <Route path="assessments" element={<Assessments />} />
-                          <Route path="assessments/add" element={<AddAssessment />} />
-                          <Route path="assessments/batch" element={<BatchAssessment />} />
-                          <Route path="assessments/:id" element={<AssessmentDetails />} />
-                          <Route path="assessments/:id/edit" element={<EditAssessment />} />
-                          <Route path="assessments/:id/responses" element={<AddStudentResponses />} />
+                          <Route path="assessments" element={withLazyLoading(LazyAssessments)({})} />
+                          <Route path="assessments/add" element={withLazyLoading(LazyAddAssessment)({})} />
+                          <Route path="assessments/batch" element={withLazyLoading(LazyBatchAssessment)({})} />
+                          <Route path="assessments/:id" element={withLazyLoading(LazyAssessmentDetails)({})} />
+                          <Route path="assessments/:id/edit" element={withLazyLoading(LazyEditAssessment)({})} />
+                          <Route path="assessments/:id/responses" element={withLazyLoading(LazyAddStudentResponses)({})} />
                           
                           {/* Goals & Skills */}
-                          <Route path="goals" element={<Goals />} />
-                          <Route path="skills" element={<Skills />} />
+                          <Route path="goals" element={withLazyLoading(LazyGoals)({})} />
+                          <Route path="skills" element={withLazyLoading(LazySkills)({})} />
                           
                           {/* Insights */}
-                          <Route path="insights/class" element={<ClassInsights />} />
-                          <Route path="insights/individual" element={<IndividualInsights />} />
-                          <Route path="insights/student/:id" element={<IndividualInsights />} />
-                          <Route path="insights/skills" element={<SkillsInsights />} />
-                          <Route path="insights/recommendations" element={<Recommendations />} />
+                          <Route path="insights/class" element={withLazyLoading(LazyClassInsights)({})} />
+                          <Route path="insights/individual" element={withLazyLoading(LazyIndividualInsights)({})} />
+                          <Route path="insights/student/:id" element={withLazyLoading(LazyIndividualInsights)({})} />
+                          <Route path="insights/skills" element={withLazyLoading(LazySkillsInsights)({})} />
+                          <Route path="insights/recommendations" element={withLazyLoading(LazyRecommendations)({})} />
                           
                           {/* Communications & Reports */}
-                          <Route path="communications" element={<Communications />} />
-                          <Route path="reports" element={<Reports />} />
-                          <Route path="reports/progress-reports" element={<ProgressReports />} />
+                          <Route path="communications" element={withLazyLoading(LazyCommunications)({})} />
+                          <Route path="reports" element={withLazyLoading(LazyReports)({})} />
+                          <Route path="reports/progress-reports" element={withLazyLoading(LazyProgressReports)({})} />
                           
                           {/* System */}
-                          <Route path="testing" element={<Testing />} />
-                          <Route path="help" element={<Help />} />
+                          <Route path="testing" element={withLazyLoading(LazyTesting)({})} />
+                          <Route path="help" element={withLazyLoading(LazyHelp)({})} />
                           
                           {/* Default redirect */}
                           <Route path="" element={<Navigate to="dashboard" replace />} />

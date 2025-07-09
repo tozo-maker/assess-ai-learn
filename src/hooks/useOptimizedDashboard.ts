@@ -23,7 +23,7 @@ export const useOptimizedDashboard = () => {
     ...state
   };
 
-  console.log('useOptimizedDashboard result:', result);
+  // Remove console.log for production performance
   
   return result;
 };

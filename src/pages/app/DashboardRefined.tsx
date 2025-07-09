@@ -9,13 +9,7 @@ import { useOptimizedDashboard } from '@/hooks/useOptimizedDashboard';
 const DashboardRefined = () => {
   const dashboardState = useOptimizedDashboard();
   
-  console.log('Refined Dashboard render:', { 
-    isInitialLoading: dashboardState.isInitialLoading,
-    hasError: dashboardState.hasError,
-    isEmpty: dashboardState.isEmpty,
-    hasData: dashboardState.hasData,
-    studentsCount: dashboardState.data?.students?.length
-  });
+  // Remove console.log for production performance
 
   return (
     <AppLayout>

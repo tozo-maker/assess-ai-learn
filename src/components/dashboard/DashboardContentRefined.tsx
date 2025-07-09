@@ -110,11 +110,7 @@ const ActivityAndInsightsWrapper: React.FC<{
 const DashboardContentRefined: React.FC<DashboardContentRefinedProps> = ({ data }) => {
   const { students, assessments, metrics, teacher } = data;
   
-  console.log('DashboardContentRefined render:', { 
-    studentsCount: students?.length, 
-    assessmentsCount: assessments?.length, 
-    metrics 
-  });
+  // Remove console.log for production performance
 
   // Generate sample sparkline data for trends
   const generateSparklineData = (baseValue: number, trend: 'up' | 'down' | 'stable') => {

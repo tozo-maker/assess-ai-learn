@@ -19,10 +19,10 @@ export const useOptimizedDashboardData = () => {
       );
     },
     enabled: !!user?.id,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes - longer cache for dashboard
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in memory longer
     refetchOnWindowFocus: false,
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
+    refetchInterval: 10 * 60 * 1000, // Refetch every 10 minutes (less frequent)
     retry: (failureCount, error: any) => {
       // Don't retry on auth errors
       if (error?.status === 401 || error?.status === 403) return false;
