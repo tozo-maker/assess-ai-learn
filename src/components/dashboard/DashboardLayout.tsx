@@ -9,7 +9,7 @@ import {
   DSSectionHeader
 } from '@/components/ui/design-system';
 
-interface OptimizedDashboardLayoutProps {
+interface DashboardLayoutProps {
   welcomeSection: React.ReactNode;
   alertsSection?: React.ReactNode;
   quickActions: React.ReactNode;
@@ -18,7 +18,7 @@ interface OptimizedDashboardLayoutProps {
   additionalTools: React.ReactNode;
 }
 
-const OptimizedDashboardLayout: React.FC<OptimizedDashboardLayoutProps> = ({
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   welcomeSection,
   alertsSection,
   quickActions,
@@ -82,4 +82,4 @@ const OptimizedDashboardLayout: React.FC<OptimizedDashboardLayoutProps> = ({
   );
 };
 
-export default OptimizedDashboardLayout;
+export default DashboardLayout;

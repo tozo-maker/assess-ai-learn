@@ -1,194 +1,298 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { formatDistanceToNow } from 'date-fns';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useNotifications } from '@/hooks/useNotifications';
-import { Bell, Trophy, TrendingUp } from 'lucide-react';
+import EnhancedWelcomeSection from './EnhancedWelcomeSection';
+import EnhancedAlertCard from './EnhancedAlertCard';
+import EnhancedMetricCardWithTrends from './EnhancedMetricCardWithTrends';
+import QuickActionsPanel from './QuickActionsPanel';
+import DashboardLayout from './DashboardLayout';
+import {
+  LazyWrapper,
+  LazyContainer,
+  LazyActivityFeedEnhanced,
+  LazyRecentInsightsEnhanced,
+  LazySecondaryWidgetsEnhanced
+} from '@/components/common/LazyComponentsEnhanced';
+import {
+  DSContentGrid,
+  DSGridItem
+} from '@/components/ui/design-system';
+import { Users, FileText, Brain, TrendingUp, AlertTriangle, Target } from 'lucide-react';
 
-interface Student {
-  id: string;
-  first_name: string;
-  last_name: string;
-  avatar_url?: string;
-  grade_level: string;
+interface DashboardContentProps {
+  data: {
+    students: any[];
+    assessments: any[];
+    metrics: {
+      totalStudents: number;
+      totalAssessments: number;
+      recentAssessments: number;
+      studentsNeedingAttention: number;
+      averagePerformance: number;
+    };
+    teacher: {
+      full_name?: string;
+      firstName?: string;
+    };
+  };
 }
 
-const DashboardContent: React.FC = () => {
-  // Fetch students data
-  const { data: students = [], isLoading: isLoadingStudents } = useQuery({
-    queryKey: ['students'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .limit(5);
+// Component to handle the new layout structure
+const ActivityAndInsightsWrapper: React.FC<{
+  renderActivityOnly?: boolean;
+  renderInsightsOnly?: boolean;
+  recentAssessments: number;
+  totalStudents: number;
+  studentsNeedingAttention: number;
+  students: any[];
+}> = ({ 
+  renderActivityOnly, 
+  renderInsightsOnly, 
+  recentAssessments, 
+  totalStudents, 
+  studentsNeedingAttention,
+  students 
+}) => {
+  if (renderActivityOnly) {
+    return (
+      <LazyContainer>
+        <LazyWrapper>
+          <LazyActivityFeedEnhanced 
+            recentAssessments={recentAssessments}
+            totalStudents={totalStudents}
+            studentsNeedingAttention={studentsNeedingAttention}
+          />
+        </LazyWrapper>
+      </LazyContainer>
+    );
+  }
+  
+  if (renderInsightsOnly) {
+    return (
+      <LazyContainer>
+        <LazyWrapper>
+          <LazyRecentInsightsEnhanced 
+            students={students}
+            communications={[]}
+          />
+        </LazyWrapper>
+      </LazyContainer>
+    );
+  }
 
-      if (error) throw error;
-      return data as Student[];
+  // Fallback for backward compatibility
+  return (
+    <DSContentGrid cols={3}>
+      <DSGridItem span={2}>
+        <LazyContainer>
+          <LazyWrapper>
+            <LazyActivityFeedEnhanced 
+              recentAssessments={recentAssessments}
+              totalStudents={totalStudents}
+              studentsNeedingAttention={studentsNeedingAttention}
+            />
+          </LazyWrapper>
+        </LazyContainer>
+      </DSGridItem>
+      
+      <DSGridItem span={1}>
+        <LazyContainer>
+          <LazyWrapper>
+            <LazyRecentInsightsEnhanced 
+              students={students}
+              communications={[]}
+            />
+          </LazyWrapper>
+        </LazyContainer>
+      </DSGridItem>
+    </DSContentGrid>
+  );
+};
+
+const DashboardContent: React.FC<DashboardContentProps> = ({ data }) => {
+  const { students, assessments, metrics, teacher } = data;
+  
+  // Remove console.log for production performance
+
+  // Generate sample sparkline data for trends
+  const generateSparklineData = (baseValue: number, trend: 'up' | 'down' | 'stable') => {
+    const data = [];
+    for (let i = 0; i < 7; i++) {
+      if (trend === 'up') {
+        data.push(baseValue + Math.random() * 10 + i * 2);
+      } else if (trend === 'down') {
+        data.push(baseValue - Math.random() * 5 - i);
+      } else {
+        data.push(baseValue + (Math.random() - 0.5) * 5);
+      }
+    }
+    return data;
+  };
+
+  // Generate alerts from metrics
+  const alerts = [];
+  if (metrics.studentsNeedingAttention > 0) {
+    alerts.push({
+      id: 'performance-alert',
+      type: 'performance' as const,
+      title: 'Students Need Attention',
+      description: `${metrics.studentsNeedingAttention} students are showing declining performance and may need additional support.`,
+      severity: metrics.studentsNeedingAttention > metrics.totalStudents * 0.3 ? 'high' as const : 'medium' as const,
+      actionUrl: '/app/students?filter=needs-attention',
+      studentCount: metrics.studentsNeedingAttention
+    });
+  }
+
+  // Prepare enhanced metrics with trends and progress
+  const enhancedMetrics = [
+    {
+      title: 'Total Students',
+      value: metrics.totalStudents,
+      icon: <Users className="h-5 w-5" />,
+      trend: {
+        value: 'Active this month',
+        direction: 'neutral' as const,
+        isPositive: true
+      },
+      priority: 'low' as const,
+      sparklineData: generateSparklineData(metrics.totalStudents, 'stable')
     },
-    staleTime: 60000, // 1 minute
-  });
+    {
+      title: 'Class Performance',
+      value: metrics.averagePerformance > 0 ? `${Math.round(metrics.averagePerformance)}%` : 'No data',
+      icon: <Target className="h-5 w-5" />,
+      trend: {
+        value: metrics.averagePerformance >= 75 ? 'Above target' : metrics.averagePerformance >= 60 ? 'On track' : 'Below target',
+        direction: metrics.averagePerformance >= 75 ? 'up' as const : metrics.averagePerformance >= 60 ? 'neutral' as const : 'down' as const,
+        percentage: metrics.averagePerformance > 0 ? Math.round((metrics.averagePerformance - 70)) : 0,
+        isPositive: metrics.averagePerformance >= 75
+      },
+      priority: metrics.averagePerformance < 60 ? 'high' as const : 'low' as const,
+      progress: metrics.averagePerformance,
+      target: 100,
+      sparklineData: generateSparklineData(metrics.averagePerformance, metrics.averagePerformance >= 75 ? 'up' : 'stable')
+    },
+    {
+      title: 'Recent Assessments',
+      value: metrics.recentAssessments,
+      icon: <FileText className="h-5 w-5" />,
+      trend: {
+        value: metrics.recentAssessments > 0 ? 'This week' : 'No recent activity',
+        direction: metrics.recentAssessments > 0 ? 'up' as const : 'neutral' as const,
+        percentage: metrics.recentAssessments > 0 ? 15 : 0,
+        isPositive: metrics.recentAssessments > 0
+      },
+      priority: metrics.recentAssessments === 0 ? 'medium' as const : 'low' as const,
+      sparklineData: generateSparklineData(metrics.recentAssessments, 'up')
+    },
+    {
+      title: 'AI Insights Generated',
+      value: Math.floor(metrics.totalAssessments * 0.3),
+      icon: <Brain className="h-5 w-5" />,
+      trend: {
+        value: 'Ready for review',
+        direction: 'up' as const,
+        percentage: 12,
+        isPositive: true
+      },
+      priority: 'low' as const,
+      progress: 75,
+      sparklineData: generateSparklineData(Math.floor(metrics.totalAssessments * 0.3), 'up')
+    },
+    {
+      title: 'Students Needing Attention',
+      value: metrics.studentsNeedingAttention,
+      icon: <AlertTriangle className="h-5 w-5" />,
+      trend: {
+        value: metrics.studentsNeedingAttention > 0 ? 'Requires action' : 'All on track',
+        direction: metrics.studentsNeedingAttention > 0 ? 'down' as const : 'up' as const,
+        percentage: metrics.studentsNeedingAttention > 0 ? -8 : 0,
+        isPositive: metrics.studentsNeedingAttention === 0
+      },
+      priority: metrics.studentsNeedingAttention > 0 ? 'high' as const : 'low' as const,
+      sparklineData: generateSparklineData(metrics.studentsNeedingAttention, 'down')
+    },
+    {
+      title: 'High Performers',
+      value: students.filter(s => s.student_performance?.[0]?.average_score > metrics.averagePerformance).length,
+      icon: <TrendingUp className="h-5 w-5" />,
+      trend: {
+        value: 'Excelling students',
+        direction: 'up' as const,
+        percentage: 5,
+        isPositive: true
+      },
+      priority: 'low' as const,
+      progress: 65,
+      sparklineData: generateSparklineData(students.filter(s => s.student_performance?.[0]?.average_score > metrics.averagePerformance).length, 'up')
+    }
+  ];
 
-  const { notifications, unreadCount } = useNotifications();
+  const welcomeSection = (
+    <EnhancedWelcomeSection 
+      teacher={teacher} 
+      metrics={{
+        totalStudents: metrics.totalStudents,
+        recentAssessments: metrics.recentAssessments
+      }}
+    />
+  );
 
-  // Get recent achievements from notifications
-  const recentAchievements = notifications
-    .filter(n => n.type === 'achievement')
-    .slice(0, 3);
+  const alertsSection = alerts.length > 0 ? <EnhancedAlertCard alerts={alerts} /> : null;
+
+  const quickActions = (
+    <QuickActionsPanel 
+      metrics={{
+        totalStudents: metrics.totalStudents,
+        recentAssessments: metrics.recentAssessments,
+        pendingGoals: Math.floor(students.length * 0.3)
+      }}
+    />
+  );
+
+  const metricsOverview = (
+    <DSContentGrid cols={2}>
+      {enhancedMetrics.map((metric, index) => (
+        <DSGridItem key={index} span={1}>
+          <EnhancedMetricCardWithTrends {...metric} />
+        </DSGridItem>
+      ))}
+    </DSContentGrid>
+  );
+
+  const activityAndInsights = (
+    <ActivityAndInsightsWrapper
+      recentAssessments={metrics.recentAssessments}
+      totalStudents={metrics.totalStudents}
+      studentsNeedingAttention={metrics.studentsNeedingAttention}
+      students={students}
+    />
+  );
+
+  const additionalTools = (
+    <LazyContainer>
+      <LazyWrapper>
+        <LazySecondaryWidgetsEnhanced 
+          assessments={assessments}
+          students={students}
+          metrics={{
+            averagePerformance: metrics.averagePerformance > 0 
+              ? `${Math.round(metrics.averagePerformance)}%` 
+              : 'No data',
+            studentsNeedingAttention: metrics.studentsNeedingAttention
+          }}
+        />
+      </LazyWrapper>
+    </LazyContainer>
+  );
 
   return (
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold">Dashboard</h2>
-          <p className="text-gray-600">Overview of your LearnSpark AI classroom</p>
-        </div>
-        <Button>Generate Report</Button>
-      </div>
-
-      {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Students</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-600">24</div>
-            <p className="text-sm text-gray-500">Currently enrolled</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Avg. Assessment Score</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-600">86%</div>
-            <p className="text-sm text-gray-500">Class average</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Goals Completed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-yellow-600">18</div>
-            <p className="text-sm text-gray-500">This week</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Active Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-purple-600">12</div>
-            <p className="text-sm text-gray-500">Currently online</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Achievements Section */}
-      {recentAchievements.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-yellow-600" />
-              Recent Achievements
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {recentAchievements.map((achievement) => (
-                <div key={achievement.id} className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <Trophy className="h-4 w-4 text-yellow-600" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{achievement.title}</p>
-                    <p className="text-xs text-gray-600">{achievement.message}</p>
-                  </div>
-                  <span className="text-xs text-gray-500">
-                    {formatDistanceToNow(achievement.timestamp, { addSuffix: true })}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Recent Activity Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Recent Activity
-            {unreadCount > 0 && (
-              <Badge variant="destructive">{unreadCount}</Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {notifications.length > 0 ? (
-            <div className="space-y-3">
-              {notifications.slice(0, 5).map((notification) => (
-                <div key={notification.id} className={`flex items-center gap-3 p-3 rounded-lg border ${
-                  !notification.read 
-                    ? 'bg-blue-50 border-blue-200' 
-                    : 'bg-gray-50 border-gray-200'
-                }`}>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{notification.title}</p>
-                    <p className="text-xs text-gray-600">{notification.message}</p>
-                  </div>
-                  <span className="text-xs text-gray-500">
-                    {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-center py-4">No recent activity</p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Enrolled Students Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Enrolled Students</CardTitle>
-          <Button variant="secondary" size="sm">View All</Button>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {isLoadingStudents ? (
-              <p className="text-gray-500">Loading students...</p>
-            ) : (
-              students.map((student) => (
-                <div key={student.id} className="flex items-center space-x-3">
-                  <Avatar>
-                    {student.avatar_url ? (
-                      <AvatarImage src={student.avatar_url} alt={student.first_name} />
-                    ) : (
-                      <AvatarFallback>{student.first_name[0]}{student.last_name[0]}</AvatarFallback>
-                    )}
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-medium">{student.first_name} {student.last_name}</p>
-                    <p className="text-xs text-gray-500">Grade {student.grade_level}</p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <DashboardLayout
+      welcomeSection={welcomeSection}
+      alertsSection={alertsSection}
+      quickActions={quickActions}
+      metricsOverview={metricsOverview}
+      activityAndInsights={activityAndInsights}
+      additionalTools={additionalTools}
+    />
   );
 };
 

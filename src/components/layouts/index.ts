@@ -2,7 +2,6 @@
 
 // Layout Templates Export
 export { StandardPageLayout } from './StandardPageLayout';
-export { DashboardLayout, DashboardWidget, DashboardGrid } from './DashboardLayout';
 export { FormPageLayout } from './FormPageLayout';
 export { ListPageLayout } from './ListPageLayout';
 

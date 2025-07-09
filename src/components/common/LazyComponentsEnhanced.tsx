@@ -4,7 +4,7 @@ import { DSCard, DSCardContent } from '@/components/ui/design-system';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Enhanced lazy loading with better skeletons
-const DashboardActivityFeedEnhanced = lazy(() => import('@/components/dashboard/DashboardActivityFeedEnhanced'));
+const DashboardActivityFeed = lazy(() => import('@/components/dashboard/DashboardActivityFeed'));
 const DashboardRecentInsightsEnhanced = lazy(() => import('@/components/dashboard/DashboardRecentInsightsEnhanced'));
 const DashboardSecondaryWidgetsEnhanced = lazy(() => import('@/components/dashboard/DashboardSecondaryWidgetsEnhanced'));
 
@@ -105,7 +105,7 @@ export const LazyActivityFeedEnhanced: React.FC<{
   studentsNeedingAttention: number;
 }> = (props) => (
   <Suspense fallback={<ActivityFeedSkeleton />}>
-    <DashboardActivityFeedEnhanced {...props} />
+    <DashboardActivityFeed {...props} />
   </Suspense>
 );
 

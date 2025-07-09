@@ -3,7 +3,7 @@ import React from 'react';
 import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { BarChart3 } from 'lucide-react';
 import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
-import DashboardContentRefined from '@/components/dashboard/DashboardContentRefined';
+import DashboardContent from '@/components/dashboard/DashboardContent';
 import PageLoadingState from '@/components/common/PageLoadingState';
 import PageErrorState from '@/components/common/PageErrorState';
 
@@ -52,7 +52,7 @@ const Dashboard: React.FC = () => {
       description="Welcome to your educational insights dashboard"
       actions={actions}
     >
-      <DashboardContentRefined 
+      <DashboardContent 
         data={data}
       />
     </StandardPageLayout>
