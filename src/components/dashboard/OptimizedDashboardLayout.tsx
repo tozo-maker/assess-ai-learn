@@ -64,14 +64,14 @@ const OptimizedDashboardLayout: React.FC<OptimizedDashboardLayoutProps> = ({
               })}
             </DSGridItem>
             <DSGridItem span={1}>
-              {/* Additional Tools moved here */}
-              {additionalTools}
-            </DSGridItem>
-            <DSGridItem span={1}>
               {/* AI Insights goes here */}
               {React.cloneElement(activityAndInsights as React.ReactElement, { 
                 renderInsightsOnly: true 
               })}
+            </DSGridItem>
+            <DSGridItem span={1}>
+              {/* Additional Tools moved here */}
+              {additionalTools}
             </DSGridItem>
           </DSContentGrid>
         </div>
