@@ -34,20 +34,22 @@ const OptimizedDashboardLayout: React.FC<OptimizedDashboardLayoutProps> = ({
         <DSSpacer size="xl" />
 
         {/* Priority Alerts + Quick Actions Split */}
-        <DSContentGrid cols={3}>
+        <DSContentGrid cols={2}>
           <DSGridItem span={1}>
             {alertsSection}
           </DSGridItem>
           <DSGridItem span={1}>
             {quickActions}
           </DSGridItem>
-          <DSGridItem span={1}>
-            <div>
-              <DSSectionHeader className="mb-6">Performance Overview</DSSectionHeader>
-              {metricsOverview}
-            </div>
-          </DSGridItem>
         </DSContentGrid>
+
+        <DSSpacer size="xl" />
+
+        {/* Performance Overview - Full Width */}
+        <div>
+          <DSSectionHeader className="mb-6">Performance Overview</DSSectionHeader>
+          {metricsOverview}
+        </div>
 
         <DSSpacer size="2xl" />
 
