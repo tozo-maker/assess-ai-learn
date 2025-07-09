@@ -56,21 +56,21 @@ const OptimizedDashboardLayout: React.FC<OptimizedDashboardLayoutProps> = ({
         {/* Main Content - Activity, Additional Tools & Insights */}
         <div>
           <DSSectionHeader className="mb-6">Recent Activity & AI Insights</DSSectionHeader>
-          <DSContentGrid cols={3}>
+          <DSContentGrid cols={2}>
             <DSGridItem span={1}>
-              {/* Recent Activity Feed goes here */}
+              {/* Recent Activity Feed */}
               {React.cloneElement(activityAndInsights as React.ReactElement, { 
                 renderActivityOnly: true 
               })}
             </DSGridItem>
             <DSGridItem span={1}>
-              {/* AI Insights goes here */}
+              {/* AI Insights */}
               {React.cloneElement(activityAndInsights as React.ReactElement, { 
                 renderInsightsOnly: true 
               })}
             </DSGridItem>
-            <DSGridItem span={1}>
-              {/* Additional Tools moved here */}
+            <DSGridItem span={2}>
+              {/* Additional Tools - Full Width */}
               {additionalTools}
             </DSGridItem>
           </DSContentGrid>
