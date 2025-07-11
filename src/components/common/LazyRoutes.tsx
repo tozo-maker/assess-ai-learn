@@ -8,6 +8,7 @@ export const LazyAddStudent = lazy(() => import('@/pages/app/students/AddStudent
 export const LazyImportStudents = lazy(() => import('@/pages/app/students/ImportStudents'));
 export const LazyStudentProfile = lazy(() => import('@/pages/app/students/StudentProfile'));
 export const LazyStudentAssessments = lazy(() => import('@/pages/app/students/StudentAssessments'));
+export const LazyClasses = lazy(() => import('@/pages/app/classes/Classes'));
 export const LazyAssessments = lazy(() => import('@/pages/app/assessments/Assessments'));
 export const LazyAddAssessment = lazy(() => import('@/pages/app/assessments/AddAssessment'));
 export const LazyEditAssessment = lazy(() => import('@/pages/app/assessments/EditAssessment'));

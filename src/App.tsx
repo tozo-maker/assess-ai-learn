@@ -24,6 +24,7 @@ import {
   LazyImportStudents,
   LazyStudentProfile,
   LazyStudentAssessments,
+  LazyClasses,
   LazyAssessments,
   LazyAddAssessment,
   LazyEditAssessment,
@@ -113,6 +114,9 @@ function App() {
                           <Route path="students/import" element={withLazyLoading(LazyImportStudents)({})} />
                           <Route path="students/:id" element={withLazyLoading(LazyStudentProfile)({})} />
                           <Route path="students/:id/assessments" element={withLazyLoading(LazyStudentAssessments)({})} />
+                          
+                          {/* Classes */}
+                          <Route path="classes" element={withLazyLoading(LazyClasses)({})} />
                           
                           {/* Assessments */}
                           <Route path="assessments" element={withLazyLoading(LazyAssessments)({})} />

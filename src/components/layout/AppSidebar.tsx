@@ -35,6 +35,7 @@ const AppSidebar: React.FC = () => {
 
   const coreFeatures = [
     { name: 'Students', href: '/app/students', icon: Users },
+    { name: 'Classes', href: '/app/classes', icon: GraduationCap },
     { name: 'Assessments', href: '/app/assessments', icon: FileText },
     { name: 'Goals', href: '/app/goals', icon: Target },
     { name: 'Skills', href: '/app/skills', icon: Zap },
