@@ -2,7 +2,7 @@
 import React from 'react';
 import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { TrendingUp } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ClassInsightsDashboard } from '@/components/insights/ClassInsightsDashboard';
 
 const ClassInsights: React.FC = () => {
   const actions = (
@@ -19,14 +19,7 @@ const ClassInsights: React.FC = () => {
         { label: 'Class Insights' }
       ]}
     >
-      <Card>
-        <CardHeader>
-          <CardTitle>Class Performance Analysis</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">Class insights and analytics will be displayed here.</p>
-        </CardContent>
-      </Card>
+      <ClassInsightsDashboard />
     </StandardPageLayout>
   );
 };

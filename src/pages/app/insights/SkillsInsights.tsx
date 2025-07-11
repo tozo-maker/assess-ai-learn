@@ -2,7 +2,7 @@
 import React from 'react';
 import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { Target } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SkillsInsightsDashboard } from '@/components/insights/SkillsInsightsDashboard';
 
 const SkillsInsights: React.FC = () => {
   const actions = (
@@ -19,14 +19,7 @@ const SkillsInsights: React.FC = () => {
         { label: 'Skills Insights' }
       ]}
     >
-      <Card>
-        <CardHeader>
-          <CardTitle>Skills Mastery Analysis</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">Skills insights and mastery analytics will be displayed here.</p>
-        </CardContent>
-      </Card>
+      <SkillsInsightsDashboard />
     </StandardPageLayout>
   );
 };

@@ -2,7 +2,7 @@
 import React from 'react';
 import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { Lightbulb } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { RecommendationsDashboard } from '@/components/insights/RecommendationsDashboard';
 
 const Recommendations: React.FC = () => {
   const actions = (
@@ -19,14 +19,7 @@ const Recommendations: React.FC = () => {
         { label: 'Recommendations' }
       ]}
     >
-      <Card>
-        <CardHeader>
-          <CardTitle>Personalized Learning Recommendations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">AI-powered recommendations and learning suggestions will be displayed here.</p>
-        </CardContent>
-      </Card>
+      <RecommendationsDashboard />
     </StandardPageLayout>
   );
 };

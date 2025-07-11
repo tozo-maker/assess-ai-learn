@@ -1,12 +1,25 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { User } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StudentSelector } from '@/components/insights/StudentSelector';
+import { IndividualInsightsDashboard } from '@/components/insights/IndividualInsightsDashboard';
+import { useStudentsData } from '@/hooks/useStudentsData';
 
 const IndividualInsights: React.FC = () => {
+  const [selectedStudentId, setSelectedStudentId] = useState<string>('');
+  const { students } = useStudentsData();
+
+  const selectedStudent = students?.find(s => s.id === selectedStudentId);
+
   const actions = (
-    <User className="h-5 w-5 text-primary" />
+    <div className="flex items-center gap-4">
+      <StudentSelector 
+        onStudentSelect={setSelectedStudentId}
+        selectedStudentId={selectedStudentId}
+      />
+      <User className="h-5 w-5 text-primary" />
+    </div>
   );
 
   return (
@@ -19,14 +32,22 @@ const IndividualInsights: React.FC = () => {
         { label: 'Individual Insights' }
       ]}
     >
-      <Card>
-        <CardHeader>
-          <CardTitle>Student Performance Analysis</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">Individual student insights and analytics will be displayed here.</p>
-        </CardContent>
-      </Card>
+      {selectedStudent ? (
+        <IndividualInsightsDashboard 
+          studentId={selectedStudent.id}
+          studentName={`${selectedStudent.first_name} ${selectedStudent.last_name}`}
+        />
+      ) : (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Select a Student</h3>
+            <p className="text-muted-foreground">
+              Choose a student from the dropdown above to view their detailed insights and analytics.
+            </p>
+          </div>
+        </div>
+      )}
     </StandardPageLayout>
   );
 };
