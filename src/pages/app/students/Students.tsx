@@ -22,6 +22,7 @@ const Students: React.FC = () => {
   const [filters, setFilters] = useState<StudentFilterValues>({
     search: '',
     gradeLevel: '',
+    classId: '',
     performanceLevel: '',
     needsAttention: null,
     hasParentContact: null
@@ -32,6 +33,15 @@ const Students: React.FC = () => {
     if (filters.search && !student.first_name.toLowerCase().includes(filters.search.toLowerCase()) && 
         !student.last_name.toLowerCase().includes(filters.search.toLowerCase())) return false;
     if (filters.gradeLevel && student.grade_level !== filters.gradeLevel) return false;
+    
+    // Handle class filter
+    if (filters.classId) {
+      if (filters.classId === 'unassigned') {
+        if (student.class_id) return false; // Student has a class assigned
+      } else {
+        if (student.class_id !== filters.classId) return false;
+      }
+    }
     
     // Handle needs_attention filter - check the performance data
     if (filters.needsAttention !== null) {
@@ -47,7 +57,6 @@ const Students: React.FC = () => {
       if (hasParentContact !== filters.hasParentContact) return false;
     }
     
-    // Add more filter logic as needed
     return true;
   });
 

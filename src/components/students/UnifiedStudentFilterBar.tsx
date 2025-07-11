@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { gradeLevelOptions, performanceLevelOptions } from '@/types/student';
+import { useClassesData } from '@/hooks/useClassesData';
 import { StudentFilterValues } from './filters/StudentFilterTypes';
 
 interface UnifiedStudentFilterBarProps {
@@ -42,6 +43,8 @@ const UnifiedStudentFilterBar: React.FC<UnifiedStudentFilterBarProps> = ({
   totalStudents,
   filteredCount
 }) => {
+  const { classes } = useClassesData();
+  
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
 
   const hasActiveFilters = Object.values(filters).some(value => 
@@ -60,6 +63,7 @@ const UnifiedStudentFilterBar: React.FC<UnifiedStudentFilterBarProps> = ({
     onFiltersChange({
       search: '',
       gradeLevel: '',
+      classId: '',
       performanceLevel: '',
       needsAttention: null,
       hasParentContact: null
@@ -84,6 +88,8 @@ const UnifiedStudentFilterBar: React.FC<UnifiedStudentFilterBarProps> = ({
         return `"${value}"`;
       case 'gradeLevel':
         return `Grade ${value}`;
+      case 'classId':
+        return value === 'unassigned' ? 'Unassigned' : `Class: ${value}`;
       case 'performanceLevel':
         return value;
       case 'needsAttention':
@@ -225,7 +231,7 @@ const UnifiedStudentFilterBar: React.FC<UnifiedStudentFilterBarProps> = ({
       <Collapsible open={isFiltersExpanded} onOpenChange={setIsFiltersExpanded}>
         <CollapsibleContent>
           <div className="border-t border-gray-200 bg-gray-50 p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               {/* Grade Level */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Grade Level</label>
@@ -246,6 +252,26 @@ const UnifiedStudentFilterBar: React.FC<UnifiedStudentFilterBarProps> = ({
                 </Select>
               </div>
 
+              {/* Class Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Class</label>
+                <Select value={filters.classId || 'all'} onValueChange={(value) => 
+                  updateFilter('classId', value === 'all' ? '' : value)
+                }>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All classes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All classes</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    {classes?.map((classItem) => (
+                      <SelectItem key={classItem.id} value={classItem.id}>
+                        {classItem.display_name} (Grade {classItem.grade_level})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               {/* Performance Level */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Performance Level</label>

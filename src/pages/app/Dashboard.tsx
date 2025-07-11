@@ -4,6 +4,7 @@ import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { BarChart3 } from 'lucide-react';
 import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
 import DashboardContent from '@/components/dashboard/DashboardContent';
+import { ClassAnalytics } from '@/components/analytics/ClassAnalytics';
 import PageLoadingState from '@/components/common/PageLoadingState';
 import PageErrorState from '@/components/common/PageErrorState';
 
@@ -52,9 +53,17 @@ const Dashboard: React.FC = () => {
       description="Welcome to your educational insights dashboard"
       actions={actions}
     >
-      <DashboardContent 
-        data={data}
-      />
+      <div className="space-y-8">
+        <DashboardContent 
+          data={data}
+        />
+        
+        {/* Class Analytics Section */}
+        <div className="border-t pt-8">
+          <h2 className="text-xl font-semibold mb-6">Class Analytics</h2>
+          <ClassAnalytics />
+        </div>
+      </div>
     </StandardPageLayout>
   );
 };

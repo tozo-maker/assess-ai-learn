@@ -2,6 +2,7 @@
 export interface StudentFilterValues {
   search: string;
   gradeLevel: string;
+  classId: string;
   performanceLevel: string;
   needsAttention: boolean | null;
   hasParentContact: boolean | null;
@@ -17,6 +18,7 @@ export interface StudentFiltersProps {
 export const getEmptyFilters = (): StudentFilterValues => ({
   search: '',
   gradeLevel: '',
+  classId: '',
   performanceLevel: '',
   needsAttention: null,
   hasParentContact: null

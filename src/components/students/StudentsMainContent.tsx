@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DSSection, DSPageContainer, DSSpacer } from '@/components/ui/design-system';
 import Breadcrumbs from '@/components/navigation/Breadcrumbs';
@@ -10,6 +10,7 @@ import BulkActionsToolbar from '@/components/students/BulkActionsToolbar';
 import StudentsOverviewMetrics from '@/components/students/StudentsOverviewMetrics';
 import StudentsAlertSystem from '@/components/students/StudentsAlertSystem';
 import UnifiedStudentFilterBar from '@/components/students/UnifiedStudentFilterBar';
+import { AssignStudentsToClassDialog } from '@/components/students/AssignStudentsToClassDialog';
 import { StudentFilterValues } from '@/components/students/filters/StudentFilterTypes';
 import { StudentWithPerformance } from '@/types/student';
 
@@ -43,6 +44,7 @@ const StudentsMainContent: React.FC<StudentsMainContentProps> = ({
   isIndeterminate
 }) => {
   const navigate = useNavigate();
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
 
   const handleAddStudent = () => {
     navigate('/app/students/add');
@@ -63,6 +65,14 @@ const StudentsMainContent: React.FC<StudentsMainContentProps> = ({
   const handleBulkDelete = () => {
     console.log('Bulk delete for students:', selectedStudents);
   };
+
+  const handleAssignToClass = () => {
+    setAssignDialogOpen(true);
+  };
+
+  const selectedStudentObjects = filteredStudents.filter(student => 
+    selectedStudents.includes(student.id)
+  );
 
   return (
     <DSSection className="py-8">
@@ -106,6 +116,7 @@ const StudentsMainContent: React.FC<StudentsMainContentProps> = ({
               onBulkEmail={handleBulkEmail}
               onBulkReport={handleBulkReport}
               onBulkDelete={handleBulkDelete}
+              onAssignToClass={handleAssignToClass}
             />
           </div>
         )}
@@ -127,6 +138,16 @@ const StudentsMainContent: React.FC<StudentsMainContentProps> = ({
             onAddStudent={handleAddStudent}
           />
         )}
+
+        <AssignStudentsToClassDialog
+          open={assignDialogOpen}
+          onOpenChange={setAssignDialogOpen}
+          selectedStudents={selectedStudentObjects}
+          onSuccess={() => {
+            setAssignDialogOpen(false);
+            onClearSelection();
+          }}
+        />
       </DSPageContainer>
     </DSSection>
   );

@@ -17,6 +17,7 @@ interface BulkActionsToolbarProps {
   onBulkEmail: () => void;
   onBulkReport: () => void;
   onBulkDelete: () => void;
+  onAssignToClass: () => void;
 }
 
 const BulkActionsToolbar: React.FC<BulkActionsToolbarProps> = ({
@@ -24,7 +25,8 @@ const BulkActionsToolbar: React.FC<BulkActionsToolbarProps> = ({
   onClearSelection,
   onBulkEmail,
   onBulkReport,
-  onBulkDelete
+  onBulkDelete,
+  onAssignToClass
 }) => {
   if (selectedCount === 0) return null;
 
@@ -73,9 +75,9 @@ const BulkActionsToolbar: React.FC<BulkActionsToolbarProps> = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={onAssignToClass}>
               <UserPlus className="mr-2 h-4 w-4" />
-              Add to Group
+              Assign to Class
             </DropdownMenuItem>
             <DropdownMenuItem>
               <FileText className="mr-2 h-4 w-4" />

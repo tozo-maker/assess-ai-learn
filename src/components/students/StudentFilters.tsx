@@ -55,6 +55,7 @@ const StudentFilters: React.FC<StudentFiltersProps & { values: StudentFilterValu
     const emptyFilters: StudentFilterValues = {
       search: '',
       gradeLevel: '',
+      classId: '',
       performanceLevel: '',
       needsAttention: null,
       hasParentContact: null
