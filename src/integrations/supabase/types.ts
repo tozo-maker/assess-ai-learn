@@ -215,6 +215,45 @@ export type Database = {
         }
         Relationships: []
       }
+      classes: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_name: string
+          grade_level: string
+          id: string
+          is_active: boolean | null
+          name: string
+          subject: string | null
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_name: string
+          grade_level: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          subject?: string | null
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          grade_level?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          subject?: string | null
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       data_exports: {
         Row: {
           completed_at: string | null
@@ -901,6 +940,7 @@ export type Database = {
       students: {
         Row: {
           avatar_url: string | null
+          class_id: string | null
           created_at: string
           first_name: string
           grade_level: string
@@ -917,6 +957,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          class_id?: string | null
           created_at?: string
           first_name: string
           grade_level: string
@@ -933,6 +974,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          class_id?: string | null
           created_at?: string
           first_name?: string
           grade_level?: string
@@ -947,7 +989,15 @@ export type Database = {
           teacher_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_performance_logs: {
         Row: {

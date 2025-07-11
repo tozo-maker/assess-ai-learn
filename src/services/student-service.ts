@@ -10,7 +10,8 @@ export const studentService = {
       .from('students')
       .select(`
         *,
-        performance:student_performance(*)
+        performance:student_performance(*),
+        class:classes(*)
       `)
       .eq('teacher_id', user.id)
       .order('last_name');
@@ -31,7 +32,8 @@ export const studentService = {
       .from('students')
       .select(`
         *,
-        performance:student_performance(*)
+        performance:student_performance(*),
+        class:classes(*)
       `)
       .eq('id', id)
       .eq('teacher_id', user.id)
@@ -143,7 +145,8 @@ export const studentService = {
       .from('students')
       .select(`
         *,
-        performance:student_performance(*)
+        performance:student_performance(*),
+        class:classes(*)
       `)
       .eq('teacher_id', user.id)
       .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,student_id.ilike.%${query}%`)
@@ -169,7 +172,8 @@ export const studentService = {
       .from('students')
       .select(`
         *,
-        performance:student_performance(*)
+        performance:student_performance(*),
+        class:classes(*)
       `)
       .eq('teacher_id', user.id);
     
@@ -219,7 +223,8 @@ export const studentService = {
       .from('students')
       .select(`
         *,
-        performance:student_performance(*)
+        performance:student_performance(*),
+        class:classes(*)
       `)
       .eq('teacher_id', user.id);
     

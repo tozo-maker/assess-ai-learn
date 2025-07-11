@@ -1,3 +1,16 @@
+export interface Class {
+  id: string;
+  teacher_id: string;
+  name: string;
+  display_name: string;
+  grade_level: string;
+  subject?: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Student {
   id: string;
   first_name: string;
@@ -7,6 +20,7 @@ export interface Student {
   learning_goals?: string;
   special_considerations?: string;
   teacher_id: string;
+  class_id?: string;
   avatar_url?: string;
   email?: string;
   parent_name?: string;
@@ -31,6 +45,12 @@ export interface StudentPerformance {
 // Update this interface to handle the array that Supabase returns
 export interface StudentWithPerformance extends Student {
   performance?: StudentPerformance | StudentPerformance[]; // Can be array from Supabase or single object
+  class?: Class;
+}
+
+export interface StudentWithClass extends Student {
+  class?: Class;
+  performance?: StudentPerformance | StudentPerformance[];
 }
 
 // Helper function to normalize performance data from Supabase
