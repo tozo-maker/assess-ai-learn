@@ -10,6 +10,7 @@ import { RealtimeProvider } from '@/components/realtime/RealtimeProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import { ProtectedRoute, PublicRoute } from '@/components/routing/RouteGuards';
+import { AppErrorBoundary } from '@/components/common/AppErrorBoundary';
 
 // Auth pages
 import Login from '@/pages/auth/Login';
@@ -75,10 +76,11 @@ function App() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <div className="min-h-screen bg-gray-50 w-full">
+    <AppErrorBoundary componentName="App">
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AuthProvider>
+            <div className="min-h-screen bg-gray-50 w-full">
             <Toaster />
             <Routes>
               {/* Public Routes */}
@@ -161,10 +163,11 @@ function App() {
               {/* Catch all */}
               <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
             </Routes>
-          </div>
-        </AuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+            </div>
+          </AuthProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </AppErrorBoundary>
   );
 }
 

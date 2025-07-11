@@ -131,14 +131,16 @@ export default function Classes() {
                           <div className="flex items-start justify-between">
                             <div>
                               <CardTitle className="text-lg">{classItem.display_name}</CardTitle>
-                              <CardDescription className="mt-1">
+                              <div className="mt-1 flex items-center gap-2">
                                 {classItem.subject && (
-                                  <Badge variant="outline" className="mr-2">
+                                  <Badge variant="outline">
                                     {classItem.subject}
                                   </Badge>
                                 )}
-                                Grade {classItem.grade_level}
-                              </CardDescription>
+                                <CardDescription>
+                                  Grade {classItem.grade_level}
+                                </CardDescription>
+                              </div>
                             </div>
                           </div>
                         </CardHeader>

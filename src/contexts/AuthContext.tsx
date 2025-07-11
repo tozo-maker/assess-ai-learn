@@ -1,9 +1,9 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { authService } from '@/services/auth-service';
 import { TeacherProfile } from '@/types/auth';
+import { errorService } from '@/services/error-service';
 
 interface AuthContextType {
   user: User | null;
@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(profileData);
       console.log('AuthContext: Profile fetched successfully:', profileData);
     } catch (error) {
-      console.error('AuthContext: Error fetching profile:', error);
+      errorService.logError('AuthContext', error as Error, { userId, action: 'fetchProfile' });
       setProfile(null);
     }
   };
@@ -107,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('AuthContext: Signup successful');
       return result;
     } catch (error) {
-      console.error('AuthContext: Signup error:', error);
+      errorService.logError('AuthContext', error as Error, { action: 'signUp', data: { ...data, password: '[REDACTED]' } }, undefined, true);
       throw error;
     } finally {
       setIsLoading(false);
@@ -122,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('AuthContext: Signin successful');
       return result;
     } catch (error) {
-      console.error('AuthContext: Signin error:', error);
+      errorService.logError('AuthContext', error as Error, { action: 'signIn', email: data.email }, undefined, true);
       throw error;
     } finally {
       setIsLoading(false);
@@ -139,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(null);
       console.log('AuthContext: Signout successful');
     } catch (error) {
-      console.error('AuthContext: Signout error:', error);
+      errorService.logError('AuthContext', error as Error, { action: 'signOut' });
       throw error;
     } finally {
       setIsLoading(false);
@@ -151,7 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const updatedProfile = await authService.updateProfile(data);
       setProfile(updatedProfile);
     } catch (error) {
-      console.error('Profile update error:', error);
+      errorService.logError('AuthContext', error as Error, { action: 'updateProfile', data });
       throw error;
     }
   };
@@ -160,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await authService.resetPassword(email);
     } catch (error) {
-      console.error('Reset password error:', error);
+      errorService.logError('AuthContext', error as Error, { action: 'resetPassword', email });
       throw error;
     }
   };
@@ -169,7 +169,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await authService.updatePassword(password);
     } catch (error) {
-      console.error('Update password error:', error);
+      errorService.logError('AuthContext', error as Error, { action: 'updatePassword' });
       throw error;
     }
   };
