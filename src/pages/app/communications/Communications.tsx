@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { FileText, Users, MessageSquare } from 'lucide-react';
+import CommunicationHistory from '@/components/communications/CommunicationHistory';
 
 const Communications: React.FC = () => {
   const actions = (
@@ -51,8 +52,10 @@ const Communications: React.FC = () => {
             <p className="text-gray-600">
               Send emails to parents, manage templates, and track communication history.
             </p>
-            <Button variant="secondary" className="w-full" disabled>
-              Coming Soon
+            <Button asChild className="w-full">
+              <Link to="/app/communications/email">
+                Open Email Center
+              </Link>
             </Button>
           </CardContent>
         </Card>
@@ -84,13 +87,7 @@ const Communications: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8">
-              <MessageSquare className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No communications yet</h3>
-              <p className="text-gray-600">
-                Your communication history will appear here once you start sending reports and messages.
-              </p>
-            </div>
+            <CommunicationHistory />
           </CardContent>
         </Card>
       </div>

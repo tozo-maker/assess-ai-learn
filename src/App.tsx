@@ -45,6 +45,7 @@ import {
   LazyHelp,
   withLazyLoading
 } from '@/components/common/LazyRoutes';
+import EmailCenter from '@/pages/app/communications/EmailCenter';
 
 // Create optimized query client instance for better performance
 const queryClient = new QueryClient({
@@ -146,6 +147,7 @@ function App() {
                           
                           {/* System */}
                           <Route path="testing" element={withLazyLoading(LazyTesting)({})} />
+                          <Route path="communications/email" element={<EmailCenter />} />
                           <Route path="help" element={withLazyLoading(LazyHelp)({})} />
                           
                           {/* Default redirect */}

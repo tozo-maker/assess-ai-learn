@@ -80,11 +80,31 @@ const HelpMainContent: React.FC = () => {
     item.answer.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSendSupport = () => {
-    // Here you would typically send the support request
-    console.log('Support message:', supportMessage);
-    setSupportMessage('');
-    // Show success message
+  const handleSendSupport = async () => {
+    try {
+      // In a real implementation, this would send to a support system
+      // For now, we'll create a notification record
+      console.log('Support message:', supportMessage);
+      
+      // Create support ticket (you could extend this to use an edge function)
+      const response = await fetch('/api/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: supportMessage,
+          timestamp: new Date().toISOString()
+        })
+      });
+
+      if (response.ok) {
+        setSupportMessage('');
+        // Show success toast or notification
+        alert('Support request sent successfully! We\'ll get back to you within 24 hours.');
+      }
+    } catch (error) {
+      console.error('Error sending support request:', error);
+      alert('Failed to send support request. Please try again.');
+    }
   };
 
   return (
