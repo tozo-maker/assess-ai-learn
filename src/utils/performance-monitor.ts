@@ -95,6 +95,29 @@ class PerformanceMonitor {
   }
 
   /**
+   * Measure async operation performance
+   */
+  async measureAsync<T>(name: string, fn: () => Promise<T>): Promise<T> {
+    const startTime = performance.now();
+    try {
+      const result = await fn();
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      
+      if (duration > 1000) {
+        console.warn(`Slow async operation: ${name} took ${duration.toFixed(2)}ms`);
+      }
+      
+      return result;
+    } catch (error) {
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      console.error(`Failed async operation: ${name} took ${duration.toFixed(2)}ms`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Get current memory usage
    */
   private getMemoryUsage(): number | undefined {

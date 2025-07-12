@@ -1,17 +1,15 @@
 import { supabase } from '@/integrations/supabase/client';
-import { productionLogger } from './production-logger';
 import { performanceMonitor } from '@/utils/performance-monitor';
-import { ParentCommunication, CommunicationFormData } from '@/types/communications';
+import { productionLogger } from './production-logger';
 
-export interface NotificationPreference {
+export interface AutomationRule {
   id: string;
-  teacherId: string;
-  emailEnabled: boolean;
-  smsEnabled: boolean;
-  pushEnabled: boolean;
-  frequency: 'immediate' | 'daily' | 'weekly';
-  types: string[];
-  quietHours: { start: string; end: string };
+  name: string;
+  trigger: 'achievement' | 'grade_drop' | 'absence' | 'improvement' | 'schedule';
+  conditions: Record<string, any>;
+  templateId: string;
+  isActive: boolean;
+  lastTriggered?: string;
 }
 
 export interface EmailTemplate {
@@ -24,101 +22,53 @@ export interface EmailTemplate {
   isDefault: boolean;
 }
 
-export interface AutomationRule {
-  id: string;
-  name: string;
-  trigger: 'grade_drop' | 'achievement' | 'absence' | 'improvement' | 'schedule';
-  conditions: Record<string, any>;
-  templateId: string;
-  isActive: boolean;
-  lastTriggered?: string;
-}
-
 export interface ParentPortalAccess {
   studentId: string;
-  parentEmail: string;
   accessCode: string;
-  lastLogin?: string;
+  expiresAt: string;
   permissions: string[];
 }
 
 class EnhancedCommunicationsService {
-  // Real-time Notifications
-  async initializeRealtimeNotifications(teacherId: string) {
-    return performanceMonitor.measureAsync('init-realtime-notifications', async () => {
+  async sendRealTimeNotification(
+    teacherId: string,
+    studentId: string,
+    type: string,
+    message: string,
+    metadata?: Record<string, any>
+  ): Promise<void> {
+    return performanceMonitor.measureAsync('send-real-time-notification', async () => {
       try {
-        // Subscribe to relevant channels
-        const channel = supabase
-          .channel(`teacher_notifications_${teacherId}`)
-          .on('postgres_changes', {
-            event: '*',
-            schema: 'public',
-            table: 'notifications',
-            filter: `teacher_id=eq.${teacherId}`
-          }, (payload) => {
-            this.handleRealtimeNotification(payload);
-          })
-          .on('postgres_changes', {
-            event: '*',
-            schema: 'public',
-            table: 'parent_communications',
-            filter: `teacher_id=eq.${teacherId}`
-          }, (payload) => {
-            this.handleCommunicationUpdate(payload);
+        const { error } = await supabase
+          .from('notifications')
+          .insert({
+            teacher_id: teacherId,
+            student_id: studentId,
+            type,
+            title: type.replace('_', ' ').toUpperCase(),
+            message,
+            metadata: metadata || {},
+            is_read: false
           });
 
-        await channel.subscribe();
-        
-        productionLogger.info('Initialized realtime notifications', { teacherId });
-        return channel;
-      } catch (error) {
-        productionLogger.error('Failed to initialize realtime notifications', { error, teacherId });
+        if (error) throw error;
+
+        productionLogger.info('Sent real-time notification', {
+          teacherId,
+          studentId,
+          type,
+          messageLength: message.length
+        });
+      } catch (error: any) {
+        productionLogger.error('Failed to send real-time notification', {
+          error: error.message
+        });
         throw error;
       }
     });
   }
 
-  private handleRealtimeNotification(payload: any) {
-    const notification = payload.new;
-    
-    // Show browser notification if permission granted
-    if (Notification.permission === 'granted') {
-      new Notification(notification.title, {
-        body: notification.message,
-        icon: '/favicon.ico',
-        badge: '/favicon.ico'
-      });
-    }
-
-    // Dispatch custom event for UI updates
-    const event = new CustomEvent('new-notification', {
-      detail: notification
-    });
-    document.dispatchEvent(event);
-
-    productionLogger.info('Handled realtime notification', {
-      notificationId: notification.id,
-      type: notification.type
-    });
-  }
-
-  private handleCommunicationUpdate(payload: any) {
-    const communication = payload.new;
-    
-    // Update UI with communication status
-    const event = new CustomEvent('communication-updated', {
-      detail: communication
-    });
-    document.dispatchEvent(event);
-
-    productionLogger.info('Handled communication update', {
-      communicationId: communication.id,
-      status: communication.email_status
-    });
-  }
-
-  // Email Automation System
-  async createEmailAutomation(teacherId: string, automation: Omit<AutomationRule, 'id'>): Promise<AutomationRule> {
+  async createEmailAutomation(teacherId: string, automation: Omit<AutomationRule, 'id' | 'lastTriggered'>): Promise<AutomationRule> {
     return performanceMonitor.measureAsync('create-email-automation', async () => {
       try {
         const { data, error } = await supabase
@@ -139,22 +89,24 @@ class EnhancedCommunicationsService {
         const result: AutomationRule = {
           id: data.id,
           name: data.name,
-          trigger: data.trigger_type,
-          conditions: data.trigger_conditions,
-          templateId: data.email_template_id,
-          isActive: data.is_active,
-          lastTriggered: data.last_triggered
+          trigger: data.trigger_type as AutomationRule['trigger'],
+          conditions: (data.trigger_conditions as Record<string, any>) || {},
+          templateId: data.email_template_id || '',
+          isActive: data.is_active || false,
+          lastTriggered: data.updated_at
         };
 
         productionLogger.info('Created email automation', {
           teacherId,
           automationId: result.id,
-          trigger: result.trigger
+          automationName: automation.name
         });
 
         return result;
-      } catch (error) {
-        productionLogger.error('Failed to create email automation', { error, teacherId });
+      } catch (error: any) {
+        productionLogger.error('Failed to create email automation', {
+          error: error.message
+        });
         throw error;
       }
     });
@@ -162,388 +114,134 @@ class EnhancedCommunicationsService {
 
   async getEmailAutomations(teacherId: string): Promise<AutomationRule[]> {
     try {
-      const { data, error } = await supabase
+      const { data: automations, error } = await supabase
         .from('email_automations')
         .select('*')
         .eq('teacher_id', teacherId);
 
       if (error) throw error;
 
-      return data.map(item => ({
-        id: item.id,
-        name: item.name,
-        trigger: item.trigger_type,
-        conditions: item.trigger_conditions,
-        templateId: item.email_template_id,
-        isActive: item.is_active,
-        lastTriggered: item.updated_at
+      return automations.map(a => ({
+        id: a.id,
+        name: a.name,
+        trigger: a.trigger_type as AutomationRule['trigger'],
+        conditions: (a.trigger_conditions as Record<string, any>) || {},
+        templateId: a.email_template_id || '',
+        isActive: a.is_active || false,
+        lastTriggered: a.updated_at
       }));
-    } catch (error) {
-      productionLogger.error('Failed to get email automations', { error, teacherId });
+    } catch (error: any) {
+      productionLogger.error('Failed to get email automations', {
+        error: error.message
+      });
       throw error;
     }
   }
 
-  async triggerAutomationCheck(teacherId: string, trigger: string, context: any): Promise<void> {
-    return performanceMonitor.measureAsync('trigger-automation-check', async () => {
+  async createEmailTemplate(teacherId: string, template: Omit<EmailTemplate, 'id'>): Promise<EmailTemplate> {
+    return performanceMonitor.measureAsync('create-email-template', async () => {
       try {
-        const { error } = await supabase.functions.invoke('check-automation-triggers', {
-          body: {
-            teacherId,
-            trigger,
-            context
-          }
-        });
+        const { data, error } = await supabase
+          .from('email_templates')
+          .insert({
+            teacher_id: teacherId,
+            name: template.name,
+            template_type: template.type,
+            subject: template.subject,
+            content: template.content,
+            variables: template.variables,
+            is_default: template.isDefault
+          })
+          .select()
+          .single();
 
         if (error) throw error;
 
-        productionLogger.info('Triggered automation check', {
+        const result: EmailTemplate = {
+          id: data.id,
+          name: data.name,
+          type: data.template_type as EmailTemplate['type'],
+          subject: data.subject,
+          content: data.content,
+          variables: Array.isArray(data.variables) ? (data.variables as string[]) : [],
+          isDefault: data.is_default || false
+        };
+
+        productionLogger.info('Created email template', {
           teacherId,
-          trigger,
-          context
+          templateId: result.id,
+          templateName: template.name
         });
-      } catch (error) {
-        productionLogger.error('Failed to trigger automation check', { error, teacherId, trigger });
+
+        return result;
+      } catch (error: any) {
+        productionLogger.error('Failed to create email template', {
+          error: error.message
+        });
         throw error;
       }
     });
-  }
-
-  // Email Templates
-  async createEmailTemplate(teacherId: string, template: Omit<EmailTemplate, 'id'>): Promise<EmailTemplate> {
-    try {
-      const { data, error } = await supabase
-        .from('email_templates')
-        .insert({
-          teacher_id: teacherId,
-          name: template.name,
-          template_type: template.type,
-          subject: template.subject,
-          content: template.content,
-          variables: template.variables,
-          is_default: template.isDefault
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      return {
-        id: data.id,
-        name: data.name,
-        type: data.template_type,
-        subject: data.subject,
-        content: data.content,
-        variables: data.variables,
-        isDefault: data.is_default
-      };
-    } catch (error) {
-      productionLogger.error('Failed to create email template', { error, teacherId });
-      throw error;
-    }
   }
 
   async getEmailTemplates(teacherId: string): Promise<EmailTemplate[]> {
     try {
-      const { data, error } = await supabase
+      const { data: templates, error } = await supabase
         .from('email_templates')
         .select('*')
         .eq('teacher_id', teacherId);
 
       if (error) throw error;
 
-      return data.map(item => ({
-        id: item.id,
-        name: item.name,
-        type: item.template_type,
-        subject: item.subject,
-        content: item.content,
-        variables: item.variables,
-        isDefault: item.is_default
+      return templates.map(t => ({
+        id: t.id,
+        name: t.name,
+        type: t.template_type as EmailTemplate['type'],
+        subject: t.subject,
+        content: t.content,
+        variables: Array.isArray(t.variables) ? (t.variables as string[]) : [],
+        isDefault: t.is_default || false
       }));
-    } catch (error) {
-      productionLogger.error('Failed to get email templates', { error, teacherId });
-      throw error;
-    }
-  }
-
-  // Parent Portal Features
-  async createParentPortalAccess(studentId: string, parentEmail: string): Promise<ParentPortalAccess> {
-    return performanceMonitor.measureAsync('create-parent-portal-access', async () => {
-      try {
-        const accessCode = this.generateAccessCode();
-        
-        const { error } = await supabase.functions.invoke('create-parent-access', {
-          body: {
-            studentId,
-            parentEmail,
-            accessCode
-          }
-        });
-
-        if (error) throw error;
-
-        const access: ParentPortalAccess = {
-          studentId,
-          parentEmail,
-          accessCode,
-          permissions: ['view_progress', 'view_assessments', 'view_goals']
-        };
-
-        productionLogger.info('Created parent portal access', {
-          studentId,
-          parentEmail
-        });
-
-        return access;
-      } catch (error) {
-        productionLogger.error('Failed to create parent portal access', { error, studentId });
-        throw error;
-      }
-    });
-  }
-
-  private generateAccessCode(): string {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  }
-
-  async sendParentInvitation(studentId: string, parentEmail: string): Promise<void> {
-    return performanceMonitor.measureAsync('send-parent-invitation', async () => {
-      try {
-        const access = await this.createParentPortalAccess(studentId, parentEmail);
-        
-        const { error } = await supabase.functions.invoke('send-parent-invitation', {
-          body: {
-            studentId,
-            parentEmail,
-            accessCode: access.accessCode
-          }
-        });
-
-        if (error) throw error;
-
-        productionLogger.info('Sent parent invitation', {
-          studentId,
-          parentEmail
-        });
-      } catch (error) {
-        productionLogger.error('Failed to send parent invitation', { error, studentId });
-        throw error;
-      }
-    });
-  }
-
-  // Teacher Collaboration
-  async shareStudentData(teacherId: string, studentId: string, recipientTeacherId: string, permissions: string[]): Promise<void> {
-    return performanceMonitor.measureAsync('share-student-data', async () => {
-      try {
-        const { error } = await supabase.functions.invoke('share-student-data', {
-          body: {
-            teacherId,
-            studentId,
-            recipientTeacherId,
-            permissions
-          }
-        });
-
-        if (error) throw error;
-
-        productionLogger.info('Shared student data', {
-          teacherId,
-          studentId,
-          recipientTeacherId,
-          permissions
-        });
-      } catch (error) {
-        productionLogger.error('Failed to share student data', { error, teacherId, studentId });
-        throw error;
-      }
-    });
-  }
-
-  async createTeacherNote(teacherId: string, studentId: string, note: string, isPrivate: boolean = false): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from('parent_communications')
-        .insert({
-          teacher_id: teacherId,
-          student_id: studentId,
-          communication_type: 'general',
-          subject: 'Teacher Note',
-          content: note,
-          email_status: isPrivate ? 'draft' : 'sent'
-        });
-
-      if (error) throw error;
-
-      productionLogger.info('Created teacher note', {
-        teacherId,
-        studentId,
-        isPrivate
+    } catch (error: any) {
+      productionLogger.error('Failed to get email templates', {
+        error: error.message
       });
-    } catch (error) {
-      productionLogger.error('Failed to create teacher note', { error, teacherId, studentId });
       throw error;
     }
   }
 
-  // Bulk Communications
-  async sendBulkCommunication(
-    teacherId: string,
-    studentIds: string[],
-    template: EmailTemplate,
-    customData: Record<string, any> = {}
-  ): Promise<{ successful: string[]; failed: string[] }> {
-    return performanceMonitor.measureAsync('send-bulk-communication', async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('send-bulk-communication', {
-          body: {
-            teacherId,
-            studentIds,
-            template,
-            customData
-          }
-        });
+  async initializeRealtimeNotifications(teacherId: string): Promise<void> {
+    // Initialize real-time subscription for notifications
+    const channel = supabase
+      .channel('notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `teacher_id=eq.${teacherId}`
+        },
+        (payload) => {
+          // Handle real-time notification
+          const notification = payload.new;
+          this.showNotificationToast(notification);
+        }
+      )
+      .subscribe();
 
-        if (error) throw error;
+    productionLogger.info('Initialized real-time notifications', { teacherId });
+  }
 
-        productionLogger.info('Sent bulk communication', {
-          teacherId,
-          studentCount: studentIds.length,
-          templateId: template.id,
-          successful: data.successful.length,
-          failed: data.failed.length
-        });
-
-        return data;
-      } catch (error) {
-        productionLogger.error('Failed to send bulk communication', { error, teacherId });
-        throw error;
+  private showNotificationToast(notification: any): void {
+    // Show toast notification in UI
+    const event = new CustomEvent('show-notification', {
+      detail: {
+        title: notification.title,
+        message: notification.message,
+        type: notification.type
       }
     });
-  }
-
-  // Communication Analytics
-  async getCommunicationAnalytics(teacherId: string, dateRange?: { start: string; end: string }) {
-    try {
-      let query = supabase
-        .from('parent_communications')
-        .select('*')
-        .eq('teacher_id', teacherId);
-
-      if (dateRange) {
-        query = query
-          .gte('created_at', dateRange.start)
-          .lte('created_at', dateRange.end);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      const analytics = {
-        totalCommunications: data.length,
-        byType: this.groupByProperty(data, 'communication_type'),
-        byStatus: this.groupByProperty(data, 'email_status'),
-        responseRate: this.calculateResponseRate(data),
-        averageResponseTime: this.calculateAverageResponseTime(data),
-        mostActiveParents: this.findMostActiveParents(data),
-        communicationTrends: this.calculateCommunicationTrends(data)
-      };
-
-      return analytics;
-    } catch (error) {
-      productionLogger.error('Failed to get communication analytics', { error, teacherId });
-      throw error;
-    }
-  }
-
-  private groupByProperty(data: any[], property: string): Record<string, number> {
-    return data.reduce((acc, item) => {
-      const key = item[property] || 'unknown';
-      acc[key] = (acc[key] || 0) + 1;
-      return acc;
-    }, {});
-  }
-
-  private calculateResponseRate(data: any[]): number {
-    const sent = data.filter(item => item.email_status === 'sent').length;
-    const total = data.length;
-    return total > 0 ? (sent / total) * 100 : 0;
-  }
-
-  private calculateAverageResponseTime(data: any[]): number {
-    const responseTimes = data
-      .filter(item => item.sent_at && item.created_at)
-      .map(item => {
-        const created = new Date(item.created_at).getTime();
-        const sent = new Date(item.sent_at).getTime();
-        return sent - created;
-      });
-
-    return responseTimes.length > 0
-      ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
-      : 0;
-  }
-
-  private findMostActiveParents(data: any[]): Array<{ email: string; count: number }> {
-    const parentCounts = this.groupByProperty(data, 'parent_email');
-    
-    return Object.entries(parentCounts)
-      .filter(([email]) => email && email !== 'unknown')
-      .map(([email, count]) => ({ email, count: count as number }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
-  }
-
-  private calculateCommunicationTrends(data: any[]) {
-    const trends = data.reduce((acc, item) => {
-      const date = new Date(item.created_at).toISOString().split('T')[0];
-      acc[date] = (acc[date] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return Object.entries(trends)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, count]) => ({ date, count }));
-  }
-
-  // Notification Preferences
-  async updateNotificationPreferences(teacherId: string, preferences: Partial<NotificationPreference>): Promise<void> {
-    try {
-      // Store preferences in localStorage for now, could be moved to database
-      const existing = this.getNotificationPreferences(teacherId);
-      const updated = { ...existing, ...preferences, teacherId };
-      
-      localStorage.setItem(`notification_prefs_${teacherId}`, JSON.stringify(updated));
-      
-      productionLogger.info('Updated notification preferences', { teacherId, preferences });
-    } catch (error) {
-      productionLogger.error('Failed to update notification preferences', { error, teacherId });
-      throw error;
-    }
-  }
-
-  getNotificationPreferences(teacherId: string): NotificationPreference {
-    try {
-      const saved = localStorage.getItem(`notification_prefs_${teacherId}`);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (error) {
-      productionLogger.error('Failed to get notification preferences', { error, teacherId });
-    }
-
-    // Default preferences
-    return {
-      id: teacherId,
-      teacherId,
-      emailEnabled: true,
-      smsEnabled: false,
-      pushEnabled: true,
-      frequency: 'immediate',
-      types: ['achievement', 'concern', 'progress_report'],
-      quietHours: { start: '22:00', end: '07:00' }
-    };
+    window.dispatchEvent(event);
   }
 }
 
