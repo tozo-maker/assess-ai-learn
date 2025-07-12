@@ -1,218 +1,257 @@
 import React, { useState } from 'react';
-import { Plus, Users, GraduationCap, Settings, BarChart3 } from 'lucide-react';
 import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useClassesData } from '@/hooks/useClassesData';
-import PageLoadingState from '@/components/common/PageLoadingState';
-import PageErrorState from '@/components/common/PageErrorState';
-import { CreateClassDialog } from '@/components/classes/CreateClassDialog';
-import { EditClassDialog } from '@/components/classes/EditClassDialog';
-import { ClassMigrationTool } from '@/components/classes/ClassMigrationTool';
-import { ClassOptimizationDashboard } from '@/components/classes/ClassOptimizationDashboard';
-import { classService } from '@/services/class-service';
+import { DataTable, Column } from '@/components/ui/data-table';
+import { StatCard } from '@/components/ui/stat-card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { 
+  Plus, 
+  Users, 
+  GraduationCap, 
+  BookOpen, 
+  Calendar,
+  Eye,
+  Edit,
+  MoreHorizontal
+} from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { Class } from '@/types/student';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-export default function Classes() {
-  const { classes, isLoading, error, refetch } = useClassesData();
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedClass, setSelectedClass] = useState<Class | null>(null);
+interface ClassData {
+  id: string;
+  name: string;
+  display_name: string;
+  subject: string;
+  grade_level: string;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+  student_count?: number;
+}
 
-  // Fetch student counts for each class
-  const { data: classCounts } = useQuery({
-    queryKey: ['class-student-counts', classes?.map(c => c.id)],
+const Classes: React.FC = () => {
+  const { toast } = useToast();
+  const [selectedClasses, setSelectedClasses] = useState<ClassData[]>([]);
+
+  // Fetch classes data
+  const { data: classes = [], isLoading } = useQuery({
+    queryKey: ['classes'],
     queryFn: async () => {
-      if (!classes) return {};
-      const counts: Record<string, number> = {};
-      for (const classItem of classes) {
-        counts[classItem.id] = await classService.getClassStudentCount(classItem.id);
-      }
-      return counts;
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('classes')
+        .select(`
+          *,
+          students(count)
+        `)
+        .eq('teacher_id', user.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform data to include student count
+      return data.map(classItem => ({
+        ...classItem,
+        student_count: classItem.students?.[0]?.count || 0
+      }));
     },
-    enabled: !!classes?.length,
   });
 
-  const handleEditClass = (classItem: Class) => {
-    setSelectedClass(classItem);
-    setEditDialogOpen(true);
+  // Calculate statistics
+  const stats = {
+    totalClasses: classes.length,
+    activeClasses: classes.filter(c => c.is_active).length,
+    totalStudents: classes.reduce((sum, c) => sum + (c.student_count || 0), 0),
+    subjects: new Set(classes.map(c => c.subject)).size
   };
 
-  const handleDeleteClass = async (classId: string) => {
-    try {
-      await classService.deleteClass(classId);
-      refetch();
-    } catch (error) {
-      console.error('Error deleting class:', error);
+  const columns: Column<ClassData>[] = [
+    {
+      key: 'display_name',
+      title: 'Class Name',
+      sortable: true,
+      render: (value, row) => (
+        <div className="space-y-1">
+          <div className="font-medium">{value}</div>
+          <div className="text-sm text-muted-foreground">{row.name}</div>
+        </div>
+      )
+    },
+    {
+      key: 'subject',
+      title: 'Subject',
+      sortable: true,
+      render: (value) => (
+        <Badge variant="outline" className="capitalize">
+          {value}
+        </Badge>
+      )
+    },
+    {
+      key: 'grade_level',
+      title: 'Grade Level',
+      sortable: true,
+      render: (value) => (
+        <Badge variant="secondary" className="capitalize">
+          {value}
+        </Badge>
+      )
+    },
+    {
+      key: 'student_count',
+      title: 'Students',
+      sortable: true,
+      render: (value) => (
+        <div className="flex items-center gap-1">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <span>{value || 0}</span>
+        </div>
+      )
+    },
+    {
+      key: 'is_active',
+      title: 'Status',
+      sortable: true,
+      render: (value) => (
+        <Badge variant={value ? 'default' : 'secondary'}>
+          {value ? 'Active' : 'Inactive'}
+        </Badge>
+      )
+    },
+    {
+      key: 'created_at',
+      title: 'Created',
+      sortable: true,
+      render: (value) => new Date(value).toLocaleDateString()
     }
+  ];
+
+  const handleCreateClass = () => {
+    toast({
+      title: "Create Class",
+      description: "Class creation feature coming soon!",
+    });
   };
 
-  if (isLoading) {
-    return <PageLoadingState message="Loading classes..." />;
-  }
+  const handleViewClass = (classItem: ClassData) => {
+    toast({
+      title: "View Class",
+      description: `Viewing ${classItem.display_name}`,
+    });
+  };
 
-  if (error) {
-    return (
-      <PageErrorState 
-        error={error} 
-        onRetry={refetch}
-        title="Failed to load classes"
-      />
-    );
-  }
-
-  const groupedClasses = classes?.reduce((acc, classItem) => {
-    if (!acc[classItem.grade_level]) {
-      acc[classItem.grade_level] = [];
-    }
-    acc[classItem.grade_level].push(classItem);
-    return acc;
-  }, {} as Record<string, Class[]>) || {};
+  const actions = (
+    <Button onClick={handleCreateClass} className="gap-2">
+      <Plus className="h-4 w-4" />
+      Create Class
+    </Button>
+  );
 
   return (
     <StandardPageLayout
       title="Classes"
-      description="Manage and organize your student classes"
-      actions={
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Class
-        </Button>
-      }
+      description="Manage your classes and track student enrollment"
+      actions={actions}
+      breadcrumbs={[
+        { label: 'Classes' }
+      ]}
     >
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <GraduationCap className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="optimization" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Optimization
-          </TabsTrigger>
-          <TabsTrigger value="migration" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Migration
-          </TabsTrigger>
-        </TabsList>
+      <div className="space-y-6">
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            title="Total Classes"
+            value={stats.totalClasses}
+            description="All your classes"
+            icon={BookOpen}
+          />
+          <StatCard
+            title="Active Classes"
+            value={stats.activeClasses}
+            description="Currently running"
+            icon={Calendar}
+            badge={{ text: "Active", variant: "default" }}
+          />
+          <StatCard
+            title="Total Students"
+            value={stats.totalStudents}
+            description="Across all classes"
+            icon={Users}
+          />
+          <StatCard
+            title="Subjects"
+            value={stats.subjects}
+            description="Different subjects"
+            icon={GraduationCap}
+          />
+        </div>
 
-        <TabsContent value="overview" className="space-y-6">
-          {(!classes || classes.length === 0) ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <GraduationCap className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No classes yet</h3>
-                <p className="text-muted-foreground text-center mb-4 max-w-sm">
-                  Create your first class to start organizing your students by grade level and subject.
-                </p>
-                <Button onClick={() => setCreateDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create First Class
-                </Button>
-              </CardContent>
-            </Card>
+        {/* Classes Table */}
+        <div className="bg-background">
+          {classes.length === 0 && !isLoading ? (
+            <EmptyState
+              icon={BookOpen}
+              title="No Classes Yet"
+              description="Create your first class to start organizing your students and curriculum."
+              action={{
+                label: "Create First Class",
+                onClick: handleCreateClass
+              }}
+            />
           ) : (
-            <div className="space-y-6">
-              {Object.entries(groupedClasses).map(([gradeLevel, gradeClasses]) => (
-                <div key={gradeLevel} className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5 text-primary" />
-                    <h2 className="text-xl font-semibold">Grade {gradeLevel}</h2>
-                    <Badge variant="secondary">{gradeClasses.length} classes</Badge>
-                  </div>
-                  
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {gradeClasses.map((classItem) => (
-                      <Card key={classItem.id} className="hover:shadow-md transition-shadow">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <CardTitle className="text-lg">{classItem.display_name}</CardTitle>
-                              <div className="mt-1 flex items-center gap-2">
-                                {classItem.subject && (
-                                  <Badge variant="outline">
-                                    {classItem.subject}
-                                  </Badge>
-                                )}
-                                <CardDescription>
-                                  Grade {classItem.grade_level}
-                                </CardDescription>
-                              </div>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                            <Users className="h-4 w-4" />
-                            <span>
-                              {classCounts?.[classItem.id] ?? 0} students
-                            </span>
-                          </div>
-                          
-                          {classItem.description && (
-                            <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                              {classItem.description}
-                            </p>
-                          )}
-                          
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleEditClass(classItem)}
-                            >
-                              Edit
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleDeleteClass(classItem.id)}
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <DataTable
+              data={classes}
+              columns={columns}
+              loading={isLoading}
+              searchable={true}
+              filterable={true}
+              exportable={true}
+              selectable={true}
+              selectedRows={selectedClasses}
+              onSelectRows={setSelectedClasses}
+              onRowClick={handleViewClass}
+              emptyState={
+                <EmptyState
+                  icon={BookOpen}
+                  title="No Classes Found"
+                  description="Try adjusting your search or filter criteria."
+                />
+              }
+            />
           )}
-        </TabsContent>
+        </div>
 
-        <TabsContent value="optimization">
-          <ClassOptimizationDashboard />
-        </TabsContent>
-
-        <TabsContent value="migration">
-          <ClassMigrationTool />
-        </TabsContent>
-      </Tabs>
-      <CreateClassDialog 
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onSuccess={() => {
-          setCreateDialogOpen(false);
-          refetch();
-        }}
-      />
-
-      {selectedClass && (
-        <EditClassDialog 
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          classData={selectedClass}
-          onSuccess={() => {
-            setEditDialogOpen(false);
-            setSelectedClass(null);
-            refetch();
-          }}
-        />
-      )}
+        {/* Bulk Actions */}
+        {selectedClasses.length > 0 && (
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-background border border-border rounded-lg shadow-lg p-4">
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium">
+                {selectedClasses.length} class{selectedClasses.length > 1 ? 'es' : ''} selected
+              </span>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm">
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Details
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Bulk Edit
+                </Button>
+                <Button variant="outline" size="sm">
+                  <MoreHorizontal className="h-4 w-4 mr-2" />
+                  More Actions
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </StandardPageLayout>
   );
-}
+};
+
+export default Classes;
