@@ -331,9 +331,7 @@ class MobileOptimizationService {
         queueSize: this.offlineQueue.length
       });
     } catch (error: any) {
-      productionLogger.error('Failed to store offline data', {
-        error: error.message
-      });
+      productionLogger.error('Failed to store offline data', error.message);
     }
   }
 
@@ -346,9 +344,7 @@ class MobileOptimizationService {
       }
       return null;
     } catch (error: any) {
-      productionLogger.error('Failed to get offline data', {
-        error: error.message
-      });
+      productionLogger.error('Failed to get offline data', error.message);
       return null;
     }
   }
@@ -375,9 +371,7 @@ class MobileOptimizationService {
         remainingItems: this.offlineQueue.length
       });
     } catch (error: any) {
-      productionLogger.error('Failed to sync offline data', {
-        error: error.message
-      });
+      productionLogger.error('Failed to sync offline data', error.message);
     }
   }
 

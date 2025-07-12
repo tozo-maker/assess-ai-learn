@@ -25,7 +25,12 @@ export const AdvancedAnalyticsDashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<any>(null);
   const [insights, setInsights] = useState<PredictiveInsight[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<AnalyticsFilter>({});
+  const [filters, setFilters] = useState<AnalyticsFilter>({
+    dateRange: { start: '', end: '' },
+    studentIds: [],
+    subjectFilter: [],
+    gradeLevel: []
+  });
   const [showFilters, setShowFilters] = useState(false);
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
 
@@ -92,7 +97,12 @@ export const AdvancedAnalyticsDashboard: React.FC = () => {
   };
 
   const clearFilters = () => {
-    setFilters({});
+    setFilters({
+      dateRange: { start: '', end: '' },
+      studentIds: [],
+      subjectFilter: [],
+      gradeLevel: []
+    });
     setDateRange({});
   };
 

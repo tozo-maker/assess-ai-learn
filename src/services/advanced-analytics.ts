@@ -3,10 +3,13 @@ import { performanceMonitor } from '@/utils/performance-monitor';
 import { productionLogger } from './production-logger';
 
 export interface PredictiveInsight {
+  id: string;
   studentId: string;
   studentName: string;
   riskLevel: 'low' | 'medium' | 'high';
   predictedOutcome: string;
+  prediction: string;
+  type: string;
   confidence: number;
   recommendations: string[];
   timeframe: string;
@@ -65,9 +68,7 @@ class AdvancedAnalyticsService {
 
         return data?.insights || [];
       } catch (error: any) {
-        productionLogger.error('Failed to generate predictive insights', {
-          message: error.message
-        });
+        productionLogger.error('Failed to generate predictive insights', error.message);
         throw error;
       }
     });
@@ -90,9 +91,7 @@ class AdvancedAnalyticsService {
 
         return data?.report;
       } catch (error: any) {
-        productionLogger.error('Failed to generate custom report', {
-          message: error.message
-        });
+        productionLogger.error('Failed to generate custom report', error.message);
         throw error;
       }
     });
@@ -117,9 +116,7 @@ class AdvancedAnalyticsService {
         insights: data || []
       };
     } catch (error: any) {
-      productionLogger.error('Failed to get advanced metrics', {
-        message: error.message
-      });
+      productionLogger.error('Failed to get advanced metrics', error.message);
       throw error;
     }
   }
@@ -141,9 +138,7 @@ class AdvancedAnalyticsService {
 
         return data?.fileUrl;
       } catch (error: any) {
-        productionLogger.error('Failed to export analytics data', {
-          message: error.message
-        });
+        productionLogger.error('Failed to export analytics data', error.message);
         throw error;
       }
     });

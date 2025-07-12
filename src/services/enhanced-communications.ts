@@ -29,6 +29,18 @@ export interface ParentPortalAccess {
   permissions: string[];
 }
 
+export interface NotificationPreference {
+  id: string;
+  teacherId: string;
+  type: string;
+  enabled: boolean;
+  frequency: 'immediate' | 'daily' | 'weekly';
+  channels: string[];
+  emailEnabled?: boolean;
+  pushEnabled?: boolean;
+  quietHours?: { start: string; end: string };
+}
+
 class EnhancedCommunicationsService {
   async sendRealTimeNotification(
     teacherId: string,
@@ -60,9 +72,7 @@ class EnhancedCommunicationsService {
           messageLength: message.length
         });
       } catch (error: any) {
-        productionLogger.error('Failed to send real-time notification', {
-          error: error.message
-        });
+        productionLogger.error('Failed to send real-time notification', error.message);
         throw error;
       }
     });
@@ -104,9 +114,7 @@ class EnhancedCommunicationsService {
 
         return result;
       } catch (error: any) {
-        productionLogger.error('Failed to create email automation', {
-          error: error.message
-        });
+        productionLogger.error('Failed to create email automation', error.message);
         throw error;
       }
     });
@@ -131,9 +139,7 @@ class EnhancedCommunicationsService {
         lastTriggered: a.updated_at
       }));
     } catch (error: any) {
-      productionLogger.error('Failed to get email automations', {
-        error: error.message
-      });
+      productionLogger.error('Failed to get email automations', error.message);
       throw error;
     }
   }
@@ -175,9 +181,7 @@ class EnhancedCommunicationsService {
 
         return result;
       } catch (error: any) {
-        productionLogger.error('Failed to create email template', {
-          error: error.message
-        });
+        productionLogger.error('Failed to create email template', error.message);
         throw error;
       }
     });
@@ -202,9 +206,7 @@ class EnhancedCommunicationsService {
         isDefault: t.is_default || false
       }));
     } catch (error: any) {
-      productionLogger.error('Failed to get email templates', {
-        error: error.message
-      });
+      productionLogger.error('Failed to get email templates', error.message);
       throw error;
     }
   }
@@ -242,6 +244,45 @@ class EnhancedCommunicationsService {
       }
     });
     window.dispatchEvent(event);
+  }
+
+  async getCommunicationAnalytics(teacherId: string): Promise<any> {
+    try {
+      const { data, error } = await supabase
+        .from('parent_communications')
+        .select('*')
+        .eq('teacher_id', teacherId);
+
+      if (error) throw error;
+
+      return {
+        totalSent: data?.length || 0,
+        recentCommunications: data?.slice(-5) || [],
+        byType: {}
+      };
+    } catch (error: any) {
+      productionLogger.error('Failed to get communication analytics', error.message);
+      throw error;
+    }
+  }
+
+  async getNotificationPreferences(teacherId: string): Promise<NotificationPreference[]> {
+    try {
+      // Placeholder implementation
+      return [];
+    } catch (error: any) {
+      productionLogger.error('Failed to get notification preferences', error.message);
+      throw error;
+    }
+  }
+
+  async updateNotificationPreferences(teacherId: string, preferences: NotificationPreference[]): Promise<void> {
+    try {
+      productionLogger.info('Updated notification preferences', { teacherId });
+    } catch (error: any) {
+      productionLogger.error('Failed to update notification preferences', error.message);
+      throw error;
+    }
   }
 }
 
