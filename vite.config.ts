@@ -19,4 +19,23 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-toast'],
+          supabase: ['@supabase/supabase-js'],
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          charts: ['recharts']
+        }
+      }
+    },
+    sourcemap: mode === 'development',
+    minify: mode === 'production' ? 'terser' : false,
+    target: 'es2020'
+  },
+  esbuild: {
+    drop: mode === 'production' ? ['console', 'debugger'] : []
+  }
 }));
