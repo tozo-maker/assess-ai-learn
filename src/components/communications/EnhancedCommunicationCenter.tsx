@@ -41,7 +41,7 @@ export const EnhancedCommunicationCenter: React.FC = () => {
   
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [automations, setAutomations] = useState<AutomationRule[]>([]);
-  const [notifications, setNotifications] = useState<NotificationPreference | null>(null);
+  const [notifications, setNotifications] = useState<NotificationPreference[]>([]);
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -83,7 +83,7 @@ export const EnhancedCommunicationCenter: React.FC = () => {
       setAutomations(automationsData);
       setAnalytics(analyticsData);
 
-      const notificationPrefs = enhancedCommunicationsService.getNotificationPreferences(user!.id);
+      const notificationPrefs = await enhancedCommunicationsService.getNotificationPreferences(user!.id);
       setNotifications(notificationPrefs);
     } catch (error) {
       toast({
@@ -208,8 +208,12 @@ export const EnhancedCommunicationCenter: React.FC = () => {
 
   const updateNotificationPreferences = async (updates: Partial<NotificationPreference>) => {
     try {
-      await enhancedCommunicationsService.updateNotificationPreferences(user!.id, updates);
-      setNotifications(prev => prev ? { ...prev, ...updates } : null);
+      // Convert partial update to full notification preferences array
+      const updatedPrefs = notifications.map(pref => 
+        pref.id === updates.id ? { ...pref, ...updates } : pref
+      );
+      await enhancedCommunicationsService.updateNotificationPreferences(user!.id, updatedPrefs);
+      setNotifications(updatedPrefs);
       
       toast({
         title: "Success",
@@ -562,7 +566,7 @@ export const EnhancedCommunicationCenter: React.FC = () => {
               <CardTitle>Notification Preferences</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {notifications && (
+              {notifications.length > 0 ? (
                 <>
                   <div className="space-y-4">
                     <h4 className="font-medium">Notification Methods</h4>
@@ -573,8 +577,11 @@ export const EnhancedCommunicationCenter: React.FC = () => {
                           <p className="text-sm text-muted-foreground">Receive notifications via email</p>
                         </div>
                         <Switch
-                          checked={notifications.emailEnabled}
-                          onCheckedChange={(checked) => updateNotificationPreferences({ emailEnabled: checked })}
+                          checked={notifications[0]?.emailEnabled || false}
+                          onCheckedChange={(checked) => updateNotificationPreferences({ 
+                            id: notifications[0]?.id || '',
+                            emailEnabled: checked 
+                          })}
                         />
                       </div>
 
@@ -584,8 +591,11 @@ export const EnhancedCommunicationCenter: React.FC = () => {
                           <p className="text-sm text-muted-foreground">Receive browser push notifications</p>
                         </div>
                         <Switch
-                          checked={notifications.pushEnabled}
-                          onCheckedChange={(checked) => updateNotificationPreferences({ pushEnabled: checked })}
+                          checked={notifications[0]?.pushEnabled || false}
+                          onCheckedChange={(checked) => updateNotificationPreferences({ 
+                            id: notifications[0]?.id || '',
+                            pushEnabled: checked 
+                          })}
                         />
                       </div>
                     </div>
@@ -594,8 +604,11 @@ export const EnhancedCommunicationCenter: React.FC = () => {
                   <div className="space-y-4">
                     <h4 className="font-medium">Notification Frequency</h4>
                     <Select
-                      value={notifications.frequency}
-                      onValueChange={(value) => updateNotificationPreferences({ frequency: value as any })}
+                      value={notifications[0]?.frequency || 'immediate'}
+                      onValueChange={(value) => updateNotificationPreferences({ 
+                        id: notifications[0]?.id || '',
+                        frequency: value as any 
+                      })}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -615,9 +628,13 @@ export const EnhancedCommunicationCenter: React.FC = () => {
                         <Label>Start Time</Label>
                         <Input
                           type="time"
-                          value={notifications.quietHours.start}
+                          value={notifications[0]?.quietHours?.start || '22:00'}
                           onChange={(e) => updateNotificationPreferences({
-                            quietHours: { ...notifications.quietHours, start: e.target.value }
+                            id: notifications[0]?.id || '',
+                            quietHours: { 
+                              ...notifications[0]?.quietHours, 
+                              start: e.target.value 
+                            }
                           })}
                         />
                       </div>
@@ -625,15 +642,24 @@ export const EnhancedCommunicationCenter: React.FC = () => {
                         <Label>End Time</Label>
                         <Input
                           type="time"
-                          value={notifications.quietHours.end}
+                          value={notifications[0]?.quietHours?.end || '08:00'}
                           onChange={(e) => updateNotificationPreferences({
-                            quietHours: { ...notifications.quietHours, end: e.target.value }
+                            id: notifications[0]?.id || '',
+                            quietHours: { 
+                              ...notifications[0]?.quietHours, 
+                              end: e.target.value 
+                            }
                           })}
                         />
                       </div>
                     </div>
                   </div>
                 </>
+              ) : (
+                <div className="text-center py-8">
+                  <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No notification preferences configured</p>
+                </div>
               )}
             </CardContent>
           </Card>
