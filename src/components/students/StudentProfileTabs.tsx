@@ -12,6 +12,14 @@ interface StudentProfileTabsProps {
 }
 
 const StudentProfileTabs: React.FC<StudentProfileTabsProps> = ({ studentId }) => {
+  if (!studentId) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-gray-500">Student ID is required to load tabs</p>
+      </div>
+    );
+  }
+
   return (
     <Tabs defaultValue="assessments" className="space-y-6">
       <TabsList className="grid w-full grid-cols-4">
