@@ -49,17 +49,17 @@ const GoalsMainContent: React.FC<GoalsMainContentProps> = ({
 
   const handleCreateGoal = (goalData: Omit<Goal, 'id' | 'created_at' | 'updated_at' | 'teacher_id'>) => {
     // This would be handled by parent component
-    console.log('Create goal:', goalData);
+    // Creating goal
   };
 
   const handleUpdateGoal = (id: string, updates: Partial<Goal>) => {
     // This would be handled by parent component
-    console.log('Update goal:', id, updates);
+    // Updating goal
   };
 
   const handleDeleteGoal = (id: string) => {
     // This would be handled by parent component
-    console.log('Delete goal:', id);
+    // Deleting goal
   };
 
   return (

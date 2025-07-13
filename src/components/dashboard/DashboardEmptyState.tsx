@@ -15,7 +15,6 @@ interface DashboardEmptyStateProps {
 }
 
 const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = ({ teacher }) => {
-  console.log('DashboardEmptyState render - no students found');
 
   return (
     <DSPageContainer>

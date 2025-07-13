@@ -84,7 +84,7 @@ const HelpMainContent: React.FC = () => {
     try {
       // In a real implementation, this would send to a support system
       // For now, we'll create a notification record
-      console.log('Support message:', supportMessage);
+      // Sending support message
       
       // Create support ticket (you could extend this to use an edge function)
       const response = await fetch('/api/support', {

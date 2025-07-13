@@ -93,7 +93,7 @@ export const EnhancedStudentResponseForm: React.FC<EnhancedStudentResponseFormPr
   const handleSubmit = async (data: ResponseFormData) => {
     setIsSubmitting(true);
     try {
-      console.log('Submitting student responses:', data);
+      // Submitting student responses
 
       // Save individual responses
       const responsePromises = data.responses.map(response => 
@@ -133,7 +133,7 @@ export const EnhancedStudentResponseForm: React.FC<EnhancedStudentResponseFormPr
           description: "Student responses saved and analysis generated successfully."
         });
       } catch (analysisError) {
-        console.error('Analysis generation failed:', analysisError);
+        // Analysis generation failed - handled by error boundary
         toast({
           title: "Responses Saved",
           description: "Responses saved but analysis generation failed. You can generate it later.",
@@ -143,7 +143,7 @@ export const EnhancedStudentResponseForm: React.FC<EnhancedStudentResponseFormPr
 
       onSubmit(data);
     } catch (error) {
-      console.error('Form submission error:', error);
+      // Form submission error - handled by error boundary
       toast({
         variant: "destructive",
         title: "Submission Failed",
