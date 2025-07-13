@@ -328,19 +328,80 @@ serve(async (req) => {
       supabase.auth.getUser(authHeader);
     }
     
-    // Get report data using the existing progress report function
-    const { data: reportData, error: reportError } = await supabase.functions.invoke('generate-progress-report', {
-      body: { student_id },
-    });
+    // Fetch report data directly from database
+    console.log('Fetching student data...');
     
-    if (reportError) {
-      console.error('Error from generate-progress-report:', reportError);
-      throw new Error(`Error fetching report data: ${reportError.message}`);
+    // Get student information
+    const { data: student, error: studentError } = await supabase
+      .from('students')
+      .select('id, first_name, last_name, grade_level')
+      .eq('id', student_id)
+      .single();
+      
+    if (studentError || !student) {
+      throw new Error(`Student not found: ${studentError?.message}`);
     }
     
-    if (!reportData) {
-      throw new Error('No report data returned');
-    }
+    // Get performance data
+    const { data: performance } = await supabase
+      .from('student_performance')
+      .select('*')
+      .eq('student_id', student_id)
+      .single();
+    
+    // Get recent assessments (via student responses)
+    const { data: recentAssessments } = await supabase
+      .from('student_responses')
+      .select(`
+        score,
+        assessments!inner(title, subject, assessment_date)
+      `)
+      .eq('student_id', student_id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    
+    // Get learning goals
+    const { data: goals } = await supabase
+      .from('goals')
+      .select('title, status, progress_percentage')
+      .eq('student_id', student_id)
+      .limit(5);
+    
+    // Get AI insights from latest assessment analysis
+    const { data: aiInsights } = await supabase
+      .from('assessment_analysis')
+      .select('strengths, growth_areas, recommendations')
+      .eq('student_id', student_id)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    
+    // Structure the report data
+    const reportData = {
+      student: {
+        id: student.id,
+        first_name: student.first_name,
+        last_name: student.last_name,
+        grade_level: student.grade_level,
+      },
+      performance: {
+        average_score: performance?.average_score || 0,
+        assessment_count: performance?.assessment_count || 0,
+        performance_level: performance?.performance_level || 'Not assessed',
+        needs_attention: performance?.needs_attention || false,
+      },
+      recent_assessments: recentAssessments?.map(response => ({
+        title: response.assessments.title,
+        score: response.score,
+        date: response.assessments.assessment_date || new Date().toISOString(),
+        subject: response.assessments.subject,
+      })) || [],
+      goals: goals || [],
+      ai_insights: {
+        strengths: aiInsights?.[0]?.strengths || ['Showing consistent effort'],
+        growth_areas: aiInsights?.[0]?.growth_areas || ['Continue practicing regularly'],
+        recommendations: aiInsights?.[0]?.recommendations || ['Keep up the good work'],
+      },
+    };
     
     console.log('Successfully fetched report data, generating PDF...');
     
