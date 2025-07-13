@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Student, StudentPerformance, StudentWithPerformance, normalizeStudentPerformance } from "@/types/student";
+import { productionLogger } from "@/services/production-logger";
 
 export const studentService = {
   async getStudents(): Promise<StudentWithPerformance[]> {
@@ -17,7 +18,7 @@ export const studentService = {
       .order('last_name');
     
     if (error) {
-      console.error("Error fetching students:", error);
+      productionLogger.error("Error fetching students", error, { context: 'getStudents' });
       throw error;
     }
     
@@ -25,8 +26,15 @@ export const studentService = {
   },
   
   async getStudentById(id: string): Promise<StudentWithPerformance | null> {
+    productionLogger.debug("Fetching student by ID", { studentId: id });
+    
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    if (!user) {
+      productionLogger.error("User not authenticated", undefined, { context: 'getStudentById' });
+      throw new Error('User not authenticated');
+    }
+
+    productionLogger.debug("User authenticated", { userId: user.id, studentId: id });
 
     const { data, error } = await supabase
       .from('students')
@@ -37,14 +45,32 @@ export const studentService = {
       `)
       .eq('id', id)
       .eq('teacher_id', user.id)
-      .single();
+      .maybeSingle();
     
     if (error) {
-      console.error(`Error fetching student with id ${id}:`, error);
+      productionLogger.error(`Error fetching student with id ${id}`, error, { 
+        studentId: id, 
+        userId: user.id,
+        context: 'getStudentById' 
+      });
       throw error;
     }
     
-    return data ? normalizeStudentPerformance(data as StudentWithPerformance) : null;
+    productionLogger.debug("Student data fetched successfully", { 
+      studentId: id, 
+      hasData: !!data,
+      hasPerformance: !!(data?.performance),
+      hasClass: !!(data?.class)
+    });
+    
+    const result = data ? normalizeStudentPerformance(data as StudentWithPerformance) : null;
+    productionLogger.debug("Student data normalized", { 
+      studentId: id, 
+      hasResult: !!result,
+      studentName: result ? `${result.first_name} ${result.last_name}` : 'N/A'
+    });
+    
+    return result;
   },
   
   async createStudent(student: Omit<Student, 'id' | 'created_at' | 'updated_at' | 'teacher_id'>): Promise<Student> {
