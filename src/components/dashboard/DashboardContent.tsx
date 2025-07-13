@@ -21,12 +21,11 @@ interface DashboardContentProps {
   data: {
     students: any[];
     assessments: any[];
-    metrics: {
+    summary: {
       totalStudents: number;
       totalAssessments: number;
-      recentAssessments: number;
+      averageScore: number;
       studentsNeedingAttention: number;
-      averagePerformance: number;
     };
     teacher: {
       full_name?: string;
@@ -108,7 +107,7 @@ const ActivityAndInsightsWrapper: React.FC<{
 };
 
 const DashboardContent: React.FC<DashboardContentProps> = ({ data }) => {
-  const { students, assessments, metrics, teacher } = data;
+  const { students, assessments, summary, teacher } = data;
   
   // Production-ready dashboard content rendering
 
@@ -127,17 +126,17 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ data }) => {
     return data;
   };
 
-  // Generate alerts from metrics
+  // Generate alerts from summary
   const alerts = [];
-  if (metrics.studentsNeedingAttention > 0) {
+  if (summary.studentsNeedingAttention > 0) {
     alerts.push({
       id: 'performance-alert',
       type: 'performance' as const,
       title: 'Students Need Attention',
-      description: `${metrics.studentsNeedingAttention} students are showing declining performance and may need additional support.`,
-      severity: metrics.studentsNeedingAttention > metrics.totalStudents * 0.3 ? 'high' as const : 'medium' as const,
+      description: `${summary.studentsNeedingAttention} students are showing declining performance and may need additional support.`,
+      severity: summary.studentsNeedingAttention > summary.totalStudents * 0.3 ? 'high' as const : 'medium' as const,
       actionUrl: '/app/students?filter=needs-attention',
-      studentCount: metrics.studentsNeedingAttention
+      studentCount: summary.studentsNeedingAttention
     });
   }
 
@@ -145,7 +144,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ data }) => {
   const enhancedMetrics = [
     {
       title: 'Total Students',
-      value: metrics.totalStudents,
+      value: summary.totalStudents,
       icon: <Users className="h-5 w-5" />,
       trend: {
         value: 'Active this month',
@@ -153,39 +152,39 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ data }) => {
         isPositive: true
       },
       priority: 'low' as const,
-      sparklineData: generateSparklineData(metrics.totalStudents, 'stable')
+      sparklineData: generateSparklineData(summary.totalStudents, 'stable')
     },
     {
       title: 'Class Performance',
-      value: metrics.averagePerformance > 0 ? `${Math.round(metrics.averagePerformance)}%` : 'No data',
+      value: summary.averageScore > 0 ? `${Math.round(summary.averageScore)}%` : 'No data',
       icon: <Target className="h-5 w-5" />,
       trend: {
-        value: metrics.averagePerformance >= 75 ? 'Above target' : metrics.averagePerformance >= 60 ? 'On track' : 'Below target',
-        direction: metrics.averagePerformance >= 75 ? 'up' as const : metrics.averagePerformance >= 60 ? 'neutral' as const : 'down' as const,
-        percentage: metrics.averagePerformance > 0 ? Math.round((metrics.averagePerformance - 70)) : 0,
-        isPositive: metrics.averagePerformance >= 75
+        value: summary.averageScore >= 75 ? 'Above target' : summary.averageScore >= 60 ? 'On track' : 'Below target',
+        direction: summary.averageScore >= 75 ? 'up' as const : summary.averageScore >= 60 ? 'neutral' as const : 'down' as const,
+        percentage: summary.averageScore > 0 ? Math.round((summary.averageScore - 70)) : 0,
+        isPositive: summary.averageScore >= 75
       },
-      priority: metrics.averagePerformance < 60 ? 'high' as const : 'low' as const,
-      progress: metrics.averagePerformance,
+      priority: summary.averageScore < 60 ? 'high' as const : 'low' as const,
+      progress: summary.averageScore,
       target: 100,
-      sparklineData: generateSparklineData(metrics.averagePerformance, metrics.averagePerformance >= 75 ? 'up' : 'stable')
+      sparklineData: generateSparklineData(summary.averageScore, summary.averageScore >= 75 ? 'up' : 'stable')
     },
     {
-      title: 'Recent Assessments',
-      value: metrics.recentAssessments,
+      title: 'Total Assessments',
+      value: summary.totalAssessments,
       icon: <FileText className="h-5 w-5" />,
       trend: {
-        value: metrics.recentAssessments > 0 ? 'This week' : 'No recent activity',
-        direction: metrics.recentAssessments > 0 ? 'up' as const : 'neutral' as const,
-        percentage: metrics.recentAssessments > 0 ? 15 : 0,
-        isPositive: metrics.recentAssessments > 0
+        value: summary.totalAssessments > 0 ? 'Available' : 'No assessments',
+        direction: summary.totalAssessments > 0 ? 'up' as const : 'neutral' as const,
+        percentage: summary.totalAssessments > 0 ? 15 : 0,
+        isPositive: summary.totalAssessments > 0
       },
-      priority: metrics.recentAssessments === 0 ? 'medium' as const : 'low' as const,
-      sparklineData: generateSparklineData(metrics.recentAssessments, 'up')
+      priority: summary.totalAssessments === 0 ? 'medium' as const : 'low' as const,
+      sparklineData: generateSparklineData(summary.totalAssessments, 'up')
     },
     {
       title: 'AI Insights Generated',
-      value: Math.floor(metrics.totalAssessments * 0.3),
+      value: Math.floor(summary.totalAssessments * 0.3),
       icon: <Brain className="h-5 w-5" />,
       trend: {
         value: 'Ready for review',
@@ -195,24 +194,24 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ data }) => {
       },
       priority: 'low' as const,
       progress: 75,
-      sparklineData: generateSparklineData(Math.floor(metrics.totalAssessments * 0.3), 'up')
+      sparklineData: generateSparklineData(Math.floor(summary.totalAssessments * 0.3), 'up')
     },
     {
       title: 'Students Needing Attention',
-      value: metrics.studentsNeedingAttention,
+      value: summary.studentsNeedingAttention,
       icon: <AlertTriangle className="h-5 w-5" />,
       trend: {
-        value: metrics.studentsNeedingAttention > 0 ? 'Requires action' : 'All on track',
-        direction: metrics.studentsNeedingAttention > 0 ? 'down' as const : 'up' as const,
-        percentage: metrics.studentsNeedingAttention > 0 ? -8 : 0,
-        isPositive: metrics.studentsNeedingAttention === 0
+        value: summary.studentsNeedingAttention > 0 ? 'Requires action' : 'All on track',
+        direction: summary.studentsNeedingAttention > 0 ? 'down' as const : 'up' as const,
+        percentage: summary.studentsNeedingAttention > 0 ? -8 : 0,
+        isPositive: summary.studentsNeedingAttention === 0
       },
-      priority: metrics.studentsNeedingAttention > 0 ? 'high' as const : 'low' as const,
-      sparklineData: generateSparklineData(metrics.studentsNeedingAttention, 'down')
+      priority: summary.studentsNeedingAttention > 0 ? 'high' as const : 'low' as const,
+      sparklineData: generateSparklineData(summary.studentsNeedingAttention, 'down')
     },
     {
       title: 'High Performers',
-      value: students.filter(s => s.student_performance?.[0]?.average_score > metrics.averagePerformance).length,
+      value: students.filter(s => s.student_performance?.[0]?.average_score > summary.averageScore).length,
       icon: <TrendingUp className="h-5 w-5" />,
       trend: {
         value: 'Excelling students',
@@ -222,7 +221,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ data }) => {
       },
       priority: 'low' as const,
       progress: 65,
-      sparklineData: generateSparklineData(students.filter(s => s.student_performance?.[0]?.average_score > metrics.averagePerformance).length, 'up')
+      sparklineData: generateSparklineData(students.filter(s => s.student_performance?.[0]?.average_score > summary.averageScore).length, 'up')
     }
   ];
 
@@ -230,8 +229,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ data }) => {
     <EnhancedWelcomeSection 
       teacher={teacher} 
       metrics={{
-        totalStudents: metrics.totalStudents,
-        recentAssessments: metrics.recentAssessments
+        totalStudents: summary.totalStudents,
+        recentAssessments: summary.totalAssessments
       }}
     />
   );
@@ -241,8 +240,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ data }) => {
   const quickActions = (
     <QuickActionsPanel 
       metrics={{
-        totalStudents: metrics.totalStudents,
-        recentAssessments: metrics.recentAssessments,
+        totalStudents: summary.totalStudents,
+        recentAssessments: summary.totalAssessments,
         pendingGoals: Math.floor(students.length * 0.3)
       }}
     />
@@ -260,9 +259,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ data }) => {
 
   const activityAndInsights = (
     <ActivityAndInsightsWrapper
-      recentAssessments={metrics.recentAssessments}
-      totalStudents={metrics.totalStudents}
-      studentsNeedingAttention={metrics.studentsNeedingAttention}
+      recentAssessments={summary.totalAssessments}
+      totalStudents={summary.totalStudents}
+      studentsNeedingAttention={summary.studentsNeedingAttention}
       students={students}
     />
   );
@@ -274,10 +273,10 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ data }) => {
           assessments={assessments}
           students={students}
           metrics={{
-            averagePerformance: metrics.averagePerformance > 0 
-              ? `${Math.round(metrics.averagePerformance)}%` 
+            averagePerformance: summary.averageScore > 0 
+              ? `${Math.round(summary.averageScore)}%` 
               : 'No data',
-            studentsNeedingAttention: metrics.studentsNeedingAttention
+            studentsNeedingAttention: summary.studentsNeedingAttention
           }}
         />
       </LazyWrapper>

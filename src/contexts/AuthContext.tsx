@@ -2,16 +2,23 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { authService } from '@/services/auth-service';
-import { TeacherProfile } from '@/types/auth';
+import { TeacherProfile, SignUpData } from '@/types/auth';
 import { errorService } from '@/services/error-service';
+import { productionLogger } from '@/services/production-logger';
+
+interface SignInData {
+  email: string;
+  password: string;
+  remember?: boolean;
+}
 
 interface AuthContextType {
   user: User | null;
   profile: TeacherProfile | null;
   session: Session | null;
   isLoading: boolean;
-  signUp: (data: any) => Promise<any>;
-  signIn: (data: any) => Promise<any>;
+  signUp: (data: SignUpData) => Promise<{ user: User | null; session: Session | null } | { user: null; session: null }>;
+  signIn: (data: SignInData) => Promise<{ user: User | null; session: Session | null } | { user: null; session: null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<TeacherProfile>) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -29,10 +36,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = async (userId: string) => {
     try {
-      console.log('AuthContext: Fetching profile for user:', userId);
+      productionLogger.debug('Fetching profile for user', { userId });
       const profileData = await authService.getProfile();
       setProfile(profileData);
-      console.log('AuthContext: Profile fetched successfully:', profileData);
+      productionLogger.info('Profile fetched successfully', { userId });
     } catch (error) {
       errorService.logError('AuthContext', error as Error, { userId, action: 'fetchProfile' });
       setProfile(null);
@@ -42,14 +49,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
     
-    console.log('AuthContext: Initializing auth state listener');
+    productionLogger.debug('Initializing auth state listener');
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
         
-        console.log('AuthContext: Auth state changed:', event, session?.user?.id);
+        productionLogger.debug('Auth state changed', { event, userId: session?.user?.id });
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -76,7 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
       
-      console.log('AuthContext: Initial session check:', session?.user?.id);
+      productionLogger.debug('Initial session check', { userId: session?.user?.id });
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -94,17 +101,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       mounted = false;
-      console.log('AuthContext: Cleaning up auth state listener');
+      productionLogger.debug('Cleaning up auth state listener');
       subscription.unsubscribe();
     };
   }, []);
 
-  const signUp = async (data: any) => {
+  const signUp = async (data: SignUpData) => {
     setIsLoading(true);
     try {
-      console.log('AuthContext: Attempting signup');
+      productionLogger.info('Attempting user signup', { email: data.email });
       const result = await authService.signUp(data);
-      console.log('AuthContext: Signup successful');
+      productionLogger.info('Signup successful', { email: data.email });
       return result;
     } catch (error) {
       errorService.logError('AuthContext', error as Error, { action: 'signUp', data: { ...data, password: '[REDACTED]' } }, undefined, true);
@@ -114,12 +121,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signIn = async (data: any) => {
+  const signIn = async (data: SignInData) => {
     setIsLoading(true);
     try {
-      console.log('AuthContext: Attempting signin');
+      productionLogger.info('Attempting user signin', { email: data.email });
       const result = await authService.signIn(data);
-      console.log('AuthContext: Signin successful');
+      productionLogger.info('Signin successful', { email: data.email });
       return result;
     } catch (error) {
       errorService.logError('AuthContext', error as Error, { action: 'signIn', email: data.email }, undefined, true);
@@ -132,12 +139,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     setIsLoading(true);
     try {
-      console.log('AuthContext: Attempting signout');
+      productionLogger.info('Attempting user signout');
       await authService.signOut();
       setUser(null);
       setProfile(null);
       setSession(null);
-      console.log('AuthContext: Signout successful');
+      productionLogger.info('Signout successful');
     } catch (error) {
       errorService.logError('AuthContext', error as Error, { action: 'signOut' });
       throw error;

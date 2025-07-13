@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { productionLogger } from '@/services/production-logger';
 import {
   Form,
   FormControl,
@@ -43,17 +44,17 @@ const Login = () => {
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      console.log('Login: Attempting to sign in user');
+      productionLogger.info('User attempting to sign in', { email: data.email });
       await signIn({
         email: data.email,
         password: data.password,
         remember: data.remember
       });
       
-      console.log('Login: Sign in successful, redirecting to dashboard');
+      productionLogger.info('Sign in successful, redirecting to dashboard', { email: data.email });
       navigate('/app/dashboard', { replace: true });
     } catch (error) {
-      console.error('Login: Sign in failed:', error);
+      productionLogger.error('Sign in failed', error as Error, { email: data.email });
     }
   };
 

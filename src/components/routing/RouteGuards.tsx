@@ -2,15 +2,16 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { productionLogger } from '@/services/production-logger';
 
 // Protected Route Component
 export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
 
-  console.log('ProtectedRoute: Checking auth status - isLoading:', isLoading, 'user:', !!user);
+  productionLogger.debug('ProtectedRoute auth check', { isLoading, hasUser: !!user });
 
   if (isLoading) {
-    console.log('ProtectedRoute: Still loading, showing spinner');
+    productionLogger.debug('ProtectedRoute showing loading spinner');
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -22,11 +23,11 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
   }
 
   if (!user) {
-    console.log('ProtectedRoute: No user found, redirecting to login');
+    productionLogger.debug('ProtectedRoute redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
-  console.log('ProtectedRoute: User authenticated, rendering protected content');
+  productionLogger.debug('ProtectedRoute rendering protected content');
   return <>{children}</>;
 };
 
@@ -34,10 +35,10 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
 export const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
 
-  console.log('PublicRoute: Checking auth status - isLoading:', isLoading, 'user:', !!user);
+  productionLogger.debug('PublicRoute auth check', { isLoading, hasUser: !!user });
 
   if (isLoading) {
-    console.log('PublicRoute: Still loading, showing spinner');
+    productionLogger.debug('PublicRoute showing loading spinner');
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -49,10 +50,10 @@ export const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children 
   }
 
   if (user) {
-    console.log('PublicRoute: User authenticated, redirecting to dashboard');
+    productionLogger.debug('PublicRoute redirecting to dashboard');
     return <Navigate to="/app/dashboard" replace />;
   }
 
-  console.log('PublicRoute: No user found, rendering public content');
+  productionLogger.debug('PublicRoute rendering public content');
   return <>{children}</>;
 };

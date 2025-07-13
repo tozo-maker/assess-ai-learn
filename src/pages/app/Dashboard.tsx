@@ -47,6 +47,30 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  // Transform data to match expected interface
+  const transformedData = data ? {
+    teacher: data.teacher,
+    students: data.students,
+    assessments: data.assessments,
+    summary: {
+      totalStudents: data.metrics.totalStudents,
+      totalAssessments: data.metrics.totalAssessments,
+      averageScore: data.metrics.averagePerformance,
+      studentsNeedingAttention: data.metrics.studentsNeedingAttention
+    }
+  } : null;
+
+  if (!transformedData) {
+    return (
+      <StandardPageLayout 
+        title="Dashboard"
+        actions={actions}
+      >
+        <PageLoadingState message="Loading dashboard data..." />
+      </StandardPageLayout>
+    );
+  }
+
   return (
     <StandardPageLayout 
       title="Dashboard"
@@ -55,7 +79,7 @@ const Dashboard: React.FC = () => {
     >
       <div className="space-y-8">
         <DashboardContent 
-          data={data}
+          data={transformedData}
         />
         
         {/* Class Analytics Section */}

@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { productionLogger } from '@/services/production-logger';
 
 export const useEnhancedDashboardData = () => {
   const { user } = useAuth();
@@ -11,7 +12,7 @@ export const useEnhancedDashboardData = () => {
     queryFn: async () => {
       if (!user?.id) throw new Error('User not authenticated');
 
-      console.log('Fetching enhanced dashboard data for user:', user.id);
+      productionLogger.info('Fetching enhanced dashboard data', { userId: user.id });
 
       // Fetch teacher profile
       const { data: teacherProfile, error: teacherError } = await supabase
@@ -21,7 +22,7 @@ export const useEnhancedDashboardData = () => {
         .single();
 
       if (teacherError && teacherError.code !== 'PGRST116') {
-        console.error('Teacher profile fetch error:', teacherError);
+        productionLogger.error('Teacher profile fetch error', teacherError as Error, { userId: user.id });
         throw teacherError;
       }
 
@@ -42,7 +43,7 @@ export const useEnhancedDashboardData = () => {
         .order('last_name', { ascending: true });
 
       if (studentsError) {
-        console.error('Students fetch error:', studentsError);
+        productionLogger.error('Students fetch error', studentsError as Error, { userId: user.id });
         throw studentsError;
       }
 
@@ -54,7 +55,7 @@ export const useEnhancedDashboardData = () => {
         .order('created_at', { ascending: false });
 
       if (assessmentsError) {
-        console.error('Assessments fetch error:', assessmentsError);
+        productionLogger.error('Assessments fetch error', assessmentsError as Error, { userId: user.id });
         throw assessmentsError;
       }
 
@@ -124,10 +125,10 @@ export const useEnhancedDashboardData = () => {
         }
       };
 
-      console.log('Enhanced dashboard data fetched:', {
+      productionLogger.info('Enhanced dashboard data fetched', {
         totalStudents,
         totalAssessments,
-        enhancedMetrics
+        userId: user.id
       });
 
       return {

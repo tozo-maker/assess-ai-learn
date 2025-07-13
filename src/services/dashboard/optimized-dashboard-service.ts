@@ -1,10 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { productionLogger } from '@/services/production-logger';
 
 export const optimizedDashboardService = {
   async getDashboardData(teacherId: string) {
     try {
-      console.log('Fetching optimized dashboard data for teacher:', teacherId);
+      productionLogger.info('Fetching optimized dashboard data', { teacherId });
 
       // Parallel fetch all dashboard data
       const [
@@ -116,7 +117,7 @@ export const optimizedDashboardService = {
       const completedGoals = goals.filter(g => g.progress_percentage >= 100).length;
       const activeGoalsCount = goals.length;
 
-      console.log('Dashboard data compiled successfully:', {
+      productionLogger.info('Dashboard data compiled successfully', {
         totalStudents,
         totalAssessments,
         studentsNeedingAttention,
@@ -160,7 +161,7 @@ export const optimizedDashboardService = {
         }
       };
     } catch (error) {
-      console.error('Optimized dashboard service error:', error);
+      productionLogger.error('Optimized dashboard service error', error as Error, { teacherId });
       throw error;
     }
   }

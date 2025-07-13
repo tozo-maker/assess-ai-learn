@@ -5,11 +5,12 @@ import DashboardEmptyState from '@/components/dashboard/DashboardEmptyState';
 import DashboardContent from '@/components/dashboard/DashboardContent';
 import { EnhancedErrorState } from '@/components/common/EnhancedErrorStates';
 import { DSPageContainer } from '@/components/ui/design-system';
+import { DashboardData } from '@/types/comprehensive';
 
 interface DashboardStateHandlerProps {
   isInitialLoading: boolean;
-  error: any;
-  data: any;
+  error: Error | null;
+  data: DashboardData | null;
   isEmpty: boolean;
   refetch: () => void;
 }
