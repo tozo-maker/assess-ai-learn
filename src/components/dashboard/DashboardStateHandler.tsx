@@ -3,7 +3,7 @@ import React from 'react';
 import DashboardLoadingState from '@/components/dashboard/DashboardLoadingState';
 import DashboardEmptyState from '@/components/dashboard/DashboardEmptyState';
 import DashboardContent from '@/components/dashboard/DashboardContent';
-import ErrorState from '@/components/common/ErrorState';
+import { EnhancedErrorState } from '@/components/common/EnhancedErrorStates';
 import { DSPageContainer } from '@/components/ui/design-system';
 
 interface DashboardStateHandlerProps {
@@ -30,11 +30,18 @@ const DashboardStateHandler: React.FC<DashboardStateHandlerProps> = ({
   if (error || !data) {
     return (
       <DSPageContainer>
-        <ErrorState
-          error={error}
+        <EnhancedErrorState
+          type="network"
           title="Failed to load dashboard"
-          description="There was an error loading your dashboard data. Please try again."
-          onRetry={refetch}
+          message="There was an error loading your dashboard data. Please try again."
+          details={error?.message || 'Unknown error occurred'}
+          actions={[
+            {
+              label: 'Retry',
+              onClick: refetch,
+              variant: 'default'
+            }
+          ]}
         />
       </DSPageContainer>
     );
