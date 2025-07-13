@@ -144,18 +144,18 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ studentId
 
   const getScoreColor = (score: number, maxScore: number) => {
     const percentage = (score / maxScore) * 100;
-    if (percentage >= 90) return 'text-green-600 bg-green-50';
-    if (percentage >= 80) return 'text-blue-600 bg-blue-50';
-    if (percentage >= 70) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+    if (percentage >= 90) return 'text-green-700 bg-green-50 border-green-200';
+    if (percentage >= 80) return 'text-blue-700 bg-blue-50 border-blue-200';
+    if (percentage >= 70) return 'text-amber-700 bg-amber-50 border-amber-200';
+    return 'text-red-700 bg-red-50 border-red-200';
   };
 
   if (responsesLoading) {
     return (
       <div className="flex items-center justify-center h-32">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-          <p className="text-gray-600">Loading assessments...</p>
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+          <p className="text-muted-foreground">Loading assessments...</p>
         </div>
       </div>
     );
@@ -275,7 +275,7 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ studentId
                   <p className="text-gray-600 mb-3">{response.assessment.description}</p>
                 )}
                 {response.teacher_notes && (
-                  <div className="bg-blue-50 p-3 rounded-lg">
+                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                     <h4 className="font-medium text-blue-900 mb-1">Teacher Notes</h4>
                     <p className="text-blue-800 text-sm">{response.teacher_notes}</p>
                   </div>

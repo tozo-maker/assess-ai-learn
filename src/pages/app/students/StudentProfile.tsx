@@ -48,9 +48,13 @@ const StudentProfile: React.FC = () => {
             message="The student you're looking for doesn't exist or you don't have permission to view them."
           />
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-6 w-full max-w-none">
             <StudentInfoCard student={student} />
-            {studentId && <StudentProfileTabs studentId={studentId} />}
+            {studentId && (
+              <div className="w-full">
+                <StudentProfileTabs studentId={studentId} />
+              </div>
+            )}
           </div>
         )}
       </MobileOptimizedLayout>

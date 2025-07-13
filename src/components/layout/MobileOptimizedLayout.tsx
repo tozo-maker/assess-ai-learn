@@ -16,7 +16,7 @@ const MobileOptimizedLayout: React.FC<MobileOptimizedLayoutProps> = ({
 
   return (
     <div className={cn(
-      "w-full",
+      "w-full max-w-7xl mx-auto",
       isMobile ? "px-4 py-4" : "px-6 py-6",
       className
     )}>
