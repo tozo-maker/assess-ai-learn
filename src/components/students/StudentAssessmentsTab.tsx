@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Plus, Calendar, Target, TrendingUp } from 'lucide-react';
+import { 
+  FileText, 
+  Plus, 
+  Calendar, 
+  Target, 
+  TrendingUp, 
+  Filter, 
+  Search,
+  ChevronDown,
+  ChevronUp,
+  ArrowUpDown,
+  MoreHorizontal,
+  Eye,
+  Edit
+} from 'lucide-react';
+import { format } from 'date-fns';
 
 interface Assessment {
   id: string;
@@ -40,6 +56,13 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ studentId
   const [selectedAssessment, setSelectedAssessment] = useState('');
   const [score, setScore] = useState('');
   const [teacherNotes, setTeacherNotes] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterSubject, setFilterSubject] = useState('all');
+  const [filterType, setFilterType] = useState('all');
+  const [sortBy, setSortBy] = useState<'date' | 'score' | 'title'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(0);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -150,6 +173,106 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ studentId
     return 'text-red-700 bg-red-50 border-red-200';
   };
 
+  const getPerformanceLabel = (score: number, maxScore: number) => {
+    const percentage = (score / maxScore) * 100;
+    if (percentage >= 90) return 'Excellent';
+    if (percentage >= 80) return 'Good';
+    if (percentage >= 70) return 'Satisfactory';
+    return 'Needs Improvement';
+  };
+
+  // Calculate summary statistics
+  const summaryStats = useMemo(() => {
+    if (responses.length === 0) return null;
+    
+    const totalAssessments = responses.length;
+    const avgScore = responses.reduce((sum, r) => sum + (r.score / r.assessment.max_score) * 100, 0) / totalAssessments;
+    const recentTrend = responses.slice(0, 3);
+    const olderTrend = responses.slice(3, 6);
+    
+    let trendDirection = 'stable';
+    if (recentTrend.length > 0 && olderTrend.length > 0) {
+      const recentAvg = recentTrend.reduce((sum, r) => sum + (r.score / r.assessment.max_score) * 100, 0) / recentTrend.length;
+      const olderAvg = olderTrend.reduce((sum, r) => sum + (r.score / r.assessment.max_score) * 100, 0) / olderTrend.length;
+      trendDirection = recentAvg > olderAvg + 5 ? 'improving' : recentAvg < olderAvg - 5 ? 'declining' : 'stable';
+    }
+    
+    return {
+      totalAssessments,
+      averageScore: Math.round(avgScore),
+      trendDirection,
+      subjectBreakdown: responses.reduce((acc, r) => {
+        acc[r.assessment.subject] = (acc[r.assessment.subject] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+    };
+  }, [responses]);
+
+  // Get unique subjects and types for filtering
+  const uniqueSubjects = useMemo(() => {
+    const subjects = [...new Set(responses.map(r => r.assessment.subject))];
+    return subjects.sort();
+  }, [responses]);
+
+  const uniqueTypes = useMemo(() => {
+    const types = [...new Set(responses.map(r => r.assessment.assessment_type))];
+    return types.sort();
+  }, [responses]);
+
+  // Filter and sort responses
+  const filteredAndSortedResponses = useMemo(() => {
+    let filtered = responses.filter(response => {
+      const matchesSearch = searchTerm === '' || 
+        response.assessment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        response.assessment.subject.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesSubject = filterSubject === 'all' || response.assessment.subject === filterSubject;
+      const matchesType = filterType === 'all' || response.assessment.assessment_type === filterType;
+      
+      return matchesSearch && matchesSubject && matchesType;
+    });
+
+    // Sort
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'date':
+          comparison = new Date(a.assessment.assessment_date || a.created_at).getTime() - 
+                      new Date(b.assessment.assessment_date || b.created_at).getTime();
+          break;
+        case 'score':
+          comparison = (a.score / a.assessment.max_score) - (b.score / b.assessment.max_score);
+          break;
+        case 'title':
+          comparison = a.assessment.title.localeCompare(b.assessment.title);
+          break;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [responses, searchTerm, filterSubject, filterType, sortBy, sortOrder]);
+
+  // Paginate results
+  const paginatedResponses = useMemo(() => {
+    const startIndex = currentPage * pageSize;
+    return filteredAndSortedResponses.slice(startIndex, startIndex + pageSize);
+  }, [filteredAndSortedResponses, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(filteredAndSortedResponses.length / pageSize);
+
+  const handleSort = (column: 'date' | 'score' | 'title') => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('desc');
+    }
+    setCurrentPage(0);
+  };
+
   if (responsesLoading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -162,20 +285,20 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ studentId
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with Add Response Button */}
+    <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <FileText className="h-5 w-5" />
             Assessment Results
           </h3>
-          <p className="text-gray-600">Track student performance across assessments</p>
+          <p className="text-sm text-muted-foreground">Track student performance across assessments</p>
         </div>
         
         <Dialog open={showAddResponse} onOpenChange={setShowAddResponse}>
           <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
+            <Button size="sm" className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               Add Response
             </Button>
@@ -246,52 +369,243 @@ const StudentAssessmentsTab: React.FC<StudentAssessmentsTabProps> = ({ studentId
         </Dialog>
       </div>
 
-      {/* Assessment Results */}
-      {responses.length > 0 ? (
-        <div className="grid gap-4">
-          {responses.map((response) => (
-            <Card key={response.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{response.assessment.title}</CardTitle>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {new Date(response.assessment.assessment_date || response.created_at).toLocaleDateString()}
-                      </span>
-                      <span>{response.assessment.subject}</span>
-                      <span className="capitalize">{response.assessment.assessment_type}</span>
-                    </div>
-                  </div>
-                  <Badge className={getScoreColor(response.score, response.assessment.max_score)}>
-                    {response.score}/{response.assessment.max_score} 
-                    ({Math.round((response.score / response.assessment.max_score) * 100)}%)
+      {/* Summary Statistics */}
+      {summaryStats && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="p-4">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-blue-600" />
+              <div>
+                <p className="text-sm text-muted-foreground">Total Assessments</p>
+                <p className="text-xl font-semibold">{summaryStats.totalAssessments}</p>
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="p-4">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-green-600" />
+              <div>
+                <p className="text-sm text-muted-foreground">Average Score</p>
+                <p className="text-xl font-semibold">{summaryStats.averageScore}%</p>
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="p-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className={`h-4 w-4 ${
+                summaryStats.trendDirection === 'improving' ? 'text-green-600' :
+                summaryStats.trendDirection === 'declining' ? 'text-red-600' : 'text-gray-600'
+              }`} />
+              <div>
+                <p className="text-sm text-muted-foreground">Trend</p>
+                <p className="text-lg font-medium capitalize">{summaryStats.trendDirection}</p>
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="p-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Subjects</p>
+              <div className="flex flex-wrap gap-1">
+                {Object.entries(summaryStats.subjectBreakdown).slice(0, 3).map(([subject, count]) => (
+                  <Badge key={subject} variant="secondary" className="text-xs">
+                    {subject} ({count})
                   </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {response.assessment.description && (
-                  <p className="text-gray-600 mb-3">{response.assessment.description}</p>
-                )}
-                {response.teacher_notes && (
-                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                    <h4 className="font-medium text-blue-900 mb-1">Teacher Notes</h4>
-                    <p className="text-blue-800 text-sm">{response.teacher_notes}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                ))}
+              </div>
+            </div>
+          </Card>
         </div>
+      )}
+
+      {/* Filters and Search */}
+      {responses.length > 0 && (
+        <Card className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search assessments..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            
+            <Select value={filterSubject} onValueChange={setFilterSubject}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Subject" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Subjects</SelectItem>
+                {uniqueSubjects.map(subject => (
+                  <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {uniqueTypes.map(type => (
+                  <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(Number(value))}>
+              <SelectTrigger className="w-full sm:w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </Card>
+      )}
+
+      {/* Assessment Results Table */}
+      {responses.length > 0 ? (
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead 
+                  className="cursor-pointer select-none hover:bg-muted/50"
+                  onClick={() => handleSort('title')}
+                >
+                  <div className="flex items-center gap-2">
+                    Assessment
+                    {sortBy === 'title' ? (
+                      sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ArrowUpDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead>Subject</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead 
+                  className="cursor-pointer select-none hover:bg-muted/50"
+                  onClick={() => handleSort('date')}
+                >
+                  <div className="flex items-center gap-2">
+                    Date
+                    {sortBy === 'date' ? (
+                      sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ArrowUpDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer select-none hover:bg-muted/50 text-right"
+                  onClick={() => handleSort('score')}
+                >
+                  <div className="flex items-center justify-end gap-2">
+                    Score
+                    {sortBy === 'score' ? (
+                      sortOrder === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ArrowUpDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead className="text-right">Performance</TableHead>
+                <TableHead className="w-12"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedResponses.map((response) => (
+                <TableRow key={response.id} className="hover:bg-muted/50">
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{response.assessment.title}</div>
+                      {response.teacher_notes && (
+                        <div className="text-xs text-muted-foreground mt-1 truncate max-w-48">
+                          Note: {response.teacher_notes}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs">
+                      {response.assessment.subject}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="capitalize text-sm">
+                    {response.assessment.assessment_type}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {format(new Date(response.assessment.assessment_date || response.created_at), 'MMM d, yyyy')}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {response.score}/{response.assessment.max_score}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Badge className={getScoreColor(response.score, response.assessment.max_score)}>
+                      {Math.round((response.score / response.assessment.max_score) * 100)}%
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t">
+              <div className="text-sm text-muted-foreground">
+                Showing {currentPage * pageSize + 1}-{Math.min((currentPage + 1) * pageSize, filteredAndSortedResponses.length)} of {filteredAndSortedResponses.length} results
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                  disabled={currentPage === 0}
+                >
+                  Previous
+                </Button>
+                <div className="text-sm">
+                  Page {currentPage + 1} of {totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                  disabled={currentPage === totalPages - 1}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
       ) : (
         <Card>
           <CardContent className="p-8 text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-              <TrendingUp className="h-6 w-6 text-gray-400" />
+            <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
+              <TrendingUp className="h-6 w-6 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-medium mb-2">No Assessment Results</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               No assessment results have been recorded for this student yet.
             </p>
             <Button onClick={() => setShowAddResponse(true)} className="flex items-center gap-2">
