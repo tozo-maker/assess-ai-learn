@@ -22,7 +22,7 @@ const StudentProfile: React.FC = () => {
 
   return (
     <AppLayout>
-      <MobileOptimizedLayout>
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Breadcrumbs />
         
         {isLoading ? (
@@ -48,16 +48,12 @@ const StudentProfile: React.FC = () => {
             message="The student you're looking for doesn't exist or you don't have permission to view them."
           />
         ) : (
-          <div className="space-y-6 w-full max-w-none">
+          <div className="space-y-6">
             <StudentInfoCard student={student} />
-            {studentId && (
-              <div className="w-full">
-                <StudentProfileTabs studentId={studentId} />
-              </div>
-            )}
+            {studentId && <StudentProfileTabs studentId={studentId} />}
           </div>
         )}
-      </MobileOptimizedLayout>
+      </div>
     </AppLayout>
   );
 };

@@ -1,6 +1,14 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 interface BreadcrumbItem {
   label: string;
   href?: string;
@@ -54,6 +62,26 @@ const Breadcrumbs: React.FC = () => {
   if (breadcrumbs.length <= 1) {
     return null;
   }
-  return;
+  
+  return (
+    <Breadcrumb className="mb-6">
+      <BreadcrumbList>
+        {breadcrumbs.map((breadcrumb, index) => (
+          <React.Fragment key={index}>
+            <BreadcrumbItem>
+              {breadcrumb.isActive ? (
+                <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
+              ) : (
+                <BreadcrumbLink asChild>
+                  <Link to={breadcrumb.href || '#'}>{breadcrumb.label}</Link>
+                </BreadcrumbLink>
+              )}
+            </BreadcrumbItem>
+            {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+          </React.Fragment>
+        ))}
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
 };
 export default Breadcrumbs;
