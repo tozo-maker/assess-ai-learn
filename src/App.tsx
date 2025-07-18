@@ -5,12 +5,14 @@ import { setupGlobalErrorHandlers } from '@/utils/error-boundary-helper';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
-import { SidebarProvider } from '@/components/ui/sidebar';
+
 import { RealtimeProvider } from '@/components/realtime/RealtimeProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import { ProtectedRoute, PublicRoute } from '@/components/routing/RouteGuards';
 import { AppErrorBoundary } from '@/components/common/AppErrorBoundary';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import AppSidebar from '@/components/layout/AppSidebar';
 
 // Auth pages
 import Login from '@/pages/auth/Login';
@@ -104,8 +106,11 @@ function App() {
               <Route path="/app/*" element={
                 <ProtectedRoute>
                   <SidebarProvider>
-                    <RealtimeProvider>
-                      <AppLayout>
+                    <div className="min-h-svh bg-background w-full flex">
+                      <AppSidebar />
+                      <SidebarInset className="flex-1 flex flex-col">
+                        <RealtimeProvider>
+                          <AppLayout>
                         <Routes>
                           {/* Dashboard */}
                           <Route path="dashboard" element={withLazyLoading(LazyDashboard)({})} />
@@ -152,8 +157,10 @@ function App() {
                           {/* Default redirect */}
                           <Route path="" element={<Navigate to="dashboard" replace />} />
                         </Routes>
-                      </AppLayout>
-                    </RealtimeProvider>
+                          </AppLayout>
+                        </RealtimeProvider>
+                      </SidebarInset>
+                    </div>
                   </SidebarProvider>
                 </ProtectedRoute>
               } />
