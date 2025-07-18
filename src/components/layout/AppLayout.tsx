@@ -19,11 +19,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   return (
     <ProductionErrorBoundary>
-      <div className="min-h-screen bg-gray-50 w-full">
+      <div className="min-h-screen bg-gray-50 w-full flex">
         <AppSidebar />
-        <SidebarInset>
+        <SidebarInset className="flex-1 flex flex-col transition-all duration-200 ease-in-out">
           {/* Top Header */}
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white sticky top-0 z-10">
           <SidebarTrigger className="-ml-1" />
           
           {/* Search Bar */}
