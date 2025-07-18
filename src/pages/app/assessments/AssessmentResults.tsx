@@ -95,16 +95,45 @@ const AssessmentResults: React.FC = () => {
   console.log('Assessment data:', assessment);
   console.log('Responses data:', responses);
 
-  // Process real data from API responses
-  const results = responses?.map((response: any) => ({
-    id: response.student_id,
-    firstName: response.student?.first_name || 'Unknown',
-    lastName: response.student?.last_name || 'Student',
-    score: response.score,
-    percentage: Math.round((response.score / assessment.max_score) * 100),
+  // Group responses by student and calculate totals
+  const studentResponsesMap = new Map();
+  
+  responses?.forEach((response: any) => {
+    const studentId = response.student_id;
+    const student = response.students;
+    
+    if (!studentResponsesMap.has(studentId)) {
+      studentResponsesMap.set(studentId, {
+        id: studentId,
+        firstName: student?.first_name || 'Unknown',
+        lastName: student?.last_name || 'Student',
+        totalScore: 0,
+        itemScores: [],
+        responses: []
+      });
+    }
+    
+    const studentData = studentResponsesMap.get(studentId);
+    studentData.totalScore += response.score;
+    studentData.itemScores.push({
+      itemNumber: response.assessment_items?.item_number || 0,
+      score: response.score,
+      maxScore: response.assessment_items?.max_score || 1,
+      question: response.assessment_items?.question_text || ''
+    });
+    studentData.responses.push(response);
+  });
+
+  // Convert to results array
+  const results = Array.from(studentResponsesMap.values()).map(student => ({
+    id: student.id,
+    firstName: student.firstName,
+    lastName: student.lastName,
+    score: student.totalScore,
+    percentage: assessment?.max_score ? Math.round((student.totalScore / assessment.max_score) * 100) : 0,
     status: 'completed' as const,
-    itemScores: response.item_scores || []
-  })) || [];
+    itemScores: student.itemScores
+  }));
 
   const summaryData = {
     totalStudents: results.length,

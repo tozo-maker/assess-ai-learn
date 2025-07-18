@@ -172,7 +172,20 @@ export const assessmentService = {
   async getStudentResponses(assessmentId: string, studentId?: string): Promise<StudentResponse[]> {
     let query = supabase
       .from('student_responses')
-      .select('*')
+      .select(`
+        *,
+        students:student_id (
+          id,
+          first_name,
+          last_name
+        ),
+        assessment_items:assessment_item_id (
+          id,
+          item_number,
+          max_score,
+          question_text
+        )
+      `)
       .eq('assessment_id', assessmentId);
     
     if (studentId) {
