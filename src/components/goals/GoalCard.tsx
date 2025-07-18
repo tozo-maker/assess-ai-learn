@@ -10,9 +10,10 @@ interface GoalCardProps {
   goal: Goal;
   onUpdate: (id: string, updates: Partial<Goal>) => void;
   onDelete: (id: string) => void;
+  onEdit: (goal: Goal) => void;
 }
 
-const GoalCard: React.FC<GoalCardProps> = ({ goal, onUpdate, onDelete }) => {
+const GoalCard: React.FC<GoalCardProps> = ({ goal, onUpdate, onDelete, onEdit }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -87,7 +88,7 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal, onUpdate, onDelete }) => {
             )}
           </div>
           <div className="flex gap-1">
-            <Button size="sm" variant="ghost" onClick={() => {}}>
+            <Button size="sm" variant="ghost" onClick={() => onEdit(goal)}>
               <Edit className="h-4 w-4" />
             </Button>
             <Button 

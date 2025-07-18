@@ -8,6 +8,10 @@ import { Goal } from '@/types/goals';
 import { GoalFilters } from '@/hooks/useGoalsData';
 import GoalCard from './GoalCard';
 import CreateGoalDialog from './CreateGoalDialog';
+import EditGoalDialog from './EditGoalDialog';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { goalService } from '@/services/goal-service';
+import { useToast } from '@/hooks/use-toast';
 
 interface GoalsMainContentProps {
   goals: Goal[];
@@ -19,11 +23,16 @@ const GoalsMainContent: React.FC<GoalsMainContentProps> = ({
   students
 }) => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [filters, setFilters] = useState<GoalFilters>({
     search: '',
     status: '',
     student_id: ''
   });
+
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const handleFilterChange = (key: keyof GoalFilters, value: string) => {
     setFilters({
@@ -47,19 +56,92 @@ const GoalsMainContent: React.FC<GoalsMainContentProps> = ({
     return true;
   });
 
+  // Mutations
+  const createGoalMutation = useMutation({
+    mutationFn: (goalData: Omit<Goal, 'id' | 'created_at' | 'updated_at' | 'teacher_id'>) => 
+      goalService.createGoal(goalData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
+      toast({
+        title: "Goal created",
+        description: "The learning goal has been created successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create goal. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Create goal error:', error);
+    },
+  });
+
+  const updateGoalMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Goal> }) => 
+      goalService.updateGoal(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
+      toast({
+        title: "Goal updated",
+        description: "The learning goal has been updated successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update goal. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Update goal error:', error);
+    },
+  });
+
+  const deleteGoalMutation = useMutation({
+    mutationFn: (id: string) => goalService.deleteGoal(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
+      toast({
+        title: "Goal deleted",
+        description: "The learning goal has been deleted successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete goal. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Delete goal error:', error);
+    },
+  });
+
+  // Handlers
   const handleCreateGoal = (goalData: Omit<Goal, 'id' | 'created_at' | 'updated_at' | 'teacher_id'>) => {
-    // This would be handled by parent component
-    // Creating goal
+    createGoalMutation.mutate(goalData);
   };
 
   const handleUpdateGoal = (id: string, updates: Partial<Goal>) => {
-    // This would be handled by parent component
-    // Updating goal
+    updateGoalMutation.mutate({ id, updates });
   };
 
   const handleDeleteGoal = (id: string) => {
-    // This would be handled by parent component
-    // Deleting goal
+    if (window.confirm('Are you sure you want to delete this goal?')) {
+      deleteGoalMutation.mutate(id);
+    }
+  };
+
+  const handleEditGoal = (goal: Goal) => {
+    setEditingGoal(goal);
+    setShowEditDialog(true);
+  };
+
+  const handleEditGoalSubmit = (updates: Partial<Goal>) => {
+    if (editingGoal) {
+      updateGoalMutation.mutate({ id: editingGoal.id, updates });
+      setShowEditDialog(false);
+      setEditingGoal(null);
+    }
   };
 
   return (
@@ -159,6 +241,7 @@ const GoalsMainContent: React.FC<GoalsMainContentProps> = ({
               goal={goal}
               onUpdate={handleUpdateGoal}
               onDelete={handleDeleteGoal}
+              onEdit={handleEditGoal}
             />
           ))}
         </div>
@@ -192,6 +275,14 @@ const GoalsMainContent: React.FC<GoalsMainContentProps> = ({
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onCreateGoal={handleCreateGoal}
+      />
+
+      {/* Edit Goal Dialog */}
+      <EditGoalDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onUpdateGoal={handleEditGoalSubmit}
+        goal={editingGoal}
       />
     </div>
   );
