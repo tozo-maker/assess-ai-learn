@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { goalsService } from '@/services/goals-service';
+import { goalService } from '@/services/goal-service';
 import { studentService } from '@/services/student-service';
 
 // Export types from the appropriate modules
@@ -14,7 +14,7 @@ export const useGoalsData = () => {
     refetch: refetchGoals
   } = useQuery({
     queryKey: ['goals'],
-    queryFn: () => goalsService.getStudentGoals(''), // This will be updated per student
+    queryFn: () => goalService.getGoals(),
     staleTime: 5 * 60 * 1000,
   });
 
