@@ -19,10 +19,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   return (
     <ProductionErrorBoundary>
-      <AppSidebar />
-      <SidebarInset>
-        {/* Top Header */}
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
+      <div className="min-h-screen bg-gray-50 w-full">
+        <AppSidebar />
+        <SidebarInset>
+          {/* Top Header */}
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white">
           <SidebarTrigger className="-ml-1" />
           
           {/* Search Bar */}
@@ -51,11 +52,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           </div>
         </header>
         
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto">
-          {children || <Outlet />}
-        </main>
-      </SidebarInset>
+          {/* Page Content */}
+          <main className="flex-1 overflow-auto">
+            {children || <Outlet />}
+          </main>
+        </SidebarInset>
+      </div>
     </ProductionErrorBoundary>
   );
 };
