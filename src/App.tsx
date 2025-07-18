@@ -34,6 +34,8 @@ import {
   LazyAssessmentDetails,
   LazyAddStudentResponses,
   LazyBatchAssessment,
+  LazyAssessmentResults,
+  LazyAssessmentAnalysis,
   LazyGoals,
   LazySkills,
   LazyClassInsights,
@@ -132,6 +134,8 @@ function App() {
                           <Route path="assessments/:id" element={withLazyLoading(LazyAssessmentDetails)({})} />
                           <Route path="assessments/:id/edit" element={withLazyLoading(LazyEditAssessment)({})} />
                           <Route path="assessments/:id/responses" element={withLazyLoading(LazyAddStudentResponses)({})} />
+                          <Route path="assessments/:id/results" element={withLazyLoading(LazyAssessmentResults)({})} />
+                          <Route path="assessments/:id/analysis" element={withLazyLoading(LazyAssessmentAnalysis)({})} />
                           
                           {/* Goals & Skills */}
                           <Route path="goals" element={withLazyLoading(LazyGoals)({})} />

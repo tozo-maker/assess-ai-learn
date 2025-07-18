@@ -26,62 +26,58 @@ const AddStudentResponses: React.FC = () => {
 
   if (!id) {
     return (
-      <AppLayout>
-        <DSSection>
-          <DSPageContainer>
-            <Breadcrumbs />
-            <DSCard>
-              <DSCardHeader>
+      <DSSection>
+        <DSPageContainer>
+          <Breadcrumbs />
+          <DSCard>
+            <DSCardHeader>
+              <DSPageTitle className="text-xl font-semibold">Error</DSPageTitle>
+              <DSBodyText className="text-gray-600">Assessment ID is missing</DSBodyText>
+            </DSCardHeader>
+            <DSCardContent>
+              <div className="text-center p-8">
                 <DSPageTitle className="text-xl font-semibold">Error</DSPageTitle>
-                <DSBodyText className="text-gray-600">Assessment ID is missing</DSBodyText>
-              </DSCardHeader>
-              <DSCardContent>
-                <div className="text-center p-8">
-                  <DSPageTitle className="text-xl font-semibold">Error</DSPageTitle>
-                  <DSBodyText className="mt-2">Assessment ID is required.</DSBodyText>
-                </div>
-              </DSCardContent>
-            </DSCard>
-          </DSPageContainer>
-        </DSSection>
-      </AppLayout>
+                <DSBodyText className="mt-2">Assessment ID is required.</DSBodyText>
+              </div>
+            </DSCardContent>
+          </DSCard>
+        </DSPageContainer>
+      </DSSection>
     );
   }
 
   return (
-    <AppLayout>
-      <DSSection>
-        <DSPageContainer>
-          <Breadcrumbs />
-          
-          {/* Page Header - Standardized */}
-          <DSCard className="mb-8">
-            <DSCardHeader>
-              <div>
-                <DSButton variant="ghost" className="mb-4 pl-0" asChild>
-                  <Link to={`/app/assessments/${id}`}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Assessment
-                  </Link>
-                </DSButton>
-                <DSPageTitle className="text-3xl font-bold text-gray-900 mb-2">
-                  Record Student Responses
-                </DSPageTitle>
-                <DSBodyText className="text-gray-600">
-                  Enter assessment data for a student to track their performance and generate insights
-                </DSBodyText>
-              </div>
-            </DSCardHeader>
-          </DSCard>
+    <DSSection>
+      <DSPageContainer>
+        <Breadcrumbs />
+        
+        {/* Page Header - Standardized */}
+        <DSCard className="mb-8">
+          <DSCardHeader>
+            <div>
+              <DSButton variant="ghost" className="mb-4 pl-0" asChild>
+                <Link to={`/app/assessments/${id}`}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Assessment
+                </Link>
+              </DSButton>
+              <DSPageTitle className="text-3xl font-bold text-gray-900 mb-2">
+                Record Student Responses
+              </DSPageTitle>
+              <DSBodyText className="text-gray-600">
+                Enter assessment data for a student to track their performance and generate insights
+              </DSBodyText>
+            </div>
+          </DSCardHeader>
+        </DSCard>
 
-          {/* Student Response Form */}
-          <StudentResponseForm 
-            assessmentId={id} 
-            preSelectedStudentId={preSelectedStudentId || undefined}
-          />
-        </DSPageContainer>
-      </DSSection>
-    </AppLayout>
+        {/* Student Response Form */}
+        <StudentResponseForm 
+          assessmentId={id} 
+          preSelectedStudentId={preSelectedStudentId || undefined}
+        />
+      </DSPageContainer>
+    </DSSection>
   );
 };
 

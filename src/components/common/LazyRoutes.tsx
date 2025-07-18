@@ -16,6 +16,7 @@ export const LazyAssessmentDetails = lazy(() => import('@/pages/app/assessments/
 export const LazyAddStudentResponses = lazy(() => import('@/pages/app/assessments/AddStudentResponses'));
 export const LazyBatchAssessment = lazy(() => import('@/pages/app/assessments/BatchAssessment'));
 export const LazyAssessmentResults = lazy(() => import('@/pages/app/assessments/AssessmentResults'));
+export const LazyAssessmentAnalysis = lazy(() => import('@/pages/app/assessments/AssessmentAnalysis'));
 export const LazyGoals = lazy(() => import('@/pages/app/goals/Goals'));
 export const LazySkills = lazy(() => import('@/pages/app/skills/Skills'));
 export const LazyClassInsights = lazy(() => import('@/pages/app/insights/ClassInsights'));

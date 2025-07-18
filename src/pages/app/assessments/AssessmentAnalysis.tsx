@@ -90,7 +90,7 @@ const AssessmentAnalysis: React.FC = () => {
               <DSPageTitle className="text-xl font-semibold">Select a Student</DSPageTitle>
               <DSBodyText className="mt-2 text-gray-500">Please select a student to view their assessment analysis.</DSBodyText>
               <DSButton asChild className="mt-4" variant="secondary">
-                <Link to={`/app/assessments/${id}/add-responses`}>Record Student Responses</Link>
+                <Link to={`/app/assessments/${id}/responses`}>Record Student Responses</Link>
               </DSButton>
             </div>
           </DSCardContent>
@@ -159,89 +159,87 @@ const AssessmentAnalysis: React.FC = () => {
   }, [students]);
 
   return (
-    <AppLayout>
-      <DSSection>
-        <DSPageContainer>
-          <Breadcrumbs />
-          
-          {/* Page Header - Standardized */}
-          <DSCard className="mb-8">
-            <DSCardHeader>
-              <div>
-                <DSButton variant="ghost" className="mb-4 pl-0" asChild>
-                  <Link to={`/app/assessments/${id}`}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Assessment Details
-                  </Link>
-                </DSButton>
-                <DSPageTitle className="text-3xl font-bold text-gray-900 mb-2">
-                  Assessment Analysis
-                </DSPageTitle>
-                <DSBodyText className="text-gray-600">
-                  {assessment ? `${assessment.title} | ${assessment.subject}` : 'Loading...'}
-                </DSBodyText>
-              </div>
-            </DSCardHeader>
-          </DSCard>
+    <DSSection>
+      <DSPageContainer>
+        <Breadcrumbs />
+        
+        {/* Page Header - Standardized */}
+        <DSCard className="mb-8">
+          <DSCardHeader>
+            <div>
+              <DSButton variant="ghost" className="mb-4 pl-0" asChild>
+                <Link to={`/app/assessments/${id}`}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Assessment Details
+                </Link>
+              </DSButton>
+              <DSPageTitle className="text-3xl font-bold text-gray-900 mb-2">
+                Assessment Analysis
+              </DSPageTitle>
+              <DSBodyText className="text-gray-600">
+                {assessment ? `${assessment.title} | ${assessment.subject}` : 'Loading...'}
+              </DSBodyText>
+            </div>
+          </DSCardHeader>
+        </DSCard>
 
-          {/* Student Selection */}
-          <DSCard className="mb-6">
-            <DSCardContent className="p-6">
-              <DSFlexContainer justify="between" align="center" className="flex-col sm:flex-row gap-4">
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-1">Select Student</h3>
-                  <DSBodyText className="text-sm text-gray-600">Choose a student to view their AI-powered assessment analysis</DSBodyText>
-                </div>
-                
-                <div className="w-full sm:w-64">
-                  {validStudents.length > 0 ? (
-                    <Select 
-                      value={selectedStudentId || undefined} 
-                      onValueChange={handleStudentChange}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a student" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {validStudents.map(student => {
-                          // Double-check student.id is valid before using it
-                          const studentId = student.id;
-                          if (!studentId || typeof studentId !== 'string' || studentId.trim() === '') {
-                            console.warn('Skipping student with invalid id in render:', student);
-                            return null;
-                          }
-                          
-                          return (
-                            <SelectItem 
-                              key={studentId} 
-                              value={studentId}
-                            >
-                              {student.first_name} {student.last_name}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Select disabled value="no-students">
-                      <SelectTrigger>
-                        <SelectValue placeholder="No students available" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="no-students">No students available</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-              </DSFlexContainer>
-            </DSCardContent>
-          </DSCard>
-          
-          {/* Analysis Content */}
-          {renderContent()}
-        </DSPageContainer>
-      </DSSection>
-    </AppLayout>
+        {/* Student Selection */}
+        <DSCard className="mb-6">
+          <DSCardContent className="p-6">
+            <DSFlexContainer justify="between" align="center" className="flex-col sm:flex-row gap-4">
+              <div>
+                <h3 className="font-medium text-gray-900 mb-1">Select Student</h3>
+                <DSBodyText className="text-sm text-gray-600">Choose a student to view their AI-powered assessment analysis</DSBodyText>
+              </div>
+              
+              <div className="w-full sm:w-64">
+                {validStudents.length > 0 ? (
+                  <Select 
+                    value={selectedStudentId || undefined} 
+                    onValueChange={handleStudentChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a student" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {validStudents.map(student => {
+                        // Double-check student.id is valid before using it
+                        const studentId = student.id;
+                        if (!studentId || typeof studentId !== 'string' || studentId.trim() === '') {
+                          console.warn('Skipping student with invalid id in render:', student);
+                          return null;
+                        }
+                        
+                        return (
+                          <SelectItem 
+                            key={studentId} 
+                            value={studentId}
+                          >
+                            {student.first_name} {student.last_name}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Select disabled value="no-students">
+                    <SelectTrigger>
+                      <SelectValue placeholder="No students available" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="no-students">No students available</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            </DSFlexContainer>
+          </DSCardContent>
+        </DSCard>
+        
+        {/* Analysis Content */}
+        {renderContent()}
+      </DSPageContainer>
+    </DSSection>
   );
 };
 
