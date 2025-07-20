@@ -1,100 +1,82 @@
 
 import React from 'react';
-import { ChevronLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import {
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbSeparator,
-  BreadcrumbPage
-} from '@/components/ui/breadcrumb';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import Breadcrumbs from '@/components/navigation/Breadcrumbs';
 
-export interface BreadcrumbItem {
+interface PageAction {
   label: string;
-  href?: string;
+  onClick: () => void;
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  disabled?: boolean;
 }
 
 interface StandardPageLayoutProps {
   title: string;
   description?: string;
-  breadcrumbs?: BreadcrumbItem[];
-  actions?: React.ReactNode;
-  backLink?: string;
+  badge?: {
+    text: string;
+    variant?: 'default' | 'secondary' | 'destructive' | 'outline';
+  };
+  actions?: PageAction[];
   children: React.ReactNode;
   className?: string;
 }
 
-export const StandardPageLayout: React.FC<StandardPageLayoutProps> = ({
+const StandardPageLayout: React.FC<StandardPageLayoutProps> = ({
   title,
   description,
-  breadcrumbs,
-  actions,
-  backLink,
+  badge,
+  actions = [],
   children,
   className = ''
 }) => {
   return (
-    <div className={`p-6 space-y-6 ${className}`}>
-      {/* Back Link */}
-      {backLink && (
-        <div className="mb-4">
-          <Link 
-            to={backLink}
-            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200"
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Back
-          </Link>
-        </div>
-      )}
-
-      {/* Breadcrumbs */}
-      {breadcrumbs && breadcrumbs.length > 0 && (
-        <div className="mb-4">
-          <Breadcrumb>
-            <BreadcrumbList>
-              {breadcrumbs.map((item, index) => (
-                <React.Fragment key={index}>
-                  <BreadcrumbItem>
-                    {item.href ? (
-                      <BreadcrumbLink asChild>
-                        <Link to={item.href} className="text-gray-600 hover:text-gray-900">
-                          {item.label}
-                        </Link>
-                      </BreadcrumbLink>
-                    ) : (
-                      <BreadcrumbPage className="text-gray-900 font-medium">
-                        {item.label}
-                      </BreadcrumbPage>
-                    )}
-                  </BreadcrumbItem>
-                  {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
-                </React.Fragment>
-              ))}
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      )}
-
-      {/* Page Header */}
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+    <div className={`space-y-6 ${className}`}>
+      <Breadcrumbs />
+      
+      <div className="flex items-start justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+            {badge && (
+              <Badge variant={badge.variant || 'default'}>
+                {badge.text}
+              </Badge>
+            )}
+          </div>
           {description && (
-            <p className="text-gray-600 mt-2">{description}</p>
+            <p className="text-lg text-muted-foreground">{description}</p>
           )}
         </div>
-        {actions && (
-          <div className="flex items-center gap-3">
-            {actions}
+        
+        {actions.length > 0 && (
+          <div className="flex items-center gap-2">
+            {actions.map((action, index) => (
+              <button
+                key={index}
+                onClick={action.onClick}
+                disabled={action.disabled}
+                className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                  action.variant === 'destructive' 
+                    ? 'bg-red-600 text-white hover:bg-red-700' 
+                    : action.variant === 'outline'
+                    ? 'border border-gray-300 bg-transparent hover:bg-gray-50'
+                    : action.variant === 'secondary'
+                    ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                    : action.variant === 'ghost'
+                    ? 'bg-transparent hover:bg-gray-100'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                } ${action.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {action.label}
+              </button>
+            ))}
           </div>
         )}
       </div>
 
-      {/* Content Area */}
-      <div>
+      <div className="space-y-6">
         {children}
       </div>
     </div>

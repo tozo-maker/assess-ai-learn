@@ -1,422 +1,325 @@
 
 import React, { useState } from 'react';
+import AppLayout from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  Play, 
   Database, 
   Shield, 
   Settings, 
-  Activity, 
-  Zap,
+  TrendingUp, 
+  Eye, 
+  Wrench,
+  PlayCircle,
   CheckCircle,
   XCircle,
   AlertTriangle,
-  Clock,
-  TrendingUp,
-  AlertCircle
+  RefreshCw
 } from 'lucide-react';
-import { ComprehensiveAuditReport, AuditResult } from '@/types/audit';
-import { comprehensiveAuditService } from '@/services/comprehensive-audit-service';
+import Breadcrumbs from '@/components/navigation/Breadcrumbs';
+import { ComprehensiveAuditReport, AuditCategory } from '@/types/audit';
 
 const ComprehensiveAudit = () => {
-  const [isRunning, setIsRunning] = useState(false);
   const [auditReport, setAuditReport] = useState<ComprehensiveAuditReport | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [currentCategory, setCurrentCategory] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const categoryIcons: Record<string, React.ComponentType<any>> = {
+    database: Database,
+    security: Shield,
+    functionality: Settings,
+    performance: TrendingUp,
+    monitoring: Eye,
+    configuration: Wrench
+  };
 
   const runComprehensiveAudit = async () => {
     setIsRunning(true);
-    setAuditReport(null);
-    
+    setError(null);
+    setProgress(0);
+    setCurrentCategory(null);
+
     try {
-      toast({
-        title: "Starting Comprehensive Audit",
-        description: "Running complete application assessment..."
-      });
+      // Import the audit service dynamically to handle missing files gracefully
+      let comprehensiveAuditService;
+      try {
+        const module = await import('@/services/comprehensive-audit-service');
+        comprehensiveAuditService = module.comprehensiveAuditService;
+      } catch (importError) {
+        console.error('Failed to import audit service:', importError);
+        throw new Error('Audit service is not available. Please check the system configuration.');
+      }
+
+      // Simulate progress updates
+      const categories = ['database', 'security', 'functionality', 'performance', 'monitoring', 'configuration'];
+      
+      for (let i = 0; i < categories.length; i++) {
+        setCurrentCategory(categories[i]);
+        setProgress(((i + 1) / categories.length) * 100);
+        
+        // Add a small delay to show progress
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
 
       const report = await comprehensiveAuditService.runCompleteAudit();
       setAuditReport(report);
-
-      const criticalCount = report.criticalIssues.length;
-      const overallScore = report.overallScore;
-
-      if (overallScore >= 90 && criticalCount === 0) {
-        toast({
-          title: "Audit Complete - Excellent! 🎉",
-          description: `Overall score: ${overallScore.toFixed(1)}% - Production ready!`
-        });
-      } else if (overallScore >= 80) {
-        toast({
-          title: "Audit Complete - Good ✅",
-          description: `Overall score: ${overallScore.toFixed(1)}% - ${criticalCount} critical issues to address`
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Audit Complete - Needs Work ⚠️",
-          description: `Overall score: ${overallScore.toFixed(1)}% - ${criticalCount} critical issues found`
-        });
-      }
-    } catch (error) {
-      console.error('Comprehensive audit failed:', error);
+      
+      toast({
+        title: "Audit Complete",
+        description: `System audit completed with ${report.overallScore.toFixed(1)}% overall score`
+      });
+    } catch (auditError) {
+      console.error('Audit failed:', auditError);
+      const errorMessage = auditError instanceof Error ? auditError.message : 'An unknown error occurred';
+      setError(errorMessage);
+      
       toast({
         variant: "destructive",
         title: "Audit Failed",
-        description: "An error occurred while running the comprehensive audit"
+        description: errorMessage
       });
     } finally {
       setIsRunning(false);
+      setCurrentCategory(null);
+      setProgress(0);
     }
   };
 
-  const getStatusIcon = (status: 'pass' | 'fail' | 'warning') => {
-    switch (status) {
-      case 'pass':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'fail':
-        return <XCircle className="h-4 w-4 text-red-600" />;
-      case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
-    }
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return 'text-green-600 bg-green-100';
+    if (score >= 80) return 'text-blue-600 bg-blue-100';
+    if (score >= 70) return 'text-yellow-600 bg-yellow-100';
+    return 'text-red-600 bg-red-100';
   };
 
-  const getStatusBadge = (status: 'pass' | 'fail' | 'warning') => {
-    const variants = {
-      pass: "default" as const,
-      fail: "destructive" as const,
-      warning: "secondary" as const
-    };
-    
-    return (
-      <Badge variant={variants[status]}>
-        {status.toUpperCase()}
-      </Badge>
-    );
-  };
-
-  const getCategoryIcon = (categoryName: string) => {
-    switch (categoryName.toLowerCase()) {
-      case 'database':
-        return <Database className="h-5 w-5 text-blue-600" />;
-      case 'security':
-        return <Shield className="h-5 w-5 text-red-600" />;
-      case 'functionality':
-        return <Settings className="h-5 w-5 text-green-600" />;
-      case 'performance':
-        return <Zap className="h-5 w-5 text-yellow-600" />;
-      case 'monitoring':
-        return <Activity className="h-5 w-5 text-purple-600" />;
-      case 'configuration':
-        return <Settings className="h-5 w-5 text-gray-600" />;
-      default:
-        return <Settings className="h-5 w-5 text-gray-600" />;
-    }
-  };
-
-  const renderAuditResults = (results: AuditResult[]) => {
-    if (results.length === 0) return null;
-
-    return (
-      <div className="space-y-4">
-        {results.map((result, index) => (
-          <div key={index} className="border rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-3">
-                {getStatusIcon(result.status)}
-                <h4 className="font-medium">{result.check}</h4>
-              </div>
-              <div className="flex items-center space-x-2">
-                {result.duration && (
-                  <span className="text-xs text-gray-500">
-                    {result.duration}ms
-                  </span>
-                )}
-                {getStatusBadge(result.status)}
-              </div>
-            </div>
-            
-            <p className="text-sm text-gray-600 mb-2">{result.message}</p>
-            
-            {result.recommendation && (
-              <div className="mt-3 p-3 bg-blue-50 rounded text-sm">
-                <p className="font-medium text-blue-800 mb-1">Recommendation:</p>
-                <p className="text-blue-700">{result.recommendation}</p>
-              </div>
-            )}
-            
-            {result.details && (
-              <div className="mt-3 p-3 bg-gray-50 rounded text-sm">
-                <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
-                  {typeof result.details === 'string' 
-                    ? result.details 
-                    : JSON.stringify(result.details, null, 2)
-                  }
-                </pre>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
+  const getScoreIcon = (score: number) => {
+    if (score >= 90) return <CheckCircle className="h-5 w-5 text-green-600" />;
+    if (score >= 70) return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
+    return <XCircle className="h-5 w-5 text-red-600" />;
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Comprehensive Application Audit</h1>
-        <p className="text-gray-600 mt-2">
-          Complete assessment of functionality, performance, security, and production readiness
-        </p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <TrendingUp className="h-6 w-6 text-blue-600" />
-            <span>Application Health Assessment</span>
-          </CardTitle>
-          <CardDescription>
-            Comprehensive audit covering database, security, functionality, performance, monitoring, and configuration
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-center">
-            <div className="space-y-2">
-              <Database className="h-8 w-8 text-blue-600 mx-auto" />
-              <p className="text-sm font-medium">Database</p>
-            </div>
-            <div className="space-y-2">
-              <Shield className="h-8 w-8 text-red-600 mx-auto" />
-              <p className="text-sm font-medium">Security</p>
-            </div>
-            <div className="space-y-2">
-              <Settings className="h-8 w-8 text-green-600 mx-auto" />
-              <p className="text-sm font-medium">Functionality</p>
-            </div>
-            <div className="space-y-2">
-              <Zap className="h-8 w-8 text-yellow-600 mx-auto" />
-              <p className="text-sm font-medium">Performance</p>
-            </div>
-            <div className="space-y-2">
-              <Activity className="h-8 w-8 text-purple-600 mx-auto" />
-              <p className="text-sm font-medium">Monitoring</p>
-            </div>
-            <div className="space-y-2">
-              <Settings className="h-8 w-8 text-gray-600 mx-auto" />
-              <p className="text-sm font-medium">Configuration</p>
-            </div>
+    <AppLayout>
+      <div className="space-y-6">
+        <Breadcrumbs />
+        
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Comprehensive System Audit</h1>
+            <p className="text-muted-foreground">
+              Complete analysis of system health, security, and performance
+            </p>
           </div>
           
-          <Separator />
-          
-          <div className="flex justify-center">
-            <Button 
-              onClick={runComprehensiveAudit} 
-              disabled={isRunning}
-              className="bg-blue-600 hover:bg-blue-700 flex items-center space-x-2"
-              size="lg"
-            >
-              {isRunning ? (
-                <>
-                  <Clock className="h-5 w-5 animate-spin" />
-                  <span>Running Comprehensive Audit...</span>
-                </>
-              ) : (
-                <>
-                  <Play className="h-5 w-5" />
-                  <span>Start Comprehensive Audit</span>
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          <Button
+            onClick={runComprehensiveAudit}
+            disabled={isRunning}
+            size="lg"
+            className="flex items-center gap-2"
+          >
+            {isRunning ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Running Audit...
+              </>
+            ) : (
+              <>
+                <PlayCircle className="h-4 w-4" />
+                Run Complete Audit
+              </>
+            )}
+          </Button>
+        </div>
 
-      {auditReport && (
-        <>
+        {isRunning && (
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Audit Summary</span>
-                <div className="flex items-center space-x-4">
-                  <div className="text-right">
-                    <div className="text-2xl font-bold">
-                      {auditReport.overallScore.toFixed(1)}%
-                    </div>
-                    <div className="text-sm text-gray-600">Overall Score</div>
-                  </div>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">
+                    {currentCategory ? `Auditing ${currentCategory}...` : 'Preparing audit...'}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {Math.round(progress)}%
+                  </span>
                 </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Progress value={auditReport.overallScore} className="w-full" />
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">
-                    {auditReport.categories.reduce((acc, cat) => 
-                      acc + cat.checks.filter(c => c.status === 'pass').length, 0
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-600">Passed Checks</div>
-                </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-yellow-600">
-                    {auditReport.categories.reduce((acc, cat) => 
-                      acc + cat.checks.filter(c => c.status === 'warning').length, 0
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-600">Warnings</div>
-                </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-red-600">
-                    {auditReport.criticalIssues.length}
-                  </div>
-                  <div className="text-sm text-gray-600">Critical Issues</div>
-                </div>
+                <Progress value={progress} className="w-full" />
               </div>
-
-              {auditReport.criticalIssues.length > 0 && (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>{auditReport.criticalIssues.length} critical issue{auditReport.criticalIssues.length > 1 ? 's' : ''} found</strong> - 
-                    Address these immediately for production readiness
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {auditReport.recommendations.length > 0 && (
-                <div>
-                  <h3 className="font-medium mb-2">Top Recommendations:</h3>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                    {auditReport.recommendations.slice(0, 5).map((rec, index) => (
-                      <li key={index}>{rec}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
             </CardContent>
           </Card>
+        )}
 
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="overview">Category Overview</TabsTrigger>
-              <TabsTrigger value="detailed">Detailed Results</TabsTrigger>
-              <TabsTrigger value="critical">Critical Issues</TabsTrigger>
-            </TabsList>
+        {error && (
+          <Card className="border-red-200 bg-red-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-red-800">
+                <XCircle className="h-5 w-5" />
+                Audit Failed
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-red-700">{error}</p>
+              <Button
+                onClick={runComprehensiveAudit}
+                variant="outline"
+                className="mt-4"
+                size="sm"
+              >
+                Retry Audit
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {auditReport.categories.map((category, index) => (
-                  <Card key={index}>
+        {auditReport && (
+          <div className="space-y-6">
+            {/* Overall Score */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  {getScoreIcon(auditReport.overallScore)}
+                  Overall System Health
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold">
+                      {auditReport.overallScore.toFixed(1)}%
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {auditReport.criticalIssues.length} critical issues found
+                    </p>
+                  </div>
+                  <Badge className={getScoreColor(auditReport.overallScore)}>
+                    {auditReport.overallScore >= 90 ? 'Excellent' :
+                     auditReport.overallScore >= 80 ? 'Good' :
+                     auditReport.overallScore >= 70 ? 'Fair' : 'Poor'}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Category Results */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {auditReport.categories.map((category) => {
+                const IconComponent = categoryIcons[category.id] || Settings;
+                return (
+                  <Card key={category.id}>
                     <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center space-x-2 text-lg">
-                        {getCategoryIcon(category.name)}
-                        <span>{category.name}</span>
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <IconComponent className="h-4 w-4" />
+                        {category.name}
                       </CardTitle>
-                      <CardDescription className="text-sm">
-                        {category.description}
-                      </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-2xl font-bold">
-                            {category.score.toFixed(1)}%
+                            {category.score.toFixed(0)}%
                           </span>
-                          <Badge 
-                            variant={category.score >= 90 ? "default" : category.score >= 70 ? "secondary" : "destructive"}
-                          >
-                            {category.score >= 90 ? "Excellent" : category.score >= 70 ? "Good" : "Needs Work"}
-                          </Badge>
+                          {getScoreIcon(category.score)}
                         </div>
-                        <Progress value={category.score} className="w-full" />
-                        <div className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           {category.checks.filter(c => c.status === 'pass').length}/{category.checks.length} checks passed
+                        </p>
+                        <div className="space-y-1">
+                          {category.checks.slice(0, 3).map((check, index) => (
+                            <div key={index} className="flex items-center gap-2 text-xs">
+                              {check.status === 'pass' ? (
+                                <CheckCircle className="h-3 w-3 text-green-500" />
+                              ) : check.status === 'warning' ? (
+                                <AlertTriangle className="h-3 w-3 text-yellow-500" />
+                              ) : (
+                                <XCircle className="h-3 w-3 text-red-500" />
+                              )}
+                              <span className="truncate">{check.check}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
-            </TabsContent>
+                );
+              })}
+            </div>
 
-            <TabsContent value="detailed" className="space-y-6">
-              {auditReport.categories.map((category, categoryIndex) => (
-                <Card key={categoryIndex}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      {getCategoryIcon(category.name)}
-                      <span>{category.name} - {category.score.toFixed(1)}%</span>
-                    </CardTitle>
-                    <CardDescription>{category.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {renderAuditResults(category.checks)}
-                  </CardContent>
-                </Card>
-              ))}
-            </TabsContent>
+            {/* Critical Issues */}
+            {auditReport.criticalIssues.length > 0 && (
+              <Card className="border-red-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-red-800">
+                    <XCircle className="h-5 w-5" />
+                    Critical Issues ({auditReport.criticalIssues.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {auditReport.criticalIssues.map((issue, index) => (
+                      <div key={index} className="p-3 bg-red-50 rounded-lg">
+                        <div className="font-medium text-red-800">
+                          {issue.category.toUpperCase()}: {issue.check}
+                        </div>
+                        <div className="text-sm text-red-700 mt-1">
+                          {issue.message}
+                        </div>
+                        {issue.recommendation && (
+                          <div className="text-sm text-red-600 mt-2 italic">
+                            Recommendation: {issue.recommendation}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-            <TabsContent value="critical" className="space-y-6">
-              {auditReport.criticalIssues.length > 0 ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2 text-red-600">
-                      <XCircle className="h-6 w-6" />
-                      <span>Critical Issues ({auditReport.criticalIssues.length})</span>
-                    </CardTitle>
-                    <CardDescription>
-                      These issues must be addressed immediately for production readiness
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {renderAuditResults(auditReport.criticalIssues)}
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card>
-                  <CardContent className="pt-6 text-center">
-                    <CheckCircle className="mx-auto h-12 w-12 text-green-600 mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No Critical Issues Found!</h3>
-                    <p className="text-gray-500">
-                      Your application has passed all critical checks and is ready for production.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-          </Tabs>
-        </>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <AlertCircle className="h-6 w-6 text-blue-600" />
-            <span>Audit Guidelines</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="text-sm space-y-2">
-            <p><strong>Database:</strong> Tests connectivity, query performance, data integrity, and indexing</p>
-            <p><strong>Security:</strong> Validates authentication, RLS policies, HTTPS, and security headers</p>
-            <p><strong>Functionality:</strong> Tests core workflows, CRUD operations, and feature completeness</p>
-            <p><strong>Performance:</strong> Measures load times, query speed, bundle size, and memory usage</p>
-            <p><strong>Monitoring:</strong> Checks error tracking, logging, and observability systems</p>
-            <p><strong>Configuration:</strong> Validates build settings, environment, and deployment readiness</p>
-            <p><strong>Scoring:</strong> 90%+ Excellent, 80-89% Good, 70-79% Needs Improvement, &lt;70% Significant Work Needed</p>
+            {/* Recommendations */}
+            {auditReport.recommendations.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recommendations</CardTitle>
+                  <CardDescription>
+                    Actions to improve your system health and performance
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {auditReport.recommendations.map((recommendation, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <div className="h-2 w-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
+                        <span className="text-sm">{recommendation}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+
+        {!auditReport && !isRunning && !error && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-12">
+                <PlayCircle className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Ready to Run Audit</h3>
+                <p className="text-muted-foreground mb-4">
+                  Click "Run Complete Audit" to analyze your system's health, security, and performance.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </AppLayout>
   );
 };
 

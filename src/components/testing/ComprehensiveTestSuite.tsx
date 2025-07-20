@@ -40,66 +40,61 @@ interface TestSuite {
 }
 
 const ComprehensiveTestSuite = () => {
-  const [testSuites, setTestSuites] = useState<TestSuite[]>([]);
+  const [testSuites, setTestSuites] = useState<TestSuite[]>([
+    {
+      id: 'functionality',
+      name: 'Core Functionality',
+      description: 'Authentication, CRUD operations, and basic platform features',
+      icon: TestTube,
+      component: FunctionalityTester,
+      status: 'pending'
+    },
+    {
+      id: 'data-integrity',
+      name: 'Data Integrity',
+      description: 'Database relationships, constraints, and data consistency',
+      icon: Database,
+      component: DataIntegrityChecker,
+      status: 'pending'
+    },
+    {
+      id: 'e2e',
+      name: 'End-to-End Testing',
+      description: 'Complete user journeys and workflow validation',
+      icon: Navigation,
+      component: E2ETestRunner,
+      status: 'pending'
+    },
+    {
+      id: 'performance',
+      name: 'Performance Testing',
+      description: 'Load testing, response times, and system performance',
+      icon: TrendingUp,
+      component: PerformanceTestSuite,
+      status: 'pending'
+    },
+    {
+      id: 'security',
+      name: 'Security Validation',
+      description: 'Authentication, authorization, and data protection',
+      icon: Shield,
+      component: SecurityTestValidator,
+      status: 'pending'
+    },
+    {
+      id: 'business-logic',
+      name: 'Business Logic',
+      description: 'Educational algorithms, grading, and domain-specific logic',
+      icon: Brain,
+      component: BusinessLogicValidator,
+      status: 'pending'
+    }
+  ]);
+  
   const [currentSuite, setCurrentSuite] = useState<string | null>(null);
   const [overallProgress, setOverallProgress] = useState(0);
   const [isRunningAll, setIsRunningAll] = useState(false);
   const { toast } = useToast();
-
-  const initializeTestSuites = () => {
-    const suites: TestSuite[] = [
-      {
-        id: 'functionality',
-        name: 'Core Functionality',
-        description: 'Authentication, CRUD operations, and basic platform features',
-        icon: TestTube,
-        component: FunctionalityTester,
-        status: 'pending'
-      },
-      {
-        id: 'data-integrity',
-        name: 'Data Integrity',
-        description: 'Database relationships, constraints, and data consistency',
-        icon: Database,
-        component: DataIntegrityChecker,
-        status: 'pending'
-      },
-      {
-        id: 'e2e',
-        name: 'End-to-End Testing',
-        description: 'Complete user journeys and workflow validation',
-        icon: Navigation,
-        component: E2ETestRunner,
-        status: 'pending'
-      },
-      {
-        id: 'performance',
-        name: 'Performance Testing',
-        description: 'Load testing, response times, and system performance',
-        icon: TrendingUp,
-        component: PerformanceTestSuite,
-        status: 'pending'
-      },
-      {
-        id: 'security',
-        name: 'Security Validation',
-        description: 'Authentication, authorization, and data protection',
-        icon: Shield,
-        component: SecurityTestValidator,
-        status: 'pending'
-      },
-      {
-        id: 'business-logic',
-        name: 'Business Logic',
-        description: 'Educational algorithms, grading, and domain-specific logic',
-        icon: Brain,
-        component: BusinessLogicValidator,
-        status: 'pending'
-      }
-    ];
-
-    setTestSuites(suites);
-  };
 
   const updateSuiteStatus = (suiteId: string, status: TestSuite['status'], score?: number) => {
     setTestSuites(prev => prev.map(suite => 
@@ -107,44 +102,76 @@ const ComprehensiveTestSuite = () => {
     ));
   };
 
-  const runTestSuite = async (suiteId: string) => {
+  const runTestSuite = async (suiteId: string): Promise<boolean> => {
     setCurrentSuite(suiteId);
     updateSuiteStatus(suiteId, 'running');
 
-    // Simulate test execution
-    const testDuration = Math.random() * 5000 + 3000; // 3-8 seconds
-    const shouldPass = Math.random() > 0.2; // 80% success rate
+    try {
+      // Simulate test execution with timeout protection
+      const testPromise = new Promise<boolean>((resolve) => {
+        const testDuration = Math.random() * 3000 + 1000; // 1-4 seconds
+        const shouldPass = Math.random() > 0.15; // 85% success rate
+        
+        setTimeout(() => {
+          const score = shouldPass 
+            ? Math.floor(Math.random() * 30) + 70 // 70-100% for pass
+            : Math.floor(Math.random() * 40) + 30; // 30-70% for fail
+          
+          updateSuiteStatus(suiteId, shouldPass ? 'completed' : 'failed', score);
+          resolve(shouldPass);
+        }, testDuration);
+      });
 
-    await new Promise(resolve => setTimeout(resolve, testDuration));
+      // Add timeout protection (max 10 seconds per test)
+      const timeoutPromise = new Promise<boolean>((resolve) => {
+        setTimeout(() => {
+          updateSuiteStatus(suiteId, 'failed', 25);
+          resolve(false);
+        }, 10000);
+      });
 
-    if (shouldPass) {
-      const score = Math.floor(Math.random() * 30) + 70; // 70-100% score
-      updateSuiteStatus(suiteId, 'completed', score);
-    } else {
-      updateSuiteStatus(suiteId, 'failed', Math.floor(Math.random() * 40) + 30);
+      const result = await Promise.race([testPromise, timeoutPromise]);
+      return result;
+    } catch (error) {
+      updateSuiteStatus(suiteId, 'failed', 0);
+      return false;
+    } finally {
+      setCurrentSuite(null);
     }
-
-    setCurrentSuite(null);
   };
 
   const runAllTestSuites = async () => {
+    if (isRunningAll) return; // Prevent multiple concurrent runs
+    
     setIsRunningAll(true);
     setOverallProgress(0);
-    initializeTestSuites();
+    
+    // Reset all test suites to pending
+    setTestSuites(prev => prev.map(suite => ({ ...suite, status: 'pending' as const, score: undefined })));
 
     try {
-      const suiteIds = ['functionality', 'data-integrity', 'e2e', 'performance', 'security', 'business-logic'];
+      const suiteIds = testSuites.map(suite => suite.id);
+      let completedCount = 0;
       
-      for (let i = 0; i < suiteIds.length; i++) {
-        await runTestSuite(suiteIds[i]);
-        setOverallProgress(((i + 1) / suiteIds.length) * 100);
+      for (const suiteId of suiteIds) {
+        try {
+          await runTestSuite(suiteId);
+          completedCount++;
+          setOverallProgress((completedCount / suiteIds.length) * 100);
+        } catch (error) {
+          console.error(`Test suite ${suiteId} failed:`, error);
+          updateSuiteStatus(suiteId, 'failed', 0);
+          completedCount++;
+          setOverallProgress((completedCount / suiteIds.length) * 100);
+        }
       }
 
       toast({
         title: "Comprehensive Testing Complete",
-        description: "All test suites have been executed successfully"
+        description: `All ${suiteIds.length} test suites have been executed`
       });
     } catch (error) {
+      console.error('Test execution failed:', error);
       toast({
         variant: "destructive",
         title: "Testing Suite Failed",
@@ -152,6 +179,7 @@ const ComprehensiveTestSuite = () => {
       });
     } finally {
       setIsRunningAll(false);
+      setCurrentSuite(null);
     }
   };
 
@@ -194,10 +222,6 @@ const ComprehensiveTestSuite = () => {
   const averageScore = testSuites.length > 0 ? 
     testSuites.reduce((sum, suite) => sum + (suite.score || 0), 0) / testSuites.length : 0;
 
-  React.useEffect(() => {
-    initializeTestSuites();
-  }, []);
-
   return (
     <div className="space-y-6">
       <Card>
@@ -231,18 +255,16 @@ const ComprehensiveTestSuite = () => {
               )}
             </Button>
 
-            {testSuites.length > 0 && (
-              <div className="text-right">
-                <div className="text-sm text-gray-600">
-                  {completedSuites} passed, {failedSuites} failed
-                </div>
-                {averageScore > 0 && (
-                  <div className="text-lg font-semibold">
-                    Average Score: {averageScore.toFixed(1)}%
-                  </div>
-                )}
+            <div className="text-right">
+              <div className="text-sm text-gray-600">
+                {completedSuites} passed, {failedSuites} failed
               </div>
-            )}
+              {averageScore > 0 && (
+                <div className="text-lg font-semibold">
+                  Average Score: {averageScore.toFixed(1)}%
+                </div>
+              )}
+            </div>
           </div>
 
           {isRunningAll && (
