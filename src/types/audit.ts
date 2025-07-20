@@ -1,18 +1,25 @@
 
 export interface AuditResult {
-  category: string;
+  category: 'database' | 'security' | 'monitoring' | 'configuration' | 'functionality' | 'performance';
   check: string;
   status: 'pass' | 'fail' | 'warning';
   message: string;
   details?: any;
   recommendation?: string;
+  duration?: number;
 }
 
 export interface AuditCategory {
-  id: string;
   name: string;
   description: string;
-  icon: React.ComponentType<any>;
   checks: AuditResult[];
   score: number;
+}
+
+export interface ComprehensiveAuditReport {
+  timestamp: string;
+  categories: AuditCategory[];
+  overallScore: number;
+  criticalIssues: AuditResult[];
+  recommendations: string[];
 }
