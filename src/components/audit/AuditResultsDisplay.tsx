@@ -63,10 +63,12 @@ const AuditResultsDisplay: React.FC<AuditResultsDisplayProps> = ({ auditResults 
                         category.score >= 80 ? 'bg-green-100' :
                         category.score >= 60 ? 'bg-yellow-100' : 'bg-red-100'
                       }`}>
-                        <IconComponent className={`h-6 w-6 ${
-                          category.score >= 80 ? 'text-green-600' :
-                          category.score >= 60 ? 'text-yellow-600' : 'text-red-600'
-                        }`} />
+                        {category.icon && (
+                          <category.icon className={`h-6 w-6 ${
+                            category.score >= 80 ? 'text-green-600' :
+                            category.score >= 60 ? 'text-yellow-600' : 'text-red-600'
+                          }`} />
+                        )}
                       </div>
                       <div>
                         <h3 className="font-semibold">{category.name}</h3>
@@ -97,7 +99,7 @@ const AuditResultsDisplay: React.FC<AuditResultsDisplayProps> = ({ auditResults 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <category.icon className="h-5 w-5" />
+                {category.icon && <category.icon className="h-5 w-5" />}
                 {category.name} Audit Results
               </CardTitle>
             </CardHeader>

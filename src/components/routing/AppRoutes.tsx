@@ -2,7 +2,6 @@
 import React from 'react';
 import { Routes } from 'react-router-dom';
 import { PublicRoutes } from './PublicRoutes';
-import { DashboardRoutes } from './DashboardRoutes';
 import { StudentRoutes } from './StudentRoutes';
 import { AssessmentRoutes } from './AssessmentRoutes';
 import { GoalRoutes } from './GoalRoutes';
@@ -16,7 +15,6 @@ export const AppRoutes = () => {
   return (
     <Routes>
       <PublicRoutes />
-      <DashboardRoutes />
       <StudentRoutes />
       <AssessmentRoutes />
       <GoalRoutes />

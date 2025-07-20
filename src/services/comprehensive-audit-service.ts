@@ -14,36 +14,42 @@ export class ComprehensiveAuditService {
     
     const categories: AuditCategory[] = [
       {
+        id: 'database',
         name: 'Database',
         description: 'Database connectivity, performance, and data integrity',
         checks: [],
         score: 0
       },
       {
+        id: 'security',
         name: 'Security',
         description: 'Authentication, authorization, and security policies',
         checks: [],
         score: 0
       },
       {
+        id: 'functionality',
         name: 'Functionality',
         description: 'Core application features and user workflows',
         checks: [],
         score: 0
       },
       {
+        id: 'performance',
         name: 'Performance',
         description: 'Application speed, responsiveness, and optimization',
         checks: [],
         score: 0
       },
       {
+        id: 'monitoring',
         name: 'Monitoring',
         description: 'Error tracking, logging, and observability',
         checks: [],
         score: 0
       },
       {
+        id: 'configuration',
         name: 'Configuration',
         description: 'Build settings, environment, and deployment readiness',
         checks: [],

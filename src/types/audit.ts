@@ -10,8 +10,10 @@ export interface AuditResult {
 }
 
 export interface AuditCategory {
+  id: string;
   name: string;
   description: string;
+  icon?: React.ComponentType<any>;
   checks: AuditResult[];
   score: number;
 }
