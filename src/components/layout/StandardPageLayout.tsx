@@ -18,16 +18,18 @@ interface StandardPageLayoutProps {
     text: string;
     variant?: 'default' | 'secondary' | 'destructive' | 'outline';
   };
-  actions?: PageAction[];
+  actions?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  breadcrumbs?: Array<{ label: string; href?: string; }>;
+  backLink?: string;
 }
 
 const StandardPageLayout: React.FC<StandardPageLayoutProps> = ({
   title,
   description,
   badge,
-  actions = [],
+  actions,
   children,
   className = ''
 }) => {
@@ -50,28 +52,9 @@ const StandardPageLayout: React.FC<StandardPageLayoutProps> = ({
           )}
         </div>
         
-        {actions.length > 0 && (
+        {actions && (
           <div className="flex items-center gap-2">
-            {actions.map((action, index) => (
-              <button
-                key={index}
-                onClick={action.onClick}
-                disabled={action.disabled}
-                className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                  action.variant === 'destructive' 
-                    ? 'bg-red-600 text-white hover:bg-red-700' 
-                    : action.variant === 'outline'
-                    ? 'border border-gray-300 bg-transparent hover:bg-gray-50'
-                    : action.variant === 'secondary'
-                    ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                    : action.variant === 'ghost'
-                    ? 'bg-transparent hover:bg-gray-100'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                } ${action.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                {action.label}
-              </button>
-            ))}
+            {actions}
           </div>
         )}
       </div>

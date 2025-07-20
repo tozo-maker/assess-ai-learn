@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import StandardPageLayout from '@/components/layout/StandardPageLayout';
 import { FileText } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProgressReportsOverview from '@/components/reports/ProgressReportsOverview';

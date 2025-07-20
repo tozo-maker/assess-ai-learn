@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import StandardPageLayout from '@/components/layout/StandardPageLayout';
 import { Target } from 'lucide-react';
 import GoalsMainContent from '@/components/goals/GoalsMainContent';
 import { useGoalsData } from '@/hooks/useGoalsData';

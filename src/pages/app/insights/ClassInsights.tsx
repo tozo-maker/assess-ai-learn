@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import StandardPageLayout from '@/components/layout/StandardPageLayout';
 import { TrendingUp } from 'lucide-react';
 import { ClassInsightsDashboard } from '@/components/insights/ClassInsightsDashboard';
 

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import StandardPageLayout from '@/components/layout/StandardPageLayout';
 import { HelpCircle } from 'lucide-react';
 import HelpMainContent from '@/components/help/HelpMainContent';
 

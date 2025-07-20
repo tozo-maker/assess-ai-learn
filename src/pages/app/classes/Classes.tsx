@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import StandardPageLayout from '@/components/layout/StandardPageLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DataTable, Column } from '@/components/ui/data-table';

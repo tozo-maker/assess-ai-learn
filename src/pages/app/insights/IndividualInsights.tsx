@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import StandardPageLayout from '@/components/layout/StandardPageLayout';
 import { User } from 'lucide-react';
 import { StudentSelector } from '@/components/insights/StudentSelector';
 import { IndividualInsightsDashboard } from '@/components/insights/IndividualInsightsDashboard';

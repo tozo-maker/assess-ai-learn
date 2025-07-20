@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import StandardPageLayout from '@/components/layout/StandardPageLayout';
 import { Lightbulb } from 'lucide-react';
 import { RecommendationsDashboard } from '@/components/insights/RecommendationsDashboard';
 

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import StandardPageLayout from '@/components/layout/StandardPageLayout';
 import { BarChart3 } from 'lucide-react';
 import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
 import DashboardContent from '@/components/dashboard/DashboardContent';

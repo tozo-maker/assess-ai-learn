@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import StandardPageLayout from '@/components/layout/StandardPageLayout';
 import { Users } from 'lucide-react';
 import StudentsMainContent from '@/components/students/StudentsMainContent';
 import { useStudentsData } from '@/hooks/useStudentsData';

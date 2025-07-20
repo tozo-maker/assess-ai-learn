@@ -1,6 +1,11 @@
 
 import React from 'react';
-import { StandardPageLayout, BreadcrumbItem } from '@/components/layout/StandardPageLayout';
+import StandardPageLayout from '@/components/layout/StandardPageLayout';
+
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
 
 interface PageTemplateProps {
   title: string;

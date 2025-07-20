@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { StandardPageLayout } from '@/components/layout/StandardPageLayout';
+import StandardPageLayout from '@/components/layout/StandardPageLayout';
 import { BookOpen } from 'lucide-react';
 import SkillsMainContent from '@/components/skills/SkillsMainContent';
 import { useSkillsData } from '@/hooks/useSkillsData';
