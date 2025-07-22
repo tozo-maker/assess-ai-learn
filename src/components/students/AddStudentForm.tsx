@@ -62,7 +62,7 @@ const AddStudentForm: React.FC = () => {
       return;
     }
 
-    createStudentMutation.mutate(formData);
+    createStudentMutation.mutate(formData as any);
   };
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {

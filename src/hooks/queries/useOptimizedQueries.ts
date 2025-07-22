@@ -65,14 +65,15 @@ export const useOptimizedAssessments = (options?: Partial<UseQueryOptions<Assess
 export const useAssessments = useOptimizedAssessments;
 
 // Student metrics with aggressive caching
-export const useOptimizedStudentMetrics = (options?: Partial<UseQueryOptions<any, Error>>) => {
+export const useOptimizedStudentMetrics = (teacherId?: string, options?: Partial<UseQueryOptions<any, Error>>) => {
   return useQuery({
-    queryKey: ['student-metrics'],
-    queryFn: async () => {
+    queryKey: ['student-metrics', teacherId],
+    queryFn: async ({ queryKey }) => {
       const cached = enhancedCache.get('student-metrics');
       if (cached) return cached;
 
-      const metrics = await studentService.getStudentMetrics();
+      const teacherId = queryKey[1] as string;
+      const metrics = await studentService.getStudentMetrics(teacherId);
       enhancedCache.set('student-metrics', metrics, {
         ttl: 5 * 60 * 1000, // 5 minutes
         tags: ['metrics', 'students']
@@ -80,6 +81,7 @@ export const useOptimizedStudentMetrics = (options?: Partial<UseQueryOptions<any
       
       return metrics || {};
     },
+    enabled: !!teacherId,
     ...optimizedQueryDefaults,
     staleTime: 5 * 60 * 1000, // 5 minutes for metrics
     ...options,

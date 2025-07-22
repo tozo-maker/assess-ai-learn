@@ -72,6 +72,56 @@ class StudentService {
 
     if (error) throw error;
   }
+
+  async getStudentById(studentId: string) {
+    const { data, error } = await supabase
+      .from('students')
+      .select(`
+        *,
+        student_performance (
+          assessment_count,
+          average_score,
+          performance_level,
+          needs_attention,
+          last_assessment_date
+        )
+      `)
+      .eq('id', studentId)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async getStudentMetrics(teacherId: string) {
+    const students = await this.getStudents(teacherId);
+    const totalStudents = students.length;
+    
+    const studentsWithPerformance = students.filter(student => 
+      Array.isArray(student.student_performance) && student.student_performance.length > 0
+    );
+    
+    const averageScore = studentsWithPerformance.length > 0
+      ? Math.round(
+          studentsWithPerformance.reduce((sum, student) => {
+            const performance = student.student_performance[0];
+            return sum + (performance?.average_score || 0);
+          }, 0) / studentsWithPerformance.length
+        )
+      : 0;
+
+    const studentsNeedingAttention = studentsWithPerformance.filter(student => {
+      const performance = student.student_performance[0];
+      return performance?.needs_attention;
+    }).length;
+
+    return {
+      totalStudents,
+      averageScore,
+      studentsNeedingAttention,
+      studentsWithPerformance: studentsWithPerformance.length
+    };
+  }
 }
 
 export const studentService = StudentService.getInstance();

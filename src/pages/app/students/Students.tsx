@@ -45,9 +45,9 @@ const Students: React.FC = () => {
     
     // Handle needs_attention filter - check the performance data
     if (filters.needsAttention !== null) {
-      const needsAttention = Array.isArray(student.performance) 
-        ? false // If it's an empty array, assume no attention needed
-        : student.performance?.needs_attention || false;
+      const needsAttention = Array.isArray(student.student_performance) && student.student_performance.length > 0
+        ? student.student_performance[0]?.needs_attention || false
+        : false;
       if (needsAttention !== filters.needsAttention) return false;
     }
     

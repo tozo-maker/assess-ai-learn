@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { studentService } from '@/services/student-service';
+import { useStudents } from '@/hooks/useStudents';
 import { exportsService } from '@/services/exports-service';
 import { ExportRequestData } from '@/types/exports';
 import DateRangeFilter from '@/components/exports/DateRangeFilter';
@@ -26,10 +26,7 @@ const ExportReports = () => {
     end_date: ''
   });
 
-  const { data: students = [] } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents
-  });
+  const { data: students = [] } = useStudents();
 
   const { data: exports = [] } = useQuery({
     queryKey: ['exports'],

@@ -66,7 +66,7 @@ const AddStudent: React.FC = () => {
           <CardContent>
             <div className="max-w-2xl">
               <ValidatedStudentForm
-                onSubmit={(formData) => createStudentMutation.mutate(formData)}
+                onSubmit={(formData) => createStudentMutation.mutate(formData as any)}
                 isLoading={createStudentMutation.isPending}
               />
             </div>

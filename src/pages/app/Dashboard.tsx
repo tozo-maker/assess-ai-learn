@@ -13,7 +13,8 @@ const Dashboard: React.FC = () => {
   } = useOptimizedDashboardData();
 
   // Check if we have an empty state (no students)
-  const isEmpty = data && data.students && data.students.length === 0;
+  console.log('Dashboard data structure:', data);
+  const isEmpty = data && data.data && data.data.students && data.data.students.length === 0;
 
   return (
     <DashboardErrorBoundary>

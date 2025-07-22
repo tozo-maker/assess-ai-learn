@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useStudents } from '@/hooks/useStudents';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -40,10 +41,8 @@ const BatchAssessment: React.FC = () => {
   });
 
   // Fetch students
-  const { data: students, isLoading: isLoadingStudents } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents,
-  });
+  const { data: students, isLoading: isLoadingStudents } = useStudents();
+  console.log('BatchAssessment students data:', students);
 
   // Fetch assessment items when assessment is selected
   const { data: assessmentItems, isLoading: isLoadingItems } = useQuery({

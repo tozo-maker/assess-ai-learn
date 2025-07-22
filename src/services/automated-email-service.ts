@@ -53,7 +53,7 @@ export const automatedEmailService = {
       const settings = await this.getAutomationSettings(teacherId);
       if (!settings?.weekly_progress) return;
 
-      const students = await studentService.getStudents();
+      const students = await studentService.getStudents(teacherId);
       const scheduledFor = this.getNextSendDate(settings.send_day, settings.send_time);
 
       // Ensure students is an array before using for...of
@@ -222,7 +222,9 @@ export const automatedEmailService = {
     ]);
 
     const student = await studentService.getStudentById(studentId);
-    const performance = student?.performance;
+    const performance = Array.isArray(student?.student_performance) && student.student_performance.length > 0 
+      ? student.student_performance[0] 
+      : null;
 
     return {
       recent_assessments: Array.isArray(assessments) ? assessments.slice(0, 5) : [],

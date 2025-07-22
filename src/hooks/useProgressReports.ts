@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { studentService } from '@/services/student-service';
+import { useStudents } from '@/hooks/useStudents';
 import { communicationsService } from '@/services/communications-service';
 import { ProgressReportData } from '@/types/communications';
 
@@ -29,7 +29,7 @@ export const useProgressReports = () => {
     timeframe: 'last-month'
   });
 
-  // Fetch students
+  // Fetch students  
   const { data: students = [], isLoading: studentsLoading } = useStudents();
 
   // Fetch generated reports

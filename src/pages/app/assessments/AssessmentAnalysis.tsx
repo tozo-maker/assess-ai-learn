@@ -2,12 +2,12 @@
 import React, { useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useStudents } from '@/hooks/useStudents';
 import { ChevronLeft, Users, ArrowLeft } from 'lucide-react';
 
 import AppLayout from '@/components/layout/AppLayout';
 import Breadcrumbs from '@/components/navigation/Breadcrumbs';
 import AssessmentAnalysisDisplay from '@/components/assessments/AssessmentAnalysisDisplay';
-import { studentService } from '@/services/student-service';
 import { assessmentService } from '@/services/assessment-service';
 
 // Design System Components
@@ -39,10 +39,7 @@ const AssessmentAnalysis: React.FC = () => {
   });
 
   // Fetch students for the teacher
-  const { data: students, isLoading: isLoadingStudents } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents,
-  });
+  const { data: students, isLoading: isLoadingStudents } = useStudents();
 
   const handleStudentChange = (studentId: string) => {
     if (studentId === 'no-students') return; // Ignore placeholder selection

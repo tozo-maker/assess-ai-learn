@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import ProgressReportViewer from '@/components/communications/ProgressReportViewer';
-import { studentService } from '@/services/student-service';
+import { useStudents } from '@/hooks/useStudents';
 import { communicationsService } from '@/services/communications-service';
 import { CommunicationFormData } from '@/types/communications';
 import BulkEmailDialog from '@/components/communications/BulkEmailDialog';
@@ -26,10 +26,7 @@ const ParentReports = () => {
   const [reportData, setReportData] = useState(null);
   const [showBulkEmailDialog, setShowBulkEmailDialog] = useState(false);
 
-  const { data: students = [] } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents
-  });
+  const { data: students = [] } = useStudents();
 
   const { data: communications = [] } = useQuery({
     queryKey: ['communications'],

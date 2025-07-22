@@ -2,6 +2,13 @@
 import { useStudents } from '@/hooks/useStudents';
 
 export const useStudentsData = () => {
-  return useStudents();
+  const { data: students, isLoading, error, refetch } = useStudents();
+  
+  return {
+    students,
+    isLoading,
+    error,
+    refetch
+  };
 };
 
