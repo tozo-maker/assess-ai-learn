@@ -14,10 +14,10 @@ const PublicHeader: React.FC = () => {
         </Link>
 
         <div className="flex items-center gap-4">
-          <Link to="/login">
+          <Link to="/auth/login">
             <Button variant="ghost">Sign In</Button>
           </Link>
-          <Link to="/signup">
+          <Link to="/auth/signup">
             <Button>Get Started</Button>
           </Link>
         </div>

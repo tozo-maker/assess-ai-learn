@@ -46,6 +46,8 @@ export const AppRoutes = () => {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
+      <Route path="/login" element={<Navigate to="/auth/login" replace />} />
+      <Route path="/signup" element={<Navigate to="/auth/signup" replace />} />
       <Route path="/auth/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/auth/signup" element={<PublicRoute><SignupPage /></PublicRoute>} />
       <Route path="/auth/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />

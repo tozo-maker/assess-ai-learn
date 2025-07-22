@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,10 +50,10 @@ const LandingPage = () => {
         </div>
 
         <div className="space-x-4">
-          <Link to="/register">
+          <Link to="/auth/signup">
             <Button size="lg">Get Started</Button>
           </Link>
-          <Link to="/login">
+          <Link to="/auth/login">
             <Button variant="outline" size="lg">Sign In</Button>
           </Link>
         </div>

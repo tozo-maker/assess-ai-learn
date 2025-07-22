@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { Mail, Lock } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { productionLogger } from '@/services/production-logger';
 import {
   Form,
@@ -141,7 +141,7 @@ const Login = () => {
                   <div className="text-center">
                     <p className="text-sm text-gray-600">
                       Don't have an account?{' '}
-                      <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+                      <Link to="/auth/signup" className="text-blue-600 hover:text-blue-700 font-medium">
                         Create one now
                       </Link>
                     </p>
