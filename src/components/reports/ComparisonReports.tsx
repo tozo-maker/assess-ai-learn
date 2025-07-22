@@ -22,7 +22,7 @@ import {
   ScatterChart,
   Scatter
 } from 'recharts';
-import { Users, TrendingUp, Award, Compare } from 'lucide-react';
+import { Users, TrendingUp, Award, BarChart3 } from 'lucide-react';
 
 interface ComparisonData {
   name: string;
@@ -97,7 +97,7 @@ const ComparisonReports: React.FC<ComparisonReportsProps> = ({
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold flex items-center">
-            <Compare className="h-6 w-6 mr-2" />
+            <BarChart3 className="h-6 w-6 mr-2" />
             {title}
           </h2>
           <p className="text-gray-600">
