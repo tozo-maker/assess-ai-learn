@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { SimpleAuthProvider } from "@/contexts/SimpleAuthContext";
 import { FontLoadingWrapper, FontPreloader } from "@/components/ui/font-loading";
 import { PerformanceMonitor } from "@/components/ui/performance-monitor";
 import { useComponentPerformance } from "@/components/ui/performance-monitor";
@@ -25,7 +25,7 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+      <SimpleAuthProvider>
         <AccessibilityProvider>
           <FontLoadingWrapper>
             <PerformanceMonitor>
@@ -40,7 +40,7 @@ const App = () => {
             </PerformanceMonitor>
           </FontLoadingWrapper>
         </AccessibilityProvider>
-      </AuthProvider>
+      </SimpleAuthProvider>
     </QueryClientProvider>
   );
 };
