@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState } from 'react';
-import { validationService } from '@/services/validation-service';
+import { enhancedValidationService } from '@/services/enhanced-validation-service';
 
 interface ValidationError {
   field: string;
@@ -34,7 +34,8 @@ export const ValidationProvider: React.FC<ValidationProviderProps> = ({ children
 
   const validateField = (field: string, value: any, rules: any): boolean => {
     try {
-      const isValid = validationService.validateField(field, value, rules);
+      const error = enhancedValidationService.validateField(field, value, 'student');
+      const isValid = !error;
       
       if (isValid) {
         // Remove any existing errors for this field
@@ -60,7 +61,8 @@ export const ValidationProvider: React.FC<ValidationProviderProps> = ({ children
 
   const validateForm = (data: any, schema: any): boolean => {
     try {
-      const isValid = validationService.validateObject(data, schema);
+      const result = enhancedValidationService.validateObject(data, 'student');
+      const isValid = result.isValid;
       if (isValid) {
         setErrors([]);
       }

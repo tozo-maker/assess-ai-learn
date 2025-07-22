@@ -104,6 +104,92 @@ class EnhancedValidationService {
     };
   }
 
+  validateField(field: string, value: any, schemaType: 'student' | 'assessment' | 'goal'): string | null {
+    let schema: ValidationSchema;
+    
+    switch (schemaType) {
+      case 'student':
+        schema = this.getStudentFormSchema();
+        break;
+      case 'assessment':
+        schema = this.getAssessmentFormSchema();
+        break;
+      case 'goal':
+        schema = this.getGoalFormSchema();
+        break;
+      default:
+        return 'Invalid schema type';
+    }
+
+    const rules = schema[field];
+    if (!rules) return null;
+
+    // Required validation
+    if (rules.required && (value === undefined || value === null || value === '')) {
+      return `${field.replace('_', ' ')} is required`;
+    }
+
+    // Skip other validations if field is empty and not required
+    if (!value && !rules.required) return null;
+
+    // Length validations
+    if (rules.minLength && value.length < rules.minLength) {
+      return `${field.replace('_', ' ')} must be at least ${rules.minLength} characters`;
+    }
+
+    if (rules.maxLength && value.length > rules.maxLength) {
+      return `${field.replace('_', ' ')} must be no more than ${rules.maxLength} characters`;
+    }
+
+    // Pattern validation
+    if (rules.pattern && !rules.pattern.test(value)) {
+      return `${field.replace('_', ' ')} format is invalid`;
+    }
+
+    // Custom validation
+    if (rules.custom) {
+      const customResult = rules.custom(value);
+      if (typeof customResult === 'string') {
+        return customResult;
+      } else if (!customResult) {
+        return `${field.replace('_', ' ')} is invalid`;
+      }
+    }
+
+    return null;
+  }
+
+  validateObject(data: any, schemaType: 'student' | 'assessment' | 'goal'): { isValid: boolean; errors: Record<string, string> } {
+    const errors: Record<string, string> = {};
+    let isValid = true;
+
+    let schema: ValidationSchema;
+    
+    switch (schemaType) {
+      case 'student':
+        schema = this.getStudentFormSchema();
+        break;
+      case 'assessment':
+        schema = this.getAssessmentFormSchema();
+        break;
+      case 'goal':
+        schema = this.getGoalFormSchema();
+        break;
+      default:
+        return { isValid: false, errors: { form: 'Invalid schema type' } };
+    }
+
+    for (const field of Object.keys(schema)) {
+      const error = this.validateField(field, data[field], schemaType);
+      if (error) {
+        errors[field] = error;
+        isValid = false;
+      }
+    }
+
+    return { isValid, errors };
+  }
+
   validateForm(data: any, schemaType: 'student' | 'assessment' | 'goal'): { isValid: boolean; errors: Record<string, string> } {
     let schema: ValidationSchema;
     
