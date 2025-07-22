@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { optimizedDashboardService } from '@/services/dashboard/optimized-dashboard-service';
 import { dashboardPerformanceService } from '@/services/dashboard-performance-service';
 
