@@ -15,7 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { errorTypeOptions, ErrorType } from '@/types/assessment';
 import { useToast } from '@/hooks/use-toast';
 import { assessmentService } from '@/services/assessment-service';
-import { studentService } from '@/services/student-service';
+import { useStudents } from '@/hooks/useStudents';
 import { Student } from '@/types/student';
 import { Separator } from '@/components/ui/separator';
 
@@ -63,10 +63,7 @@ const StudentResponseForm: React.FC<StudentResponseFormProps> = ({
   });
 
   // Fetch students for the teacher
-  const { data: students, isLoading: isLoadingStudents } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents,
-  });
+  const { data: students, isLoading: isLoadingStudents } = useStudents();
 
   // Setup form with default values
   const form = useForm<ResponseFormValues>({

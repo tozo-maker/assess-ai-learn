@@ -1,11 +1,10 @@
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import StandardLoadingState from '@/components/common/StandardLoadingState';
 import StudentSelectionCard from './StudentSelectionCard';
 import ReportOptionsCard from './ReportOptionsCard';
 import ReportGenerationActions from './ReportGenerationActions';
-import { studentService } from '@/services/student-service';
+import { useStudents } from '@/hooks/useStudents';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -27,10 +26,7 @@ const ProgressReportGenerator: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
-  const { data: students, isLoading } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents,
-  });
+  const { data: students, isLoading } = useStudents();
 
   const handleStudentSelection = (studentId: string, checked: boolean) => {
     if (checked) {

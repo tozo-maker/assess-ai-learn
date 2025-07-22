@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { assessmentService } from '@/services/assessment-service';
-import { studentService } from '@/services/student-service';
+import { useStudents } from '@/hooks/useStudents';
 import { useToast } from '@/hooks/use-toast';
 import {
   DSCard,
@@ -48,10 +48,7 @@ const AssessmentResponseManagement: React.FC<AssessmentResponseManagementProps> 
     queryFn: () => assessmentService.getAssessmentById(assessmentId),
   });
 
-  const { data: students } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents,
-  });
+  const { data: students } = useStudents();
 
   const { data: responses, isLoading } = useQuery({
     queryKey: ['student-responses', assessmentId],

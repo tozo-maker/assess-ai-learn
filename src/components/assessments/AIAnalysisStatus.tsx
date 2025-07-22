@@ -52,23 +52,10 @@ const AIAnalysisStatus: React.FC<AIAnalysisStatusProps> = ({
   }
 
   const getStatusBadge = () => {
-    if (analysis.status === 'completed') {
-      return <Badge variant="default" className="flex items-center gap-1">
-        <Brain className="h-3 w-3" />
-        Analysis Complete
-      </Badge>;
-    }
-    
-    if (analysis.status === 'processing') {
-      return <Badge variant="secondary" className="flex items-center gap-1">
-        <Clock className="h-3 w-3 animate-spin" />
-        Processing...
-      </Badge>;
-    }
-
-    return <Badge variant="outline" className="flex items-center gap-1">
-      <AlertCircle className="h-3 w-3" />
-      {analysis.status || 'Unknown'}
+    // Analysis exists, so it's completed
+    return <Badge variant="default" className="flex items-center gap-1">
+      <Brain className="h-3 w-3" />
+      Analysis Complete
     </Badge>;
   };
 
@@ -81,15 +68,12 @@ const AIAnalysisStatus: React.FC<AIAnalysisStatusProps> = ({
             {getStatusBadge()}
           </div>
           <p className="text-sm text-gray-600">
-            {analysis.status === 'completed' && analysis.insights_count && 
-              `${analysis.insights_count} insights generated`}
-            {analysis.status === 'processing' && 'AI is analyzing the assessment...'}
-            {analysis.status === 'failed' && 'Analysis failed - please try again'}
+            {analysis.strengths?.length || 0} insights generated
           </p>
         </div>
       </div>
       
-      {analysis.status === 'completed' && onViewAnalysis && (
+      {analysis && onViewAnalysis && (
         <Button
           variant="outline"
           size="sm"

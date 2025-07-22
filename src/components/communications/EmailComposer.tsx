@@ -9,8 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useStudents } from '@/hooks/useStudents';
 import { Mail, Send, Users } from 'lucide-react';
-import { studentService } from '@/services/student-service';
 import { emailService } from '@/services/email-service';
 
 interface EmailComposerProps {
@@ -30,10 +30,7 @@ const EmailComposer: React.FC<EmailComposerProps> = ({
   const [emailType, setEmailType] = useState<EmailType>(templateType);
   const { toast } = useToast();
 
-  const { data: students = [], isLoading } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents,
-  });
+  const { data: students = [], isLoading } = useStudents();
 
   const sendEmailMutation = useMutation({
     mutationFn: async () => {

@@ -1,13 +1,12 @@
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useStudents } from '@/hooks/useStudents';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Users, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
 import { skillsService } from '@/services/skills-service';
-import { studentService } from '@/services/student-service';
 import { useAuth } from '@/contexts/AuthContext';
 
 const ClassSkillsOverview = () => {
@@ -16,11 +15,7 @@ const ClassSkillsOverview = () => {
   const [selectedGradeLevel, setSelectedGradeLevel] = useState('');
 
   // Fetch students for class overview
-  const { data: students } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents,
-    enabled: !!user,
-  });
+  const { data: students } = useStudents();
 
   // Mock data for skills overview - in real implementation, this would come from the database
   const classSkillsData = [
