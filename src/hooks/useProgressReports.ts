@@ -30,10 +30,7 @@ export const useProgressReports = () => {
   });
 
   // Fetch students
-  const { data: students = [], isLoading: studentsLoading } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents
-  });
+  const { data: students = [], isLoading: studentsLoading } = useStudents();
 
   // Fetch generated reports
   const { data: reports = [] } = useQuery({

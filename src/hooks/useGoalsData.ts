@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
+import { useStudents } from '@/hooks/useStudents';
 import { goalService } from '@/services/goal-service';
-import { studentService } from '@/services/student-service';
 
 // Export types from the appropriate modules
 export type { Goal, GoalFilters } from '@/types/goals';
@@ -23,11 +23,7 @@ export const useGoalsData = () => {
     isLoading: studentsLoading,
     error: studentsError,
     refetch: refetchStudents
-  } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents,
-    staleTime: 5 * 60 * 1000,
-  });
+  } = useStudents();
 
   const isLoading = goalsLoading || studentsLoading;
   const error = goalsError || studentsError;

@@ -57,7 +57,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ data }) => {
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Welcome back, {data.teacher.full_name}!
+            Welcome back, {data.teacher?.full_name || 'Teacher'}!
           </h1>
           <p className="text-gray-600">
             Here's your class overview and recent insights.

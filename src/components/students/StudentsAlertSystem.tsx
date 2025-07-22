@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useStudents } from '@/hooks/useStudents';
 import { AlertCircle, Eye, Mail, TrendingDown, Clock, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   DSCard,
@@ -14,7 +14,6 @@ import {
   DSStatusBadge
 } from '@/components/ui/design-system';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { studentService } from '@/services/student-service';
 import { StudentWithPerformance } from '@/types/student';
 
 interface AlertProps {
@@ -118,16 +117,16 @@ const AlertCard: React.FC<AlertProps> = ({
 export const StudentsAlertSystem: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   
-  const { data: students = [] } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents,
-  });
+  const { data: students = [] } = useStudents();
 
   const generateAlerts = () => {
     const alerts: Array<AlertProps> = [];
 
     students.forEach(student => {
-      const performance = Array.isArray(student.performance) ? null : student.performance;
+      // Check if student_performance array exists and normalize it
+      const performance = Array.isArray(student.student_performance) && student.student_performance.length > 0 
+        ? student.student_performance[0] 
+        : null;
       
       // High priority: Students needing immediate attention
       if (performance?.needs_attention) {

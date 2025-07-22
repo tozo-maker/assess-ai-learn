@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useStudents } from '@/hooks/useStudents';
 import { TrendingUp, TrendingDown, Users, AlertCircle, BookOpen, Calendar } from 'lucide-react';
 import {
   DSCard,
@@ -119,34 +119,31 @@ const MetricCard: React.FC<MetricCardProps> = ({
 };
 
 export const StudentsOverviewMetrics: React.FC = () => {
-  const { data: students = [] } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents,
-  });
+  const { data: students = [] } = useStudents();
 
   // Calculate enhanced metrics
   const totalStudents = students.length;
   
   const studentsWithPerformance = students.filter(student => 
-    student.performance && !Array.isArray(student.performance)
+    Array.isArray(student.student_performance) && student.student_performance.length > 0
   );
   
   const averageScore = studentsWithPerformance.length > 0
     ? Math.round(
         studentsWithPerformance.reduce((sum, student) => {
-          const performance = Array.isArray(student.performance) ? null : student.performance;
+          const performance = student.student_performance[0];
           return sum + (performance?.average_score || 0);
         }, 0) / studentsWithPerformance.length
       )
     : 0;
 
-  const studentsNeedingAttention = students.filter(student => {
-    const performance = Array.isArray(student.performance) ? null : student.performance;
+  const studentsNeedingAttention = studentsWithPerformance.filter(student => {
+    const performance = student.student_performance[0];
     return performance?.needs_attention;
   }).length;
 
   const recentAssessments = studentsWithPerformance.reduce((total, student) => {
-    const performance = Array.isArray(student.performance) ? null : student.performance;
+    const performance = student.student_performance[0];
     return total + (performance?.assessment_count || 0);
   }, 0);
 
