@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { PublicRoute, ProtectedRoute } from './RouteGuards';
@@ -19,6 +20,9 @@ import AddStudentPage from '@/pages/app/students/AddStudent';
 import StudentDetailsPage from '@/pages/app/students/StudentProfile';
 import StudentAssessments from '@/pages/app/students/StudentAssessments';
 import ImportStudentsPage from '@/pages/app/students/ImportStudents';
+
+// Classes pages
+import ClassesPage from '@/pages/app/classes/Classes';
 
 // Assessment pages
 import AssessmentsPage from '@/pages/app/assessments/Assessments';
@@ -63,6 +67,9 @@ export const AppRoutes = () => {
         <Route path="students/import" element={<ImportStudentsPage />} />
         <Route path="students/:id" element={<StudentDetailsPage />} />
         <Route path="students/:id/assessments" element={<StudentAssessments />} />
+        
+        {/* Classes Routes */}
+        <Route path="classes" element={<ClassesPage />} />
         
         {/* Assessment Routes */}
         <Route path="assessments" element={<AssessmentsPage />} />
