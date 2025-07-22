@@ -1,297 +1,294 @@
+
 import React from 'react';
-import EnhancedWelcomeSection from './EnhancedWelcomeSection';
-import EnhancedAlertCard from './EnhancedAlertCard';
-import EnhancedMetricCardWithTrends from './EnhancedMetricCardWithTrends';
-import QuickActionsPanel from './QuickActionsPanel';
-import DashboardLayout from './DashboardLayout';
-import {
-  LazyWrapper,
-  LazyContainer,
-  LazyActivityFeedEnhanced,
-  LazyRecentInsightsEnhanced,
-  LazySecondaryWidgetsEnhanced
-} from '@/components/common/LazyComponentsEnhanced';
-import {
-  DSContentGrid,
-  DSGridItem
-} from '@/components/ui/design-system';
-import { Users, FileText, Brain, TrendingUp, AlertTriangle, Target } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { enhancedDashboardMetricsService } from '@/services/enhanced-dashboard-metrics';
+import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { 
+  Users, 
+  BookOpen, 
+  TrendingUp, 
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Target
+} from 'lucide-react';
+import { DashboardData } from '@/types/comprehensive';
+import EnhancedErrorBoundary from '@/components/dashboard/EnhancedErrorBoundary';
 
 interface DashboardContentProps {
-  data: {
-    students: any[];
-    assessments: any[];
-    summary: {
-      totalStudents: number;
-      totalAssessments: number;
-      averageScore: number;
-      studentsNeedingAttention: number;
-    };
-    teacher: {
-      full_name?: string;
-      firstName?: string;
-    };
-  };
+  data: DashboardData;
 }
 
-// Component to handle the new layout structure
-const ActivityAndInsightsWrapper: React.FC<{
-  renderActivityOnly?: boolean;
-  renderInsightsOnly?: boolean;
-  recentAssessments: number;
-  totalStudents: number;
-  studentsNeedingAttention: number;
-  students: any[];
-}> = ({ 
-  renderActivityOnly, 
-  renderInsightsOnly, 
-  recentAssessments, 
-  totalStudents, 
-  studentsNeedingAttention,
-  students 
-}) => {
-  if (renderActivityOnly) {
-    return (
-      <LazyContainer>
-        <LazyWrapper>
-          <LazyActivityFeedEnhanced 
-            recentAssessments={recentAssessments}
-            totalStudents={totalStudents}
-            studentsNeedingAttention={studentsNeedingAttention}
-          />
-        </LazyWrapper>
-      </LazyContainer>
-    );
-  }
-  
-  if (renderInsightsOnly) {
-    return (
-      <LazyContainer>
-        <LazyWrapper>
-          <LazyRecentInsightsEnhanced 
-            students={students}
-            communications={[]}
-          />
-        </LazyWrapper>
-      </LazyContainer>
-    );
-  }
-
-  // Fallback for backward compatibility
-  return (
-    <DSContentGrid cols={3}>
-      <DSGridItem span={2}>
-        <LazyContainer>
-          <LazyWrapper>
-            <LazyActivityFeedEnhanced 
-              recentAssessments={recentAssessments}
-              totalStudents={totalStudents}
-              studentsNeedingAttention={studentsNeedingAttention}
-            />
-          </LazyWrapper>
-        </LazyContainer>
-      </DSGridItem>
-      
-      <DSGridItem span={1}>
-        <LazyContainer>
-          <LazyWrapper>
-            <LazyRecentInsightsEnhanced 
-              students={students}
-              communications={[]}
-            />
-          </LazyWrapper>
-        </LazyContainer>
-      </DSGridItem>
-    </DSContentGrid>
-  );
-};
-
 const DashboardContent: React.FC<DashboardContentProps> = ({ data }) => {
-  const { students, assessments, summary, teacher } = data;
-  
-  // Production-ready dashboard content rendering
+  const { user } = useAuth();
 
-  // Generate sample sparkline data for trends
-  const generateSparklineData = (baseValue: number, trend: 'up' | 'down' | 'stable') => {
-    const data = [];
-    for (let i = 0; i < 7; i++) {
-      if (trend === 'up') {
-        data.push(baseValue + Math.random() * 10 + i * 2);
-      } else if (trend === 'down') {
-        data.push(baseValue - Math.random() * 5 - i);
-      } else {
-        data.push(baseValue + (Math.random() - 0.5) * 5);
-      }
+  // Fetch enhanced metrics
+  const { data: enhancedMetrics } = useQuery({
+    queryKey: ['enhanced-dashboard-metrics', user?.id],
+    queryFn: () => enhancedDashboardMetricsService.calculateEnhancedMetrics(user!.id),
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const getPerformanceTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'improving': return <TrendingUp className="h-4 w-4 text-green-600" />;
+      case 'declining': return <TrendingUp className="h-4 w-4 text-red-600 rotate-180" />;
+      default: return <Target className="h-4 w-4 text-gray-600" />;
     }
-    return data;
   };
 
-  // Generate alerts from summary
-  const alerts = [];
-  if (summary.studentsNeedingAttention > 0) {
-    alerts.push({
-      id: 'performance-alert',
-      type: 'performance' as const,
-      title: 'Students Need Attention',
-      description: `${summary.studentsNeedingAttention} students are showing declining performance and may need additional support.`,
-      severity: summary.studentsNeedingAttention > summary.totalStudents * 0.3 ? 'high' as const : 'medium' as const,
-      actionUrl: '/app/students?filter=needs-attention',
-      studentCount: summary.studentsNeedingAttention
-    });
-  }
-
-  // Prepare enhanced metrics with trends and progress
-  const enhancedMetrics = [
-    {
-      title: 'Total Students',
-      value: summary.totalStudents,
-      icon: <Users className="h-5 w-5" />,
-      trend: {
-        value: 'Active this month',
-        direction: 'neutral' as const,
-        isPositive: true
-      },
-      priority: 'low' as const,
-      sparklineData: generateSparklineData(summary.totalStudents, 'stable')
-    },
-    {
-      title: 'Class Performance',
-      value: summary.averageScore > 0 ? `${Math.round(summary.averageScore)}%` : 'No data',
-      icon: <Target className="h-5 w-5" />,
-      trend: {
-        value: summary.averageScore >= 75 ? 'Above target' : summary.averageScore >= 60 ? 'On track' : 'Below target',
-        direction: summary.averageScore >= 75 ? 'up' as const : summary.averageScore >= 60 ? 'neutral' as const : 'down' as const,
-        percentage: summary.averageScore > 0 ? Math.round((summary.averageScore - 70)) : 0,
-        isPositive: summary.averageScore >= 75
-      },
-      priority: summary.averageScore < 60 ? 'high' as const : 'low' as const,
-      progress: summary.averageScore,
-      target: 100,
-      sparklineData: generateSparklineData(summary.averageScore, summary.averageScore >= 75 ? 'up' : 'stable')
-    },
-    {
-      title: 'Total Assessments',
-      value: summary.totalAssessments,
-      icon: <FileText className="h-5 w-5" />,
-      trend: {
-        value: summary.totalAssessments > 0 ? 'Available' : 'No assessments',
-        direction: summary.totalAssessments > 0 ? 'up' as const : 'neutral' as const,
-        percentage: summary.totalAssessments > 0 ? 15 : 0,
-        isPositive: summary.totalAssessments > 0
-      },
-      priority: summary.totalAssessments === 0 ? 'medium' as const : 'low' as const,
-      sparklineData: generateSparklineData(summary.totalAssessments, 'up')
-    },
-    {
-      title: 'AI Insights Generated',
-      value: Math.floor(summary.totalAssessments * 0.3),
-      icon: <Brain className="h-5 w-5" />,
-      trend: {
-        value: 'Ready for review',
-        direction: 'up' as const,
-        percentage: 12,
-        isPositive: true
-      },
-      priority: 'low' as const,
-      progress: 75,
-      sparklineData: generateSparklineData(Math.floor(summary.totalAssessments * 0.3), 'up')
-    },
-    {
-      title: 'Students Needing Attention',
-      value: summary.studentsNeedingAttention,
-      icon: <AlertTriangle className="h-5 w-5" />,
-      trend: {
-        value: summary.studentsNeedingAttention > 0 ? 'Requires action' : 'All on track',
-        direction: summary.studentsNeedingAttention > 0 ? 'down' as const : 'up' as const,
-        percentage: summary.studentsNeedingAttention > 0 ? -8 : 0,
-        isPositive: summary.studentsNeedingAttention === 0
-      },
-      priority: summary.studentsNeedingAttention > 0 ? 'high' as const : 'low' as const,
-      sparklineData: generateSparklineData(summary.studentsNeedingAttention, 'down')
-    },
-    {
-      title: 'High Performers',
-      value: students.filter(s => s.student_performance?.[0]?.average_score > summary.averageScore).length,
-      icon: <TrendingUp className="h-5 w-5" />,
-      trend: {
-        value: 'Excelling students',
-        direction: 'up' as const,
-        percentage: 5,
-        isPositive: true
-      },
-      priority: 'low' as const,
-      progress: 65,
-      sparklineData: generateSparklineData(students.filter(s => s.student_performance?.[0]?.average_score > summary.averageScore).length, 'up')
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'high': return 'destructive';
+      case 'medium': return 'secondary';
+      case 'low': return 'outline';
+      default: return 'secondary';
     }
-  ];
-
-  const welcomeSection = (
-    <EnhancedWelcomeSection 
-      teacher={teacher} 
-      metrics={{
-        totalStudents: summary.totalStudents,
-        recentAssessments: summary.totalAssessments
-      }}
-    />
-  );
-
-  const alertsSection = alerts.length > 0 ? <EnhancedAlertCard alerts={alerts} /> : null;
-
-  const quickActions = (
-    <QuickActionsPanel 
-      metrics={{
-        totalStudents: summary.totalStudents,
-        recentAssessments: summary.totalAssessments,
-        pendingGoals: Math.floor(students.length * 0.3)
-      }}
-    />
-  );
-
-  const metricsOverview = (
-    <DSContentGrid cols={2}>
-      {enhancedMetrics.map((metric, index) => (
-        <DSGridItem key={index} span={1}>
-          <EnhancedMetricCardWithTrends {...metric} />
-        </DSGridItem>
-      ))}
-    </DSContentGrid>
-  );
-
-  const activityAndInsights = (
-    <ActivityAndInsightsWrapper
-      recentAssessments={summary.totalAssessments}
-      totalStudents={summary.totalStudents}
-      studentsNeedingAttention={summary.studentsNeedingAttention}
-      students={students}
-    />
-  );
-
-  const additionalTools = (
-    <LazyContainer>
-      <LazyWrapper>
-        <LazySecondaryWidgetsEnhanced 
-          assessments={assessments}
-          students={students}
-          metrics={{
-            averagePerformance: summary.averageScore > 0 
-              ? `${Math.round(summary.averageScore)}%` 
-              : 'No data',
-            studentsNeedingAttention: summary.studentsNeedingAttention
-          }}
-        />
-      </LazyWrapper>
-    </LazyContainer>
-  );
+  };
 
   return (
-    <DashboardLayout
-      welcomeSection={welcomeSection}
-      alertsSection={alertsSection}
-      quickActions={quickActions}
-      metricsOverview={metricsOverview}
-      activityAndInsights={activityAndInsights}
-      additionalTools={additionalTools}
-    />
+    <EnhancedErrorBoundary componentName="DashboardContent">
+      <div className="space-y-8">
+        {/* Welcome Section */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Welcome back, {data.teacher.firstName}!
+          </h1>
+          <p className="text-gray-600">
+            Here's your class overview and recent insights.
+          </p>
+        </div>
+
+        {/* Enhanced Overview Metrics */}
+        {enhancedMetrics && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Students</p>
+                    <p className="text-3xl font-bold">{enhancedMetrics.overview.totalStudents}</p>
+                  </div>
+                  <Users className="h-8 w-8 text-blue-600" />
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                  {getPerformanceTrendIcon(enhancedMetrics.overview.performanceTrend)}
+                  <span className="text-sm text-gray-600 capitalize">
+                    {enhancedMetrics.overview.performanceTrend}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Assessments</p>
+                    <p className="text-3xl font-bold">{enhancedMetrics.overview.totalAssessments}</p>
+                  </div>
+                  <BookOpen className="h-8 w-8 text-green-600" />
+                </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  {enhancedMetrics.overview.completedAssessments} completed
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Average Score</p>
+                    <p className="text-3xl font-bold">{enhancedMetrics.overview.averageScore}%</p>
+                  </div>
+                  <Target className="h-8 w-8 text-purple-600" />
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                  {getPerformanceTrendIcon(enhancedMetrics.overview.performanceTrend)}
+                  <span className="text-sm text-gray-600">
+                    Class performance
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">AI Analyses</p>
+                    <p className="text-3xl font-bold">{enhancedMetrics.overview.totalAnalyses}</p>
+                  </div>
+                  <CheckCircle className="h-8 w-8 text-indigo-600" />
+                </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  Generated insights
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Performance Distribution */}
+        {enhancedMetrics && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {enhancedMetrics.performance.performanceDistribution.map((level, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{level.level}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full"
+                            style={{ width: `${level.percentage}%` }}
+                          />
+                        </div>
+                        <span className="text-sm text-gray-600">
+                          {level.count} ({Math.round(level.percentage)}%)
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Insights</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {enhancedMetrics.insights.topStrengths.slice(0, 3).map((strength, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-green-50 rounded">
+                      <span className="text-sm text-green-800">{strength.strength}</span>
+                      <Badge variant="secondary">{strength.frequency} students</Badge>
+                    </div>
+                  ))}
+                  {enhancedMetrics.insights.commonGrowthAreas.slice(0, 2).map((area, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-amber-50 rounded">
+                      <span className="text-sm text-amber-800">{area.area}</span>
+                      <Badge variant="outline">{area.frequency} students</Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Smart Alerts */}
+        {enhancedMetrics && enhancedMetrics.alerts.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Smart Alerts
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {enhancedMetrics.alerts.map((alert) => (
+                  <div key={alert.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-medium">{alert.title}</h4>
+                        <Badge variant={getSeverityColor(alert.severity) as any}>
+                          {alert.severity}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600">{alert.description}</p>
+                      {alert.studentCount && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Affects {alert.studentCount} students
+                        </p>
+                      )}
+                    </div>
+                    <Link to={alert.actionUrl}>
+                      <Button variant="outline" size="sm">
+                        View Details
+                      </Button>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Recommendations */}
+        {enhancedMetrics && enhancedMetrics.recommendations.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Recommendations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {enhancedMetrics.recommendations.map((rec, index) => (
+                  <div key={index} className="p-4 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium">{rec.title}</h4>
+                      <Badge variant={getSeverityColor(rec.priority) as any}>
+                        {rec.priority} priority
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-3">{rec.description}</p>
+                    <div className="space-y-1">
+                      {rec.actionItems.map((action, actionIndex) => (
+                        <div key={actionIndex} className="flex items-center gap-2 text-sm">
+                          <div className="w-1 h-1 bg-blue-600 rounded-full" />
+                          <span>{action}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Link to="/app/assessments/add" className="block">
+                <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
+                  <BookOpen className="h-6 w-6" />
+                  Create Assessment
+                </Button>
+              </Link>
+              <Link to="/app/students/add" className="block">
+                <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
+                  <Users className="h-6 w-6" />
+                  Add Student
+                </Button>
+              </Link>
+              <Link to="/app/insights/class" className="block">
+                <Button variant="outline" className="w-full h-20 flex flex-col gap-2">
+                  <TrendingUp className="h-6 w-6" />
+                  View Insights
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </EnhancedErrorBoundary>
   );
 };
 
