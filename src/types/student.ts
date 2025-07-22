@@ -26,6 +26,7 @@ export interface Student {
   parent_name?: string;
   parent_email?: string;
   parent_phone?: string;
+  learning_style?: 'visual' | 'auditory' | 'kinesthetic' | 'reading';
   created_at: string;
   updated_at: string;
 }

@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { dataService } from '@/services/data-service';
+import { studentService } from '@/services/student-service';
 import ValidatedStudentForm from '@/components/forms/ValidatedStudentForm';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
@@ -16,7 +16,7 @@ const AddStudent: React.FC = () => {
   const queryClient = useQueryClient();
 
   const createStudentMutation = useMutation({
-    mutationFn: dataService.createStudent,
+    mutationFn: studentService.createStudent,
     onSuccess: (student) => {
       toast({
         title: "Student Added Successfully",
@@ -55,7 +55,18 @@ const AddStudent: React.FC = () => {
         {/* Form */}
         <div className="max-w-2xl">
           <ValidatedStudentForm
-            onSubmit={(data) => createStudentMutation.mutate(data)}
+            onSubmit={(formData) => {
+              // Transform form data to student data
+              const studentData = {
+                first_name: formData.first_name || '',
+                last_name: formData.last_name || '',
+                grade_level: formData.grade_level || 'kindergarten',
+                learning_style: formData.learning_style,
+                special_considerations: formData.special_considerations,
+                email: formData.email,
+              };
+              createStudentMutation.mutate(studentData);
+            }}
             isLoading={createStudentMutation.isPending}
           />
         </div>
