@@ -23,13 +23,15 @@ const Assessments: React.FC = () => {
     },
     enabled: !!user?.id,
     retry: 2,
-    onError: (error: Error) => {
-      console.error('Failed to fetch assessments:', error);
-      toast({
-        variant: "destructive",
-        title: "Error loading assessments",
-        description: error.message || "Please try again later.",
-      });
+    meta: {
+      onError: (error: Error) => {
+        console.error('Failed to fetch assessments:', error);
+        toast({
+          variant: "destructive",
+          title: "Error loading assessments",
+          description: error.message || "Please try again later.",
+        });
+      }
     }
   });
 

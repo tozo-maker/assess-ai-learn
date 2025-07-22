@@ -14,6 +14,7 @@ interface PageAction {
 interface StandardPageLayoutProps {
   title: string;
   description?: string;
+  subtitle?: string;
   badge?: {
     text: string;
     variant?: 'default' | 'secondary' | 'destructive' | 'outline';
@@ -28,6 +29,7 @@ interface StandardPageLayoutProps {
 const StandardPageLayout: React.FC<StandardPageLayoutProps> = ({
   title,
   description,
+  subtitle,
   badge,
   actions,
   children,
@@ -49,6 +51,9 @@ const StandardPageLayout: React.FC<StandardPageLayoutProps> = ({
           </div>
           {description && (
             <p className="text-lg text-muted-foreground">{description}</p>
+          )}
+          {subtitle && (
+            <p className="text-lg text-muted-foreground">{subtitle}</p>
           )}
         </div>
         

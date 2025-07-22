@@ -28,8 +28,10 @@ const Dashboard: React.FC = () => {
     staleTime: 2 * 60 * 1000, // 2 minutes
     retry: 2,
     refetchOnWindowFocus: false,
-    onError: (error) => {
-      console.error('Dashboard query error:', error);
+    meta: {
+      onError: (error) => {
+        console.error('Dashboard query error:', error);
+      }
     }
   });
 

@@ -5,29 +5,7 @@ import { assessmentService } from './assessment-service';
 import { skillsService } from './skills-service';
 import { goalService } from './goal-service';
 
-export interface DashboardData {
-  teacher: any;
-  students: any[];
-  assessments: any[];
-  goals: any[];
-  notifications: any[];
-  metrics: {
-    totalStudents: number;
-    totalAssessments: number;
-    studentsNeedingAttention: number;
-    averagePerformance: number;
-    recentAssessments: number;
-    activeGoalsCount: number;
-    completedGoals: number;
-    unreadNotifications: number;
-    performanceDistribution: {
-      excellent: number;
-      good: number;
-      satisfactory: number;
-      needsImprovement: number;
-    };
-  };
-}
+import { DashboardData } from '@/types/comprehensive';
 
 export const dataService = {
   async getDashboardData(teacherId: string): Promise<DashboardData> {
@@ -194,23 +172,20 @@ export const dataService = {
 
       return {
         teacher: teacherProfile || { 
+          id: teacherId,
           full_name: 'Teacher',
-          firstName: 'Teacher'
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         },
         students,
         assessments,
-        goals,
-        notifications,
-        metrics: {
+        recentCommunications: [],
+        summary: {
           totalStudents,
           totalAssessments,
+          averageScore: Math.round(averagePerformance),
           studentsNeedingAttention,
-          averagePerformance: Math.round(averagePerformance),
-          recentAssessments,
-          activeGoalsCount,
-          completedGoals,
-          unreadNotifications: notifications.length,
-          performanceDistribution
+          recentActivity: []
         }
       };
     } catch (error) {
