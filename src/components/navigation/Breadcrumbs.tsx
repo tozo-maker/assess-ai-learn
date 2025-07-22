@@ -67,7 +67,7 @@ const Breadcrumbs: React.FC = () => {
     <Breadcrumb className="mb-6">
       <BreadcrumbList>
         {breadcrumbs.map((breadcrumb, index) => (
-          <React.Fragment key={index}>
+          <React.Fragment key={`breadcrumb-${index}`}>
             <BreadcrumbItem>
               {breadcrumb.isActive ? (
                 <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
