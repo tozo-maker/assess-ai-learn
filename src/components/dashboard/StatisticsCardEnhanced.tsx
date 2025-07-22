@@ -4,6 +4,7 @@ import { LucideIcon, TrendingUp, TrendingDown, Minus, ArrowUpRight, ArrowDownRig
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { LoadingSpinner, Skeleton } from '@/components/ui/transitions';
 import { cn } from '@/lib/utils';
 
 interface StatisticsCardEnhancedProps {
@@ -25,6 +26,7 @@ interface StatisticsCardEnhancedProps {
   priority?: 'high' | 'medium' | 'low' | 'none';
   className?: string;
   onClick?: () => void;
+  isLoading?: boolean;
 }
 
 const StatisticsCardEnhanced: React.FC<StatisticsCardEnhancedProps> = ({
@@ -37,6 +39,7 @@ const StatisticsCardEnhanced: React.FC<StatisticsCardEnhancedProps> = ({
   priority = 'none',
   className,
   onClick,
+  isLoading = false,
 }) => {
   const getTrendIcon = () => {
     switch (trend?.direction) {
@@ -94,26 +97,57 @@ const StatisticsCardEnhanced: React.FC<StatisticsCardEnhancedProps> = ({
 
   const TrendIcon = getTrendIcon();
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <Card className={cn("p-6", className)}>
+        <CardContent className="p-0">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-8 rounded-xl" />
+            </div>
+            <Skeleton className="h-8 w-16" />
+            <Skeleton lines={2} />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card 
       className={cn(
-        "group transition-all duration-300 hover:shadow-lg hover:shadow-primary/5",
+        "group interactive-card",
         getPriorityStyles(),
-        onClick && "cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
+        onClick && "cursor-pointer",
         className
       )}
       onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      } : undefined}
+      aria-label={onClick ? `View details for ${title}` : undefined}
     >
       <CardContent className="p-6">
         {/* Header Section */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              <h3 className="text-caption">
                 {title}
               </h3>
               {priority !== 'none' && (
-                <Badge variant={getPriorityBadgeVariant()} className="text-xs px-2 py-0">
+                <Badge 
+                  variant={getPriorityBadgeVariant()} 
+                  className="text-xs px-2 py-0"
+                  aria-label={`Priority: ${priority}`}
+                >
                   {priority}
                 </Badge>
               )}
@@ -122,7 +156,10 @@ const StatisticsCardEnhanced: React.FC<StatisticsCardEnhancedProps> = ({
           
           {Icon && (
             <div className="flex-shrink-0">
-              <div className="p-2.5 rounded-xl bg-primary/10 text-primary group-hover:bg-primary/15 transition-colors">
+              <div 
+                className="p-2.5 rounded-xl bg-primary/10 text-primary group-hover:bg-primary/15 transition-colors duration-300"
+                aria-hidden="true"
+              >
                 <Icon className="h-5 w-5" />
               </div>
             </div>
@@ -131,22 +168,28 @@ const StatisticsCardEnhanced: React.FC<StatisticsCardEnhancedProps> = ({
 
         {/* Main Value Section */}
         <div className="space-y-3">
-          <div className="text-4xl font-bold text-foreground tracking-tight">
+          <div className="text-hierarchy-2 micro-bounce">
             {value}
           </div>
           
           {/* Trend Section */}
           {trend && (
             <div className="flex items-center gap-2">
-              <div className={cn("flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50", getTrendColor())}>
-                <TrendIcon className="h-3.5 w-3.5" />
+              <div 
+                className={cn(
+                  "flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50 transition-colors duration-200",
+                  getTrendColor()
+                )}
+                aria-label={`Trend: ${trend.direction} ${trend.value}${trend.direction !== 'neutral' ? '%' : ''} ${trend.label}`}
+              >
+                <TrendIcon className="h-3.5 w-3.5" aria-hidden="true" />
                 <span className="text-sm font-semibold">
                   {trend.value > 0 && trend.direction !== 'neutral' && '+'}
                   {trend.value}
                   {trend.direction !== 'neutral' && '%'}
                 </span>
               </div>
-              <span className="text-sm text-muted-foreground font-medium">
+              <span className="text-body-secondary">
                 {trend.label}
               </span>
             </div>
@@ -156,7 +199,7 @@ const StatisticsCardEnhanced: React.FC<StatisticsCardEnhancedProps> = ({
           {progress && (
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground font-medium">
+                <span className="text-body-secondary">
                   {progress.label || 'Progress'}
                 </span>
                 <span className="text-sm font-semibold text-foreground">
@@ -165,9 +208,10 @@ const StatisticsCardEnhanced: React.FC<StatisticsCardEnhancedProps> = ({
               </div>
               <Progress 
                 value={(progress.value / progress.max) * 100} 
-                className="h-2.5" 
+                className="h-2.5"
+                aria-label={`Progress: ${Math.round((progress.value / progress.max) * 100)}%`}
               />
-              <div className="text-xs text-muted-foreground">
+              <div className="text-caption">
                 {progress.value} of {progress.max}
               </div>
             </div>
@@ -175,7 +219,7 @@ const StatisticsCardEnhanced: React.FC<StatisticsCardEnhancedProps> = ({
 
           {/* Description */}
           {description && (
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <p className="text-body-secondary">
               {description}
             </p>
           )}

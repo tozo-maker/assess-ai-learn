@@ -48,44 +48,55 @@ const EnhancedWelcomeSection: React.FC<EnhancedWelcomeSectionProps> = ({
       icon: Users,
       label: 'Active Students',
       value: contextualInfo?.totalStudents || 0,
-      color: 'text-blue-600'
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50 dark:bg-blue-950/20'
     },
     {
       icon: TrendingUp,
       label: 'New Insights',
       value: contextualInfo?.recentInsights || 0,
-      color: 'text-emerald-600'
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-50 dark:bg-emerald-950/20'
     },
     {
       icon: Clock,
       label: 'Pending Items',
       value: contextualInfo?.upcomingDeadlines || 0,
-      color: 'text-amber-600'
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50 dark:bg-amber-950/20'
     }
   ];
 
   return (
-    <Card className="bg-gradient-to-r from-primary/5 via-primary/3 to-primary/5 border-primary/20">
+    <Card className="bg-gradient-to-r from-primary/5 via-primary/3 to-primary/5 border-primary/20 interactive-card">
       <CardContent className="p-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           {/* Welcome Message */}
           <div className="space-y-3">
             <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2 tracking-tight">
+              <h1 className="text-hierarchy-1 mb-2 animate-fade-in">
                 {getGreeting()}
               </h1>
-              <div className="flex items-center gap-3 text-muted-foreground">
+              <div className="flex items-center gap-3 text-muted-foreground animate-fade-in" style={{ animationDelay: '0.2s' }}>
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  <span className="font-medium">{formattedDate}</span>
+                  <Calendar className="h-4 w-4" aria-hidden="true" />
+                  <time 
+                    dateTime={currentDate.toISOString().split('T')[0]}
+                    className="font-medium"
+                  >
+                    {formattedDate}
+                  </time>
                 </div>
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                <Badge 
+                  variant="secondary" 
+                  className="bg-primary/10 text-primary border-primary/20"
+                >
                   Dashboard Overview
                 </Badge>
               </div>
             </div>
             
-            <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
+            <p className="text-body-primary max-w-2xl animate-fade-in" style={{ animationDelay: '0.4s' }}>
               Here's your educational insights dashboard. Track student progress, 
               review AI-powered recommendations, and manage your classroom effectively.
             </p>
@@ -97,16 +108,22 @@ const EnhancedWelcomeSection: React.FC<EnhancedWelcomeSectionProps> = ({
               {contextualInsights.map((insight, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-3 px-4 py-3 bg-white/70 dark:bg-gray-800/70 rounded-xl border border-border/50 backdrop-blur-sm min-w-[140px]"
+                  className={cn(
+                    "stagger-item flex items-center gap-3 px-4 py-3 rounded-xl border border-border/50 backdrop-blur-sm min-w-[140px] transition-all duration-200 hover:shadow-md focus-enhanced",
+                    insight.bgColor
+                  )}
+                  style={{ animationDelay: `${0.6 + (index * 0.1)}s` }}
+                  role="group"
+                  aria-label={`${insight.label}: ${insight.value}`}
                 >
-                  <div className={`p-2 rounded-lg bg-white dark:bg-gray-800 shadow-sm ${insight.color}`}>
-                    <insight.icon className="h-4 w-4" />
+                  <div className={cn("p-2 rounded-lg bg-white dark:bg-gray-800 shadow-sm", insight.color)}>
+                    <insight.icon className="h-4 w-4" aria-hidden="true" />
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-foreground">
+                    <div className="text-hierarchy-3">
                       {insight.value}
                     </div>
-                    <div className="text-xs text-muted-foreground font-medium">
+                    <div className="text-caption">
                       {insight.label}
                     </div>
                   </div>
