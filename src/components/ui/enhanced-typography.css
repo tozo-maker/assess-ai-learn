@@ -33,13 +33,15 @@
   --letter-spacing-widest: 0.1em;
 }
 
-/* Enhanced Typography Classes */
+/* Enhanced Typography Classes with Accessibility */
 .text-hierarchy-1 {
   font-size: var(--font-size-4xl);
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
   color: hsl(var(--foreground));
+  font-feature-settings: "kern" 1, "liga" 1;
+  text-rendering: optimizeLegibility;
 }
 
 .text-hierarchy-2 {
@@ -48,6 +50,8 @@
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-tight);
   color: hsl(var(--foreground));
+  font-feature-settings: "kern" 1, "liga" 1;
+  text-rendering: optimizeLegibility;
 }
 
 .text-hierarchy-3 {
@@ -55,6 +59,7 @@
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-snug);
   color: hsl(var(--foreground) / 0.9);
+  font-feature-settings: "kern" 1;
 }
 
 .text-hierarchy-4 {
@@ -62,6 +67,7 @@
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-snug);
   color: hsl(var(--foreground) / 0.8);
+  font-feature-settings: "kern" 1;
 }
 
 .text-body-primary {
@@ -69,6 +75,7 @@
   font-weight: var(--font-weight-normal);
   line-height: var(--line-height-relaxed);
   color: hsl(var(--foreground) / 0.7);
+  font-feature-settings: "kern" 1;
 }
 
 .text-body-secondary {
@@ -76,6 +83,7 @@
   font-weight: var(--font-weight-normal);
   line-height: var(--line-height-normal);
   color: hsl(var(--muted-foreground));
+  font-feature-settings: "kern" 1;
 }
 
 .text-caption {
@@ -85,9 +93,42 @@
   letter-spacing: var(--letter-spacing-wide);
   color: hsl(var(--muted-foreground) / 0.8);
   text-transform: uppercase;
+  font-feature-settings: "kern" 1;
 }
 
-/* Enhanced Animations */
+/* Enhanced Number Rendering */
+.text-numeric {
+  font-feature-settings: "tnum" 1, "kern" 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-numeric-proportional {
+  font-feature-settings: "pnum" 1, "kern" 1;
+  font-variant-numeric: proportional-nums;
+}
+
+/* High Contrast Mode Adjustments */
+@media (prefers-contrast: high) {
+  .text-hierarchy-1,
+  .text-hierarchy-2,
+  .text-hierarchy-3,
+  .text-hierarchy-4 {
+    color: hsl(var(--foreground));
+    font-weight: var(--font-weight-bold);
+  }
+  
+  .text-body-primary,
+  .text-body-secondary {
+    color: hsl(var(--foreground));
+  }
+  
+  .text-caption {
+    color: hsl(var(--foreground) / 0.9);
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+/* Enhanced Animations with Reduced Motion Support */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -109,22 +150,88 @@
   50% { transform: translateY(-2px); }
 }
 
+/* Reduced Motion Alternatives */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes shimmer-reduced {
+    0% { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
+  
+  @keyframes stagger-fade-in-reduced {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  
+  .loading-skeleton {
+    animation: shimmer-reduced 2s ease-in-out infinite alternate;
+  }
+  
+  .stagger-item {
+    animation: stagger-fade-in-reduced 0.3s ease-out both;
+  }
+  
+  .micro-bounce {
+    animation: none;
+  }
+}
+
 /* Enhanced Focus States for Accessibility */
 .focus-enhanced {
   @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+@media (prefers-contrast: high) {
+  .focus-enhanced {
+    @apply focus-visible:ring-4 focus-visible:ring-primary focus-visible:ring-offset-4;
+  }
 }
 
 .focus-enhanced-inset {
   @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-inset;
 }
 
+@media (prefers-contrast: high) {
+  .focus-enhanced-inset {
+    @apply focus-visible:ring-4 focus-visible:ring-primary;
+  }
+}
+
 /* Interactive Element Enhancements */
 .interactive-card {
-  @apply transition-all duration-300 ease-out hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 focus-enhanced;
+  transition: all 0.3s ease-out;
+}
+
+.interactive-card:hover {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interactive-card {
+    transition: box-shadow 0.1s ease-out;
+  }
+  
+  .interactive-card:hover {
+    transform: none;
+  }
 }
 
 .interactive-button {
-  @apply transition-all duration-150 ease-out active:scale-[0.98] focus-enhanced;
+  transition: all 0.15s ease-out;
+}
+
+.interactive-button:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interactive-button {
+    transition: background-color 0.1s ease-out;
+  }
+  
+  .interactive-button:active {
+    transform: none;
+  }
 }
 
 /* Loading State Utilities */
@@ -153,3 +260,27 @@
 .stagger-item:nth-child(4) { animation-delay: 300ms; }
 .stagger-item:nth-child(5) { animation-delay: 400ms; }
 .stagger-item:nth-child(6) { animation-delay: 500ms; }
+
+/* Print Optimization */
+@media print {
+  .text-hierarchy-1,
+  .text-hierarchy-2,
+  .text-hierarchy-3,
+  .text-hierarchy-4 {
+    color: black !important;
+    text-shadow: none !important;
+  }
+  
+  .text-body-primary,
+  .text-body-secondary,
+  .text-caption {
+    color: black !important;
+  }
+  
+  .loading-skeleton,
+  .micro-bounce,
+  .stagger-item {
+    animation: none !important;
+    background: transparent !important;
+  }
+}

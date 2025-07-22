@@ -7,7 +7,16 @@
 @import './components/ui/enhanced-typography.css';
 @import './components/ui/animations.css';
 
-/* Custom animations */
+/* Font Loading Optimizations */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+}
+
+/* Custom animations with reduced motion support */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -19,8 +28,43 @@
   }
 }
 
+@keyframes fade-in-reduced {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.5s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in {
+    animation: fade-in-reduced 0.2s ease-out both;
+  }
+  
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 0 0% 100%;
+    --border: 0 0% 30%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 10%;
+  }
 }
 
 /* Design System Base Styles - Enhanced */
@@ -60,23 +104,38 @@
     --ds-radius-xl: 1rem;      /* 16px */
   }
 
-  /* Enhanced focus styles for better accessibility */
+  /* Enhanced focus styles with high contrast support */
   *:focus-visible {
     outline: 2px solid hsl(var(--ds-color-primary));
     outline-offset: 2px;
   }
 
-  /* Smooth scrolling for better UX */
+  @media (prefers-contrast: high) {
+    *:focus-visible {
+      outline: 3px solid currentColor;
+      outline-offset: 3px;
+    }
+  }
+
+  /* Smooth scrolling with reduced motion support */
   html {
     scroll-behavior: smooth;
   }
 
-  /* Enhanced text rendering */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  /* Enhanced text rendering with performance optimizations */
   body {
     font-family: var(--ds-font-family);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1;
+    contain: layout style paint;
   }
 
   /* Enhanced selection styles */
@@ -84,17 +143,47 @@
     background-color: hsl(var(--ds-color-primary) / 0.2);
     color: hsl(var(--ds-color-primary));
   }
+
+  /* Print styles optimization */
+  @media print {
+    * {
+      background: transparent !important;
+      color: black !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+    
+    body {
+      font-size: 12pt;
+      line-height: 1.5;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      page-break-after: avoid;
+      font-weight: bold;
+    }
+    
+    p {
+      orphans: 3;
+      widows: 3;
+    }
+  }
 }
 
-/* Enhanced utility classes */
+/* Enhanced utility classes with accessibility support */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
   
   .font-feature-numbers {
-    font-feature-settings: "tnum";
+    font-feature-settings: "tnum" 1, "kern" 1;
     font-variant-numeric: tabular-nums;
+  }
+
+  .font-feature-optimized {
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
   }
 
   .scrollbar-none {
@@ -104,5 +193,47 @@
   
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Loading state utilities */
+  .loading-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--muted) / 0.5) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loading-shimmer {
+      background: hsl(var(--muted));
+      animation: none;
+    }
+  }
+
+  /* High contrast utilities */
+  @media (prefers-contrast: high) {
+    .text-muted-foreground {
+      color: hsl(0 0% 0%) !important;
+    }
+    
+    .border {
+      border-color: hsl(0 0% 0%) !important;
+      border-width: 2px !important;
+    }
+  }
+
+  /* Reduced motion utilities */
+  .motion-safe\:animate-fade-in {
+    animation: fade-in 0.5s ease-out both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .motion-safe\:animate-fade-in {
+      animation: fade-in-reduced 0.2s ease-out both;
+    }
   }
 }
