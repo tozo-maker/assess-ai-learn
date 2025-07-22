@@ -29,11 +29,14 @@ export const useEnhancedDashboard = () => {
 
   // Mock data generators for new components (replace with real data in production)
   const generateMockAlerts = useCallback(() => {
-    const students = data?.data?.students || [];
+    const students = data?.students || [];
+    const alertTypes = ['performance_drop', 'goal_overdue', 'missing_assessment'] as const;
+    const severityLevels = ['high', 'medium', 'low'] as const;
+    
     return students.slice(0, 3).map((student: any, index: number) => ({
       id: `alert-${index}`,
-      type: ['performance_drop', 'goal_overdue', 'missing_assessment'][index % 3] as const,
-      severity: ['high', 'medium', 'low'][index % 3] as const,
+      type: alertTypes[index % 3],
+      severity: severityLevels[index % 3],
       student_id: student.id,
       student_name: `${student.first_name} ${student.last_name}`,
       title: `Alert for ${student.first_name}`,
@@ -45,10 +48,12 @@ export const useEnhancedDashboard = () => {
   }, [data]);
 
   const generateMockActivities = useCallback(() => {
-    const assessments = data?.data?.assessments || [];
+    const assessments = data?.assessments || [];
+    const activityTypes = ['assessment', 'goal', 'communication'] as const;
+    
     return assessments.slice(0, 5).map((assessment: any, index: number) => ({
       id: `activity-${index}`,
-      type: ['assessment', 'goal', 'communication'][index % 3] as const,
+      type: activityTypes[index % 3],
       title: assessment.title || `Activity ${index + 1}`,
       description: `Recent activity for ${assessment.subject}`,
       timestamp: new Date(assessment.created_at || Date.now()),
