@@ -1,7 +1,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { performanceCache } from '@/utils/performance-cache';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 
 export const useOptimizedQueries = () => {
   const { user } = useAuth();

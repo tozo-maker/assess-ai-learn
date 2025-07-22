@@ -1,5 +1,6 @@
+
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { studentService } from '@/services/student-service';
 
 export const useStudents = () => {

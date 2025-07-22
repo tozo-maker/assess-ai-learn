@@ -1,6 +1,5 @@
-
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { enhancedCache } from '@/services/enhanced-caching-service';
 import { studentService } from '@/services/student-service';
 import { assessmentService } from '@/services/assessment-service';
