@@ -40,12 +40,12 @@ const SkillsFilters: React.FC<SkillsFiltersProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Subject</label>
-            <Select value={filters.subject} onValueChange={(value) => updateFilter('subject', value)}>
+            <Select value={filters.subject || "all"} onValueChange={(value) => updateFilter('subject', value === "all" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="All subjects" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All subjects</SelectItem>
+                <SelectItem value="all">All subjects</SelectItem>
                 <SelectItem value="Mathematics">Mathematics</SelectItem>
                 <SelectItem value="English Language Arts">English Language Arts</SelectItem>
                 <SelectItem value="Science">Science</SelectItem>
@@ -56,12 +56,12 @@ const SkillsFilters: React.FC<SkillsFiltersProps> = ({
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Grade Level</label>
-            <Select value={filters.gradeLevel} onValueChange={(value) => updateFilter('gradeLevel', value)}>
+            <Select value={filters.gradeLevel || "all-grades"} onValueChange={(value) => updateFilter('gradeLevel', value === "all-grades" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="All grades" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All grades</SelectItem>
+                <SelectItem value="all-grades">All grades</SelectItem>
                 <SelectItem value="K">Kindergarten</SelectItem>
                 <SelectItem value="1">Grade 1</SelectItem>
                 <SelectItem value="2">Grade 2</SelectItem>
@@ -74,12 +74,12 @@ const SkillsFilters: React.FC<SkillsFiltersProps> = ({
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Difficulty</label>
-            <Select value={filters.difficulty_level} onValueChange={(value) => updateFilter('difficulty_level', value)}>
+            <Select value={filters.difficulty_level || "all-levels"} onValueChange={(value) => updateFilter('difficulty_level', value === "all-levels" ? "" : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="All levels" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All levels</SelectItem>
+                <SelectItem value="all-levels">All levels</SelectItem>
                 <SelectItem value="1">Beginning</SelectItem>
                 <SelectItem value="2">Basic</SelectItem>
                 <SelectItem value="3">Intermediate</SelectItem>
