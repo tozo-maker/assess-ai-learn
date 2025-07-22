@@ -55,7 +55,8 @@ interface EnhancedDashboardData {
 export const useEnhancedDashboard = (data: PerformanceResult<any>): EnhancedDashboardData => {
   // Mock data generators for new components (replace with real data in production)
   const generateMockAlerts = useCallback(() => {
-    const students = data?.students || [];
+    const dashboardData = data?.data || data;
+    const students = dashboardData?.students || [];
     const alertTypes = ['performance_drop', 'goal_overdue', 'missing_assessment'] as const;
     const severityLevels = ['high', 'medium', 'low'] as const;
     
@@ -74,7 +75,8 @@ export const useEnhancedDashboard = (data: PerformanceResult<any>): EnhancedDash
   }, [data]);
 
   const generateMockActivities = useCallback(() => {
-    const assessments = data?.assessments || [];
+    const dashboardData = data?.data || data;
+    const assessments = dashboardData?.assessments || [];
     const activityTypes = ['assessment', 'goal', 'communication'] as const;
     
     return assessments.slice(0, 5).map((assessment: any, index: number) => ({
@@ -91,7 +93,8 @@ export const useEnhancedDashboard = (data: PerformanceResult<any>): EnhancedDash
   }, [data]);
 
   const generateMockHeatmapData = useCallback(() => {
-    const students = data?.students || [];
+    const dashboardData = data?.data || data;
+    const students = dashboardData?.students || [];
     const skills = ['Math', 'Reading', 'Science', 'Writing'];
     
     return students.slice(0, 10).map((student: any) => ({
@@ -110,7 +113,8 @@ export const useEnhancedDashboard = (data: PerformanceResult<any>): EnhancedDash
   }, [data]);
 
   const generateRecentStudents = useCallback(() => {
-    const students = data?.students || [];
+    const dashboardData = data?.data || data;
+    const students = dashboardData?.students || [];
     return students.slice(0, 5).map((student: any) => ({
       id: student.id,
       name: `${student.first_name} ${student.last_name}`
