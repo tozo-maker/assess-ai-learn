@@ -2,8 +2,8 @@
 import React from 'react';
 import { PerformanceResult } from '@/services/dashboard-performance-service';
 import { useEnhancedDashboard } from '@/hooks/useEnhancedDashboard';
-import EnhancedDashboardHeader from './EnhancedDashboardHeader';
 import EnhancedWelcomeSection from './EnhancedWelcomeSection';
+import DashboardBreadcrumbs from './DashboardBreadcrumbs';
 import StatisticsCardEnhanced from './StatisticsCardEnhanced';
 import { Users, FileText, Lightbulb, TrendingUp, AlertTriangle, Clock } from 'lucide-react';
 import { ValidationProvider } from '@/components/validation/FormValidationProvider';
@@ -110,11 +110,8 @@ const DashboardContentEnhanced: React.FC<DashboardContentEnhancedProps> = ({ dat
   return (
     <ValidationProvider>
       <div className="min-h-screen bg-background">
-        {/* Enhanced Header */}
-        <EnhancedDashboardHeader 
-          teacher={teacher}
-          notificationCount={metrics.studentsNeedingAttention || 0}
-        />
+        {/* Breadcrumb Navigation */}
+        <DashboardBreadcrumbs />
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
