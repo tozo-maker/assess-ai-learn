@@ -1,25 +1,22 @@
 
 import React from 'react';
 import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
-import DashboardContent from '@/components/dashboard/DashboardContent';
+import DashboardContentEnhanced from '@/components/dashboard/DashboardContentEnhanced';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { data, isLoading, error } = useOptimizedDashboardData();
 
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded"></div>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-64 bg-gray-200 rounded"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">Loading Dashboard</h2>
+            <p className="text-muted-foreground">Preparing your educational insights...</p>
+          </div>
         </div>
       </div>
     );
@@ -27,27 +24,31 @@ const Dashboard: React.FC = () => {
 
   if (error) {
     return (
-      <Card className="border-red-200 bg-red-50">
-        <CardHeader>
-          <CardTitle className="flex items-center text-red-800">
-            <AlertCircle className="h-5 w-5 mr-2" />
-            Error Loading Dashboard
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-red-600 mb-4">{(error as Error).message}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-          >
-            Reload Dashboard
-          </button>
-        </CardContent>
-      </Card>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="border-destructive bg-destructive/5 max-w-md w-full">
+          <CardHeader>
+            <CardTitle className="flex items-center text-destructive">
+              <AlertCircle className="h-5 w-5 mr-2" />
+              Dashboard Error
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">
+              {(error as Error).message || 'Failed to load dashboard data'}
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
+            >
+              Reload Dashboard
+            </button>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
-  return <DashboardContent data={data} />;
+  return <DashboardContentEnhanced data={data} />;
 };
 
 export default Dashboard;

@@ -1,131 +1,122 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, FileText, Users, BarChart3, Calendar } from 'lucide-react';
-import {
-  DSFlexContainer,
-  DSButton,
-  DSBodyText,
-  DSSectionHeader,
-  DSCard,
-  DSCardContent,
-  DSContentGrid,
-  DSGridItem
-} from '@/components/ui/design-system';
+import { Calendar, Clock, Users, TrendingUp } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface EnhancedWelcomeSectionProps {
   teacher: {
     full_name?: string;
     firstName?: string;
   };
-  metrics?: {
+  contextualInfo?: {
     totalStudents: number;
-    recentAssessments: number;
+    activeAssessments: number;
+    upcomingDeadlines: number;
+    recentInsights: number;
   };
 }
 
-const EnhancedWelcomeSection: React.FC<EnhancedWelcomeSectionProps> = ({ 
-  teacher, 
-  metrics 
+const EnhancedWelcomeSection: React.FC<EnhancedWelcomeSectionProps> = ({
+  teacher,
+  contextualInfo
 }) => {
-  const currentDate = new Date().toLocaleDateString('en-US', {
+  const currentDate = new Date();
+  const timeOfDay = currentDate.getHours() < 12 ? 'morning' : 
+                   currentDate.getHours() < 17 ? 'afternoon' : 'evening';
+  
+  const formattedDate = currentDate.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
 
-  // Extract first name from full_name or use firstName
   const firstName = teacher?.firstName || teacher?.full_name?.split(' ')[0] || 'Teacher';
 
-  const quickActions = [
+  const getGreeting = () => {
+    const greetings = {
+      morning: `Good morning, ${firstName}! ☀️`,
+      afternoon: `Good afternoon, ${firstName}! 🌤️`,
+      evening: `Good evening, ${firstName}! 🌙`
+    };
+    return greetings[timeOfDay];
+  };
+
+  const contextualInsights = [
     {
-      label: 'Add Student',
-      href: '/app/students/add',
-      icon: <Plus className="h-4 w-4" />,
-      variant: 'primary' as const,
-      description: 'Add a new student to your class'
+      icon: Users,
+      label: 'Active Students',
+      value: contextualInfo?.totalStudents || 0,
+      color: 'text-blue-600'
     },
     {
-      label: 'Create Assessment',
-      href: '/app/assessments/add',
-      icon: <FileText className="h-4 w-4" />,
-      variant: 'primary' as const,
-      description: 'Record new assessment results'
+      icon: TrendingUp,
+      label: 'New Insights',
+      value: contextualInfo?.recentInsights || 0,
+      color: 'text-emerald-600'
     },
     {
-      label: 'View Students',
-      href: '/app/students',
-      icon: <Users className="h-4 w-4" />,
-      variant: 'secondary' as const,
-      description: `Manage ${metrics?.totalStudents || 0} students`
-    },
-    {
-      label: 'View Reports',
-      href: '/app/reports',
-      icon: <BarChart3 className="h-4 w-4" />,
-      variant: 'secondary' as const,
-      description: 'Generate progress reports'
+      icon: Clock,
+      label: 'Pending Items',
+      value: contextualInfo?.upcomingDeadlines || 0,
+      color: 'text-amber-600'
     }
   ];
 
   return (
-    <DSCard className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-      <DSCardContent className="p-8">
-        <DSFlexContainer direction="col" gap="lg">
-          {/* Welcome Header */}
-          <div>
-            <DSSectionHeader className="text-gray-800 mb-2">
-              Welcome back, {firstName}! 👋
-            </DSSectionHeader>
-            <DSFlexContainer align="center" gap="sm" className="text-gray-600">
-              <Calendar className="h-4 w-4" />
-              <DSBodyText>
-                {currentDate}
-              </DSBodyText>
-              {metrics && (
-                <>
-                  <span className="text-gray-400">•</span>
-                  <DSBodyText>
-                    {metrics.totalStudents} students • {metrics.recentAssessments} recent assessments
-                  </DSBodyText>
-                </>
-              )}
-            </DSFlexContainer>
+    <Card className="bg-gradient-to-r from-primary/5 via-primary/3 to-primary/5 border-primary/20">
+      <CardContent className="p-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          {/* Welcome Message */}
+          <div className="space-y-3">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2 tracking-tight">
+                {getGreeting()}
+              </h1>
+              <div className="flex items-center gap-3 text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span className="font-medium">{formattedDate}</span>
+                </div>
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                  Dashboard Overview
+                </Badge>
+              </div>
+            </div>
+            
+            <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
+              Here's your educational insights dashboard. Track student progress, 
+              review AI-powered recommendations, and manage your classroom effectively.
+            </p>
           </div>
 
-          {/* Quick Actions Grid */}
-          <div>
-            <DSBodyText className="text-gray-700 font-medium mb-4">
-              Quick Actions
-            </DSBodyText>
-            <DSContentGrid cols={4}>
-              {quickActions.map((action, index) => (
-                <DSGridItem key={index} span={1}>
-                  <Link to={action.href} className="block">
-                    <DSCard className="h-full hover:shadow-md transition-all duration-200 border-gray-200 hover:border-blue-300">
-                      <DSCardContent className="p-4 text-center">
-                        <div className="mb-3 flex justify-center">
-                          <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
-                            {action.icon}
-                          </div>
-                        </div>
-                        <h4 className="font-medium text-gray-900 mb-1 text-sm">
-                          {action.label}
-                        </h4>
-                        <DSBodyText className="text-xs text-gray-500">
-                          {action.description}
-                        </DSBodyText>
-                      </DSCardContent>
-                    </DSCard>
-                  </Link>
-                </DSGridItem>
+          {/* Contextual Quick Stats */}
+          {contextualInfo && (
+            <div className="flex flex-wrap lg:flex-col gap-4 lg:gap-3">
+              {contextualInsights.map((insight, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 px-4 py-3 bg-white/70 dark:bg-gray-800/70 rounded-xl border border-border/50 backdrop-blur-sm min-w-[140px]"
+                >
+                  <div className={`p-2 rounded-lg bg-white dark:bg-gray-800 shadow-sm ${insight.color}`}>
+                    <insight.icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-foreground">
+                      {insight.value}
+                    </div>
+                    <div className="text-xs text-muted-foreground font-medium">
+                      {insight.label}
+                    </div>
+                  </div>
+                </div>
               ))}
-            </DSContentGrid>
-          </div>
-        </DSFlexContainer>
-      </DSCardContent>
-    </DSCard>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
