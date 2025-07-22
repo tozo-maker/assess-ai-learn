@@ -1,307 +1,91 @@
-import { supabase } from "@/integrations/supabase/client";
-import { Student, StudentPerformance, StudentWithPerformance, normalizeStudentPerformance } from "@/types/student";
-import { productionLogger } from "@/services/production-logger";
 
-export const studentService = {
-  async getStudents(): Promise<StudentWithPerformance[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
-    const { data: students, error } = await supabase
-      .from('students')
-      .select(`
-        *,
-        performance:student_performance(*),
-        class:classes(*)
-      `)
-      .eq('teacher_id', user.id)
-      .order('last_name');
-    
-    if (error) {
-      productionLogger.error("Error fetching students", error, { context: 'getStudents' });
-      throw error;
+interface CreateStudentData {
+  first_name: string;
+  last_name: string;
+  grade_level: string;
+  learning_style?: 'visual' | 'auditory' | 'kinesthetic' | 'reading';
+  special_considerations?: string;
+  email?: string;
+}
+
+class StudentService {
+  private static instance: StudentService;
+
+  static getInstance(): StudentService {
+    if (!StudentService.instance) {
+      StudentService.instance = new StudentService();
     }
-    
-    return (students || []).map(student => normalizeStudentPerformance(student as StudentWithPerformance));
-  },
-  
-  async getStudentById(id: string): Promise<StudentWithPerformance | null> {
-    productionLogger.debug("Fetching student by ID", { studentId: id });
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      productionLogger.error("User not authenticated", undefined, { context: 'getStudentById' });
-      throw new Error('User not authenticated');
-    }
+    return StudentService.instance;
+  }
 
-    productionLogger.debug("User authenticated", { userId: user.id, studentId: id });
-
+  async createStudent(studentData: CreateStudentData & { teacher_id: string }) {
     const { data, error } = await supabase
       .from('students')
-      .select(`
-        *,
-        performance:student_performance(*),
-        class:classes(*)
-      `)
-      .eq('id', id)
-      .eq('teacher_id', user.id)
-      .maybeSingle();
-    
-    if (error) {
-      productionLogger.error(`Error fetching student with id ${id}`, error, { 
-        studentId: id, 
-        userId: user.id,
-        context: 'getStudentById' 
-      });
-      throw error;
-    }
-    
-    productionLogger.debug("Student data fetched successfully", { 
-      studentId: id, 
-      hasData: !!data,
-      hasPerformance: !!(data?.performance),
-      hasClass: !!(data?.class)
-    });
-    
-    const result = data ? normalizeStudentPerformance(data as StudentWithPerformance) : null;
-    productionLogger.debug("Student data normalized", { 
-      studentId: id, 
-      hasResult: !!result,
-      studentName: result ? `${result.first_name} ${result.last_name}` : 'N/A'
-    });
-    
-    return result;
-  },
-  
-  async createStudent(student: Omit<Student, 'id' | 'created_at' | 'updated_at' | 'teacher_id'>): Promise<Student> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    const { data, error } = await supabase
-      .from('students')
-      .insert([{
-        ...student,
-        teacher_id: user.id
-      }])
+      .insert([studentData])
       .select()
       .single();
-    
-    if (error) {
-      console.error("Error creating student:", error);
-      throw error;
-    }
-    
-    // Create empty performance record
-    await this.createEmptyPerformanceRecord(data.id);
-    
+
+    if (error) throw error;
     return data;
-  },
-  
-  async updateStudent(id: string, updates: Partial<Student>): Promise<Student> {
+  }
+
+  async getStudents(teacherId: string) {
+    const { data, error } = await supabase
+      .from('students')
+      .select(`
+        *,
+        student_performance (
+          assessment_count,
+          average_score,
+          performance_level,
+          needs_attention,
+          last_assessment_date
+        )
+      `)
+      .eq('teacher_id', teacherId)
+      .order('last_name', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async updateStudent(studentId: string, updates: Partial<CreateStudentData>) {
     const { data, error } = await supabase
       .from('students')
       .update(updates)
-      .eq('id', id)
+      .eq('id', studentId)
       .select()
       .single();
-    
-    if (error) {
-      console.error(`Error updating student with id ${id}:`, error);
-      throw error;
-    }
-    
+
+    if (error) throw error;
     return data;
-  },
-  
-  async deleteStudent(id: string): Promise<void> {
+  }
+
+  async deleteStudent(studentId: string) {
     const { error } = await supabase
       .from('students')
       .delete()
-      .eq('id', id);
-    
-    if (error) {
-      console.error(`Error deleting student with id ${id}:`, error);
-      throw error;
-    }
-  },
-  
-  async createEmptyPerformanceRecord(studentId: string): Promise<StudentPerformance> {
-    const { data, error } = await supabase
-      .from('student_performance')
-      .insert([{
-        student_id: studentId,
-        assessment_count: 0,
-        needs_attention: false
-      }])
-      .select()
-      .single();
-    
-    if (error) {
-      console.error("Error creating performance record:", error);
-      throw error;
-    }
-    
-    return data;
-  },
-  
-  async updateStudentPerformance(
-    studentId: string, 
-    updates: Partial<StudentPerformance>
-  ): Promise<StudentPerformance> {
-    const { data, error } = await supabase
-      .from('student_performance')
-      .update(updates)
-      .eq('student_id', studentId)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error(`Error updating performance for student ${studentId}:`, error);
-      throw error;
-    }
-    
-    return data;
-  },
-  
-  async searchStudents(query: string): Promise<StudentWithPerformance[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+      .eq('id', studentId);
 
-    const { data, error } = await supabase
-      .from('students')
-      .select(`
-        *,
-        performance:student_performance(*),
-        class:classes(*)
-      `)
-      .eq('teacher_id', user.id)
-      .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,student_id.ilike.%${query}%`)
-      .order('last_name');
-    
-    if (error) {
-      console.error("Error searching students:", error);
-      throw error;
-    }
-    
-    return (data || []).map(student => normalizeStudentPerformance(student as StudentWithPerformance));
-  },
-  
-  async getStudentsByFilter(filters: {
-    grade_level?: string;
-    needs_attention?: boolean;
-    performance_level?: string;
-  }): Promise<StudentWithPerformance[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    let query = supabase
-      .from('students')
-      .select(`
-        *,
-        performance:student_performance(*),
-        class:classes(*)
-      `)
-      .eq('teacher_id', user.id);
-    
-    if (filters.grade_level) {
-      query = query.eq('grade_level', filters.grade_level);
-    }
-    
-    const { data: students, error } = await query.order('last_name');
-    
-    if (error) {
-      console.error("Error filtering students:", error);
-      throw error;
-    }
-    
-    const normalizedStudents = (students || []).map(student => 
-      normalizeStudentPerformance(student as StudentWithPerformance)
-    );
-    
-    let filteredStudents = normalizedStudents;
-    
-    if (filters.needs_attention !== undefined) {
-      filteredStudents = filteredStudents.filter(student => {
-        if (!student.performance || Array.isArray(student.performance)) {
-          return false;
-        }
-        return student.performance.needs_attention === filters.needs_attention;
-      });
-    }
-    
-    if (filters.performance_level) {
-      filteredStudents = filteredStudents.filter(student => {
-        if (!student.performance || Array.isArray(student.performance)) {
-          return false;
-        }
-        return student.performance.performance_level === filters.performance_level;
-      });
-    }
-    
-    return filteredStudents;
-  },
-  
-  async getStudentMetrics() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    const { data: students, error } = await supabase
-      .from('students')
-      .select(`
-        *,
-        performance:student_performance(*),
-        class:classes(*)
-      `)
-      .eq('teacher_id', user.id);
-    
-    if (error) {
-      console.error("Error fetching student metrics:", error);
-      throw error;
-    }
-    
-    const normalizedStudents = (students || []).map(student => 
-      normalizeStudentPerformance(student as StudentWithPerformance)
-    );
-    
-    const totalStudents = normalizedStudents.length || 0;
-    
-    const studentsNeedingAttention = normalizedStudents.filter(student => {
-      if (!student.performance || Array.isArray(student.performance)) {
-        return false;
-      }
-      return student.performance.needs_attention;
-    }).length || 0;
-    
-    const aboveAverageCount = normalizedStudents.filter(student => {
-      if (!student.performance || Array.isArray(student.performance)) {
-        return false;
-      }
-      return student.performance.performance_level === 'Above Average';
-    }).length || 0;
-    
-    let averagePerformance = 0;
-    const studentsWithScores = normalizedStudents.filter(student => {
-      if (!student.performance || Array.isArray(student.performance)) {
-        return false;
-      }
-      return student.performance.average_score !== null && 
-             student.performance.average_score !== undefined;
-    });
-    
-    if (studentsWithScores.length > 0) {
-      averagePerformance = studentsWithScores.reduce((sum, student) => {
-        if (!student.performance || Array.isArray(student.performance)) {
-          return sum;
-        }
-        return sum + (student.performance.average_score || 0);
-      }, 0) / studentsWithScores.length;
-    }
-    
-    return {
-      totalStudents,
-      studentsNeedingAttention,
-      aboveAverageCount,
-      averagePerformance: Math.round(averagePerformance * 10) / 10
-    };
+    if (error) throw error;
   }
+}
+
+export const studentService = StudentService.getInstance();
+
+// Hook to create student with auth context
+export const useCreateStudent = () => {
+  const { user } = useAuth();
+  
+  return async (studentData: CreateStudentData) => {
+    if (!user?.id) throw new Error('User not authenticated');
+    
+    return studentService.createStudent({
+      ...studentData,
+      teacher_id: user.id
+    });
+  };
 };
