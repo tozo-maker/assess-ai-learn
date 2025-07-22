@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -79,9 +80,11 @@ const SkillsFilters: React.FC<SkillsFiltersProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All levels</SelectItem>
-                <SelectItem value="1">Basic</SelectItem>
-                <SelectItem value="2">Intermediate</SelectItem>
-                <SelectItem value="3">Advanced</SelectItem>
+                <SelectItem value="1">Beginning</SelectItem>
+                <SelectItem value="2">Basic</SelectItem>
+                <SelectItem value="3">Intermediate</SelectItem>
+                <SelectItem value="4">Advanced</SelectItem>
+                <SelectItem value="5">Expert</SelectItem>
               </SelectContent>
             </Select>
           </div>
