@@ -1,25 +1,24 @@
-
 import React, { useEffect, Suspense } from 'react';
 import { initializePerformanceOptimizations } from '@/services/performance-optimization';
 import { setupGlobalErrorHandlers } from '@/utils/error-boundary-helper';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/toaster';
-
-import { RealtimeProvider } from '@/components/realtime/RealtimeProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { Toaster } from '@/components/ui/toaster';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { ProtectedRoute } from '@/components/routing/RouteGuards';
 import AppLayout from '@/components/layout/AppLayout';
-import { ProtectedRoute, PublicRoute } from '@/components/routing/RouteGuards';
-import { AppErrorBoundary } from '@/components/common/AppErrorBoundary';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import AppSidebar from '@/components/layout/AppSidebar';
+import AppErrorBoundary from '@/components/common/AppErrorBoundary';
+import RealtimeProvider from '@/components/realtime/RealtimeProvider';
 
-// Auth pages
+// Authentication pages (direct imports for better reliability)
 import Login from '@/pages/auth/Login';
-import ForgotPassword from '@/pages/auth/ForgotPassword';
-import ResetPassword from '@/pages/auth/ResetPassword';
+import Register from '@/pages/auth/Register';
+import PasswordReset from '@/pages/auth/PasswordReset';
+import LandingPage from '@/pages/LandingPage';
 
-// Lazy-loaded app pages for better performance
+// Lazy loaded components
 import {
   LazyDashboard,
   LazyStudents,
@@ -46,8 +45,7 @@ import {
   LazyReports,
   LazyProgressReports,
   LazyTesting,
-  LazyHelp,
-  withLazyLoading
+  LazyHelp
 } from '@/components/common/LazyRoutes';
 import PageLoadingState from '@/components/common/PageLoadingState';
 import EmailCenter from '@/pages/app/communications/EmailCenter';
@@ -56,135 +54,220 @@ import EmailCenter from '@/pages/app/communications/EmailCenter';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh longer
-      gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache longer
-      refetchOnWindowFocus: false, // Disable automatic refetch on focus
-      refetchOnMount: false, // Don't refetch if data is fresh
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
       retry: (failureCount, error: any) => {
-        // Don't retry on auth errors or 400 errors
-        if (error?.status === 401 || error?.status === 403 || error?.status >= 400 && error?.status < 500) {
-          return false;
-        }
+        if (error?.status === 401 || error?.status === 403) return false;
         return failureCount < 2;
       },
+      refetchOnWindowFocus: false,
     },
     mutations: {
-      retry: 1, // Retry mutations once
+      retry: false,
     },
   },
 });
 
-function App() {
-  // Initialize performance optimizations on app start
+const App: React.FC = () => {
   useEffect(() => {
+    // Initialize performance optimizations
     initializePerformanceOptimizations();
+    
+    // Setup global error handlers
     setupGlobalErrorHandlers();
   }, []);
 
   return (
-    <AppErrorBoundary componentName="App">
+    <AppErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
-            <Toaster />
             <Routes>
-              {/* Public Routes */}
-              <Route path="/login" element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>
-              } />
-              <Route path="/forgot-password" element={
-                <PublicRoute>
-                  <ForgotPassword />
-                </PublicRoute>
-              } />
-              <Route path="/reset-password" element={
-                <PublicRoute>
-                  <ResetPassword />
-                </PublicRoute>
-              } />
+              {/* Public routes */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/reset-password" element={<PasswordReset />} />
               
-              {/* Protected App Routes - All wrapped with AppLayout */}
+              {/* Protected app routes */}
               <Route path="/app/*" element={
                 <ProtectedRoute>
                   <SidebarProvider>
-                    <div className="min-h-svh bg-background w-full flex">
-                      <AppSidebar />
-                      <SidebarInset className="flex-1 flex flex-col">
+                    <TooltipProvider>
+                      <div className="min-h-screen flex w-full">
                         <RealtimeProvider>
                           <AppLayout>
-                        <Routes>
-                          {/* Dashboard */}
-                          <Route path="dashboard" element={
-                            <Suspense fallback={<PageLoadingState message="Loading dashboard..." />}>
-                              <LazyDashboard />
-                            </Suspense>
-                          } />
-                          
-                          {/* Students */}
-                          <Route path="students" element={withLazyLoading(LazyStudents)({})} />
-                          <Route path="students/add" element={withLazyLoading(LazyAddStudent)({})} />
-                          <Route path="students/import" element={withLazyLoading(LazyImportStudents)({})} />
-                          <Route path="students/:id" element={withLazyLoading(LazyStudentProfile)({})} />
-                          <Route path="students/:id/assessments" element={withLazyLoading(LazyStudentAssessments)({})} />
-                          
-                          {/* Classes */}
-                          <Route path="classes" element={withLazyLoading(LazyClasses)({})} />
-                          
-                          {/* Assessments */}
-                          <Route path="assessments" element={withLazyLoading(LazyAssessments)({})} />
-                          <Route path="assessments/add" element={withLazyLoading(LazyAddAssessment)({})} />
-                          <Route path="assessments/batch" element={withLazyLoading(LazyBatchAssessment)({})} />
-                          <Route path="assessments/:id" element={withLazyLoading(LazyAssessmentDetails)({})} />
-                          <Route path="assessments/:id/edit" element={withLazyLoading(LazyEditAssessment)({})} />
-                          <Route path="assessments/:id/responses" element={withLazyLoading(LazyAddStudentResponses)({})} />
-                          <Route path="assessments/:id/results" element={withLazyLoading(LazyAssessmentResults)({})} />
-                          <Route path="assessments/:id/analysis" element={withLazyLoading(LazyAssessmentAnalysis)({})} />
-                          
-                          {/* Goals & Skills */}
-                          <Route path="goals" element={withLazyLoading(LazyGoals)({})} />
-                          <Route path="skills" element={withLazyLoading(LazySkills)({})} />
-                          
-                          {/* Insights */}
-                          <Route path="insights/class" element={withLazyLoading(LazyClassInsights)({})} />
-                          <Route path="insights/individual" element={withLazyLoading(LazyIndividualInsights)({})} />
-                          <Route path="insights/student/:id" element={withLazyLoading(LazyIndividualInsights)({})} />
-                          <Route path="insights/skills" element={withLazyLoading(LazySkillsInsights)({})} />
-                          <Route path="insights/recommendations" element={withLazyLoading(LazyRecommendations)({})} />
-                          
-                          {/* Communications & Reports */}
-                          <Route path="communications" element={withLazyLoading(LazyCommunications)({})} />
-                          <Route path="reports" element={withLazyLoading(LazyReports)({})} />
-                          <Route path="reports/progress-reports" element={withLazyLoading(LazyProgressReports)({})} />
-                          
-                          {/* System */}
-                          <Route path="testing" element={withLazyLoading(LazyTesting)({})} />
-                          <Route path="communications/email" element={<EmailCenter />} />
-                          <Route path="help" element={withLazyLoading(LazyHelp)({})} />
-                          
-                          {/* Default redirect */}
-                          <Route path="" element={<Navigate to="dashboard" replace />} />
-                        </Routes>
+                            <Routes>
+                              {/* Dashboard - simplified loading */}
+                              <Route path="dashboard" element={
+                                <Suspense fallback={<PageLoadingState message="Loading dashboard..." />}>
+                                  <LazyDashboard />
+                                </Suspense>
+                              } />
+                              
+                              {/* Students */}
+                              <Route path="students" element={
+                                <Suspense fallback={<PageLoadingState message="Loading students..." />}>
+                                  <LazyStudents />
+                                </Suspense>
+                              } />
+                              <Route path="students/add" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyAddStudent />
+                                </Suspense>
+                              } />
+                              <Route path="students/import" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyImportStudents />
+                                </Suspense>
+                              } />
+                              <Route path="students/:id" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyStudentProfile />
+                                </Suspense>
+                              } />
+                              <Route path="students/:id/assessments" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyStudentAssessments />
+                                </Suspense>
+                              } />
+                              
+                              {/* Classes */}
+                              <Route path="classes" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyClasses />
+                                </Suspense>
+                              } />
+                              
+                              {/* Assessments */}
+                              <Route path="assessments" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyAssessments />
+                                </Suspense>
+                              } />
+                              <Route path="assessments/add" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyAddAssessment />
+                                </Suspense>
+                              } />
+                              <Route path="assessments/:id/edit" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyEditAssessment />
+                                </Suspense>
+                              } />
+                              <Route path="assessments/:id" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyAssessmentDetails />
+                                </Suspense>
+                              } />
+                              <Route path="assessments/:id/responses" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyAddStudentResponses />
+                                </Suspense>
+                              } />
+                              <Route path="assessments/:id/batch" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyBatchAssessment />
+                                </Suspense>
+                              } />
+                              <Route path="assessments/:id/results" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyAssessmentResults />
+                                </Suspense>
+                              } />
+                              <Route path="assessments/:id/analysis" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyAssessmentAnalysis />
+                                </Suspense>
+                              } />
+                              
+                              {/* Goals & Skills */}
+                              <Route path="goals" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyGoals />
+                                </Suspense>
+                              } />
+                              <Route path="skills" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazySkills />
+                                </Suspense>
+                              } />
+                              
+                              {/* Insights & Analytics */}
+                              <Route path="insights/class" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyClassInsights />
+                                </Suspense>
+                              } />
+                              <Route path="insights/individual" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyIndividualInsights />
+                                </Suspense>
+                              } />
+                              <Route path="insights/skills" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazySkillsInsights />
+                                </Suspense>
+                              } />
+                              <Route path="insights/recommendations" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyRecommendations />
+                                </Suspense>
+                              } />
+                              
+                              {/* Communications */}
+                              <Route path="communications" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyCommunications />
+                                </Suspense>
+                              } />
+                              <Route path="communications/email" element={<EmailCenter />} />
+                              
+                              {/* Reports */}
+                              <Route path="reports" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyReports />
+                                </Suspense>
+                              } />
+                              <Route path="reports/progress" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyProgressReports />
+                                </Suspense>
+                              } />
+                              
+                              {/* Testing & Help */}
+                              <Route path="testing" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyTesting />
+                                </Suspense>
+                              } />
+                              <Route path="help" element={
+                                <Suspense fallback={<PageLoadingState message="Loading..." />}>
+                                  <LazyHelp />
+                                </Suspense>
+                              } />
+                              
+                              {/* Default redirect */}
+                              <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+                            </Routes>
                           </AppLayout>
                         </RealtimeProvider>
-                      </SidebarInset>
-                    </div>
+                      </div>
+                    </TooltipProvider>
                   </SidebarProvider>
                 </ProtectedRoute>
               } />
               
-              {/* Root redirect */}
-              <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-              
-              {/* Catch all */}
-              <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+              {/* Fallback redirect */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </AuthProvider>
         </BrowserRouter>
+        
+        <Toaster />
       </QueryClientProvider>
     </AppErrorBoundary>
   );
-}
+};
 
 export default App;

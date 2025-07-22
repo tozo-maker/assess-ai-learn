@@ -1,7 +1,8 @@
+
 import React, { Suspense, lazy } from 'react';
 import PageLoadingState from '@/components/common/PageLoadingState';
 
-// Lazy load page components for better code splitting
+// Simple lazy load components without complex wrappers
 export const LazyDashboard = lazy(() => import('@/pages/app/Dashboard'));
 export const LazyStudents = lazy(() => import('@/pages/app/students/Students'));
 export const LazyAddStudent = lazy(() => import('@/pages/app/students/AddStudent'));
@@ -29,7 +30,7 @@ export const LazyProgressReports = lazy(() => import('@/pages/app/reports/Progre
 export const LazyTesting = lazy(() => import('@/pages/app/Testing'));
 export const LazyHelp = lazy(() => import('@/pages/app/help/Help'));
 
-// HOC to wrap lazy components with Suspense
+// Simple HOC for consistent loading states
 export function withLazyLoading<T extends React.ComponentType<any>>(
   Component: React.LazyExoticComponent<T>,
   fallback?: React.ReactNode
