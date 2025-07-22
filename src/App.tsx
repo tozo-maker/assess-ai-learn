@@ -9,8 +9,8 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ProtectedRoute } from '@/components/routing/RouteGuards';
 import AppLayout from '@/components/layout/AppLayout';
-import AppErrorBoundary from '@/components/common/AppErrorBoundary';
-import RealtimeProvider from '@/components/realtime/RealtimeProvider';
+import { AppErrorBoundary } from '@/components/common/AppErrorBoundary';
+import { RealtimeProvider } from '@/components/realtime/RealtimeProvider';
 
 // Authentication pages (direct imports for better reliability)
 import Login from '@/pages/auth/Login';
