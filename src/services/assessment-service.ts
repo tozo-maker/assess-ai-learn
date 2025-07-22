@@ -28,17 +28,31 @@ export const assessmentService = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating assessment:', error);
+      throw new Error(`Failed to create assessment: ${error.message}`);
+    }
+    
+    console.log('Assessment created successfully:', assessment);
     return assessment as Assessment;
   },
 
   async getAssessments(): Promise<Assessment[]> {
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) throw new Error("User not authenticated");
+
     const { data, error } = await supabase
       .from('assessments')
       .select('*')
+      .eq('teacher_id', authData.user.id)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching assessments:', error);
+      throw new Error(`Failed to fetch assessments: ${error.message}`);
+    }
+    
+    console.log(`Fetched ${data?.length || 0} assessments`);
     return data as Assessment[];
   },
 
@@ -49,7 +63,10 @@ export const assessmentService = {
       .eq('id', id)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching assessment:', error);
+      throw new Error(`Failed to fetch assessment: ${error.message}`);
+    }
     return data as Assessment;
   },
 
@@ -61,7 +78,10 @@ export const assessmentService = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating assessment:', error);
+      throw new Error(`Failed to update assessment: ${error.message}`);
+    }
     return assessment as Assessment;
   },
 
@@ -71,7 +91,10 @@ export const assessmentService = {
       .delete()
       .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error deleting assessment:', error);
+      throw new Error(`Failed to delete assessment: ${error.message}`);
+    }
   },
 
   async duplicateAssessment(id: string, newTitle?: string): Promise<Assessment> {
@@ -194,7 +217,12 @@ export const assessmentService = {
     
     const { data, error } = await query;
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching student responses:', error);
+      throw new Error(`Failed to fetch responses: ${error.message}`);
+    }
+    
+    console.log(`Fetched ${data?.length || 0} student responses for assessment ${assessmentId}`);
     return data as StudentResponse[];
   },
 

@@ -1,94 +1,49 @@
 
 import React from 'react';
-import StandardPageLayout from '@/components/layout/StandardPageLayout';
-import { BarChart3 } from 'lucide-react';
-import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
-import DashboardContent from '@/components/dashboard/DashboardContent';
-import { ClassAnalytics } from '@/components/analytics/ClassAnalytics';
-import PageLoadingState from '@/components/common/PageLoadingState';
-import PageErrorState from '@/components/common/PageErrorState';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { dataService } from '@/services/data-service';
+import DashboardStateHandler from '@/components/dashboard/DashboardStateHandler';
 
 const Dashboard: React.FC = () => {
-  const { 
-    data, 
-    isLoading, 
-    error, 
-    refetch 
-  } = useOptimizedDashboardData();
+  const { user } = useAuth();
 
-  const actions = (
-    <BarChart3 className="h-5 w-5 text-primary" />
-  );
-
-  if (isLoading) {
-    return (
-      <StandardPageLayout 
-        title="Dashboard"
-        actions={actions}
-      >
-        <PageLoadingState message="Loading dashboard data..." />
-      </StandardPageLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <StandardPageLayout 
-        title="Dashboard"
-        actions={actions}
-      >
-        <PageErrorState 
-          error={error}
-          onRetry={refetch}
-          title="Dashboard Error"
-          description="Failed to load dashboard data. Please try again."
-        />
-      </StandardPageLayout>
-    );
-  }
-
-  // Transform data to match expected interface
-  const transformedData = data ? {
-    teacher: data.teacher,
-    students: data.students,
-    assessments: data.assessments,
-    summary: {
-      totalStudents: data.metrics.totalStudents,
-      totalAssessments: data.metrics.totalAssessments,
-      averageScore: data.metrics.averagePerformance,
-      studentsNeedingAttention: data.metrics.studentsNeedingAttention
+  const {
+    data,
+    isLoading: isInitialLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['dashboard-data', user?.id],
+    queryFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      
+      // Ensure student performance records exist
+      await dataService.ensureStudentPerformanceRecords(user.id);
+      
+      // Fetch dashboard data
+      return await dataService.getDashboardData(user.id);
+    },
+    enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: 2,
+    refetchOnWindowFocus: false,
+    onError: (error) => {
+      console.error('Dashboard query error:', error);
     }
-  } : null;
+  });
 
-  if (!transformedData) {
-    return (
-      <StandardPageLayout 
-        title="Dashboard"
-        actions={actions}
-      >
-        <PageLoadingState message="Loading dashboard data..." />
-      </StandardPageLayout>
-    );
-  }
+  // Check if we have an empty state (no students)
+  const isEmpty = data && data.students.length === 0;
 
   return (
-    <StandardPageLayout 
-      title="Dashboard"
-      description="Welcome to your educational insights dashboard"
-      actions={actions}
-    >
-      <div className="space-y-8">
-        <DashboardContent 
-          data={transformedData}
-        />
-        
-        {/* Class Analytics Section */}
-        <div className="border-t pt-8">
-          <h2 className="text-xl font-semibold mb-6">Class Analytics</h2>
-          <ClassAnalytics />
-        </div>
-      </div>
-    </StandardPageLayout>
+    <DashboardStateHandler
+      isInitialLoading={isInitialLoading}
+      error={error}
+      data={data}
+      isEmpty={isEmpty}
+      refetch={refetch}
+    />
   );
 };
 

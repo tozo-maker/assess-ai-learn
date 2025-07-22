@@ -12,6 +12,7 @@ import { ProtectedRoute } from './RouteGuards';
 
 export const AssessmentRoutes = () => (
   <React.Fragment>
+    {/* Main assessments list page */}
     <Route
       path="/app/assessments"
       element={
@@ -20,7 +21,8 @@ export const AssessmentRoutes = () => (
         </ProtectedRoute>
       }
     />
-    {/* Static routes BEFORE dynamic routes */}
+    
+    {/* Static routes - MUST come before dynamic routes */}
     <Route
       path="/app/assessments/add"
       element={
@@ -37,7 +39,8 @@ export const AssessmentRoutes = () => (
         </ProtectedRoute>
       }
     />
-    {/* Dynamic routes AFTER static routes */}
+    
+    {/* Dynamic routes with ID parameters - MUST come after static routes */}
     <Route
       path="/app/assessments/:id/edit"
       element={

@@ -1,66 +1,66 @@
 
 import React from 'react';
 import StandardPageLayout from '@/components/layout/StandardPageLayout';
-import { BookOpen } from 'lucide-react';
-import SkillsMainContent from '@/components/skills/SkillsMainContent';
+import { useSkillsInitialization } from '@/hooks/useSkillsInitialization';
 import { useSkillsData } from '@/hooks/useSkillsData';
-import PageLoadingState from '@/components/common/PageLoadingState';
-import PageErrorState from '@/components/common/PageErrorState';
+import SkillsFilters from '@/components/skills/SkillsFilters';
+import SkillsTable from '@/components/skills/SkillsTable';
 
 const Skills: React.FC = () => {
-  const {
-    skills,
-    filteredSkills,
-    isLoading,
-    error,
-    refetch,
-    filters,
-    setFilters
-  } = useSkillsData();
+  const { isLoading: isInitializing, hasSkills } = useSkillsInitialization();
+  const { skills, filteredSkills, isLoading: isLoadingSkills, filters, setFilters } = useSkillsData();
 
-  const actions = (
-    <BookOpen className="h-5 w-5 text-primary" />
-  );
+  const isLoading = isInitializing || isLoadingSkills;
 
   if (isLoading) {
     return (
-      <StandardPageLayout 
+      <StandardPageLayout
         title="Skills Management"
-        actions={actions}
+        subtitle="Manage curriculum skills and learning objectives"
       >
-        <PageLoadingState message="Loading skills data..." />
+        <div className="flex justify-center items-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-gray-600">
+              {isInitializing ? 'Initializing skills database...' : 'Loading skills...'}
+            </p>
+          </div>
+        </div>
       </StandardPageLayout>
     );
   }
 
-  if (error) {
+  if (!hasSkills && !isLoading) {
     return (
-      <StandardPageLayout 
+      <StandardPageLayout
         title="Skills Management"
-        actions={actions}
+        subtitle="Manage curriculum skills and learning objectives"
       >
-        <PageErrorState 
-          error={error}
-          onRetry={refetch}
-          title="Skills Loading Error"
-          description="Failed to load skills data. Please try again."
-        />
+        <div className="text-center py-8">
+          <p className="text-gray-600 mb-4">No skills available. Please contact support.</p>
+        </div>
       </StandardPageLayout>
     );
   }
 
   return (
-    <StandardPageLayout 
+    <StandardPageLayout
       title="Skills Management"
-      description="Manage skills, categories, and track student mastery"
-      actions={actions}
+      subtitle={`${filteredSkills.length} of ${skills.length} skills`}
     >
-      <SkillsMainContent
-        skills={skills || []}
-        filteredSkills={filteredSkills || []}
-        filters={filters}
-        onFiltersChange={setFilters}
-      />
+      <div className="space-y-6">
+        <SkillsFilters 
+          filters={filters}
+          onFiltersChange={setFilters}
+          totalSkills={skills.length}
+          filteredCount={filteredSkills.length}
+        />
+        
+        <SkillsTable 
+          skills={filteredSkills}
+          isLoading={isLoading}
+        />
+      </div>
     </StandardPageLayout>
   );
 };
