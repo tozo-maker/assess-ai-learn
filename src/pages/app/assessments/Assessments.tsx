@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import AssessmentsMainContent from '@/components/assessments/AssessmentsMainContent';
 import { assessmentService } from '@/services/assessment-service';
 import { useToast } from '@/hooks/use-toast';

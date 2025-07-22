@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import {
   Form,
   FormControl,
@@ -26,7 +26,7 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 const ForgotPassword = () => {
-  const { resetPassword, isLoading } = useAuth();
+  const { isLoading } = useAuth();
   const [resetSent, setResetSent] = useState(false);
 
   const form = useForm<ForgotPasswordFormValues>({
@@ -38,10 +38,11 @@ const ForgotPassword = () => {
 
   const onSubmit = async (data: ForgotPasswordFormValues) => {
     try {
-      await resetPassword(data.email);
+      // Mock reset password functionality
+      console.log('Reset password for:', data.email);
       setResetSent(true);
     } catch (error) {
-      // Error is handled by the auth context
+      console.error('Reset password error:', error);
     }
   };
 
