@@ -6,7 +6,7 @@ import AppSidebar from './AppSidebar';
 import ProductionErrorBoundary from '@/components/common/ProductionErrorBoundary';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import UniversalSearch from '@/components/search/UniversalSearch';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
 

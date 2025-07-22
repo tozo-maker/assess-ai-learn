@@ -13,19 +13,19 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { User, Settings, LogOut } from 'lucide-react';
 import RealtimeNotificationBell from '@/components/realtime/RealtimeNotificationBell';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile } = useAuth();
+  const { user, signOut } = useAuth();
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
-      navigate('/login');
+      await signOut();
+      navigate('/auth/login');
       toast({
         title: 'Signed out successfully',
         description: 'You have been signed out of your account.',
@@ -39,7 +39,7 @@ const Header: React.FC = () => {
     }
   };
 
-  const teacherName = profile?.full_name || 'Teacher';
+  const teacherName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Teacher';
   const initials = teacherName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
@@ -73,7 +73,7 @@ const Header: React.FC = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center space-x-3 px-3 py-2 h-auto">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={profile?.avatar_url} alt={teacherName} />
+                    <AvatarImage src={user?.user_metadata?.avatar_url} alt={teacherName} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
                       {initials}
                     </AvatarFallback>

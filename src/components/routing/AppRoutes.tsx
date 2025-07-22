@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { PublicRoute, ProtectedRoute } from './RouteGuards';
+import AppLayout from '@/components/layout/AppLayout';
 
 // Public pages
 import LandingPage from '@/pages/Index';
@@ -53,39 +53,41 @@ export const AppRoutes = () => {
       <Route path="/auth/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/auth/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
 
-      {/* Protected App Routes */}
-      <Route path="/app/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-      
-      {/* Student Routes */}
-      <Route path="/app/students" element={<ProtectedRoute><StudentsPage /></ProtectedRoute>} />
-      <Route path="/app/students/add" element={<ProtectedRoute><AddStudentPage /></ProtectedRoute>} />
-      <Route path="/app/students/import" element={<ProtectedRoute><ImportStudentsPage /></ProtectedRoute>} />
-      <Route path="/app/students/:id" element={<ProtectedRoute><StudentDetailsPage /></ProtectedRoute>} />
-      <Route path="/app/students/:id/assessments" element={<ProtectedRoute><StudentAssessments /></ProtectedRoute>} />
-      
-      {/* Assessment Routes */}
-      <Route path="/app/assessments" element={<ProtectedRoute><AssessmentsPage /></ProtectedRoute>} />
-      <Route path="/app/assessments/add" element={<ProtectedRoute><AddAssessmentPage /></ProtectedRoute>} />
-      <Route path="/app/assessments/batch" element={<ProtectedRoute><BatchAssessment /></ProtectedRoute>} />
-      <Route path="/app/assessments/:id/edit" element={<ProtectedRoute><EditAssessmentPage /></ProtectedRoute>} />
-      <Route path="/app/assessments/:id/responses" element={<ProtectedRoute><ResponsesPage /></ProtectedRoute>} />
-      <Route path="/app/assessments/:id/results" element={<ProtectedRoute><AssessmentResults /></ProtectedRoute>} />
-      <Route path="/app/assessments/:id" element={<ProtectedRoute><AssessmentDetailsPage /></ProtectedRoute>} />
-      
-      {/* Other App Routes */}
-      <Route path="/app/goals" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
-      <Route path="/app/skills" element={<ProtectedRoute><SkillsPage /></ProtectedRoute>} />
-      <Route path="/app/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
-      <Route path="/app/reports/progress-reports" element={<ProtectedRoute><ProgressReports /></ProtectedRoute>} />
-      <Route path="/app/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
-      <Route path="/app/help" element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
-      <Route path="/app/settings/profile" element={<ProtectedRoute><SettingsProfilePage /></ProtectedRoute>} />
-      <Route path="/app/audit" element={<ProtectedRoute><ProductionAudit /></ProtectedRoute>} />
-      <Route path="/app/audit/comprehensive" element={<ProtectedRoute><ComprehensiveAudit /></ProtectedRoute>} />
-      <Route path="/app/verification" element={<ProtectedRoute><SystemVerification /></ProtectedRoute>} />
-      
-      {/* Default redirects */}
-      <Route path="/app" element={<Navigate to="/app/dashboard" replace />} />
+      {/* Protected App Routes - All wrapped with AppLayout */}
+      <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+        <Route path="dashboard" element={<DashboardPage />} />
+        
+        {/* Student Routes */}
+        <Route path="students" element={<StudentsPage />} />
+        <Route path="students/add" element={<AddStudentPage />} />
+        <Route path="students/import" element={<ImportStudentsPage />} />
+        <Route path="students/:id" element={<StudentDetailsPage />} />
+        <Route path="students/:id/assessments" element={<StudentAssessments />} />
+        
+        {/* Assessment Routes */}
+        <Route path="assessments" element={<AssessmentsPage />} />
+        <Route path="assessments/add" element={<AddAssessmentPage />} />
+        <Route path="assessments/batch" element={<BatchAssessment />} />
+        <Route path="assessments/:id/edit" element={<EditAssessmentPage />} />
+        <Route path="assessments/:id/responses" element={<ResponsesPage />} />
+        <Route path="assessments/:id/results" element={<AssessmentResults />} />
+        <Route path="assessments/:id" element={<AssessmentDetailsPage />} />
+        
+        {/* Other App Routes */}
+        <Route path="goals" element={<GoalsPage />} />
+        <Route path="skills" element={<SkillsPage />} />
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="reports/progress-reports" element={<ProgressReports />} />
+        <Route path="communications" element={<Communications />} />
+        <Route path="help" element={<HelpPage />} />
+        <Route path="settings/profile" element={<SettingsProfilePage />} />
+        <Route path="audit" element={<ProductionAudit />} />
+        <Route path="audit/comprehensive" element={<ComprehensiveAudit />} />
+        <Route path="verification" element={<SystemVerification />} />
+        
+        {/* Default redirect */}
+        <Route index element={<Navigate to="dashboard" replace />} />
+      </Route>
     </Routes>
   );
 };
