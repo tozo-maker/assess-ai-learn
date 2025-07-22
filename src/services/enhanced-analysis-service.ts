@@ -121,7 +121,7 @@ class EnhancedAnalysisService {
         throw error;
       }
 
-      return data ? data as EnhancedAnalysisResult : null;
+      return data ? (data as unknown as EnhancedAnalysisResult) : null;
     } catch (error) {
       errorService.logError('EnhancedAnalysisService', error as Error, {
         action: 'getAnalysis',
@@ -152,7 +152,7 @@ class EnhancedAnalysisService {
         throw error;
       }
 
-      return data ? data.map(item => item as EnhancedAnalysisResult) : [];
+      return data ? data.map(item => item as unknown as EnhancedAnalysisResult) : [];
     } catch (error) {
       errorService.logError('EnhancedAnalysisService', error as Error, {
         action: 'getAnalysesForAssessment',
@@ -212,7 +212,7 @@ class EnhancedAnalysisService {
       .eq('student_id', studentId)
       .maybeSingle();
 
-    return data ? data as EnhancedAnalysisResult : null;
+    return data ? (data as unknown as EnhancedAnalysisResult) : null;
   }
 
   private async fetchAnalysisContext(assessmentId: string, studentId: string) {
@@ -325,7 +325,7 @@ class EnhancedAnalysisService {
         throw error;
       }
 
-      return data as EnhancedAnalysisResult;
+      return data as unknown as EnhancedAnalysisResult;
     } catch (error) {
       errorService.logError('EnhancedAnalysisService', error as Error, {
         action: 'saveAnalysisResult',

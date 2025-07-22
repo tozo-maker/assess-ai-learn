@@ -199,7 +199,7 @@ class EnhancedDashboardMetricsService {
 
   private async fetchGoalsData(teacherId: string, filters: DashboardFilter) {
     const { data, error } = await supabase
-      .from('learning_goals')
+      .from('goals')
       .select(`
         *,
         students!inner(teacher_id, grade_level)
@@ -389,8 +389,8 @@ class EnhancedDashboardMetricsService {
     const allStrengths = analyses.flatMap(a => a.strengths || []);
     const allGrowthAreas = analyses.flatMap(a => a.growth_areas || []);
 
-    const topStrengths = this.getTopItems(allStrengths).slice(0, 5);
-    const commonGrowthAreas = this.getTopItems(allGrowthAreas).slice(0, 5);
+    const topStrengths = this.getTopItems(allStrengths).slice(0, 5).map(item => ({ strength: item.item, frequency: item.frequency }));
+    const commonGrowthAreas = this.getTopItems(allGrowthAreas).slice(0, 5).map(item => ({ area: item.item, frequency: item.frequency }));
 
     // Calculate engagement metrics
     const totalStudents = new Set(responses.map(r => r.student_id)).size;
