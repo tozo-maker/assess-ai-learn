@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { initializePerformanceOptimizations } from '@/services/performance-optimization';
 import { setupGlobalErrorHandlers } from '@/utils/error-boundary-helper';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -49,6 +49,7 @@ import {
   LazyHelp,
   withLazyLoading
 } from '@/components/common/LazyRoutes';
+import PageLoadingState from '@/components/common/PageLoadingState';
 import EmailCenter from '@/pages/app/communications/EmailCenter';
 
 // Create optimized query client instance for better performance
@@ -115,7 +116,11 @@ function App() {
                           <AppLayout>
                         <Routes>
                           {/* Dashboard */}
-                          <Route path="dashboard" element={withLazyLoading(LazyDashboard)({})} />
+                          <Route path="dashboard" element={
+                            <Suspense fallback={<PageLoadingState message="Loading dashboard..." />}>
+                              <LazyDashboard />
+                            </Suspense>
+                          } />
                           
                           {/* Students */}
                           <Route path="students" element={withLazyLoading(LazyStudents)({})} />
