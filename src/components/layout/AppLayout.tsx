@@ -19,40 +19,48 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   return (
     <ProductionErrorBoundary>
-      {/* Top Header */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white sticky top-0 z-10">
-        <SidebarTrigger className="-ml-1" />
+      <div className="flex min-h-screen w-full">
+        {/* Sidebar */}
+        <AppSidebar />
         
-        {/* Search Bar */}
-        <div className="flex-1 max-w-2xl">
-          <UniversalSearch />
-        </div>
-        
-        {/* User Actions */}
-        <div className="flex items-center gap-4">
-          <NotificationCenter />
+        {/* Main content area */}
+        <SidebarInset className="flex-1">
+          {/* Top Header */}
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white sticky top-0 z-10">
+            <SidebarTrigger className="-ml-1" />
+            
+            {/* Search Bar */}
+            <div className="flex-1 max-w-2xl">
+              <UniversalSearch />
+            </div>
+            
+            {/* User Actions */}
+            <div className="flex items-center gap-4">
+              <NotificationCenter />
+              
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <User className="h-4 w-4" />
+                <span>{user?.email}</span>
+              </div>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={signOut}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
+          </header>
           
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <User className="h-4 w-4" />
-            <span>{user?.email}</span>
-          </div>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={signOut}
-            className="flex items-center gap-2"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </Button>
-        </div>
-      </header>
-      
-      {/* Page Content */}
-      <main className="flex-1 overflow-auto">
-        {children || <Outlet />}
-      </main>
+          {/* Page Content */}
+          <main className="flex-1 overflow-auto p-6">
+            {children || <Outlet />}
+          </main>
+        </SidebarInset>
+      </div>
     </ProductionErrorBoundary>
   );
 };

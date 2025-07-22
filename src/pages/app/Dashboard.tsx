@@ -39,7 +39,7 @@ const Dashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="space-y-6">
         <div className="animate-pulse space-y-6">
           <div className="h-8 bg-gray-200 rounded w-1/3"></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -54,17 +54,15 @@ const Dashboard: React.FC = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-red-800 mb-2">Error Loading Dashboard</h2>
-          <p className="text-red-600">{(error as Error).message}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Reload Page
-          </button>
-        </div>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <h2 className="text-lg font-semibold text-red-800 mb-2">Error Loading Dashboard</h2>
+        <p className="text-red-600">{(error as Error).message}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Reload Page
+        </button>
       </div>
     );
   }
@@ -83,7 +81,7 @@ const Dashboard: React.FC = () => {
   }).length;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6">
       {/* Welcome Section */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
