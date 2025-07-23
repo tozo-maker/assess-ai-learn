@@ -1,4 +1,3 @@
-
 import { toast } from '@/hooks/use-toast';
 
 export interface ErrorReport {
@@ -124,25 +123,17 @@ class ErrorService {
   }
 
   private sendToErrorTracking(error: ErrorReport): void {
-    // Enhanced error tracking for production
-    try {
-      // This would integrate with services like Sentry, LogRocket, etc.
-      console.log('Error tracked:', {
-        id: error.id,
-        component: error.component,
-        message: error.error.message,
-        timestamp: error.timestamp,
-        context: error.context
-      });
-    } catch (trackingError) {
-      console.warn('Failed to send error to tracking service:', trackingError);
+    // Placeholder for external error tracking service
+    // e.g., Sentry, LogRocket, etc.
+    if (process.env.NODE_ENV === 'production') {
+      console.log('Would send to error tracking:', error);
     }
   }
 }
 
 export const errorService = ErrorService.getInstance();
 
-// Enhanced hook for using error service in components
+// Hook for using error service in components
 export const useErrorHandler = (component: string) => {
   const logError = (error: Error, context: Record<string, any> = {}, showToast = false) => {
     return errorService.logError(component, error, context, undefined, showToast);
