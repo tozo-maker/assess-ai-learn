@@ -66,6 +66,14 @@ export const AssessmentRoutes = () => (
       }
     />
     <Route
+      path="/app/assessments/:id/analysis"
+      element={
+        <ProtectedRoute>
+          <AssessmentResults />
+        </ProtectedRoute>
+      }
+    />
+    <Route
       path="/app/assessments/:id"
       element={
         <ProtectedRoute>

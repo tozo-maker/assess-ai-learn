@@ -20,9 +20,8 @@ import {
 
 const AddAssessment: React.FC = () => {
   return (
-    <AppLayout>
-      <DSSection>
-        <DSPageContainer>
+    <DSSection>
+      <DSPageContainer>
           <Breadcrumbs />
           
           {/* Page Header - Standardized */}
@@ -47,9 +46,8 @@ const AddAssessment: React.FC = () => {
 
           {/* Assessment Wizard */}
           <AssessmentWizard />
-        </DSPageContainer>
-      </DSSection>
-    </AppLayout>
+      </DSPageContainer>
+    </DSSection>
   );
 };
 

@@ -58,7 +58,7 @@ const AppSidebar: React.FC = () => {
   ];
 
   const system = [
-    { name: 'Testing', href: '/app/testing', icon: TestTube },
+    ...(process.env.NODE_ENV === 'development' ? [{ name: 'Testing', href: '/app/testing', icon: TestTube }] : []),
     { name: 'Help', href: '/app/help', icon: HelpCircle },
   ];
 

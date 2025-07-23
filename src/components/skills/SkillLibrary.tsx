@@ -4,11 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, BookOpen, Target } from 'lucide-react';
-import { Skill, SkillCategory } from '@/services/skills-service';
-import CreateSkillDialog from './CreateSkillDialog';
-import EditSkillDialog from './EditSkillDialog';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { skillsService } from '@/services/skills-service';
+import { SkillForm } from './SkillForm';
+import type { Skill, SkillCategory } from '@/services/skills-service';
 
 interface SkillLibraryProps {
   skills: Skill[];
@@ -18,25 +18,97 @@ interface SkillLibraryProps {
 }
 
 const SkillLibrary: React.FC<SkillLibraryProps> = ({ skills, categories, isLoading, onRefresh }) => {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
+  const [skillFormOpen, setSkillFormOpen] = useState(false);
+  const [editingSkill, setEditingSkill] = useState<Skill | undefined>();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const handleDeleteSkill = async (skillId: string) => {
-    try {
-      await skillsService.deleteSkill(skillId);
+  const createSkillMutation = useMutation({
+    mutationFn: skillsService.createSkill,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['skills'] });
       toast({
-        title: "Success",
-        description: "Skill deleted successfully.",
+        title: 'Success',
+        description: 'Skill created successfully',
       });
       onRefresh();
-    } catch (error) {
+    },
+    onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to delete skill. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to create skill',
+        variant: 'destructive',
       });
+    },
+  });
+
+  const updateSkillMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Skill> }) =>
+      skillsService.updateSkill(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['skills'] });
+      toast({
+        title: 'Success',
+        description: 'Skill updated successfully',
+      });
+      onRefresh();
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to update skill',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteSkillMutation = useMutation({
+    mutationFn: skillsService.deleteSkill,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['skills'] });
+      toast({
+        title: 'Success',
+        description: 'Skill deleted successfully',
+      });
+      onRefresh();
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete skill',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleCreateSkill = async (data: any) => {
+    await createSkillMutation.mutateAsync(data);
+  };
+
+  const handleUpdateSkill = async (data: any) => {
+    if (editingSkill) {
+      await updateSkillMutation.mutateAsync({
+        id: editingSkill.id,
+        updates: data,
+      });
+      setEditingSkill(undefined);
     }
+  };
+
+  const handleDeleteSkill = async (skillId: string) => {
+    if (confirm('Are you sure you want to delete this skill?')) {
+      await deleteSkillMutation.mutateAsync(skillId);
+    }
+  };
+
+  const openEditForm = (skill: Skill) => {
+    setEditingSkill(skill);
+    setSkillFormOpen(true);
+  };
+
+  const closeSkillForm = () => {
+    setSkillFormOpen(false);
+    setEditingSkill(undefined);
   };
 
   const getDifficultyColor = (level: number) => {
@@ -76,7 +148,7 @@ const SkillLibrary: React.FC<SkillLibraryProps> = ({ skills, categories, isLoadi
           <h3 className="text-lg font-semibold">Skills Library</h3>
           <p className="text-gray-600">Manage and organize your curriculum skills</p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
+        <Button onClick={() => setSkillFormOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Add Skill
         </Button>
@@ -99,7 +171,7 @@ const SkillLibrary: React.FC<SkillLibraryProps> = ({ skills, categories, isLoadi
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setEditingSkill(skill)}
+                    onClick={() => openEditForm(skill)}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -151,7 +223,7 @@ const SkillLibrary: React.FC<SkillLibraryProps> = ({ skills, categories, isLoadi
             <p className="text-gray-600 mb-4">
               Start building your skills library by adding your first skill.
             </p>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Button onClick={() => setSkillFormOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Add First Skill
             </Button>
@@ -159,22 +231,14 @@ const SkillLibrary: React.FC<SkillLibraryProps> = ({ skills, categories, isLoadi
         </Card>
       )}
 
-      <CreateSkillDialog
-        isOpen={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
+      <SkillForm
+        open={skillFormOpen}
+        onClose={closeSkillForm}
+        onSubmit={editingSkill ? handleUpdateSkill : handleCreateSkill}
+        skill={editingSkill}
         categories={categories}
-        onSuccess={onRefresh}
+        isLoading={createSkillMutation.isPending || updateSkillMutation.isPending}
       />
-
-      {editingSkill && (
-        <EditSkillDialog
-          skill={editingSkill}
-          isOpen={!!editingSkill}
-          onOpenChange={(open) => !open && setEditingSkill(null)}
-          categories={categories}
-          onSuccess={onRefresh}
-        />
-      )}
     </>
   );
 };

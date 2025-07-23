@@ -115,7 +115,7 @@ const AddStudent = () => {
   };
 
   return (
-    <AppLayout>
+    <>
       <Breadcrumbs />
       <DSSection>
         <DSPageContainer>
@@ -329,7 +329,7 @@ const AddStudent = () => {
           </DSCard>
         </DSPageContainer>
       </DSSection>
-    </AppLayout>
+    </>
   );
 };
 

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import {
   Form,
   FormControl,
@@ -81,7 +81,7 @@ const experienceOptions = [
 ];
 
 const ProfileSettings = () => {
-  const { profile, updateProfile, updatePassword, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('general');
 
   const profileForm = useForm<ProfileFormValues>({
@@ -105,32 +105,26 @@ const ProfileSettings = () => {
   });
 
   useEffect(() => {
-    if (profile) {
+    if (user) {
       profileForm.reset({
-        full_name: profile.full_name,
-        school: profile.school || '',
-        years_experience: profile.years_experience,
-        grade_levels: profile.grade_levels,
-        subjects: profile.subjects,
+        full_name: user.user_metadata?.full_name || '',
+        school: user.user_metadata?.school || '',
+        years_experience: user.user_metadata?.years_experience,
+        grade_levels: user.user_metadata?.grade_levels || [],
+        subjects: user.user_metadata?.subjects || [],
       });
     }
-  }, [profile, profileForm]);
+  }, [user, profileForm]);
 
   const handleProfileUpdate = async (data: ProfileFormValues) => {
-    try {
-      await updateProfile(data as Partial<TeacherProfile>);
-    } catch (error) {
-      // Error is handled by the auth context
-    }
+    // Profile update functionality to be implemented with proper auth service
+    console.log('Profile update:', data);
   };
 
   const handlePasswordUpdate = async (data: PasswordFormValues) => {
-    try {
-      await updatePassword(data.newPassword);
-      passwordForm.reset();
-    } catch (error) {
-      // Error is handled by the auth context
-    }
+    // Password update functionality to be implemented with proper auth service
+    console.log('Password update requested');
+    passwordForm.reset();
   };
 
   return (

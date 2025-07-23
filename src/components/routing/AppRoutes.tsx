@@ -100,6 +100,7 @@ export const AppRoutes = () => {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="reports/progress-reports" element={<ProgressReports />} />
         <Route path="communications" element={<Communications />} />
+        <Route path="communications/email" element={<Communications />} />
         <Route path="help" element={<HelpPage />} />
         <Route path="settings/profile" element={<SettingsProfilePage />} />
         <Route path="audit" element={<ProductionAudit />} />

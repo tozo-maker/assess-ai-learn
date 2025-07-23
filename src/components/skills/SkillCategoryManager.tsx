@@ -4,9 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Folder } from 'lucide-react';
-import { SkillCategory, skillsService } from '@/services/skills-service';
-import CreateCategoryDialog from './CreateCategoryDialog';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { skillsService } from '@/services/skills-service';
+import { CategoryForm } from './CategoryForm';
+import type { SkillCategory } from '@/services/skills-service';
 
 interface SkillCategoryManagerProps {
   categories: SkillCategory[];
@@ -14,8 +16,43 @@ interface SkillCategoryManagerProps {
 }
 
 const SkillCategoryManager: React.FC<SkillCategoryManagerProps> = ({ categories, onRefresh }) => {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [categoryFormOpen, setCategoryFormOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<SkillCategory | undefined>();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const createCategoryMutation = useMutation({
+    mutationFn: skillsService.createSkillCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['skill-categories'] });
+      toast({
+        title: 'Success',
+        description: 'Category created successfully',
+      });
+      onRefresh();
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to create category',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleCreateCategory = async (data: any) => {
+    await createCategoryMutation.mutateAsync(data);
+  };
+
+  const openEditForm = (category: SkillCategory) => {
+    setEditingCategory(category);
+    setCategoryFormOpen(true);
+  };
+
+  const closeCategoryForm = () => {
+    setCategoryFormOpen(false);
+    setEditingCategory(undefined);
+  };
 
   // Group categories by subject
   const categoriesBySubject = categories.reduce((acc, category) => {
@@ -33,7 +70,7 @@ const SkillCategoryManager: React.FC<SkillCategoryManagerProps> = ({ categories,
           <h3 className="text-lg font-semibold">Skill Categories</h3>
           <p className="text-gray-600">Organize skills into logical categories</p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
+        <Button onClick={() => setCategoryFormOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Add Category
         </Button>
@@ -61,7 +98,11 @@ const SkillCategoryManager: React.FC<SkillCategoryManagerProps> = ({ categories,
                           )}
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => openEditForm(category)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                     </div>
@@ -93,7 +134,7 @@ const SkillCategoryManager: React.FC<SkillCategoryManagerProps> = ({ categories,
             <p className="text-gray-600 mb-4">
               Create your first skill category to organize your curriculum.
             </p>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Button onClick={() => setCategoryFormOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Add First Category
             </Button>
@@ -101,10 +142,12 @@ const SkillCategoryManager: React.FC<SkillCategoryManagerProps> = ({ categories,
         </Card>
       )}
 
-      <CreateCategoryDialog
-        isOpen={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onSuccess={onRefresh}
+      <CategoryForm
+        open={categoryFormOpen}
+        onClose={closeCategoryForm}
+        onSubmit={handleCreateCategory}
+        category={editingCategory}
+        isLoading={createCategoryMutation.isPending}
       />
     </>
   );
