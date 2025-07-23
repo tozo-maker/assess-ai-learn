@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Brain, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import {
@@ -12,7 +11,7 @@ import {
 } from '@/components/ui/design-system';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 
 const AIAnalysisStatusCard: React.FC = () => {
   const { user } = useAuth();
