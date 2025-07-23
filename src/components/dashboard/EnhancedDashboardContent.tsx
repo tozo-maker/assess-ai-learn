@@ -6,10 +6,10 @@ import PerformanceSection from './PerformanceSection';
 import DashboardPerformanceWidget from './DashboardPerformanceWidget';
 import AIAnalysisStatusCard from './AIAnalysisStatusCard';
 import PerformanceMetricsWidget from './PerformanceMetricsWidget';
-import QuickActions from './QuickActions';
+import EnhancedQuickActions from './EnhancedQuickActions';
 import RecentActivity from './RecentActivity';
-import AlertsCenter from './AlertsCenter';
-import PerformanceHeatmap from './PerformanceHeatmap';
+import PerformanceHeatmapEnhanced from './PerformanceHeatmapEnhanced';
+import EnhancedAlertsCenter from '../alerts/EnhancedAlertsCenter';
 import {
   DSSection,
   DSContentGrid,
@@ -24,31 +24,45 @@ const EnhancedDashboardContent: React.FC<EnhancedDashboardContentProps> = ({ dat
   const navigate = useNavigate();
   const dashboardData = data?.data || data;
   
-  // Mock data for new components - in real implementation, this would come from dashboardData
-  const mockAlerts = [
+  // Enhanced mock data for alerts center
+  const mockEnhancedAlerts = [
     {
       id: '1',
-      type: 'performance_drop' as const,
-      severity: 'high' as const,
-      student_id: '1',
-      student_name: 'John Smith',
-      title: 'Math Performance Declining',
-      description: 'Student showing 15% drop in recent assessments',
-      created_at: new Date().toISOString(),
-      is_dismissed: false,
-      action_required: true
+      type: 'critical' as const,
+      title: 'Math Performance Critical Drop',
+      message: 'John Smith showing 25% drop in recent math assessments over past week',
+      details: 'Student has struggled with algebra concepts in last 3 assessments. Recommendation: Schedule one-on-one tutoring session and review foundational concepts.',
+      studentName: 'John Smith',
+      timestamp: new Date(),
+      dismissible: true,
+      expandable: true,
+      actionRequired: true,
+      metadata: { subject: 'Mathematics', dropPercentage: 25, assessmentCount: 3 }
     },
     {
       id: '2', 
-      type: 'goal_overdue' as const,
-      severity: 'medium' as const,
-      student_id: '2',
-      student_name: 'Sarah Johnson',
+      type: 'high' as const,
       title: 'Reading Goal Overdue',
-      description: 'Goal deadline passed 3 days ago',
-      created_at: new Date(Date.now() - 86400000).toISOString(),
-      is_dismissed: false,
-      action_required: true
+      message: 'Sarah Johnson has missed reading comprehension goal deadline',
+      details: 'Goal was set for 3 weeks ago. Student is at 65% completion. Suggest extending deadline and providing additional reading materials.',
+      studentName: 'Sarah Johnson',
+      timestamp: new Date(Date.now() - 86400000 * 3),
+      dismissible: true,
+      expandable: true,
+      actionRequired: true,
+      metadata: { goalType: 'Reading Comprehension', completionPercentage: 65 }
+    },
+    {
+      id: '3',
+      type: 'medium' as const,
+      title: 'Class Average Below Target',
+      message: 'Science class average dropped to 78% this week',
+      details: 'Weekly quiz results show decline from previous 85% average. Consider reviewing recent topics and providing additional practice materials.',
+      timestamp: new Date(Date.now() - 86400000),
+      dismissible: true,
+      expandable: true,
+      actionRequired: false,
+      metadata: { subject: 'Science', currentAverage: 78, previousAverage: 85 }
     }
   ];
 
@@ -78,7 +92,8 @@ const EnhancedDashboardContent: React.FC<EnhancedDashboardContentProps> = ({ dat
       skills: {
         'Math': { score: 78, assessmentCount: 5, lastAssessed: new Date(), trend: 'down' as const },
         'Reading': { score: 85, assessmentCount: 3, lastAssessed: new Date(), trend: 'up' as const },
-        'Science': { score: 92, assessmentCount: 4, lastAssessed: new Date(), trend: 'stable' as const }
+        'Science': { score: 92, assessmentCount: 4, lastAssessed: new Date(), trend: 'stable' as const },
+        'Writing': { score: 88, assessmentCount: 2, lastAssessed: new Date(), trend: 'up' as const }
       }
     },
     {
@@ -87,29 +102,46 @@ const EnhancedDashboardContent: React.FC<EnhancedDashboardContentProps> = ({ dat
       skills: {
         'Math': { score: 88, assessmentCount: 4, lastAssessed: new Date(), trend: 'up' as const },
         'Reading': { score: 76, assessmentCount: 6, lastAssessed: new Date(), trend: 'down' as const },
-        'Science': { score: 89, assessmentCount: 3, lastAssessed: new Date(), trend: 'stable' as const }
+        'Science': { score: 89, assessmentCount: 3, lastAssessed: new Date(), trend: 'stable' as const },
+        'Writing': { score: 91, assessmentCount: 4, lastAssessed: new Date(), trend: 'up' as const }
+      }
+    },
+    {
+      studentId: '3',
+      studentName: 'Mike Davis',
+      skills: {
+        'Math': { score: 94, assessmentCount: 5, lastAssessed: new Date(), trend: 'up' as const },
+        'Reading': { score: 82, assessmentCount: 4, lastAssessed: new Date(), trend: 'stable' as const },
+        'Science': { score: 87, assessmentCount: 3, lastAssessed: new Date(), trend: 'up' as const },
+        'Writing': { score: 79, assessmentCount: 3, lastAssessed: new Date(), trend: 'down' as const }
       }
     }
-  ];
-
-  const mockRecentStudents = [
-    { id: '1', name: 'John Smith' },
-    { id: '2', name: 'Sarah Johnson' },
-    { id: '3', name: 'Mike Davis' }
   ];
 
   const handleQuickAction = (actionId: string, data?: any) => {
     console.log('Quick action:', actionId, data);
     
     switch (actionId) {
-      case 'add-assessment':
+      case 'add-student':
+        navigate('/app/students/add');
+        break;
+      case 'create-assessment':
         navigate('/app/assessments/add');
         break;
-      case 'view-class':
+      case 'view-insights':
+        navigate('/app/insights/class');
+        break;
+      case 'set-goals':
         navigate('/app/students');
         break;
-      case 'create-goal':
-        navigate('/app/goals');
+      case 'progress-report':
+        navigate('/app/reports');
+        break;
+      case 'curriculum-guide':
+        navigate('/app/curriculum');
+        break;
+      case 'parent-communication':
+        navigate('/app/communication');
         break;
       case 'view-student':
         if (data?.studentId) {
@@ -129,9 +161,18 @@ const EnhancedDashboardContent: React.FC<EnhancedDashboardContentProps> = ({ dat
     // In real implementation, this would update the alert status
   };
 
-  const handleTakeAction = (alert: any) => {
-    console.log('Taking action on alert:', alert);
-    // In real implementation, this would handle alert-specific actions
+  const handleBulkDismissAlerts = (alertIds: string[]) => {
+    console.log('Bulk dismissing alerts:', alertIds);
+    // In real implementation, this would update multiple alert statuses
+  };
+
+  const handleTakeAction = (alertId: string, action: string) => {
+    console.log('Taking action on alert:', alertId, action);
+    const alert = mockEnhancedAlerts.find(a => a.id === alertId);
+    if (alert?.studentName) {
+      // Navigate to student page for direct action
+      navigate('/app/students');
+    }
   };
 
   const handleActivityClick = (activity: any) => {
@@ -142,6 +183,11 @@ const EnhancedDashboardContent: React.FC<EnhancedDashboardContentProps> = ({ dat
   const handleHeatmapCellClick = (studentId: string, skill: string) => {
     console.log('Heatmap cell clicked:', studentId, skill);
     navigate(`/app/students/${studentId}`);
+  };
+
+  const handleRefreshAlerts = () => {
+    console.log('Refreshing alerts...');
+    // In real implementation, this would refetch alert data
   };
 
   return (
@@ -157,20 +203,19 @@ const EnhancedDashboardContent: React.FC<EnhancedDashboardContentProps> = ({ dat
         studentMetrics={dashboardData?.metrics?.studentMetrics}
       />
 
-      {/* Alerts and Quick Actions */}
+      {/* Enhanced Alerts Center and Quick Actions */}
       <DSContentGrid cols={2}>
         <DSGridItem span={1}>
-          <AlertsCenter
-            alerts={mockAlerts}
+          <EnhancedAlertsCenter
+            alerts={mockEnhancedAlerts}
             onDismissAlert={handleDismissAlert}
+            onBulkDismiss={handleBulkDismissAlerts}
             onTakeAction={handleTakeAction}
+            onRefresh={handleRefreshAlerts}
           />
         </DSGridItem>
         <DSGridItem span={1}>
-          <QuickActions
-            recentStudents={mockRecentStudents}
-            onAction={handleQuickAction}
-          />
+          <EnhancedQuickActions />
         </DSGridItem>
       </DSContentGrid>
 
@@ -180,11 +225,12 @@ const EnhancedDashboardContent: React.FC<EnhancedDashboardContentProps> = ({ dat
         studentMetrics={dashboardData?.metrics?.studentMetrics}
       />
 
-      {/* Performance Heatmap - Full Width */}
-      <PerformanceHeatmap
+      {/* Enhanced Performance Heatmap - Full Width */}
+      <PerformanceHeatmapEnhanced
         data={mockHeatmapData}
-        skillCategories={['Math', 'Reading', 'Science']}
+        skillCategories={['Math', 'Reading', 'Science', 'Writing']}
         timeRange="month"
+        onTimeRangeChange={(range) => console.log('Time range changed:', range)}
         onCellClick={handleHeatmapCellClick}
       />
 
