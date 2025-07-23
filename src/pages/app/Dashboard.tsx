@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
-import DashboardContentEnhanced from '@/components/dashboard/DashboardContentEnhanced';
+import IntegratedDashboard from '@/components/dashboard/IntegratedDashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, Loader2 } from 'lucide-react';
 
@@ -48,7 +48,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  return <DashboardContentEnhanced data={data} />;
+  return <IntegratedDashboard data={data} />;
 };
 
 export default Dashboard;
