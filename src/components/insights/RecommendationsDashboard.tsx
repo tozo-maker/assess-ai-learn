@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,16 @@ export const RecommendationsDashboard: React.FC = () => {
   const [filters, setFilters] = useState<RecommendationFilters>(getEmptyFilters());
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Define categorizeRecommendation function using useCallback
+  const categorizeRecommendation = useCallback((rec: string): string => {
+    const lower = rec.toLowerCase();
+    if (lower.includes('practice') || lower.includes('drill')) return 'practice';
+    if (lower.includes('support') || lower.includes('help')) return 'support';
+    if (lower.includes('challenge') || lower.includes('advance')) return 'enrichment';
+    if (lower.includes('review') || lower.includes('revisit')) return 'review';
+    return 'general';
+  }, []);
 
   // Fetch recommendations data
   const { data: recommendationsData, isLoading, refetch } = useQuery({
@@ -127,16 +137,7 @@ export const RecommendationsDashboard: React.FC = () => {
       totalCount: allRecommendations.length,
       filteredCount: filteredRecommendations.length
     };
-  }, [recommendationsData, filters]);
-
-  const categorizeRecommendation = (rec: string): string => {
-    const lower = rec.toLowerCase();
-    if (lower.includes('practice') || lower.includes('drill')) return 'practice';
-    if (lower.includes('support') || lower.includes('help')) return 'support';
-    if (lower.includes('challenge') || lower.includes('advance')) return 'enrichment';
-    if (lower.includes('review') || lower.includes('revisit')) return 'review';
-    return 'general';
-  };
+  }, [recommendationsData, filters, categorizeRecommendation]);
 
   const handleRecommendationAction = (recommendationId: string, action: string) => {
     if (action === 'implement') {
