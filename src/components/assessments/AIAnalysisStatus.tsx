@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Brain, Eye, Clock, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 
 interface AIAnalysisStatusProps {
   assessmentId: string;
@@ -17,9 +18,13 @@ const AIAnalysisStatus: React.FC<AIAnalysisStatusProps> = ({
   studentId,
   onViewAnalysis
 }) => {
+  const { user } = useAuth();
+  
   const { data: analysis, isLoading } = useQuery({
     queryKey: ['assessment-analysis', assessmentId, studentId],
     queryFn: async () => {
+      if (!user?.id) throw new Error('No authenticated user');
+      
       const { data, error } = await supabase
         .from('assessment_analysis')
         .select('*')
@@ -30,12 +35,13 @@ const AIAnalysisStatus: React.FC<AIAnalysisStatusProps> = ({
       if (error && error.code !== 'PGRST116') throw error;
       return data;
     },
+    enabled: !!user?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-500">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Clock className="h-4 w-4 animate-spin" />
         <span>Checking analysis...</span>
       </div>
@@ -44,7 +50,7 @@ const AIAnalysisStatus: React.FC<AIAnalysisStatusProps> = ({
 
   if (!analysis) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-500">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <AlertCircle className="h-4 w-4" />
         <span>No AI analysis available</span>
       </div>
@@ -67,7 +73,7 @@ const AIAnalysisStatus: React.FC<AIAnalysisStatusProps> = ({
           <div className="flex items-center gap-2 mb-1">
             {getStatusBadge()}
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {analysis.strengths?.length || 0} insights generated
           </p>
         </div>
