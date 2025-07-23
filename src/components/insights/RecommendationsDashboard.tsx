@@ -1,60 +1,185 @@
-import React from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, TrendingUp, Users, BookOpen, Target, ArrowRight } from 'lucide-react';
+import { Lightbulb, TrendingUp, Users, BookOpen, Target, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import RecommendationFiltersComponent, { RecommendationFilters } from './RecommendationFilters';
+import StudentRecommendationCard from './StudentRecommendationCard';
+import { Skeleton } from '@/components/ui/loading-skeleton';
+
+const getEmptyFilters = (): RecommendationFilters => ({
+  search: '',
+  student: '',
+  subject: '',
+  gradeLevel: '',
+  priority: '',
+  category: '',
+  status: '',
+  sortBy: 'date_desc'
+});
 
 export const RecommendationsDashboard: React.FC = () => {
-  // Fetch recent assessment analyses for recommendations
-  const { data: analysesData, isLoading } = useQuery({
-    queryKey: ['recommendations-data'],
+  const [filters, setFilters] = useState<RecommendationFilters>(getEmptyFilters());
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Fetch recommendations data
+  const { data: recommendationsData, isLoading, refetch } = useQuery({
+    queryKey: ['recommendations-enhanced', filters],
     queryFn: async () => {
-      // Get recent analyses with recommendations
+      // Get analyses with recommendations
       const { data: analyses, error: analysesError } = await supabase
         .from('assessment_analysis')
         .select(`
           *,
-          student:students(first_name, last_name, grade_level),
-          assessment:assessments(title, subject)
+          student:students(id, first_name, last_name, grade_level),
+          assessment:assessments(title, subject, grade_level)
         `)
         .not('recommendations', 'eq', '{}')
-        .order('created_at', { ascending: false })
-        .limit(20);
+        .order('created_at', { ascending: false });
 
       if (analysesError) throw analysesError;
 
-      // Get student skills that need attention
-      const { data: skillsNeedingAttention, error: skillsError } = await supabase
-        .from('student_skills')
-        .select(`
-          *,
-          student:students(first_name, last_name, grade_level),
-          skill:skills(name, subject, grade_level)
-        `)
-        .eq('current_mastery_level', 'Beginning')
-        .order('last_assessed_at', { ascending: false })
-        .limit(15);
+      // Get students for filtering
+      const { data: students, error: studentsError } = await supabase
+        .from('students')
+        .select('id, first_name, last_name, grade_level')
+        .order('last_name');
 
-      if (skillsError) throw skillsError;
+      if (studentsError) throw studentsError;
 
-      return { analyses, skillsNeedingAttention };
+      return { analyses: analyses || [], students: students || [] };
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
   });
+
+  // Process and filter data
+  const processedData = useMemo(() => {
+    if (!recommendationsData) return { studentRecommendations: [], totalCount: 0 };
+
+    const { analyses, students } = recommendationsData;
+    
+    // Convert analyses to recommendation format
+    const allRecommendations = analyses.flatMap(analysis => 
+      (analysis.recommendations || []).map((rec: string, index: number) => ({
+        id: `${analysis.id}-${index}`,
+        text: rec,
+        student: analysis.student,
+        assessment: analysis.assessment,
+        priority: analysis.growth_areas?.length > 2 ? 'high' : 
+                 analysis.growth_areas?.length > 0 ? 'medium' : 'low',
+        category: categorizeRecommendation(rec),
+        growthAreas: analysis.growth_areas || [],
+        created_at: analysis.created_at,
+        status: 'new' as const
+      }))
+    );
+
+    // Apply filters
+    let filteredRecommendations = allRecommendations.filter(rec => {
+      if (filters.search && !rec.text.toLowerCase().includes(filters.search.toLowerCase()) &&
+          !`${rec.student.first_name} ${rec.student.last_name}`.toLowerCase().includes(filters.search.toLowerCase()) &&
+          !rec.assessment.title.toLowerCase().includes(filters.search.toLowerCase())) {
+        return false;
+      }
+      if (filters.student && rec.student.id !== filters.student) return false;
+      if (filters.subject && rec.assessment.subject !== filters.subject) return false;
+      if (filters.gradeLevel && rec.student.grade_level !== filters.gradeLevel) return false;
+      if (filters.priority && rec.priority !== filters.priority) return false;
+      if (filters.category && rec.category !== filters.category) return false;
+      return true;
+    });
+
+    // Apply sorting
+    filteredRecommendations.sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'date_asc':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'student_asc':
+          return `${a.student.last_name} ${a.student.first_name}`.localeCompare(`${b.student.last_name} ${b.student.first_name}`);
+        case 'student_desc':
+          return `${b.student.last_name} ${b.student.first_name}`.localeCompare(`${a.student.last_name} ${a.student.first_name}`);
+        case 'priority_desc':
+          const priorityOrder = { high: 3, medium: 2, low: 1 };
+          return priorityOrder[b.priority] - priorityOrder[a.priority];
+        case 'subject':
+          return a.assessment.subject.localeCompare(b.assessment.subject);
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+
+    // Group by student
+    const studentRecommendations = students
+      .map(student => ({
+        student,
+        recommendations: filteredRecommendations.filter(rec => rec.student.id === student.id)
+      }))
+      .filter(group => group.recommendations.length > 0);
+
+    return {
+      studentRecommendations,
+      totalCount: allRecommendations.length,
+      filteredCount: filteredRecommendations.length
+    };
+  }, [recommendationsData, filters]);
+
+  const categorizeRecommendation = (rec: string): string => {
+    const lower = rec.toLowerCase();
+    if (lower.includes('practice') || lower.includes('drill')) return 'practice';
+    if (lower.includes('support') || lower.includes('help')) return 'support';
+    if (lower.includes('challenge') || lower.includes('advance')) return 'enrichment';
+    if (lower.includes('review') || lower.includes('revisit')) return 'review';
+    return 'general';
+  };
+
+  const handleRecommendationAction = (recommendationId: string, action: string) => {
+    if (action === 'implement') {
+      toast({
+        title: "Recommendation Implemented",
+        description: "This recommendation has been marked as implemented.",
+      });
+    } else if (action === 'view') {
+      toast({
+        title: "View Details",
+        description: "Opening detailed view for this recommendation.",
+      });
+    }
+  };
+
+  const handleViewStudentDetails = (studentId: string) => {
+    navigate(`/app/insights/student/${studentId}`);
+  };
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-4 bg-muted rounded w-3/4"></div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
               </CardHeader>
               <CardContent>
-                <div className="h-20 bg-muted rounded"></div>
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-3 w-32 mt-2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-48" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-20 w-full" />
               </CardContent>
             </Card>
           ))}
@@ -63,228 +188,117 @@ export const RecommendationsDashboard: React.FC = () => {
     );
   }
 
-  const { analyses = [], skillsNeedingAttention = [] } = analysesData || {};
+  const { studentRecommendations, totalCount, filteredCount } = processedData;
 
-  // Aggregate recommendations by category
-  const recommendationCategories = analyses.reduce((acc, analysis) => {
-    analysis.recommendations.forEach((rec: string) => {
-      // Simple categorization based on keywords
-      let category = 'General';
-      if (rec.toLowerCase().includes('practice') || rec.toLowerCase().includes('drill')) {
-        category = 'Practice & Reinforcement';
-      } else if (rec.toLowerCase().includes('support') || rec.toLowerCase().includes('help')) {
-        category = 'Additional Support';
-      } else if (rec.toLowerCase().includes('challenge') || rec.toLowerCase().includes('advance')) {
-        category = 'Enrichment';
-      } else if (rec.toLowerCase().includes('review') || rec.toLowerCase().includes('revisit')) {
-        category = 'Review & Remediation';
-      }
-
-      if (!acc[category]) {
-        acc[category] = [];
-      }
-      acc[category].push({
-        recommendation: rec,
-        student: analysis.student,
-        assessment: analysis.assessment,
-        created_at: analysis.created_at
-      });
-    });
-    return acc;
-  }, {} as Record<string, any[]>);
-
-  // Priority recommendations (most recent and critical)
-  const priorityRecommendations = analyses
-    .filter(a => a.growth_areas.length > 0)
-    .slice(0, 5)
-    .map(analysis => ({
-      student: analysis.student,
-      assessment: analysis.assessment,
-      growthAreas: analysis.growth_areas,
-      recommendations: analysis.recommendations.slice(0, 2),
-      created_at: analysis.created_at
-    }));
-
-  // Skills-based recommendations
-  const skillsRecommendations = skillsNeedingAttention
-    .slice(0, 8)
-    .map(skill => ({
-      student: skill.student,
-      skill: skill.skill,
-      recommendation: `Focus on ${skill.skill.name} fundamentals for ${skill.student.first_name}. Consider additional practice materials and one-on-one support.`,
-      priority: 'High'
-    }));
+  // Calculate stats
+  const stats = useMemo(() => {
+    const allRecs = studentRecommendations.flatMap(sr => sr.recommendations);
+    return {
+      total: allRecs.length,
+      highPriority: allRecs.filter(r => r.priority === 'high').length,
+      studentsWithRecommendations: studentRecommendations.length,
+      subjects: new Set(allRecs.map(r => r.assessment.subject)).size
+    };
+  }, [studentRecommendations]);
 
   return (
     <div className="space-y-6">
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Overview Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Recommendations</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Recommendations</CardTitle>
             <Lightbulb className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {analyses.reduce((sum, a) => sum + a.recommendations.length, 0)}
-            </div>
+            <div className="text-2xl font-bold">{stats.total}</div>
             <p className="text-xs text-muted-foreground">
-              from {analyses.length} recent analyses
+              across all students
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Students Need Support</CardTitle>
+            <CardTitle className="text-sm font-medium">High Priority</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{stats.highPriority}</div>
+            <p className="text-xs text-muted-foreground">
+              need immediate attention
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Students</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">
-              {new Set(skillsNeedingAttention.map(s => s.student_id)).size}
-            </div>
+            <div className="text-2xl font-bold">{stats.studentsWithRecommendations}</div>
             <p className="text-xs text-muted-foreground">
-              requiring immediate attention
+              with recommendations
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Skills to Focus</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Subjects</CardTitle>
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {new Set(skillsNeedingAttention.map(s => s.skill_id)).size}
-            </div>
+            <div className="text-2xl font-bold">{stats.subjects}</div>
             <p className="text-xs text-muted-foreground">
-              skills need reinforcement
+              areas covered
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Priority Recommendations */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            Priority Recommendations
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {priorityRecommendations.map((item, index) => (
-              <div key={index} className="p-4 border rounded-lg bg-primary/5">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h4 className="font-medium">
-                      {item.student.first_name} {item.student.last_name}
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      {item.assessment.subject} • Grade {item.student.grade_level}
-                    </p>
-                  </div>
-                  <Badge variant="default" className="text-xs">
-                    Priority
-                  </Badge>
-                </div>
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-xs font-medium text-muted-foreground">Growth Areas:</span>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {item.growthAreas.slice(0, 3).map((area, i) => (
-                        <Badge key={i} variant="outline" className="text-xs">
-                          {area}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-xs font-medium text-muted-foreground">Recommendations:</span>
-                    <ul className="text-sm mt-1 space-y-1">
-                      {item.recommendations.map((rec, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <ArrowRight className="h-3 w-3 mt-0.5 text-primary flex-shrink-0" />
-                          {rec}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Filters */}
+      <RecommendationFiltersComponent
+        filters={filters}
+        onFiltersChange={setFilters}
+        onClearFilters={() => setFilters(getEmptyFilters())}
+        students={recommendationsData?.students || []}
+        totalCount={totalCount}
+        filteredCount={filteredCount}
+      />
 
-      {/* Skills-Based Recommendations */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-warning" />
-            Skills Requiring Immediate Attention
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3">
-            {skillsRecommendations.map((item, index) => (
-              <div key={index} className="p-3 border rounded-lg bg-warning/5">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium text-sm">
-                        {item.student.first_name} {item.student.last_name}
-                      </h4>
-                      <Badge variant="destructive" className="text-xs">
-                        {item.priority}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      {item.skill.name} • {item.skill.subject} • Grade {item.skill.grade_level}
-                    </p>
-                    <p className="text-sm">{item.recommendation}</p>
-                  </div>
-                  <Button variant="outline" size="sm" className="ml-2">
-                    Action Plan
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recommendation Categories */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {Object.entries(recommendationCategories).map(([category, recs]) => (
-          <Card key={category}>
-            <CardHeader>
-              <CardTitle className="text-lg">{category}</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                {recs.length} recommendation{recs.length !== 1 ? 's' : ''}
-              </p>
-            </CardHeader>
+      {/* Student Recommendation Cards */}
+      <div className="space-y-4">
+        {studentRecommendations.length === 0 ? (
+          <Card className="text-center py-8">
             <CardContent>
-              <div className="space-y-3">
-                {recs.slice(0, 4).map((rec, index) => (
-                  <div key={index} className="p-2 bg-muted rounded text-sm">
-                    <p className="mb-1">{rec.recommendation}</p>
-                    <p className="text-xs text-muted-foreground">
-                      For {rec.student.first_name} {rec.student.last_name} • {rec.assessment.subject}
-                    </p>
-                  </div>
-                ))}
-                {recs.length > 4 && (
-                  <p className="text-xs text-center text-muted-foreground">
-                    +{recs.length - 4} more recommendations
-                  </p>
-                )}
-              </div>
+              <Lightbulb className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">No Recommendations Found</h3>
+              <p className="text-muted-foreground mb-4">
+                {totalCount === 0 
+                  ? "No AI recommendations have been generated yet. Complete some assessments to get personalized recommendations."
+                  : "No recommendations match your current filters. Try adjusting your search criteria."
+                }
+              </p>
+              {totalCount === 0 && (
+                <Button onClick={() => navigate('/app/assessments')}>
+                  Go to Assessments
+                </Button>
+              )}
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          studentRecommendations.map((studentGroup) => (
+            <StudentRecommendationCard
+              key={studentGroup.student.id}
+              student={studentGroup.student}
+              recommendations={studentGroup.recommendations}
+              onRecommendationAction={handleRecommendationAction}
+              onViewStudentDetails={handleViewStudentDetails}
+            />
+          ))
+        )}
       </div>
     </div>
   );
