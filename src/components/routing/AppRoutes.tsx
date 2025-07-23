@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { PublicRoute, ProtectedRoute } from './RouteGuards';
@@ -32,6 +31,13 @@ import AssessmentDetailsPage from '@/pages/app/assessments/AssessmentDetails';
 import ResponsesPage from '@/pages/app/assessments/AddStudentResponses';
 import BatchAssessment from '@/pages/app/assessments/BatchAssessment';
 import AssessmentResults from '@/pages/app/assessments/AssessmentResults';
+
+// Insights pages
+import InsightsPage from '@/pages/app/insights/Insights';
+import ClassInsightsPage from '@/pages/app/insights/ClassInsights';
+import IndividualInsightsPage from '@/pages/app/insights/IndividualInsights';
+import SkillsInsightsPage from '@/pages/app/insights/SkillsInsights';
+import RecommendationsPage from '@/pages/app/insights/Recommendations';
 
 // Other app pages
 import GoalsPage from '@/pages/app/goals/Goals';
@@ -79,6 +85,14 @@ export const AppRoutes = () => {
         <Route path="assessments/:id/responses" element={<ResponsesPage />} />
         <Route path="assessments/:id/results" element={<AssessmentResults />} />
         <Route path="assessments/:id" element={<AssessmentDetailsPage />} />
+        
+        {/* Insights Routes */}
+        <Route path="insights" element={<InsightsPage />} />
+        <Route path="insights/class" element={<ClassInsightsPage />} />
+        <Route path="insights/individual" element={<IndividualInsightsPage />} />
+        <Route path="insights/student/:id" element={<IndividualInsightsPage />} />
+        <Route path="insights/skills" element={<SkillsInsightsPage />} />
+        <Route path="insights/recommendations" element={<RecommendationsPage />} />
         
         {/* Other App Routes */}
         <Route path="goals" element={<GoalsPage />} />
