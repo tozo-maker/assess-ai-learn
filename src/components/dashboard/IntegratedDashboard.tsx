@@ -12,8 +12,7 @@ interface IntegratedDashboardProps {
 }
 
 const IntegratedDashboard: React.FC<IntegratedDashboardProps> = ({ data }) => {
-  // Extract data with proper type checking
-  const dashboardData = (data as any)?.data || data;
+  const dashboardData = data?.data || data;
   const teacher = dashboardData?.teacher || { full_name: 'Teacher', firstName: 'Teacher' };
   const metrics = dashboardData?.metrics || {
     totalStudents: 0,

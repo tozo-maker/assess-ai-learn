@@ -1,6 +1,6 @@
 
 export interface Teacher {
-  id?: string;
+  id: string;
   full_name: string;
   firstName?: string;
   school?: string;
@@ -8,8 +8,8 @@ export interface Teacher {
   subjects?: string[];
   years_experience?: number;
   avatar_url?: string;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DashboardMetrics {
@@ -17,13 +17,9 @@ export interface DashboardMetrics {
   totalAssessments: number;
   studentsNeedingAttention: number;
   averagePerformance: number;
-  aiInsights?: number;
+  aiInsights: number;
   recentAssessments: number;
-  todaysInsights?: number;
-  activeGoalsCount?: number;
-  completedGoals?: number;
-  unreadNotifications?: number;
-  performanceDistribution?: any;
+  todaysInsights: number;
 }
 
 export interface ContextualInfo {
