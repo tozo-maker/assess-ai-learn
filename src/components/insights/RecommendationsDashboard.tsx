@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -139,6 +138,26 @@ export const RecommendationsDashboard: React.FC = () => {
     };
   }, [recommendationsData, filters, categorizeRecommendation]);
 
+  // Calculate stats
+  const stats = useMemo(() => {
+    if (!processedData.studentRecommendations) {
+      return {
+        total: 0,
+        highPriority: 0,
+        studentsWithRecommendations: 0,
+        subjects: 0
+      };
+    }
+    
+    const allRecs = processedData.studentRecommendations.flatMap(sr => sr.recommendations);
+    return {
+      total: allRecs.length,
+      highPriority: allRecs.filter(r => r.priority === 'high').length,
+      studentsWithRecommendations: processedData.studentRecommendations.length,
+      subjects: new Set(allRecs.map(r => r.assessment.subject)).size
+    };
+  }, [processedData.studentRecommendations]);
+
   const handleRecommendationAction = (recommendationId: string, action: string) => {
     if (action === 'implement') {
       toast({
@@ -190,17 +209,6 @@ export const RecommendationsDashboard: React.FC = () => {
   }
 
   const { studentRecommendations, totalCount, filteredCount } = processedData;
-
-  // Calculate stats
-  const stats = useMemo(() => {
-    const allRecs = studentRecommendations.flatMap(sr => sr.recommendations);
-    return {
-      total: allRecs.length,
-      highPriority: allRecs.filter(r => r.priority === 'high').length,
-      studentsWithRecommendations: studentRecommendations.length,
-      subjects: new Set(allRecs.map(r => r.assessment.subject)).size
-    };
-  }, [studentRecommendations]);
 
   return (
     <div className="space-y-6">
