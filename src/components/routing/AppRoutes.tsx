@@ -42,7 +42,7 @@ import RecommendationsPage from '@/pages/app/insights/Recommendations';
 
 // Other app pages
 import GoalsPage from '@/pages/app/goals/Goals';
-import SkillsPage from '@/pages/app/skills/Skills';
+import SkillsManagementPage from '@/pages/app/skills/SkillsManagement';
 import ReportsPage from '@/pages/app/reports/Reports';
 import ProgressReports from '@/pages/app/reports/ProgressReports';
 import Communications from '@/pages/app/communications/Communications';
@@ -99,7 +99,7 @@ export const AppRoutes = () => {
         
         {/* Other App Routes */}
         <Route path="goals" element={<GoalsPage />} />
-        <Route path="skills" element={<SkillsPage />} />
+        <Route path="skills" element={<SkillsManagementPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="reports/progress-reports" element={<ProgressReports />} />
         <Route path="communications" element={<Communications />} />
