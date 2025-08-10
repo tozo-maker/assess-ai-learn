@@ -31,6 +31,7 @@ import AssessmentDetailsPage from '@/pages/app/assessments/AssessmentDetails';
 import ResponsesPage from '@/pages/app/assessments/AddStudentResponses';
 import BatchAssessment from '@/pages/app/assessments/BatchAssessment';
 import AssessmentResults from '@/pages/app/assessments/AssessmentResults';
+import AssessmentAnalysisPage from '@/pages/app/assessments/AssessmentAnalysis';
 
 // Insights pages
 import InsightsPage from '@/pages/app/insights/Insights';
@@ -45,6 +46,7 @@ import SkillsPage from '@/pages/app/skills/Skills';
 import ReportsPage from '@/pages/app/reports/Reports';
 import ProgressReports from '@/pages/app/reports/ProgressReports';
 import Communications from '@/pages/app/communications/Communications';
+import { EmailCenter } from '@/components/communications/EmailCenter';
 import HelpPage from '@/pages/app/help/Help';
 import SettingsProfilePage from '@/pages/app/settings/ProfileSettings';
 import ProductionAudit from '@/pages/app/audit/ProductionAudit';
@@ -84,6 +86,7 @@ export const AppRoutes = () => {
         <Route path="assessments/:id/edit" element={<EditAssessmentPage />} />
         <Route path="assessments/:id/responses" element={<ResponsesPage />} />
         <Route path="assessments/:id/results" element={<AssessmentResults />} />
+        <Route path="assessments/:id/analysis" element={<AssessmentAnalysisPage />} />
         <Route path="assessments/:id" element={<AssessmentDetailsPage />} />
         
         {/* Insights Routes */}
@@ -100,7 +103,7 @@ export const AppRoutes = () => {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="reports/progress-reports" element={<ProgressReports />} />
         <Route path="communications" element={<Communications />} />
-        <Route path="communications/email" element={<Communications />} />
+        <Route path="communications/email" element={<EmailCenter />} />
         <Route path="help" element={<HelpPage />} />
         <Route path="settings/profile" element={<SettingsProfilePage />} />
         <Route path="audit" element={<ProductionAudit />} />

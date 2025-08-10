@@ -34,7 +34,9 @@ const navigationItems: NavigationItem[] = [
   { title: 'Reports', href: '/app/reports', icon: BarChart3, group: 'reporting' },
   
   // Testing (development only)
-  { title: 'Testing', href: '/app/testing', icon: TestTube, group: 'system' },
+  ...(process.env.NODE_ENV === 'development'
+    ? [{ title: 'Testing', href: '/app/testing', icon: TestTube, group: 'system' }]
+    : []),
   
   // System group
   { title: 'Help', href: '/app/help', icon: HelpCircle, group: 'system' },
