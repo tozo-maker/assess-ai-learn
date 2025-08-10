@@ -5,8 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
-// Layout Components
-import AppLayout from '@/components/layout/AppLayout';
 import Breadcrumbs from '@/components/navigation/Breadcrumbs';
 
 // Design System Components

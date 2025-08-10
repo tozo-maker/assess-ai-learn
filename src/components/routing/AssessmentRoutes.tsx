@@ -8,6 +8,7 @@ import AssessmentDetailsPage from '@/pages/app/assessments/AssessmentDetails';
 import ResponsesPage from '@/pages/app/assessments/AddStudentResponses';
 import BatchAssessment from '@/pages/app/assessments/BatchAssessment';
 import AssessmentResults from '@/pages/app/assessments/AssessmentResults';
+import AssessmentAnalysisPage from '@/pages/app/assessments/AssessmentAnalysis';
 import { ProtectedRoute } from './RouteGuards';
 
 export const AssessmentRoutes = () => (
@@ -69,7 +70,7 @@ export const AssessmentRoutes = () => (
       path="/app/assessments/:id/analysis"
       element={
         <ProtectedRoute>
-          <AssessmentResults />
+          <AssessmentAnalysisPage />
         </ProtectedRoute>
       }
     />

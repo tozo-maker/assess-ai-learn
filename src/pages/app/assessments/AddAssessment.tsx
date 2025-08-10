@@ -1,7 +1,7 @@
 
 import React from 'react';
 import AssessmentWizard from '@/components/assessments/AssessmentWizard';
-import AppLayout from '@/components/layout/AppLayout';
+
 import Breadcrumbs from '@/components/navigation/Breadcrumbs';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
