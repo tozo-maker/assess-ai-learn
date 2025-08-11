@@ -52,8 +52,10 @@ import SettingsProfilePage from '@/pages/app/settings/ProfileSettings';
 import ProductionAudit from '@/pages/app/audit/ProductionAudit';
 import ComprehensiveAudit from '@/pages/app/audit/ComprehensiveAudit';
 import SystemVerification from '@/pages/app/SystemVerification';
+import Testing from '@/pages/app/Testing';
 
 export const AppRoutes = () => {
+  const isDev = process.env.NODE_ENV === 'development';
   return (
     <Routes>
       {/* Public Routes */}
@@ -109,6 +111,7 @@ export const AppRoutes = () => {
         <Route path="audit" element={<ProductionAudit />} />
         <Route path="audit/comprehensive" element={<ComprehensiveAudit />} />
         <Route path="verification" element={<SystemVerification />} />
+        {isDev && <Route path="testing" element={<Testing />} />}
         
         {/* Default redirect */}
         <Route index element={<Navigate to="dashboard" replace />} />

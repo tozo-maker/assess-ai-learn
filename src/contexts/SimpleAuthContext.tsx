@@ -27,6 +27,8 @@ interface SimpleAuthContextType {
   signIn: (data: SignInData) => Promise<{ user: User | null; session: Session | null }>;
   signUp: (data: SignUpData) => Promise<{ user: User | null; session: Session | null }>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
 }
 
 const SimpleAuthContext = createContext<SimpleAuthContextType | undefined>(undefined);
@@ -121,6 +123,34 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      productionLogger.info('Attempting password reset', { email });
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      } as any);
+      if (error) throw error;
+      productionLogger.info('Password reset email sent', { email });
+    } catch (error) {
+      productionLogger.error('Reset password failed', error as Error, { email });
+      throw error;
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    try {
+      productionLogger.info('Attempting password update');
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+      if (error) throw error;
+      productionLogger.info('Password update successful');
+    } catch (error) {
+      productionLogger.error('Update password failed', error as Error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     session,
@@ -128,6 +158,8 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     signIn,
     signUp,
     signOut,
+    resetPassword,
+    updatePassword,
   };
 
   return <SimpleAuthContext.Provider value={value}>{children}</SimpleAuthContext.Provider>;

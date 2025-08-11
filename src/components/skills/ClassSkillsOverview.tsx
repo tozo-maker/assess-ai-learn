@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Users, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
 import { skillsService } from '@/services/skills-service';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 
 const ClassSkillsOverview = () => {
   const { user } = useAuth();

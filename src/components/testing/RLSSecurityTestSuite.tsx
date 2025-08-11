@@ -15,7 +15,7 @@ import {
   Lock
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 
 interface SecurityTest {
   table: string;

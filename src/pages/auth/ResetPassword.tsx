@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { Lock, CheckCircle } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import {
   Form,
   FormControl,

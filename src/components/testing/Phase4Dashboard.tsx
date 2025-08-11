@@ -22,7 +22,7 @@ import {
   Users,
   Globe
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { securityAuditService, SecurityReport } from '@/services/security-audit';
 import { productionReadinessService, ProductionReadinessReport } from '@/services/production-readiness';

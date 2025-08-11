@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { User, Mail, Lock, School } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import {
   Form,
   FormControl,
@@ -20,7 +20,7 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form';
-import { SignUpData } from '@/types/auth';
+// Removed SignUpData import; mapping handled inline
 
 const signupSchema = z.object({
   full_name: z.string().min(1, 'Name is required'),
@@ -95,18 +95,16 @@ const Signup = () => {
   });
 
   const onSubmit = async (data: SignupFormValues) => {
-    const signUpData: SignUpData = {
-      email: data.email,
-      password: data.password,
-      full_name: data.full_name,
-      school: data.school,
-      grade_levels: data.grade_levels,
-      subjects: data.subjects,
-      years_experience: data.years_experience,
-    };
-
     try {
-      await signUp(signUpData);
+      await signUp({
+        email: data.email,
+        password: data.password,
+        fullName: data.full_name,
+        school: data.school,
+        gradeLevels: data.grade_levels,
+        subjects: data.subjects,
+        yearsExperience: data.years_experience,
+      });
       navigate('/auth/onboarding');
     } catch (error) {
       // Error is handled by the auth context

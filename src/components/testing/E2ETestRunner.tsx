@@ -16,7 +16,7 @@ import {
   AlertTriangle,
   Navigation
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 
 interface E2ETest {
   id: string;

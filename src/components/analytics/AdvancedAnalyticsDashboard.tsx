@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, TrendingDown, Users, BookOpen, Target, Download, Filter, Calendar as CalendarIcon, AlertTriangle, CheckCircle } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { advancedAnalyticsService, AnalyticsFilter, PredictiveInsight } from '@/services/advanced-analytics';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';

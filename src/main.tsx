@@ -3,6 +3,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import './utils/env-polyfill'
 import { productionLogger } from '@/services/production-logger'
 
 // Register service worker for basic caching only

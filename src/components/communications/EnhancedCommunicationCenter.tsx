@@ -25,7 +25,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { 
   enhancedCommunicationsService, 

@@ -15,7 +15,7 @@ import {
   Eye
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 
 interface TableInfo {
   table_name: string;
