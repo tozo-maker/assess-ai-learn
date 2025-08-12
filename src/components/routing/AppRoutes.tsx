@@ -48,6 +48,7 @@ import ProgressReports from '@/pages/app/reports/ProgressReports';
 import Communications from '@/pages/app/communications/Communications';
 import { EmailCenter } from '@/components/communications/EmailCenter';
 import HelpPage from '@/pages/app/help/Help';
+import SystemOverview from '@/pages/app/help/SystemOverview';
 import SettingsProfilePage from '@/pages/app/settings/ProfileSettings';
 import ProductionAudit from '@/pages/app/audit/ProductionAudit';
 import ComprehensiveAudit from '@/pages/app/audit/ComprehensiveAudit';
@@ -107,6 +108,7 @@ export const AppRoutes = () => {
         <Route path="communications" element={<Communications />} />
         <Route path="communications/email" element={<EmailCenter />} />
         <Route path="help" element={<HelpPage />} />
+        <Route path="help/system-overview" element={<SystemOverview />} />
         <Route path="settings/profile" element={<SettingsProfilePage />} />
         <Route path="audit" element={<ProductionAudit />} />
         <Route path="audit/comprehensive" element={<ComprehensiveAudit />} />

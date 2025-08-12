@@ -3,6 +3,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { productionLogger } from '@/services/production-logger';
+import { authService } from '@/services/auth-service';
+import { TeacherProfile } from '@/types/auth';
 
 interface SignInData {
   email: string;
@@ -22,6 +24,7 @@ interface SignUpData {
 
 interface SimpleAuthContextType {
   user: User | null;
+  profile: TeacherProfile | null;
   session: Session | null;
   isLoading: boolean;
   signIn: (data: SignInData) => Promise<{ user: User | null; session: Session | null }>;
@@ -29,6 +32,7 @@ interface SimpleAuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
+  updateProfile: (updates: Partial<TeacherProfile>) => Promise<void>;
 }
 
 const SimpleAuthContext = createContext<SimpleAuthContextType | undefined>(undefined);
@@ -36,6 +40,7 @@ const SimpleAuthContext = createContext<SimpleAuthContextType | undefined>(undef
 export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<TeacherProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -45,6 +50,16 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         productionLogger.debug('Auth state changed', { event, userId: session?.user?.id });
         setSession(session);
         setUser(session?.user ?? null);
+        if (session?.user) {
+          authService.getProfile()
+            .then((p) => setProfile(p))
+            .catch((e) => {
+              productionLogger.warn('Profile fetch failed on auth change', { error: e as Error });
+              setProfile(null);
+            });
+        } else {
+          setProfile(null);
+        }
         setIsLoading(false);
       }
     );
@@ -54,6 +69,16 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       productionLogger.debug('Initial session check', { userId: session?.user?.id });
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+        authService.getProfile()
+          .then((p) => setProfile(p))
+          .catch((e) => {
+            productionLogger.warn('Profile fetch failed on initial check', { error: e as Error });
+            setProfile(null);
+          });
+      } else {
+        setProfile(null);
+      }
       setIsLoading(false);
     });
 
@@ -116,6 +141,7 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       setUser(null);
       setSession(null);
+      setProfile(null);
       productionLogger.info('Signout successful');
     } catch (error) {
       productionLogger.error('Signout failed', error as Error);
@@ -151,8 +177,20 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  const updateProfile = async (updates: Partial<TeacherProfile>) => {
+    try {
+      productionLogger.info('Attempting profile update');
+      const updated = await authService.updateProfile(updates);
+      setProfile(updated);
+      productionLogger.info('Profile update successful');
+    } catch (error) {
+      productionLogger.error('Update profile failed', error as Error);
+      throw error;
+    }
+  };
   const value = {
     user,
+    profile,
     session,
     isLoading,
     signIn,
@@ -160,6 +198,7 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     signOut,
     resetPassword,
     updatePassword,
+    updateProfile,
   };
 
   return <SimpleAuthContext.Provider value={value}>{children}</SimpleAuthContext.Provider>;

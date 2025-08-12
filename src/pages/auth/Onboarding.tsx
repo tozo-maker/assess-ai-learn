@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { CheckCircle, Users, FileText, Lightbulb } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/SimpleAuthContext';
 
 const Onboarding = () => {
   const { user, profile, updateProfile } = useAuth();
