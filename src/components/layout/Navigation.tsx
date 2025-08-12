@@ -40,6 +40,7 @@ const navigationItems: NavigationItem[] = [
   
   // System group
   { title: 'Help', href: '/app/help', icon: HelpCircle, group: 'system' },
+  { title: 'System Overview', href: '/app/help/system-overview', icon: HelpCircle, group: 'system' },
 ];
 
 const Navigation: React.FC = () => {
