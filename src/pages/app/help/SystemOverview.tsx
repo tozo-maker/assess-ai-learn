@@ -1,9 +1,12 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { useSEO } from '@/hooks/useSEO';
 
 const SystemOverview: React.FC = () => {
-  useEffect(() => {
-    document.title = 'System Overview | LearnSpark AI';
-  }, []);
+  useSEO({
+    title: 'System Overview | LearnSpark AI',
+    description: 'Architecture and quality audit overview for LearnSpark AI.',
+    canonicalPath: '/app/help/system-overview'
+  });
 
   return (
     <main className="min-h-screen bg-background">

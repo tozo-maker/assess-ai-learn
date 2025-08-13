@@ -5,6 +5,7 @@ import EnhancedDashboardContent from './EnhancedDashboardContent';
 import EnhancedWelcomeSection from './EnhancedWelcomeSection';
 import ResponsiveDashboardWrapper from './ResponsiveDashboardWrapper';
 import { ValidationProvider } from '@/components/validation/FormValidationProvider';
+import { useSEO } from '@/hooks/useSEO';
 
 interface IntegratedDashboardProps {
   data: PerformanceResult<any>;
@@ -21,6 +22,12 @@ const IntegratedDashboard: React.FC<IntegratedDashboardProps> = ({ data }) => {
     upcomingDeadlines: metrics.studentsNeedingAttention || 0,
     recentInsights: metrics.todaysInsights || 0
   };
+
+  useSEO({
+    title: 'Dashboard | LearnSpark AI',
+    description: 'Teacher dashboard for student performance insights and actionable recommendations.',
+    canonicalPath: '/app/dashboard'
+  });
 
   return (
     <ValidationProvider>
