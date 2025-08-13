@@ -54,7 +54,7 @@ import ProductionAudit from '@/pages/app/audit/ProductionAudit';
 import ComprehensiveAudit from '@/pages/app/audit/ComprehensiveAudit';
 import SystemVerification from '@/pages/app/SystemVerification';
 import Testing from '@/pages/app/Testing';
-
+import NotFound from '@/pages/NotFound';
 export const AppRoutes = () => {
   const isDev = process.env.NODE_ENV === 'development';
   return (
@@ -117,7 +117,11 @@ export const AppRoutes = () => {
         
         {/* Default redirect */}
         <Route index element={<Navigate to="dashboard" replace />} />
+        {/* 404 within /app */}
+        <Route path="*" element={<NotFound />} />
       </Route>
+      {/* Global 404 */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

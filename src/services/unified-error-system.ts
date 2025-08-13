@@ -43,6 +43,7 @@ class UnifiedErrorSystem {
   private readonly flushInterval = 3000;
   private readonly sessionId = this.generateSessionId();
   private readonly isDevelopment = process.env.NODE_ENV === 'development';
+  private readonly enableRemote = process.env.NODE_ENV === 'production';
 
   constructor() {
     this.startBatchProcessor();
@@ -133,6 +134,7 @@ class UnifiedErrorSystem {
   }
 
   private async flushLogs(): Promise<void> {
+    if (!this.enableRemote) return;
     if (this.logQueue.length === 0) return;
 
     const logsToFlush = [...this.logQueue];

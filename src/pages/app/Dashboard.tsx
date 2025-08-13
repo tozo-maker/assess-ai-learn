@@ -4,9 +4,16 @@ import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
 import IntegratedDashboard from '@/components/dashboard/IntegratedDashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, Loader2 } from 'lucide-react';
+import { useSEO } from '@/hooks/useSEO';
 
 const Dashboard: React.FC = () => {
   const { data, isLoading, error } = useOptimizedDashboardData();
+
+  useSEO({
+    title: 'Dashboard | LearnSpark AI',
+    description: 'Teacher dashboard for student performance insights and actionable recommendations.',
+    canonicalPath: '/app/dashboard'
+  });
 
   if (isLoading) {
     return (

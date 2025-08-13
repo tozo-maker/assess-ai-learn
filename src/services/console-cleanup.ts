@@ -3,7 +3,7 @@
  * This service helps identify and replace console.log statements with proper logging
  */
 
-import { productionLogger } from './production-logger';
+import { unifiedErrorSystem } from './unified-error-system';
 
 // Global console override for production
 if (process.env.NODE_ENV === 'production') {
@@ -11,27 +11,28 @@ if (process.env.NODE_ENV === 'production') {
   const originalConsole = { ...console };
   
   console.log = (...args: any[]) => {
-    productionLogger.debug('Console.log intercepted', { args: args.map(String) });
+    unifiedErrorSystem.debug('Console.log intercepted', { args: args.map(String) });
   };
   
   console.warn = (...args: any[]) => {
-    productionLogger.warn('Console.warn intercepted', { args: args.map(String) });
+    unifiedErrorSystem.warn('Console.warn intercepted', { args: args.map(String) });
   };
   
   console.error = (...args: any[]) => {
     if (args[0] instanceof Error) {
-      productionLogger.error('Console.error intercepted', args[0], { 
-        additionalArgs: args.slice(1).map(String) 
+      unifiedErrorSystem.error('Console.error intercepted', {
+        error: args[0],
+        context: { additionalArgs: args.slice(1).map(String) }
       });
     } else {
-      productionLogger.error('Console.error intercepted', undefined, { 
-        args: args.map(String) 
+      unifiedErrorSystem.error('Console.error intercepted', {
+        context: { args: args.map(String) }
       });
     }
   };
   
   console.info = (...args: any[]) => {
-    productionLogger.info('Console.info intercepted', { args: args.map(String) });
+    unifiedErrorSystem.info('Console.info intercepted', { args: args.map(String) });
   };
 }
 
@@ -39,32 +40,29 @@ if (process.env.NODE_ENV === 'production') {
  * Migration helper functions for replacing console statements
  */
 export const ConsoleCleanup = {
-  /**
-   * Replace console.log with appropriate logging
-   */
   replaceLogs: (message: string, data?: any) => {
-    productionLogger.debug(message, data);
+    unifiedErrorSystem.debug(message, data);
   },
 
   /**
    * Replace console.error with structured error logging
    */
   replaceErrors: (message: string, error?: Error, context?: any) => {
-    productionLogger.error(message, error, context);
+    unifiedErrorSystem.error(message, { error, context });
   },
 
   /**
    * Replace console.warn with structured warning logging
    */
   replaceWarnings: (message: string, context?: any) => {
-    productionLogger.warn(message, context);
+    unifiedErrorSystem.warn(message, context);
   },
 
   /**
    * Replace console.info with structured info logging
    */
   replaceInfo: (message: string, context?: any) => {
-    productionLogger.info(message, context);
+    unifiedErrorSystem.info(message, context);
   }
 };
 
@@ -118,7 +116,7 @@ export const CONSOLE_STATEMENTS_TO_REPLACE = [
  */
 export const auditConsoleUsage = () => {
   if (process.env.NODE_ENV === 'development') {
-    productionLogger.info('Console cleanup audit', {
+    unifiedErrorSystem.info('Console cleanup audit', {
       totalStatementsFound: CONSOLE_STATEMENTS_TO_REPLACE.length,
       recommendation: 'Replace console statements with structured logging'
     });
