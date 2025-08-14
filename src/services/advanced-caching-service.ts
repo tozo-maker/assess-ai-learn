@@ -172,14 +172,8 @@ class AdvancedCachingService {
 
   // Browser caching setup
   private setupBrowserCaching(): void {
-    // Service Worker registration for advanced caching
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then(() => {
-        console.log('Service Worker registered for caching');
-      }).catch(error => {
-        console.warn('Service Worker registration failed:', error);
-      });
-    }
+    // Note: Service Worker registration handled in main.tsx to avoid conflicts
+    // This method now only handles fetch interception
 
     // Implement cache-first strategy for API calls
     this.interceptFetchRequests();

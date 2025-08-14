@@ -6,7 +6,8 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { useOptimizedFormHandlers, usePerformanceMonitor } from '@/hooks/useOptimizedComponents';
+import { useOptimizedFormHandlers } from '@/hooks/useOptimizedComponents';
+import { useConsolidatedPerformance } from '@/hooks/useConsolidatedPerformance';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DSCard, DSCardContent } from '@/components/ui/design-system';
 import UnifiedErrorBoundary from '@/components/common/UnifiedErrorBoundary';
@@ -42,7 +43,7 @@ const AssessmentWizard: React.FC<AssessmentWizardProps> = ({
   onComplete,
   onCancel
 }) => {
-  usePerformanceMonitor('AssessmentWizard');
+  useConsolidatedPerformance({ componentName: 'AssessmentWizard' });
   
   const [currentStep, setCurrentStep] = useState<WizardStepId>('basic-info');
   const [showSubmissionWorkflow, setShowSubmissionWorkflow] = useState(false);

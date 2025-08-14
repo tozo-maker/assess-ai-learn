@@ -111,16 +111,16 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: data.fullName,
-            school: data.school || '',
-            grade_levels: data.gradeLevels?.join(',') || '',
-            subjects: data.subjects?.join(',') || '',
-            years_experience: data.yearsExperience || null
-          }
+      options: {
+        emailRedirectTo: `${window.location.origin}/app/dashboard`,
+        data: {
+          full_name: data.fullName,
+          school: data.school || '',
+          grade_levels: data.gradeLevels?.join(',') || '',
+          subjects: data.subjects?.join(',') || '',
+          years_experience: data.yearsExperience || null
         }
+      }
       });
 
       if (error) throw error;
@@ -153,8 +153,8 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     try {
       productionLogger.info('Attempting password reset', { email });
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
-      } as any);
+        redirectTo: `${window.location.origin}/app/dashboard`,
+      });
       if (error) throw error;
       productionLogger.info('Password reset email sent', { email });
     } catch (error) {

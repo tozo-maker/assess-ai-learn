@@ -5,8 +5,15 @@ import ProductionReadinessAudit from '@/components/audit/ProductionReadinessAudi
 import RealTimeMonitoringDashboard from '@/components/monitoring/RealTimeMonitoringDashboard';
 import Breadcrumbs from '@/components/navigation/Breadcrumbs';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useSEO } from '@/hooks/useSEO';
 
 const ProductionAudit = () => {
+  useSEO({
+    title: 'Production Audit - LearnSpark AI',
+    description: 'Monitor system performance, security, and production readiness with comprehensive auditing tools.',
+    canonicalPath: '/app/audit'
+  });
+
   return (
     <AppLayout>
       <Breadcrumbs />

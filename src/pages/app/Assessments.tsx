@@ -3,6 +3,7 @@ import React from 'react';
 import AssessmentsErrorBoundary from '@/components/assessments/AssessmentsErrorBoundary';
 import AssessmentsOverviewMetrics from '@/components/assessments/AssessmentsOverviewMetrics';
 import { useAssessments } from '@/hooks/queries/useOptimizedQueries';
+import { useSEO } from '@/hooks/useSEO';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +12,12 @@ import { Link } from 'react-router-dom';
 
 const Assessments: React.FC = () => {
   const { data: assessments = [], isLoading, error } = useAssessments();
+  
+  useSEO({
+    title: 'Assessment Management - LearnSpark AI',
+    description: 'Create, manage, and analyze assessments with AI-powered insights. Track student performance and generate actionable recommendations.',
+    canonicalPath: '/app/assessments'
+  });
 
   if (isLoading) {
     return (

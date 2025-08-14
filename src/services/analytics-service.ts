@@ -319,6 +319,16 @@ class AnalyticsService {
 
   // Public methods for batch operations
   public async flushAnalytics() {
+    // Only flush to database in production to avoid RLS violations
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Analytics flush skipped (development mode)');
+      // Clear local data without database write
+      localStorage.removeItem('analytics_metrics');
+      localStorage.removeItem('analytics_behavior');
+      localStorage.removeItem('analytics_errors');
+      return;
+    }
+
     try {
       await Promise.all([
         this.flushMetrics(),

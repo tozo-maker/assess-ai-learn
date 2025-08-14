@@ -7,6 +7,7 @@ import ReportGenerationActions from './ReportGenerationActions';
 import { useStudents } from '@/hooks/useStudents';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { productionLogger } from '@/services/production-logger';
 
 interface ReportOptions {
   includeInsights: boolean;
@@ -73,20 +74,20 @@ const ProgressReportGenerator: React.FC = () => {
 
         try {
           if (format === 'pdf') {
-            console.log(`Generating PDF for student: ${studentId}`);
+            productionLogger.info(`Generating PDF for student: ${studentId}`);
             
             const { data, error } = await supabase.functions.invoke('generate-progress-pdf', {
               body: { student_id: studentId }
             });
 
             if (error) {
-              console.error(`PDF generation error for ${student.first_name}:`, error);
+              productionLogger.error(`PDF generation error for ${student.first_name}`, error as Error);
               failCount++;
               continue;
             }
 
             if (data?.pdf_url) {
-              console.log('PDF generated successfully, creating download link');
+              productionLogger.info('PDF generated successfully, creating download link');
               
               // Create download link
               const link = document.createElement('a');
@@ -98,11 +99,11 @@ const ProgressReportGenerator: React.FC = () => {
               
               successCount++;
             } else {
-              console.error('No PDF URL returned');
+              productionLogger.error('No PDF URL returned');
               failCount++;
             }
           } else if (format === 'email') {
-            console.log(`Sending email for student: ${studentId}`);
+            productionLogger.info(`Sending email for student: ${studentId}`);
             
             // Generate progress report data first
             const { data: reportData, error: reportError } = await supabase.functions.invoke('generate-progress-report', {
@@ -110,7 +111,7 @@ const ProgressReportGenerator: React.FC = () => {
             });
 
             if (reportError) {
-              console.error(`Progress report generation error for ${student.first_name}:`, reportError);
+              productionLogger.error(`Progress report generation error for ${student.first_name}`, reportError as Error);
               failCount++;
               continue;
             }
@@ -128,14 +129,14 @@ const ProgressReportGenerator: React.FC = () => {
               });
 
             if (commError) {
-              console.error(`Communication record creation error for ${student.first_name}:`, commError);
+              productionLogger.error(`Communication record creation error for ${student.first_name}`, commError as Error);
               failCount++;
             } else {
               successCount++;
             }
           }
         } catch (error) {
-          console.error(`Error processing ${student.first_name}:`, error);
+          productionLogger.error(`Error processing ${student.first_name}`, error as Error);
           failCount++;
         }
       }
@@ -157,7 +158,7 @@ const ProgressReportGenerator: React.FC = () => {
       }
 
     } catch (error) {
-      console.error('Error generating reports:', error);
+      productionLogger.error('Error generating reports', error as Error);
       toast({
         title: "Report generation failed",
         description: "There was an error generating the progress reports. Please try again.",

@@ -2,6 +2,7 @@
 import React from 'react';
 import StudentsErrorBoundary from '@/components/students/StudentsErrorBoundary';
 import { useStudents } from '@/hooks/queries/useOptimizedQueries';
+import { useSEO } from '@/hooks/useSEO';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Users } from 'lucide-react';
@@ -9,6 +10,12 @@ import { Link } from 'react-router-dom';
 
 const Students: React.FC = () => {
   const { data: students = [], isLoading, error } = useStudents();
+  
+  useSEO({
+    title: 'Student Management - LearnSpark AI',
+    description: 'Manage your students, track their progress, and organize your classroom with LearnSpark AI\'s comprehensive student management system.',
+    canonicalPath: '/app/students'
+  });
 
   if (isLoading) {
     return (
