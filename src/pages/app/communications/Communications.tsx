@@ -7,8 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { FileText, Users, MessageSquare } from 'lucide-react';
 import CommunicationHistory from '@/components/communications/CommunicationHistory';
+import { useSEO } from '@/hooks/useSEO';
 
 const Communications: React.FC = () => {
+  useSEO({
+    title: 'Communications - LearnSpark AI',
+    description: 'Manage parent communications, send progress reports, and track communication history.',
+    canonicalPath: '/app/communications'
+  });
+
   const actions = (
     <Mail className="h-5 w-5 text-primary" />
   );

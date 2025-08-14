@@ -6,6 +6,7 @@ import GoalsMainContent from '@/components/goals/GoalsMainContent';
 import { useGoalsData } from '@/hooks/useGoalsData';
 import PageLoadingState from '@/components/common/PageLoadingState';
 import PageErrorState from '@/components/common/PageErrorState';
+import { useSEO } from '@/hooks/useSEO';
 
 const Goals: React.FC = () => {
   const {
@@ -15,6 +16,12 @@ const Goals: React.FC = () => {
     error,
     refetch
   } = useGoalsData();
+
+  useSEO({
+    title: 'Learning Goals - LearnSpark AI',
+    description: 'Set and track learning goals for your students. Monitor progress and achievement with AI-powered insights.',
+    canonicalPath: '/app/goals'
+  });
 
   const actions = (
     <Target className="h-5 w-5 text-primary" />

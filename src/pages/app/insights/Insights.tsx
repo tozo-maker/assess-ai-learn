@@ -4,8 +4,15 @@ import { Link } from 'react-router-dom';
 import StandardPageLayout from '@/components/layout/StandardPageLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, User, Target, Lightbulb, BarChart3, Users } from 'lucide-react';
+import { useSEO } from '@/hooks/useSEO';
 
 const Insights: React.FC = () => {
+  useSEO({
+    title: 'AI Insights - LearnSpark AI',
+    description: 'Discover meaningful patterns in student performance with AI-powered insights and data analysis.',
+    canonicalPath: '/app/insights'
+  });
+
   const insightSections = [
     {
       title: 'Class Insights',

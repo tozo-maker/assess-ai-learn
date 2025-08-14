@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, FileText, Calendar, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { PageLoader } from '@/components/common/UnifiedLoading';
 
 const Assessments: React.FC = () => {
   const { data: assessments = [], isLoading, error } = useAssessments();
@@ -20,16 +21,7 @@ const Assessments: React.FC = () => {
   });
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="h-8 bg-gray-200 rounded animate-pulse" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-40 bg-gray-200 rounded animate-pulse" />
-          ))}
-        </div>
-      </div>
-    );
+    return <PageLoader message="Loading assessments..." />;
   }
 
   if (error) {
