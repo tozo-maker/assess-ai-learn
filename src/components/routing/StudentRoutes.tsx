@@ -9,7 +9,7 @@ import ImportStudentsPage from '@/pages/app/students/ImportStudents';
 import { ProtectedRoute } from './RouteGuards';
 
 export const StudentRoutes = () => {
-  console.log('StudentRoutes component rendering');
+  // StudentRoutes component rendering
   
   return (
     <React.Fragment>

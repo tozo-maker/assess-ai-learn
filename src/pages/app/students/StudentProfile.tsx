@@ -9,7 +9,7 @@ import Breadcrumbs from '@/components/navigation/Breadcrumbs';
 import StudentInfoCard from '@/components/students/StudentInfoCard';
 import StudentProfileTabs from '@/components/students/StudentProfileTabs';
 import MobileOptimizedLayout from '@/components/layout/MobileOptimizedLayout';
-import UniversalLoadingState from '@/components/common/UniversalLoadingState';
+import { PageLoader } from '@/components/common/UnifiedLoading';
 import { EnhancedErrorState } from '@/components/common/EnhancedErrorStates';
 
 const StudentProfile: React.FC = () => {
@@ -25,7 +25,7 @@ const StudentProfile: React.FC = () => {
       <Breadcrumbs />
       
       {isLoading ? (
-        <UniversalLoadingState type="dashboard" message="Loading student profile..." />
+        <PageLoader message="Loading student profile..." />
       ) : error ? (
         <EnhancedErrorState
           type="server"

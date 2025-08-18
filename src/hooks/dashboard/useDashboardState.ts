@@ -16,7 +16,7 @@ export const useDashboardState = ({ data, isLoading, error }: DashboardStateProp
       hasError: !!error
     };
     
-    console.log('useDashboardState computed:', state);
+    // Dashboard state computed
     return state;
   }, [data, isLoading, error]);
 };
