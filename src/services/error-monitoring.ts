@@ -190,29 +190,35 @@ class ErrorMonitoringService {
     const batch = this.errorQueue.splice(0, 10); // Process 10 at a time
 
     try {
-      // Store errors in Supabase for persistence
-      const { error } = await supabase
-        .from('system_performance_logs')
-        .insert(
-          batch.map(report => ({
-            endpoint: report.url,
-            method: 'ERROR',
-            status_code: this.severityToStatusCode(report.severity),
-            response_time_ms: 0,
-            error_message: `${report.message}\n\nStack: ${report.stack || 'N/A'}\n\nContext: ${JSON.stringify(report.context)}`,
-            user_id: report.userId
-          }))
-        );
+      // Use the new edge function instead of direct DB writes
+      const logs = batch.map(report => ({
+        level: 'ERROR' as const,
+        message: report.message,
+        endpoint: report.url,
+        method: 'ERROR',
+        status_code: this.severityToStatusCode(report.severity),
+        response_time_ms: 0,
+        error_message: `${report.message}\n\nStack: ${report.stack || 'N/A'}\n\nContext: ${JSON.stringify(report.context)}`,
+        user_id: report.userId,
+        context: report.context
+      }));
+
+      const { error } = await supabase.functions.invoke('ingest-logs', {
+        body: {
+          logs,
+          session_id: `error_monitor_${Date.now()}`
+        }
+      });
 
       if (error) {
-        productionLogger.error('Failed to store error reports', error);
+        productionLogger.error('Failed to store error reports via edge function', error);
         // Re-add to queue for retry
         this.errorQueue.unshift(...batch);
       } else {
-        productionLogger.info(`Processed ${batch.length} error reports`);
+        productionLogger.info(`Processed ${batch.length} error reports via edge function`);
       }
     } catch (error) {
-      productionLogger.error('Error processing queue', error as Error);
+      productionLogger.error('Error processing error queue', error as Error);
       // Re-add to queue for retry
       this.errorQueue.unshift(...batch);
     } finally {

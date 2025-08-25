@@ -1,66 +1,80 @@
+// Minimal Service Worker for LearnSpark AI
+// Provides basic offline support and caching
 
-const CACHE_NAME = 'learnspark-ai-v1';
-const STATIC_CACHE_NAME = 'learnspark-static-v1';
-
-// Minimal static assets to prevent cache errors
-const STATIC_ASSETS = [
-  '/favicon.ico'
+const CACHE_NAME = 'learnspark-v1';
+const STATIC_CACHE_URLS = [
+  '/',
+  '/app',
+  '/auth/login',
+  '/auth/signup'
 ];
 
+// Install event - cache static resources
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing...');
-  
   event.waitUntil(
-    caches.open(STATIC_CACHE_NAME).then(cache => {
-      // Only cache essential assets to prevent errors
-      return cache.addAll(STATIC_ASSETS).catch(error => {
-        console.warn('Failed to cache some assets:', error);
-        return Promise.resolve(); // Don't fail installation
-      });
-    }).then(() => {
-      console.log('Service Worker installed');
-      return self.skipWaiting();
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_CACHE_URLS);
     })
   );
+  self.skipWaiting();
 });
 
+// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating...');
-  
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
+        cacheNames
+          .filter((cacheName) => cacheName !== CACHE_NAME)
+          .map((cacheName) => caches.delete(cacheName))
       );
-    }).then(() => {
-      console.log('Service Worker activated');
-      return self.clients.claim();
     })
   );
+  self.clients.claim();
 });
 
+// Fetch event - serve from cache when offline
 self.addEventListener('fetch', (event) => {
-  // Minimal fetch handling to prevent errors
-  const { request } = event;
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
   
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
+  // Skip API calls and external resources
+  if (event.request.url.includes('/api') || 
+      event.request.url.includes('supabase.co') ||
+      event.request.url.includes('chrome-extension')) {
     return;
   }
 
-  // Only handle favicon to prevent API interference
-  if (request.url.includes('favicon.ico')) {
-    event.respondWith(
-      caches.match(request).then(response => {
-        return response || fetch(request);
-      })
-    );
-  }
-  
-  // Let all other requests pass through normally
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      // Return cached version or fetch from network
+      return response || fetch(event.request).catch(() => {
+        // If both cache miss and network fail, return a basic offline page
+        if (event.request.mode === 'navigate') {
+          return new Response(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>LearnSpark AI - Offline</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <style>
+                body { font-family: system-ui, sans-serif; text-align: center; padding: 2rem; }
+                .offline { max-width: 400px; margin: 0 auto; }
+              </style>
+            </head>
+            <body>
+              <div class="offline">
+                <h1>You're offline</h1>
+                <p>LearnSpark AI needs an internet connection to work properly.</p>
+                <button onclick="location.reload()">Try again</button>
+              </div>
+            </body>
+            </html>
+          `, {
+            headers: { 'Content-Type': 'text/html' }
+          });
+        }
+      });
+    })
+  );
 });

@@ -141,18 +141,25 @@ class UnifiedErrorSystem {
     this.logQueue = [];
 
     try {
-      const performanceLogs = logsToFlush.map(log => ({
+      // Use the new edge function for log ingestion instead of direct DB writes
+      const logs = logsToFlush.map(log => ({
+        level: log.level,
+        message: log.message,
         endpoint: `app_${log.level.toLowerCase()}`,
         method: log.level,
-        response_time_ms: 0,
         status_code: this.levelToStatusCode(log.level),
+        response_time_ms: 0,
         error_message: this.formatLogMessage(log),
-        user_id: log.context?.userId || null
+        user_id: log.context?.userId || null,
+        context: log.context
       }));
 
-      const { error } = await supabase
-        .from('system_performance_logs')
-        .insert(performanceLogs);
+      const { error } = await supabase.functions.invoke('ingest-logs', {
+        body: {
+          logs,
+          session_id: this.sessionId
+        }
+      });
 
       if (error) {
         this.storeLogsLocally(logsToFlush);
