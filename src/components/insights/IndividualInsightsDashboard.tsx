@@ -2,9 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, TrendingDown, Target, Calendar, Award } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, Calendar, Award, Info } from 'lucide-react';
 import { useAssessmentAnalysis } from '@/hooks/useAssessmentAnalysis';
-import { useStudentSkills } from '@/hooks/useStudentSkills';
+import { useStudentSkills, StudentSkillData } from '@/hooks/useStudentSkills';
 import { format } from 'date-fns';
 
 interface IndividualInsightsDashboardProps {
@@ -42,8 +42,12 @@ export const IndividualInsightsDashboard: React.FC<IndividualInsightsDashboardPr
 
   const latestAnalysis = analyses?.[0];
   const totalSkills = skills?.length || 0;
-  const masteredSkills = skills?.filter(s => s.current_mastery_level === 'Advanced' || s.current_mastery_level === 'Proficient').length || 0;
-  const needsAttentionSkills = skills?.filter(s => s.current_mastery_level === 'Beginning').length || 0;
+  const masteredSkills = skills?.filter((s: StudentSkillData) => 
+    s.current_mastery_level === 'Advanced' || s.current_mastery_level === 'Proficient'
+  ).length || 0;
+  const needsAttentionSkills = skills?.filter((s: StudentSkillData) => 
+    s.current_mastery_level === 'Beginning'
+  ).length || 0;
 
   const overallProgress = totalSkills > 0 ? Math.round((masteredSkills / totalSkills) * 100) : 0;
 
@@ -125,22 +129,22 @@ export const IndividualInsightsDashboard: React.FC<IndividualInsightsDashboardPr
               <div>
                 <h4 className="font-medium mb-2">Strengths</h4>
                 <div className="flex flex-wrap gap-2">
-                  {latestAnalysis.strengths.map((strength, index) => (
+                  {latestAnalysis.strengths?.map((strength, index) => (
                     <Badge key={index} variant="secondary" className="text-xs">
                       {strength}
                     </Badge>
-                  ))}
+                  )) || <p className="text-sm text-muted-foreground">No strengths identified yet</p>}
                 </div>
               </div>
 
               <div>
                 <h4 className="font-medium mb-2">Growth Areas</h4>
                 <div className="flex flex-wrap gap-2">
-                  {latestAnalysis.growth_areas.map((area, index) => (
+                  {latestAnalysis.growth_areas?.map((area, index) => (
                     <Badge key={index} variant="outline" className="text-xs">
                       {area}
                     </Badge>
-                  ))}
+                  )) || <p className="text-sm text-muted-foreground">No growth areas identified yet</p>}
                 </div>
               </div>
             </CardContent>
@@ -153,38 +157,50 @@ export const IndividualInsightsDashboard: React.FC<IndividualInsightsDashboardPr
             <CardTitle>Skills Mastery Breakdown</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {skills?.slice(0, 8).map((skill) => (
-                <div key={skill.id} className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{skill.skill?.name}</p>
-                    <p className="text-xs text-muted-foreground">{skill.skill?.subject}</p>
+            {skills && skills.length > 0 ? (
+              <div className="space-y-4">
+                {skills.slice(0, 8).map((skill: StudentSkillData) => (
+                  <div key={skill.id} className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{skill.skill?.name || 'Unknown Skill'}</p>
+                      <p className="text-xs text-muted-foreground">{skill.skill?.subject || 'No subject'}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        variant={
+                          skill.current_mastery_level === 'Advanced' ? 'default' :
+                          skill.current_mastery_level === 'Proficient' ? 'secondary' :
+                          skill.current_mastery_level === 'Developing' ? 'outline' : 'destructive'
+                        }
+                        className="text-xs"
+                      >
+                        {skill.current_mastery_level}
+                      </Badge>
+                      {skill.mastery_score !== null && (
+                        <span className="text-xs text-muted-foreground">
+                          {Math.round(skill.mastery_score)}%
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge 
-                      variant={
-                        skill.current_mastery_level === 'Advanced' ? 'default' :
-                        skill.current_mastery_level === 'Proficient' ? 'secondary' :
-                        skill.current_mastery_level === 'Developing' ? 'outline' : 'destructive'
-                      }
-                      className="text-xs"
-                    >
-                      {skill.current_mastery_level}
-                    </Badge>
-                    {skill.mastery_score && (
-                      <span className="text-xs text-muted-foreground">
-                        {Math.round(skill.mastery_score)}%
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {(skills?.length || 0) > 8 && (
-                <p className="text-xs text-muted-foreground text-center">
-                  and {skills!.length - 8} more skills...
+                ))}
+                {skills.length > 8 && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    and {skills.length - 8} more skills...
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <Info className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  No skills data available yet.
                 </p>
-              )}
-            </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Skills will appear after assessments are completed.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -206,6 +222,19 @@ export const IndividualInsightsDashboard: React.FC<IndividualInsightsDashboardPr
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty state when no analysis */}
+      {!latestAnalysis && (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Info className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">No Analysis Available</h3>
+            <p className="text-muted-foreground">
+              Complete an assessment to generate AI-powered insights for {studentName}.
+            </p>
           </CardContent>
         </Card>
       )}

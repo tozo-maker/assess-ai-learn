@@ -41,26 +41,23 @@ export interface Assessment {
 export interface AssessmentItem {
   id: string;
   assessment_id: string;
-  item_number: number;
+  item_order: number | null;
   question_text: string;
-  knowledge_type: string;
-  difficulty_level: string;
-  max_score: number;
-  standard_reference?: string;
+  knowledge_type: string | null;
+  difficulty_level: string | null;
+  max_score: number | null;
   created_at: string;
-  updated_at: string;
 }
 
 export interface StudentResponse {
   id: string;
   student_id: string;
   assessment_id: string;
-  assessment_item_id: string;
-  score: number;
-  error_type?: string;
-  teacher_notes?: string;
+  assessment_item_id: string | null;
+  score: number | null;
+  error_type?: string | null;
+  teacher_notes?: string | null;
   created_at: string;
-  updated_at: string;
 }
 
 export interface Goal {
@@ -68,10 +65,10 @@ export interface Goal {
   student_id: string;
   teacher_id: string;
   title: string;
-  description?: string;
-  status: 'active' | 'completed' | 'paused' | 'cancelled';
-  progress_percentage?: number;
-  target_date?: string;
+  description?: string | null;
+  status: string | null;
+  progress?: number | null;
+  target_date?: string | null;
   created_at: string;
   updated_at: string;
 }

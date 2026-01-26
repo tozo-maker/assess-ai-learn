@@ -211,10 +211,10 @@ const ComprehensiveAnalyticsDashboard: React.FC = () => {
                 <div key={goal.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <p className="font-medium">{goal.title}</p>
-                    <p className="text-sm text-gray-600">Progress: {goal.progress_percentage || 0}%</p>
+                    <p className="text-sm text-gray-600">Progress: {goal.progress || 0}%</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Progress value={goal.progress_percentage || 0} className="w-20" />
+                    <Progress value={goal.progress || 0} className="w-20" />
                     <Badge variant={goal.status === 'completed' ? 'default' : 'secondary'}>
                       {goal.status}
                     </Badge>

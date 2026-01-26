@@ -369,7 +369,7 @@ const BusinessLogicValidator = () => {
       // Get goals data
       const { data: goals, error } = await supabase
         .from('goals')
-        .select('id, title, progress_percentage, status')
+        .select('id, title, progress, status')
         .eq('teacher_id', user?.id)
         .limit(10);
 
@@ -389,9 +389,9 @@ const BusinessLogicValidator = () => {
       for (const goal of goals) {
         totalGoals++;
         
-        const progress = Number(goal.progress_percentage || 0);
+        const progress = Number(goal.progress || 0);
         const hasValidProgress = progress >= 0 && progress <= 100;
-        const hasValidStatus = ['active', 'completed', 'paused'].includes(goal.status);
+        const hasValidStatus = ['active', 'completed', 'paused'].includes(goal.status || '');
         
         if (hasValidProgress && hasValidStatus) {
           validGoals++;

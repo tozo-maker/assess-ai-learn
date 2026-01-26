@@ -1,12 +1,9 @@
 
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { 
   Bell, 
   BellRing, 
@@ -14,11 +11,10 @@ import {
   AlertTriangle, 
   Trophy, 
   TrendingUp,
-  Users,
   X,
-  CheckCheck
+  CheckCheck,
+  Info
 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
 
 interface Notification {
   id: string;
@@ -28,97 +24,56 @@ interface Notification {
   is_read: boolean;
   created_at: string;
   action_url?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   student_id?: string;
 }
 
+// Static notifications for demo purposes
+// In production, this would come from a notifications table
+const getStaticNotifications = (): Notification[] => [
+  {
+    id: '1',
+    type: 'system',
+    title: 'Welcome to LearnSpark AI',
+    message: 'Get started by adding students and creating assessments.',
+    is_read: false,
+    created_at: new Date().toISOString()
+  }
+];
+
 const NotificationCenter: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [notifications, setNotifications] = useState<Notification[]>(getStaticNotifications());
+  const [isLoading] = useState(false);
 
-  const { data: notifications = [], isLoading } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+  const markAsRead = (notificationId: string) => {
+    setNotifications(prev => 
+      prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
+    );
+  };
 
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('teacher_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+  };
 
-      if (error) throw error;
-      return data as Notification[];
-    }
-  });
-
-  const markAsReadMutation = useMutation({
-    mutationFn: async (notificationId: string) => {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    }
-  });
-
-  const markAllAsReadMutation = useMutation({
-    mutationFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('teacher_id', user.id)
-        .eq('is_read', false);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      toast({
-        title: "Success",
-        description: "All notifications marked as read"
-      });
-    }
-  });
-
-  const deleteNotificationMutation = useMutation({
-    mutationFn: async (notificationId: string) => {
-      const { error } = await supabase
-        .from('notifications')
-        .delete()
-        .eq('id', notificationId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    }
-  });
+  const deleteNotification = (notificationId: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+  };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'achievement':
-        return <Trophy className="h-4 w-4 text-yellow-600" />;
+        return <Trophy className="h-4 w-4 text-warning" />;
       case 'goal_completed':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'alert':
-        return <AlertTriangle className="h-4 w-4 text-red-600" />;
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
       case 'performance_update':
-        return <TrendingUp className="h-4 w-4 text-blue-600" />;
+        return <TrendingUp className="h-4 w-4 text-primary" />;
       default:
-        return <Bell className="h-4 w-4 text-gray-600" />;
+        return <Bell className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -127,15 +82,15 @@ const NotificationCenter: React.FC = () => {
     
     switch (type) {
       case 'achievement':
-        return `${baseStyle} border-l-4 border-yellow-400 bg-yellow-50`;
+        return `${baseStyle} border-l-4 border-warning bg-warning/10`;
       case 'goal_completed':
-        return `${baseStyle} border-l-4 border-green-400 bg-green-50`;
+        return `${baseStyle} border-l-4 border-success bg-success/10`;
       case 'alert':
-        return `${baseStyle} border-l-4 border-red-400 bg-red-50`;
+        return `${baseStyle} border-l-4 border-destructive bg-destructive/10`;
       case 'performance_update':
-        return `${baseStyle} border-l-4 border-blue-400 bg-blue-50`;
+        return `${baseStyle} border-l-4 border-primary bg-primary/10`;
       default:
-        return `${baseStyle} border-l-4 border-gray-400 bg-gray-50`;
+        return `${baseStyle} border-l-4 border-muted bg-muted/10`;
     }
   };
 
@@ -178,8 +133,7 @@ const NotificationCenter: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => markAllAsReadMutation.mutate()}
-                    disabled={markAllAsReadMutation.isPending}
+                    onClick={markAllAsRead}
                   >
                     <CheckCheck className="h-4 w-4" />
                   </Button>
@@ -197,7 +151,7 @@ const NotificationCenter: React.FC = () => {
           <CardContent className="p-0">
             <ScrollArea className="h-96">
               {isLoading ? (
-                <div className="p-4 text-center text-gray-500">
+                <div className="p-4 text-center text-muted-foreground">
                   <Bell className="h-6 w-6 mx-auto mb-2 animate-pulse" />
                   Loading notifications...
                 </div>
@@ -206,7 +160,7 @@ const NotificationCenter: React.FC = () => {
                   {notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={`p-4 hover:bg-gray-50 transition-colors ${getNotificationStyle(notification.type, notification.is_read)}`}
+                      className={`p-4 hover:bg-muted/50 transition-colors ${getNotificationStyle(notification.type, notification.is_read)}`}
                     >
                       <div className="flex items-start gap-3">
                         <div className="flex-shrink-0 mt-1">
@@ -215,14 +169,11 @@ const NotificationCenter: React.FC = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <h4 className={`text-sm font-medium ${notification.is_read ? 'text-gray-600' : 'text-gray-900'}`}>
+                              <h4 className={`text-sm font-medium ${notification.is_read ? 'text-muted-foreground' : 'text-foreground'}`}>
                                 {notification.title}
                               </h4>
-                              <p className={`text-sm mt-1 ${notification.is_read ? 'text-gray-500' : 'text-gray-700'}`}>
+                              <p className={`text-sm mt-1 ${notification.is_read ? 'text-muted-foreground' : 'text-foreground/80'}`}>
                                 {notification.message}
-                              </p>
-                              <p className="text-xs text-gray-400 mt-2">
-                                {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                               </p>
                             </div>
                             <div className="flex gap-1 ml-2">
@@ -230,7 +181,7 @@ const NotificationCenter: React.FC = () => {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => markAsReadMutation.mutate(notification.id)}
+                                  onClick={() => markAsRead(notification.id)}
                                   className="h-6 w-6 p-0"
                                 >
                                   <CheckCircle className="h-3 w-3" />
@@ -239,8 +190,8 @@ const NotificationCenter: React.FC = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => deleteNotificationMutation.mutate(notification.id)}
-                                className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
+                                onClick={() => deleteNotification(notification.id)}
+                                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                               >
                                 <X className="h-3 w-3" />
                               </Button>
@@ -252,8 +203,8 @@ const NotificationCenter: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="p-8 text-center text-gray-500">
-                  <Bell className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <div className="p-8 text-center text-muted-foreground">
+                  <Bell className="h-12 w-12 mx-auto mb-4 text-muted" />
                   <h3 className="text-lg font-medium mb-2">No notifications</h3>
                   <p className="text-sm">You're all caught up! New notifications will appear here.</p>
                 </div>

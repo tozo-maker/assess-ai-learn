@@ -27,7 +27,7 @@ interface SecurityTest {
 }
 
 // Define valid table names based on the database schema
-type ValidTableName = 'teacher_profiles' | 'students' | 'assessments' | 'assessment_items' | 'student_responses' | 'assessment_analysis' | 'goals' | 'goal_milestones' | 'goal_progress_history' | 'goal_achievements' | 'parent_communications' | 'student_performance' | 'data_exports';
+type ValidTableName = 'teacher_profiles' | 'students' | 'assessments' | 'assessment_items' | 'student_responses' | 'assessment_analysis' | 'goals' | 'parent_communications' | 'skills' | 'classes' | 'email_templates' | 'system_performance_logs';
 
 const RLSSecurityTestSuite = () => {
   const [tests, setTests] = useState<SecurityTest[]>([]);

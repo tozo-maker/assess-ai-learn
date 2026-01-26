@@ -2,11 +2,12 @@ export interface Class {
   id: string;
   teacher_id: string;
   name: string;
-  display_name: string;
-  grade_level: string;
-  subject?: string;
-  description?: string;
-  is_active: boolean;
+  display_name?: string; // Make optional for compatibility
+  grade_level: string | null;
+  subject?: string | null;
+  description?: string | null;
+  is_active?: boolean; // Make optional for compatibility
+  academic_year?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -32,15 +33,14 @@ export interface Student {
 }
 
 export interface StudentPerformance {
-  id: string;
-  student_id: string;
-  assessment_count: number;
-  average_score?: number;
-  last_assessment_date?: string;
-  performance_level?: string;
-  needs_attention: boolean;
-  created_at: string;
-  updated_at: string;
+  student_id: string | null;
+  assessment_count: number | null;
+  average_score: number | null;
+  performance_level: string | null;
+  needs_attention: boolean | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  teacher_id?: string | null;
 }
 
 // Update this interface to handle the array that Supabase returns
