@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -25,16 +24,42 @@ serve(async (req) => {
   }
 
   try {
+    // Require authentication header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Create client with user's auth context (respects RLS)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
     );
+
+    // Verify authenticated user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     const { assessmentId, studentId, responses }: AssessmentAnalysisRequest = await req.json();
 
-    console.log('Generating analysis for:', { assessmentId, studentId, responseCount: responses.length });
+    console.log('Generating analysis for:', { assessmentId, studentId, responseCount: responses.length, userId: user.id });
 
-    // Get assessment and student details
+    // Get assessment and student details - RLS will ensure teacher_id = user.id
     const [assessmentResult, studentResult] = await Promise.all([
       supabase
         .from('assessments')
@@ -43,17 +68,38 @@ serve(async (req) => {
           assessment_items (*)
         `)
         .eq('id', assessmentId)
+        .eq('teacher_id', user.id)
         .single(),
       
       supabase
         .from('students')
         .select('*')
         .eq('id', studentId)
+        .eq('teacher_id', user.id)
         .single()
     ]);
 
-    if (assessmentResult.error) throw assessmentResult.error;
-    if (studentResult.error) throw studentResult.error;
+    if (assessmentResult.error) {
+      console.error('Assessment not found or access denied:', assessmentResult.error);
+      return new Response(
+        JSON.stringify({ error: 'Assessment not found or access denied' }),
+        { 
+          status: 404, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    if (studentResult.error) {
+      console.error('Student not found or access denied:', studentResult.error);
+      return new Response(
+        JSON.stringify({ error: 'Student not found or access denied' }),
+        { 
+          status: 404, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     const assessment = assessmentResult.data;
     const student = studentResult.data;
@@ -82,7 +128,7 @@ serve(async (req) => {
       errorTypes
     });
 
-    console.log('Analysis generated successfully');
+    console.log('Analysis generated successfully for user:', user.id);
 
     return new Response(
       JSON.stringify(analysis),

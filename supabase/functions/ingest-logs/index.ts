@@ -13,7 +13,6 @@ interface LogEntry {
   status_code?: number;
   response_time_ms?: number;
   error_message?: string;
-  user_id?: string;
   context?: Record<string, any>;
   timestamp?: string;
 }
@@ -40,11 +39,37 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client with service role key for bypassing RLS
+    // Require authentication header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Create client with user's auth context
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify authenticated user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     // Parse request body
     const { logs, session_id }: LogBatch = await req.json();
@@ -59,20 +84,39 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`[ingest-logs] Processing ${logs.length} log entries`);
+    // Limit batch size to prevent abuse
+    const maxBatchSize = 100;
+    if (logs.length > maxBatchSize) {
+      return new Response(
+        JSON.stringify({ error: `Batch size exceeds maximum of ${maxBatchSize}` }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
-    // Transform logs to match database schema
+    console.log(`[ingest-logs] Processing ${logs.length} log entries for user: ${user.id}`);
+
+    // Transform logs to match database schema - associate with authenticated user
     const dbLogs = logs.map(log => ({
       endpoint: log.endpoint,
       method: log.method || log.level,
       status_code: log.status_code || levelToStatusCode(log.level),
       response_time_ms: log.response_time_ms || 0,
       error_message: formatLogMessage(log),
-      user_id: log.user_id || null
+      user_id: user.id  // Always associate logs with authenticated user
     }));
 
-    // Insert logs into database using service role (bypasses RLS)
-    const { error } = await supabase
+    // Use service role key for insert since RLS blocks direct inserts
+    // But we've already verified the user, so this is safe
+    const serviceSupabase = createClient(
+      supabaseUrl,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    // Insert logs into database
+    const { error } = await serviceSupabase
       .from('system_performance_logs')
       .insert(dbLogs);
 
@@ -87,7 +131,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`[ingest-logs] Successfully stored ${logs.length} log entries`);
+    console.log(`[ingest-logs] Successfully stored ${logs.length} log entries for user: ${user.id}`);
 
     return new Response(
       JSON.stringify({ 
