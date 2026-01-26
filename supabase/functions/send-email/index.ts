@@ -51,7 +51,7 @@ serve(async (req) => {
     if (!resendApiKey) {
       console.error('RESEND_API_KEY not configured');
       return new Response(
-        JSON.stringify({ success: false, error: 'Email service not configured' }),
+        JSON.stringify({ success: false, error: 'Unable to send email. Please try again later.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -67,9 +67,42 @@ serve(async (req) => {
       );
     }
 
+    // Validate recipient count to prevent abuse
+    if (emailRequest.recipients.length > 50) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Too many recipients. Maximum is 50.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate subject
     if (!emailRequest.subject?.trim()) {
       return new Response(
         JSON.stringify({ success: false, error: 'Subject is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate subject length and prevent header injection
+    if (emailRequest.subject.length > 200) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Subject is too long. Maximum is 200 characters.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (emailRequest.subject.includes('\n') || emailRequest.subject.includes('\r')) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid characters in subject' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate content size to prevent memory issues
+    const maxContentSize = 100000; // 100KB
+    if (JSON.stringify(emailRequest.template_data || {}).length > maxContentSize) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Email content is too large' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -87,12 +120,17 @@ serve(async (req) => {
       );
     }
 
+    // Sanitize sender name - only allow alphanumeric, spaces and basic punctuation
+    const safeSenderName = (emailRequest.sender_name || 'LearnSpark AI')
+      .replace(/[^a-zA-Z0-9\s\-_.]/g, '')
+      .substring(0, 50);
+
     // Generate email content
     const emailContent = generateEmailContent(emailRequest.template_type, emailRequest.template_data);
-    
-    // Send email
+
+    // Send email with sanitized sender name
     const emailResponse = await resend.emails.send({
-      from: `${emailRequest.sender_name || 'LearnSpark AI'} <noreply@learnspark.dev>`,
+      from: `${safeSenderName} <noreply@learnspark.dev>`,
       to: validRecipients,
       subject: emailRequest.subject,
       html: emailContent.html,

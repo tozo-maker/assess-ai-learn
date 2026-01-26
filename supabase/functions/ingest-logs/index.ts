@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
     if (error) {
       console.error('[ingest-logs] Database error:', error);
       return new Response(
-        JSON.stringify({ error: 'Failed to store logs', details: error.message }),
+        JSON.stringify({ error: 'Failed to store logs', success: false }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -150,8 +150,8 @@ Deno.serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        error: 'Internal processing error', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
+        error: 'Failed to process logs. Please try again.',
+        success: false
       }),
       { 
         status: 500, 
