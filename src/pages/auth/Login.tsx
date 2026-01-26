@@ -12,6 +12,7 @@ import PublicLayout from '@/components/layout/PublicLayout';
 import { Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/SimpleAuthContext';
 import { productionLogger } from '@/services/production-logger';
+import { useToast } from '@/hooks/use-toast';
 import {
   Form,
   FormControl,
@@ -32,6 +33,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const Login = () => {
   const { signIn, isLoading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -53,8 +55,13 @@ const Login = () => {
       
       productionLogger.info('Sign in successful, redirecting to dashboard', { email: data.email });
       navigate('/app/dashboard', { replace: true });
-    } catch (error) {
+    } catch (error: any) {
       productionLogger.error('Sign in failed', error as Error, { email: data.email });
+      toast({
+        variant: "destructive",
+        title: "Sign In Failed",
+        description: error.message || "Invalid email or password. Please try again.",
+      });
     }
   };
 
