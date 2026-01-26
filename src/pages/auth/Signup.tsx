@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import PublicLayout from '@/components/layout/PublicLayout';
 import { User, Mail, Lock, School } from 'lucide-react';
 import { useAuth } from '@/contexts/SimpleAuthContext';
+import { useToast } from '@/hooks/use-toast';
 import {
   Form,
   FormControl,
@@ -79,6 +80,7 @@ const experienceOptions = [
 const Signup = () => {
   const { signUp, isLoading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -105,9 +107,17 @@ const Signup = () => {
         subjects: data.subjects,
         yearsExperience: data.years_experience,
       });
+      toast({
+        title: "Account Created!",
+        description: "Welcome to LearnSpark AI. Let's get you set up.",
+      });
       navigate('/auth/onboarding');
-    } catch (error) {
-      // Error is handled by the auth context
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Registration Failed",
+        description: error.message || "Could not create your account. Please try again.",
+      });
     }
   };
 

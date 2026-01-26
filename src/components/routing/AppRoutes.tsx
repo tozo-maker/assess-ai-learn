@@ -9,6 +9,7 @@ import LoginPage from '@/pages/auth/Login';
 import SignupPage from '@/pages/auth/Signup';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
 import ResetPassword from '@/pages/auth/ResetPassword';
+import Onboarding from '@/pages/auth/Onboarding';
 
 // Dashboard and main app pages
 import DashboardPage from '@/pages/app/Dashboard';
@@ -67,6 +68,7 @@ export const AppRoutes = () => {
       <Route path="/auth/signup" element={<PublicRoute><SignupPage /></PublicRoute>} />
       <Route path="/auth/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/auth/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
+      <Route path="/auth/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
       {/* Protected App Routes - All wrapped with AppLayout */}
       <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
