@@ -281,11 +281,20 @@ class MobileOptimizationService {
     `;
 
     if (element.closest('.student-card')) {
-      menu.innerHTML = `
-        <div class="menu-item" data-action="view">View Details</div>
-        <div class="menu-item" data-action="edit">Edit Student</div>
-        <div class="menu-item" data-action="contact">Contact Parent</div>
-      `;
+      // Use safe DOM manipulation instead of innerHTML to prevent XSS
+      const menuItems = [
+        { action: 'view', label: 'View Details' },
+        { action: 'edit', label: 'Edit Student' },
+        { action: 'contact', label: 'Contact Parent' }
+      ];
+      
+      menuItems.forEach(item => {
+        const menuItem = document.createElement('div');
+        menuItem.className = 'menu-item';
+        menuItem.dataset.action = item.action;
+        menuItem.textContent = item.label;
+        menu.appendChild(menuItem);
+      });
     }
 
     document.body.appendChild(menu);

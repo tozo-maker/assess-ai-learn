@@ -39,11 +39,3 @@ export const getCorsHeaders = (req: Request): Record<string, string> => {
     'Access-Control-Allow-Credentials': 'true',
   };
 };
-
-// Legacy export for backwards compatibility during migration
-// TODO: Update all edge functions to use getCorsHeaders(req) instead
-export const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-};

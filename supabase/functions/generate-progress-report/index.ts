@@ -12,21 +12,38 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication first
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     const { student_id } = await req.json();
     
     if (!student_id) {
-      throw new Error('Student ID is required');
+      return new Response(
+        JSON.stringify({ error: 'Student ID is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
     
-    // Initialize Supabase client
+    // Initialize Supabase client with user's auth context
     const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') as string;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
     
-    // Get authenticated user for RLS
+    // Verify the user is authenticated
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      throw new Error('Authentication required');
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
     
     console.log(`Generating progress report for student: ${student_id}, teacher: ${user.id}`);
@@ -41,11 +58,11 @@ serve(async (req) => {
     
     if (studentError) {
       console.error('Error fetching student:', studentError);
-      throw new Error(`Error fetching student: ${studentError.message}`);
+      throw new Error('Unable to fetch student data');
     }
     
     if (!student) {
-      throw new Error('Student not found or access denied');
+      throw new Error('Unable to fetch student data');
     }
     
     console.log(`Found student: ${student.first_name} ${student.last_name}`);
@@ -71,7 +88,7 @@ serve(async (req) => {
     
     if (assessmentsError) {
       console.error('Error fetching assessments:', assessmentsError);
-      throw new Error(`Error fetching assessments: ${assessmentsError.message}`);
+      // Continue with empty assessments rather than failing completely
     }
     
     console.log(`Found ${assessments?.length || 0} assessment responses`);
