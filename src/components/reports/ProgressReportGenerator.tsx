@@ -261,8 +261,8 @@ const ProgressReportGenerator: React.FC<ProgressReportGeneratorProps> = ({ stude
                           {goal.status}
                         </Badge>
                       </div>
-                      <Progress value={goal.progress_percentage || 0} className="mb-2" />
-                      <p className="text-sm text-gray-600">{goal.progress_percentage || 0}% complete</p>
+                      <Progress value={goal.progress || 0} className="mb-2" />
+                      <p className="text-sm text-gray-600">{goal.progress || 0}% complete</p>
                     </div>
                   ))}
                 </div>

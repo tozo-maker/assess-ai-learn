@@ -33,7 +33,7 @@ export const getPerformanceData = (student: StudentWithPerformance): Performance
     score: student.performance.average_score,
     needsAttention: student.performance.needs_attention,
     assessmentCount: student.performance.assessment_count,
-    lastAssessment: student.performance.last_assessment_date
+    lastAssessment: null // last_assessment_date not in current schema
   };
 };
 

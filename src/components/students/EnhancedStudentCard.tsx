@@ -58,10 +58,8 @@ const EnhancedStudentCard: React.FC<EnhancedStudentCardProps> = ({
   };
 
   const getLastAssessmentDate = () => {
-    if (!student.performance || Array.isArray(student.performance)) {
-      return null;
-    }
-    return student.performance.last_assessment_date;
+    // last_assessment_date is not available in current schema
+    return null;
   };
 
   const getAssessmentCount = () => {

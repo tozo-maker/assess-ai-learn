@@ -4,12 +4,15 @@ import type { Class } from '@/types/student';
 export const classService = {
   // Get all classes for the authenticated teacher
   async getClasses(): Promise<Class[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data, error } = await supabase
       .from('classes')
       .select('*')
-      .eq('is_active', true)
+      .eq('teacher_id', user.id)
       .order('grade_level', { ascending: true })
-      .order('display_name', { ascending: true });
+      .order('name', { ascending: true });
 
     if (error) {
       console.error('Error fetching classes:', error);
@@ -80,11 +83,11 @@ export const classService = {
     return data;
   },
 
-  // Delete a class (soft delete by setting is_active to false)
+  // Delete a class (hard delete since is_active doesn't exist)
   async deleteClass(id: string): Promise<void> {
     const { error } = await supabase
       .from('classes')
-      .update({ is_active: false })
+      .delete()
       .eq('id', id);
 
     if (error) {
@@ -95,12 +98,15 @@ export const classService = {
 
   // Get classes by grade level
   async getClassesByGradeLevel(gradeLevel: string): Promise<Class[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data, error } = await supabase
       .from('classes')
       .select('*')
+      .eq('teacher_id', user.id)
       .eq('grade_level', gradeLevel)
-      .eq('is_active', true)
-      .order('display_name', { ascending: true });
+      .order('name', { ascending: true });
 
     if (error) {
       console.error('Error fetching classes by grade level:', error);

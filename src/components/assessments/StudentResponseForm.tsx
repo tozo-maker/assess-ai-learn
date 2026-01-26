@@ -253,7 +253,7 @@ const StudentResponseForm: React.FC<StudentResponseFormProps> = ({
                 <Card key={item.id} className="p-4">
                   <div className="mb-3">
                     <div className="flex justify-between">
-                      <h4 className="font-medium">Item #{item.item_number}</h4>
+                      <h4 className="font-medium">Item #{item.item_order || index + 1}</h4>
                       <span className="text-sm text-gray-500">
                         Max score: {item.max_score} | Type: {item.knowledge_type} | Difficulty: {item.difficulty_level}
                       </span>

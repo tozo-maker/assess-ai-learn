@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { productionLogger } from '@/services/production-logger';
 
@@ -7,12 +6,11 @@ export const optimizedDashboardService = {
     try {
       productionLogger.info('Fetching optimized dashboard data', { teacherId });
 
-      // Parallel fetch all dashboard data
+      // Parallel fetch all dashboard data (excluding notifications since table doesn't exist)
       const [
         studentsResult,
         assessmentsResult,
         goalsResult,
-        notificationsResult,
         teacherProfileResult
       ] = await Promise.all([
         // Students with performance data
@@ -24,8 +22,7 @@ export const optimizedDashboardService = {
               assessment_count,
               average_score,
               performance_level,
-              needs_attention,
-              last_assessment_date
+              needs_attention
             )
           `)
           .eq('teacher_id', teacherId)
@@ -56,15 +53,6 @@ export const optimizedDashboardService = {
           .order('created_at', { ascending: false })
           .limit(5),
 
-        // Recent notifications
-        supabase
-          .from('notifications')
-          .select('*')
-          .eq('teacher_id', teacherId)
-          .eq('is_read', false)
-          .order('created_at', { ascending: false })
-          .limit(5),
-
         // Teacher profile
         supabase
           .from('teacher_profiles')
@@ -77,12 +65,10 @@ export const optimizedDashboardService = {
       if (studentsResult.error) throw studentsResult.error;
       if (assessmentsResult.error) throw assessmentsResult.error;
       if (goalsResult.error) throw goalsResult.error;
-      if (notificationsResult.error) throw notificationsResult.error;
 
       const students = studentsResult.data || [];
       const assessments = assessmentsResult.data || [];
       const goals = goalsResult.data || [];
-      const notifications = notificationsResult.data || [];
       const teacherProfile = teacherProfileResult.data;
 
       // Calculate metrics
@@ -113,8 +99,8 @@ export const optimizedDashboardService = {
         a => new Date(a.created_at) > thirtyDaysAgo
       ).length;
 
-      // Goals progress
-      const completedGoals = goals.filter(g => g.progress_percentage >= 100).length;
+      // Goals progress - use 'progress' not 'progress_percentage'
+      const completedGoals = goals.filter(g => (g.progress || 0) >= 100).length;
       const activeGoalsCount = goals.length;
 
       productionLogger.info('Dashboard data compiled successfully', {
@@ -125,7 +111,7 @@ export const optimizedDashboardService = {
         recentAssessments,
         activeGoalsCount,
         completedGoals,
-        unreadNotifications: notifications.length
+        unreadNotifications: 0
       });
 
       return {
@@ -136,7 +122,7 @@ export const optimizedDashboardService = {
         students,
         assessments,
         goals,
-        notifications,
+        notifications: [], // No notifications table
         metrics: {
           totalStudents,
           totalAssessments,
@@ -145,7 +131,7 @@ export const optimizedDashboardService = {
           recentAssessments,
           activeGoalsCount,
           completedGoals,
-          unreadNotifications: notifications.length,
+          unreadNotifications: 0,
           performanceDistribution: {
             excellent: students.filter(s => (s.student_performance?.[0]?.average_score || 0) >= 90).length,
             good: students.filter(s => {

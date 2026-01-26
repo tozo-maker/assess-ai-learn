@@ -1,31 +1,31 @@
-
-import { supabase } from '@/integrations/supabase/client';
-
+// Skill interface aligned with actual skills table in database
 export interface Skill {
   id: string;
   name: string;
-  description?: string;
-  category_id: string;
-  grade_level: string;
-  subject: string;
-  curriculum_standard?: string;
-  difficulty_level: number;
+  description?: string | null;
+  category?: string | null;
+  grade_levels?: string[] | null;
+  subject?: string | null;
   created_at: string;
-  updated_at: string;
 }
 
 class SkillService {
   async getSkills(): Promise<Skill[]> {
+    // Import supabase dynamically to avoid circular deps
+    const { supabase } = await import('@/integrations/supabase/client');
+    
     const { data, error } = await supabase
       .from('skills')
       .select('*')
       .order('name');
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as Skill[];
   }
 
   async getSkillById(id: string): Promise<Skill | null> {
+    const { supabase } = await import('@/integrations/supabase/client');
+    
     const { data, error } = await supabase
       .from('skills')
       .select('*')
@@ -33,7 +33,7 @@ class SkillService {
       .single();
 
     if (error) throw error;
-    return data;
+    return data as Skill;
   }
 }
 

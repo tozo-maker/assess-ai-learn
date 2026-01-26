@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,28 +33,6 @@ const SkillsTable: React.FC<SkillsTableProps> = ({ skills, isLoading }) => {
     );
   }
 
-  const getDifficultyColor = (level: number) => {
-    switch (level) {
-      case 1: return 'bg-green-100 text-green-800';
-      case 2: return 'bg-blue-100 text-blue-800';
-      case 3: return 'bg-yellow-100 text-yellow-800';
-      case 4: return 'bg-orange-100 text-orange-800';
-      case 5: return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getDifficultyLabel = (level: number) => {
-    switch (level) {
-      case 1: return 'Beginning';
-      case 2: return 'Basic';
-      case 3: return 'Intermediate';
-      case 4: return 'Advanced';
-      case 5: return 'Expert';
-      default: return 'Unknown';
-    }
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -68,9 +45,7 @@ const SkillsTable: React.FC<SkillsTableProps> = ({ skills, isLoading }) => {
               <tr className="border-b">
                 <th className="text-left p-4 font-medium">Skill Name</th>
                 <th className="text-left p-4 font-medium">Subject</th>
-                <th className="text-left p-4 font-medium">Grade Level</th>
-                <th className="text-left p-4 font-medium">Difficulty</th>
-                <th className="text-left p-4 font-medium">Standard</th>
+                <th className="text-left p-4 font-medium">Grade Levels</th>
                 <th className="text-left p-4 font-medium">Description</th>
               </tr>
             </thead>
@@ -79,20 +54,14 @@ const SkillsTable: React.FC<SkillsTableProps> = ({ skills, isLoading }) => {
                 <tr key={skill.id} className="border-b hover:bg-muted/50">
                   <td className="p-4 font-medium">{skill.name}</td>
                   <td className="p-4">
-                    <Badge variant="outline">{skill.subject}</Badge>
+                    <Badge variant="outline">{skill.subject || 'N/A'}</Badge>
                   </td>
                   <td className="p-4">
-                    <Badge variant="secondary">
-                      {skill.grade_level === 'K' ? 'Kindergarten' : `Grade ${skill.grade_level}`}
-                    </Badge>
-                  </td>
-                  <td className="p-4">
-                    <Badge className={getDifficultyColor(skill.difficulty_level)}>
-                      {getDifficultyLabel(skill.difficulty_level)}
-                    </Badge>
-                  </td>
-                  <td className="p-4 text-sm text-muted-foreground">
-                    {skill.curriculum_standard || 'N/A'}
+                    {skill.grade_levels?.map(level => (
+                      <Badge key={level} variant="secondary" className="mr-1">
+                        {level === 'K' ? 'K' : level}
+                      </Badge>
+                    )) || <span className="text-muted-foreground">N/A</span>}
                   </td>
                   <td className="p-4 text-sm text-muted-foreground max-w-xs truncate">
                     {skill.description || 'No description available'}

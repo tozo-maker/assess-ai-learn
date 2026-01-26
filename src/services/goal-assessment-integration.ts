@@ -1,6 +1,4 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { goalsService } from './goals-service';
 
 export const goalAssessmentIntegration = {
   // Link assessment performance to relevant goals
@@ -21,7 +19,7 @@ export const goalAssessmentIntegration = {
         .select('*')
         .eq('student_id', studentId)
         .eq('status', 'active')
-        .ilike('description', `%${assessment.subject}%`);
+        .ilike('description', `%${assessment.subject || ''}%`);
 
       // Log the linkage for tracking
       console.log(`Linked assessment ${assessment.title} to ${goals?.length || 0} goals`);
@@ -46,12 +44,12 @@ export const goalAssessmentIntegration = {
       const suggestions: string[] = [];
 
       // Convert growth areas to goal suggestions
-      analysis.growth_areas.forEach(area => {
+      (analysis.growth_areas || []).forEach(area => {
         suggestions.push(`Improve ${area.toLowerCase()} through targeted practice and exercises`);
       });
 
       // Convert recommendations to goal suggestions
-      analysis.recommendations.forEach(rec => {
+      (analysis.recommendations || []).forEach(rec => {
         if (rec.toLowerCase().includes('practice') || rec.toLowerCase().includes('improve')) {
           suggestions.push(rec);
         }
@@ -69,10 +67,10 @@ export const goalAssessmentIntegration = {
     try {
       const suggestions: Array<{goalId: string, suggestedProgress: number, reason: string}> = [];
 
-      // Get active goals for student
+      // Get active goals for student - use 'progress' not 'progress_percentage'
       const { data: goals } = await supabase
         .from('goals')
-        .select('id, title, progress_percentage, description')
+        .select('id, title, progress, description')
         .eq('student_id', studentId)
         .eq('status', 'active');
 
@@ -92,20 +90,23 @@ export const goalAssessmentIntegration = {
 
       // Analyze performance and suggest progress updates
       for (const goal of goals) {
-        const relatedAssessments = recentAssessments?.filter(assessment => 
-          goal.description?.toLowerCase().includes(assessment.assessments.subject.toLowerCase())
-        ) || [];
+        const relatedAssessments = recentAssessments?.filter(assessment => {
+          const subject = assessment.assessments?.subject || '';
+          return goal.description?.toLowerCase().includes(subject.toLowerCase());
+        }) || [];
 
         if (relatedAssessments.length > 0) {
-          const averageScore = relatedAssessments.reduce((acc, curr) => 
-            acc + (curr.score / curr.assessments.max_score * 100), 0
-          ) / relatedAssessments.length;
+          const averageScore = relatedAssessments.reduce((acc, curr) => {
+            const maxScore = curr.assessments?.max_score || 100;
+            return acc + ((curr.score || 0) / maxScore * 100);
+          }, 0) / relatedAssessments.length;
 
-          if (averageScore > 80 && (goal.progress_percentage || 0) < 80) {
+          const currentProgress = goal.progress || 0;
+          if (averageScore > 80 && currentProgress < 80) {
             suggestions.push({
               goalId: goal.id,
-              suggestedProgress: Math.min(90, (goal.progress_percentage || 0) + 20),
-              reason: `Strong performance in recent ${goal.description?.includes('math') ? 'mathematics' : 'assessment'} (${Math.round(averageScore)}% average)`
+              suggestedProgress: Math.min(90, currentProgress + 20),
+              reason: `Strong performance in recent assessments (${Math.round(averageScore)}% average)`
             });
           }
         }
@@ -123,13 +124,13 @@ export const goalAssessmentIntegration = {
     try {
       const achievements: Array<{goalId: string, achieved: boolean, assessmentTitle: string}> = [];
 
-      // Get goals close to completion
+      // Get goals close to completion - use 'progress' not 'progress_percentage'
       const { data: goals } = await supabase
         .from('goals')
-        .select('id, title, progress_percentage, target_date')
+        .select('id, title, progress, target_date')
         .eq('student_id', studentId)
         .eq('status', 'active')
-        .gte('progress_percentage', 80);
+        .gte('progress', 80);
 
       if (!goals) return achievements;
 
@@ -145,15 +146,17 @@ export const goalAssessmentIntegration = {
         .order('created_at', { ascending: false });
 
       for (const goal of goals) {
-        const highPerformance = recentHighScores?.find(score => 
-          (score.score / score.assessments.max_score * 100) >= 90
-        );
+        const highPerformance = recentHighScores?.find(score => {
+          const maxScore = score.assessments?.max_score || 100;
+          return ((score.score || 0) / maxScore * 100) >= 90;
+        });
 
-        if (highPerformance && (goal.progress_percentage || 0) >= 90) {
+        const currentProgress = goal.progress || 0;
+        if (highPerformance && currentProgress >= 90) {
           achievements.push({
             goalId: goal.id,
             achieved: true,
-            assessmentTitle: highPerformance.assessments.title
+            assessmentTitle: highPerformance.assessments?.title || 'Unknown'
           });
         }
       }
