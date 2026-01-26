@@ -309,24 +309,41 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication first
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Initialize Supabase client with user's auth context
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') as string;
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+    
+    // Verify the user is authenticated
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { student_id } = await req.json();
     
     if (!student_id) {
-      throw new Error('Student ID is required');
+      return new Response(
+        JSON.stringify({ error: 'Student ID is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
     
-    console.log(`Generating PDF for student: ${student_id}`);
-    
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') as string;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    
-    // Get authenticated user for RLS
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      supabase.auth.getUser(authHeader);
-    }
+    console.log(`User ${user.id} generating PDF for student: ${student_id}`);
     
     // Fetch report data directly from database
     console.log('Fetching student data...');
@@ -414,14 +431,13 @@ serve(async (req) => {
     // For now, return the PDF as a data URL for immediate download
     const pdfDataUrl = `data:application/pdf;base64,${base64PDF}`;
     
-    // Save communication record
-    const { data: user } = await supabase.auth.getUser();
-    if (user.user) {
+    // Save communication record (user already verified above)
+    if (user) {
       const { error: communicationError } = await supabase
         .from('parent_communications')
         .insert({
-          student_id,
-          teacher_id: user.user.id,
+          student_id: student_id,
+          teacher_id: user.id,
           communication_type: 'progress_report',
           subject: `Progress Report for ${reportData.student.first_name} ${reportData.student.last_name}`,
           content: `Generated progress report PDF on ${new Date().toLocaleDateString()}`,
