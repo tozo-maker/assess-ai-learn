@@ -10,7 +10,8 @@ import { CheckCircle, Users, FileText, Lightbulb } from 'lucide-react';
 import { useAuth } from '@/contexts/SimpleAuthContext';
 
 const Onboarding = () => {
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, updateProfile, isLoading } = useAuth();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [displayName, setDisplayName] = useState(profile?.full_name?.split(' ')[0] || '');
   const [goals, setGoals] = useState('');
@@ -19,9 +20,32 @@ const Onboarding = () => {
   const [studentCount, setStudentCount] = useState('');
   const [gradeLevel, setGradeLevel] = useState('');
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
-  const navigate = useNavigate();
   
   const totalSteps = 3;
+
+  // Redirect to login if not authenticated (after loading completes)
+  React.useEffect(() => {
+    if (!isLoading && !user) {
+      navigate('/auth/login', { replace: true });
+    }
+  }, [isLoading, user, navigate]);
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if no user (will redirect)
+  if (!user) {
+    return null;
+  }
 
   const nextStep = () => {
     if (currentStep === 1 && displayName) {
