@@ -1,181 +1,117 @@
+// student_performance is a VIEW, not a table
+// Cannot insert/update/upsert into views
+// This service provides read-only access and logging for attempted writes
 
 import { supabase } from '@/integrations/supabase/client';
 
-interface PerformanceMetric {
-  endpoint: string;
-  method: string;
-  response_time_ms: number;
-  status_code: number;
-  error_message?: string;
+export interface StudentPerformance {
+  student_id: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  teacher_id: string | null;
+  assessment_count: number | null;
+  average_score: number | null;
+  performance_level: string | null;
+  needs_attention: boolean | null;
 }
 
-class PerformanceService {
-  private metrics: PerformanceMetric[] = [];
-  private batchSize = 10;
-  private flushInterval = 5000; // 5 seconds
-
-  constructor() {
-    // Auto-flush metrics periodically
-    setInterval(() => {
-      this.flushMetrics();
-    }, this.flushInterval);
-  }
-
-  logMetric(metric: PerformanceMetric) {
-    this.metrics.push(metric);
-    
-    if (this.metrics.length >= this.batchSize) {
-      this.flushMetrics();
-    }
-  }
-
-  private async flushMetrics() {
-    if (this.metrics.length === 0) return;
-
-    const metricsToFlush = [...this.metrics];
-    this.metrics = [];
-
-    try {
-      await supabase
-        .from('system_performance_logs')
-        .insert(metricsToFlush);
-    } catch (error) {
-      console.warn('Failed to log performance metrics:', error);
-      // Put metrics back if failed
-      this.metrics.unshift(...metricsToFlush);
-    }
-  }
-
-  async getPerformanceStats(timeframe: 'hour' | 'day' | 'week' = 'day') {
-    const timeframeHours = timeframe === 'hour' ? 1 : timeframe === 'day' ? 24 : 168;
-    const since = new Date(Date.now() - timeframeHours * 60 * 60 * 1000).toISOString();
-
+export const performanceService = {
+  // Get performance data for a student
+  async getStudentPerformance(studentId: string): Promise<StudentPerformance | null> {
     const { data, error } = await supabase
-      .from('system_performance_logs')
+      .from('student_performance')
       .select('*')
-      .gte('created_at', since)
-      .order('created_at', { ascending: false });
+      .eq('student_id', studentId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null; // No performance record found
+      }
+      throw error;
+    }
+
+    return data as StudentPerformance;
+  },
+
+  // Get all performance data for a teacher's students
+  async getTeacherStudentsPerformance(teacherId: string): Promise<StudentPerformance[]> {
+    const { data, error } = await supabase
+      .from('student_performance')
+      .select('*')
+      .eq('teacher_id', teacherId);
+
+    if (error) throw error;
+    return (data || []) as StudentPerformance[];
+  },
+
+  // Get students needing attention
+  async getStudentsNeedingAttention(teacherId: string): Promise<StudentPerformance[]> {
+    const { data, error } = await supabase
+      .from('student_performance')
+      .select('*')
+      .eq('teacher_id', teacherId)
+      .eq('needs_attention', true);
+
+    if (error) throw error;
+    return (data || []) as StudentPerformance[];
+  },
+
+  // Calculate and log performance (view is auto-calculated from student_responses)
+  async calculateStudentPerformance(studentId: string): Promise<void> {
+    console.log('Performance calculation requested for student:', studentId);
+    console.log('Note: student_performance is a VIEW that auto-calculates from student_responses');
+    
+    // Performance is automatically calculated by the view
+    // Just verify the student exists and has responses
+    const { data: responses, error } = await supabase
+      .from('student_responses')
+      .select('id, score')
+      .eq('student_id', studentId);
+
+    if (error) {
+      console.error('Error checking student responses:', error);
+      return;
+    }
+
+    console.log(`Student ${studentId} has ${responses?.length || 0} responses - view will auto-calculate performance`);
+  },
+
+  // Recalculate all student performances (no-op, view handles this)
+  async recalculateAllPerformances(): Promise<void> {
+    console.log('Performance recalculation requested');
+    console.log('Note: student_performance is a VIEW that auto-calculates - no manual recalculation needed');
+  },
+
+  // Get performance distribution for a teacher
+  async getPerformanceDistribution(teacherId: string): Promise<{
+    advanced: number;
+    proficient: number;
+    developing: number;
+    beginning: number;
+  }> {
+    const { data, error } = await supabase
+      .from('student_performance')
+      .select('performance_level')
+      .eq('teacher_id', teacherId);
 
     if (error) throw error;
 
-    return {
-      totalRequests: data.length,
-      averageResponseTime: data.reduce((sum, log) => sum + log.response_time_ms, 0) / data.length,
-      errorRate: data.filter(log => log.status_code >= 400).length / data.length,
-      slowRequests: data.filter(log => log.response_time_ms > 2000).length,
-      data
+    const distribution = {
+      advanced: 0,
+      proficient: 0,
+      developing: 0,
+      beginning: 0
     };
+
+    (data || []).forEach(student => {
+      const level = student.performance_level?.toLowerCase();
+      if (level === 'advanced') distribution.advanced++;
+      else if (level === 'proficient') distribution.proficient++;
+      else if (level === 'developing') distribution.developing++;
+      else if (level === 'beginning') distribution.beginning++;
+    });
+
+    return distribution;
   }
-
-  // Add the missing updateStudentPerformance method
-  async updateStudentPerformance(studentId: string): Promise<void> {
-    try {
-      // Get all student responses for this student
-      const { data: responses, error: responsesError } = await supabase
-        .from('student_responses')
-        .select(`
-          score,
-          assessment_item_id,
-          assessment_items!inner(max_score)
-        `)
-        .eq('student_id', studentId);
-
-      if (responsesError) throw responsesError;
-
-      if (!responses || responses.length === 0) {
-        // No responses yet, create a default performance record
-        await supabase
-          .from('student_performance')
-          .upsert({
-            student_id: studentId,
-            average_score: null,
-            performance_level: null,
-            assessment_count: 0,
-            needs_attention: false,
-            last_assessment_date: null
-          });
-        return;
-      }
-
-      // Calculate performance metrics
-      let totalPossibleScore = 0;
-      let totalActualScore = 0;
-      
-      responses.forEach(response => {
-        const maxScore = (response as any).assessment_items.max_score;
-        totalPossibleScore += maxScore;
-        totalActualScore += response.score;
-      });
-
-      const averageScore = totalPossibleScore > 0 ? (totalActualScore / totalPossibleScore) * 100 : 0;
-      
-      // Determine performance level
-      let performanceLevel = 'Beginning';
-      if (averageScore >= 90) performanceLevel = 'Advanced';
-      else if (averageScore >= 80) performanceLevel = 'Proficient';
-      else if (averageScore >= 65) performanceLevel = 'Developing';
-
-      // Determine if needs attention (below 65% average)
-      const needsAttention = averageScore < 65;
-
-      // Get the most recent assessment date
-      const { data: lastAssessment } = await supabase
-        .from('student_responses')
-        .select('created_at')
-        .eq('student_id', studentId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      // Update or insert performance record
-      await supabase
-        .from('student_performance')
-        .upsert({
-          student_id: studentId,
-          average_score: Math.round(averageScore * 100) / 100, // Round to 2 decimal places
-          performance_level: performanceLevel,
-          assessment_count: responses.length,
-          needs_attention: needsAttention,
-          last_assessment_date: lastAssessment?.created_at || null
-        });
-
-    } catch (error) {
-      console.error('Error updating student performance:', error);
-      throw error;
-    }
-  }
-}
-
-export const performanceService = new PerformanceService();
-
-// Performance monitoring hook
-export const withPerformanceTracking = <T extends (...args: any[]) => Promise<any>>(
-  fn: T,
-  endpoint: string,
-  method: string = 'GET'
-): T => {
-  return (async (...args: any[]) => {
-    const startTime = Date.now();
-    let status_code = 200;
-    let error_message: string | undefined;
-
-    try {
-      const result = await fn(...args);
-      return result;
-    } catch (error: any) {
-      status_code = error.status || 500;
-      error_message = error.message;
-      throw error;
-    } finally {
-      const response_time_ms = Date.now() - startTime;
-      
-      performanceService.logMetric({
-        endpoint,
-        method,
-        response_time_ms,
-        status_code,
-        error_message
-      });
-    }
-  }) as T;
 };

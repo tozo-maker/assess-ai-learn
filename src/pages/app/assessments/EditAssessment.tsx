@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -8,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
@@ -48,14 +46,14 @@ const EditAssessment: React.FC = () => {
   const { data: assessment, isLoading: isLoadingAssessment } = useQuery({
     queryKey: ['assessment', id],
     queryFn: () => assessmentService.getAssessmentById(id as string),
-    enabled: !!id,
+    enabled: !!id
   });
 
   // Fetch assessment items
   const { data: assessmentItems, isLoading: isLoadingItems } = useQuery({
-    queryKey: ['assessmentItems', id],
+    queryKey: ['assessment-items', id],
     queryFn: () => assessmentService.getAssessmentItems(id as string),
-    enabled: !!id,
+    enabled: !!id
   });
 
   // Update form data when assessment loads
@@ -81,10 +79,9 @@ const EditAssessment: React.FC = () => {
     if (assessmentItems) {
       const formattedItems = assessmentItems.map(item => ({
         question_text: item.question_text,
-        item_number: item.item_number,
+        item_order: item.item_order,
         knowledge_type: item.knowledge_type,
         difficulty_level: item.difficulty_level,
-        standard_reference: item.standard_reference || '',
         max_score: item.max_score
       }));
       setItems(formattedItems);
@@ -113,7 +110,7 @@ const EditAssessment: React.FC = () => {
     }
   });
 
-  const handleInputChange = (field: keyof AssessmentFormData, value: any) => {
+  const handleInputChange = (field: keyof AssessmentFormData, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -133,367 +130,307 @@ const EditAssessment: React.FC = () => {
   const addItem = () => {
     const newItem: AssessmentItemFormData = {
       question_text: '',
-      item_number: items.length + 1,
+      item_order: items.length + 1,
       knowledge_type: 'factual',
       difficulty_level: 'medium',
-      standard_reference: '',
       max_score: 1
     };
     setItems([...items, newItem]);
   };
 
-  const updateItem = (index: number, field: keyof AssessmentItemFormData, value: any) => {
-    const newItems = [...items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setItems(newItems);
+  const updateItem = (index: number, field: keyof AssessmentItemFormData, value: unknown) => {
+    const updatedItems = [...items];
+    updatedItems[index] = { ...updatedItems[index], [field]: value };
+    setItems(updatedItems);
   };
 
   const removeItem = (index: number) => {
-    const newItems = items.filter((_, i) => i !== index);
-    // Renumber items
-    const renumberedItems = newItems.map((item, i) => ({ ...item, item_number: i + 1 }));
-    setItems(renumberedItems);
+    setItems(items.filter((_, i) => i !== index));
   };
 
-  const calculateTotalScore = () => {
-    return items.reduce((total, item) => total + item.max_score, 0);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.title.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Assessment title is required.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    const totalScore = calculateTotalScore();
-    const updatedFormData = { ...formData, max_score: totalScore };
-    
-    updateAssessmentMutation.mutate(updatedFormData);
+    updateAssessmentMutation.mutate(formData);
   };
 
   if (isLoadingAssessment || isLoadingItems) {
     return (
-      <PageShell
-        title="Loading..."
-        description="Loading assessment data"
-        link="/app/assessments"
-        linkText="Back to Assessments"
+      <PageShell 
+        title="Edit Assessment" 
+        description="Loading assessment..."
       >
-        <div className="flex items-center justify-center min-h-96">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      </PageShell>
-    );
-  }
-
-  if (!assessment) {
-    return (
-      <PageShell
-        title="Assessment Not Found"
-        description="The requested assessment could not be found"
-        link="/app/assessments"
-        linkText="Back to Assessments"
-      >
-        <div className="text-center p-8">
-          <AlertCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium mb-2">Assessment not found</h3>
-          <p className="text-gray-500">The assessment you're looking for doesn't exist or has been deleted.</p>
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       </PageShell>
     );
   }
 
   return (
-    <PageShell
-      title="Edit Assessment"
-      description="Modify assessment details and questions"
-      link="/app/assessments"
-      linkText="Back to Assessments"
+    <PageShell 
+      title="Edit Assessment" 
+      description="Update assessment details and questions"
     >
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" onClick={() => navigate(`/app/assessments/${id}`)}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Assessment
-          </Button>
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Back Button */}
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Assessment Information</CardTitle>
-              <CardDescription>Basic details about the assessment</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="title">Assessment Title *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => handleInputChange('title', e.target.value)}
-                    placeholder="Enter assessment title"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="subject">Subject *</Label>
-                  <Input
-                    id="subject"
-                    value={formData.subject}
-                    onChange={(e) => handleInputChange('subject', e.target.value)}
-                    placeholder="e.g., Mathematics, Science"
-                    required
-                  />
-                </div>
+        {/* Basic Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Assessment Information</CardTitle>
+            <CardDescription>Basic details about the assessment</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="title">Title *</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  placeholder="Assessment title"
+                  required
+                />
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Brief description of the assessment"
-                  rows={3}
+                <Label htmlFor="subject">Subject *</Label>
+                <Input
+                  id="subject"
+                  value={formData.subject}
+                  onChange={(e) => handleInputChange('subject', e.target.value)}
+                  placeholder="e.g., Mathematics, English"
+                  required
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="gradeLevel">Grade Level</Label>
-                  <Select value={formData.grade_level} onValueChange={(value: GradeLevel) => handleInputChange('grade_level', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {gradeLevels.map((grade) => (
-                        <SelectItem key={grade} value={grade}>
-                          {grade === 'K' ? 'Kindergarten' : `Grade ${grade}`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="assessmentType">Assessment Type</Label>
-                  <Select value={formData.assessment_type} onValueChange={(value: AssessmentType) => handleInputChange('assessment_type', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {assessmentTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type.charAt(0).toUpperCase() + type.slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="assessmentDate">Assessment Date</Label>
-                  <Input
-                    id="assessmentDate"
-                    type="date"
-                    value={formData.assessment_date}
-                    onChange={(e) => handleInputChange('assessment_date', e.target.value)}
-                  />
-                </div>
+              <div>
+                <Label>Grade Level</Label>
+                <Select
+                  value={formData.grade_level}
+                  onValueChange={(value: GradeLevel) => handleInputChange('grade_level', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {gradeLevels.map((grade) => (
+                      <SelectItem key={grade} value={grade}>
+                        {grade}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="isDraft"
-                  checked={formData.is_draft}
-                  onCheckedChange={(checked) => handleInputChange('is_draft', checked)}
+              <div>
+                <Label>Assessment Type</Label>
+                <Select
+                  value={formData.assessment_type}
+                  onValueChange={(value: AssessmentType) => handleInputChange('assessment_type', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {assessmentTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="max_score">Maximum Score</Label>
+                <Input
+                  id="max_score"
+                  type="number"
+                  min="1"
+                  value={formData.max_score}
+                  onChange={(e) => handleInputChange('max_score', parseInt(e.target.value) || 100)}
                 />
-                <Label htmlFor="isDraft">Save as draft</Label>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Standards */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Standards Covered</CardTitle>
-              <CardDescription>Educational standards this assessment addresses</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
+              <div>
+                <Label htmlFor="assessment_date">Assessment Date</Label>
+                <Input
+                  id="assessment_date"
+                  type="date"
+                  value={formData.assessment_date}
+                  onChange={(e) => handleInputChange('assessment_date', e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder="Describe the assessment objectives and content"
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label>Standards Covered</Label>
+              <div className="flex gap-2 mb-2">
                 <Input
                   value={standardInput}
                   onChange={(e) => setStandardInput(e.target.value)}
-                  placeholder="e.g., CCSS.MATH.3.OA.A.1"
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addStandard())}
+                  placeholder="Add a standard"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addStandard();
+                    }
+                  }}
                 />
-                <Button type="button" onClick={addStandard} variant="outline">
-                  Add
-                </Button>
+                <Button type="button" onClick={addStandard}>Add</Button>
               </div>
-              
-              {formData.standards_covered && formData.standards_covered.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {formData.standards_covered.map((standard) => (
-                    <Badge key={standard} variant="secondary" className="flex items-center gap-1">
-                      {standard}
-                      <button
-                        type="button"
-                        onClick={() => removeStandard(standard)}
-                        className="ml-1 hover:text-red-500"
-                      >
-                        ×
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              <div className="flex flex-wrap gap-2">
+                {formData.standards_covered?.map((standard, index) => (
+                  <Badge key={index} variant="secondary" className="cursor-pointer" onClick={() => removeStandard(standard)}>
+                    {standard} ×
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Assessment Items */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
+        {/* Assessment Items */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Assessment Items</CardTitle>
+              <CardDescription>Questions and tasks for this assessment</CardDescription>
+            </div>
+            <Button type="button" onClick={addItem}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Item
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {items.map((item, index) => (
+              <div key={index} className="p-4 border rounded-lg space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">Question {(item.item_order || index + 1)}</h4>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeItem(index)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+
                 <div>
-                  <CardTitle>Assessment Items</CardTitle>
-                  <CardDescription>Questions and scoring for this assessment</CardDescription>
+                  <Label>Question Text *</Label>
+                  <Textarea
+                    value={item.question_text}
+                    onChange={(e) => updateItem(index, 'question_text', e.target.value)}
+                    placeholder="Enter the question or task description"
+                    rows={2}
+                    required
+                  />
                 </div>
-                <div className="text-sm text-gray-600">
-                  Total Score: {calculateTotalScore()} points
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {items.map((item, index) => (
-                <div key={index} className="p-4 border rounded-lg space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Question {item.item_number}</h4>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeItem(index)}
-                      className="text-red-600 hover:text-red-700"
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label>Knowledge Type</Label>
+                    <Select
+                      value={item.knowledge_type || 'factual'}
+                      onValueChange={(value: KnowledgeType) => updateItem(index, 'knowledge_type', value)}
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {knowledgeTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>
-                    <Label>Question Text *</Label>
-                    <Textarea
-                      value={item.question_text}
-                      onChange={(e) => updateItem(index, 'question_text', e.target.value)}
-                      placeholder="Enter the question or task description"
-                      rows={2}
-                      required
+                    <Label>Difficulty</Label>
+                    <Select
+                      value={item.difficulty_level || 'medium'}
+                      onValueChange={(value: DifficultyLevel) => updateItem(index, 'difficulty_level', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {difficultyLevels.map((level) => (
+                          <SelectItem key={level} value={level}>
+                            {level.charAt(0).toUpperCase() + level.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Points</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={item.max_score || 1}
+                      onChange={(e) => updateItem(index, 'max_score', parseInt(e.target.value) || 1)}
                     />
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <Label>Knowledge Type</Label>
-                      <Select
-                        value={item.knowledge_type}
-                        onValueChange={(value: KnowledgeType) => updateItem(index, 'knowledge_type', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {knowledgeTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type.charAt(0).toUpperCase() + type.slice(1)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label>Difficulty</Label>
-                      <Select
-                        value={item.difficulty_level}
-                        onValueChange={(value: DifficultyLevel) => updateItem(index, 'difficulty_level', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {difficultyLevels.map((level) => (
-                            <SelectItem key={level} value={level}>
-                              {level.charAt(0).toUpperCase() + level.slice(1)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label>Points</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={item.max_score}
-                        onChange={(e) => updateItem(index, 'max_score', parseInt(e.target.value) || 1)}
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Standard (Optional)</Label>
-                      <Input
-                        value={item.standard_reference}
-                        onChange={(e) => updateItem(index, 'standard_reference', e.target.value)}
-                        placeholder="Standard reference"
-                      />
-                    </div>
-                  </div>
                 </div>
-              ))}
+              </div>
+            ))}
 
-              <Button type="button" onClick={addItem} variant="outline" className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Question
-              </Button>
-            </CardContent>
-          </Card>
+            {items.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                <p>No items added yet. Click "Add Item" to add questions.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          <Separator />
+        <Separator />
 
-          {/* Submit Button */}
-          <div className="flex justify-end gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(`/app/assessments/${id}`)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={updateAssessmentMutation.isPending}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {updateAssessmentMutation.isPending ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              Update Assessment
-            </Button>
-          </div>
-        </form>
-      </div>
+        {/* Actions */}
+        <div className="flex justify-end gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate(-1)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={updateAssessmentMutation.isPending}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {updateAssessmentMutation.isPending ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </form>
     </PageShell>
   );
 };

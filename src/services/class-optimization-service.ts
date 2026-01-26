@@ -40,66 +40,50 @@ export const classOptimizationService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    // Get classes with student counts in a single optimized query
+    // Get classes
     const { data: classData, error: classError } = await supabase
       .from('classes')
-      .select(`
-        *,
-        students!inner(id, grade_level, performance:student_performance(*))
-      `)
-      .eq('teacher_id', user.id)
-      .eq('is_active', true);
+      .select('*')
+      .eq('teacher_id', user.id);
 
     if (classError) throw classError;
 
-    // Get total student counts
-    const { count: totalStudents, error: totalError } = await supabase
+    // Get students with class assignments
+    const { data: students, error: studentsError } = await supabase
       .from('students')
-      .select('*', { count: 'exact', head: true })
+      .select('id, class_id, grade_level')
       .eq('teacher_id', user.id);
 
-    if (totalError) throw totalError;
+    if (studentsError) throw studentsError;
+
+    // Get total student counts
+    const totalStudents = students?.length || 0;
 
     // Get unassigned student count
-    const { count: unassignedStudents, error: unassignedError } = await supabase
-      .from('students')
-      .select('*', { count: 'exact', head: true })
-      .eq('teacher_id', user.id)
-      .is('class_id', null);
+    const unassignedStudents = students?.filter(s => !s.class_id).length || 0;
 
-    if (unassignedError) throw unassignedError;
-
-    // Process class summary with student counts and performance
+    // Process class summary with student counts
     const classSummary = (classData || []).map(classItem => {
-      const students = Array.isArray(classItem.students) ? classItem.students : [];
-      const studentCount = students.length;
-      
-      // Calculate average performance if available
-      const performanceScores = students
-        .map(s => s.performance?.[0]?.average_score)
-        .filter(score => score !== null && score !== undefined) as number[];
-      
-      const averagePerformance = performanceScores.length > 0 
-        ? performanceScores.reduce((sum, score) => sum + score, 0) / performanceScores.length
-        : undefined;
+      const classStudents = students?.filter(s => s.class_id === classItem.id) || [];
+      const studentCount = classStudents.length;
 
       return {
         ...classItem,
-        students: undefined, // Remove nested data to reduce payload
         studentCount,
-        averagePerformance
+        averagePerformance: undefined
       };
     });
 
     // Calculate grade distribution
     const gradeDistribution = classSummary.reduce((acc, classItem) => {
-      const existing = acc.find(item => item.grade === classItem.grade_level);
+      const grade = classItem.grade_level || 'Unknown';
+      const existing = acc.find(item => item.grade === grade);
       if (existing) {
         existing.totalStudents += classItem.studentCount;
         existing.classCount += 1;
       } else {
         acc.push({
-          grade: classItem.grade_level,
+          grade,
           totalStudents: classItem.studentCount,
           classCount: 1
         });
@@ -110,8 +94,8 @@ export const classOptimizationService = {
     return {
       classSummary,
       gradeDistribution,
-      unassignedStudents: unassignedStudents || 0,
-      totalStudents: totalStudents || 0
+      unassignedStudents,
+      totalStudents
     };
   },
 
@@ -183,14 +167,14 @@ export const classOptimizationService = {
       if (updateError) throw updateError;
     }
 
-    // Deactivate source class
-    const { error: deactivateError } = await supabase
+    // Delete source class
+    const { error: deleteError } = await supabase
       .from('classes')
-      .update({ is_active: false })
+      .delete()
       .eq('id', sourceClassId)
       .eq('teacher_id', user.id);
 
-    if (deactivateError) throw deactivateError;
+    if (deleteError) throw deleteError;
   },
 
   // Class capacity and balance analysis
@@ -219,7 +203,7 @@ export const classOptimizationService = {
         return {
           type: 'underutilized' as const,
           classId: classItem.id,
-          className: classItem.display_name,
+          className: classItem.name,
           currentSize: studentCount,
           recommendedAction: 'Consider removing this empty class or merge with another class'
         };
@@ -227,7 +211,7 @@ export const classOptimizationService = {
         return {
           type: 'underutilized' as const,
           classId: classItem.id,
-          className: classItem.display_name,
+          className: classItem.name,
           currentSize: studentCount,
           recommendedAction: 'Consider merging with another class in the same grade'
         };
@@ -235,7 +219,7 @@ export const classOptimizationService = {
         return {
           type: 'overcrowded' as const,
           classId: classItem.id,
-          className: classItem.display_name,
+          className: classItem.name,
           currentSize: studentCount,
           recommendedAction: 'Consider splitting into multiple classes or redistributing students'
         };
@@ -243,7 +227,7 @@ export const classOptimizationService = {
         return {
           type: 'balanced' as const,
           classId: classItem.id,
-          className: classItem.display_name,
+          className: classItem.name,
           currentSize: studentCount
         };
       }

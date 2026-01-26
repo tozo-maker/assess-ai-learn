@@ -316,7 +316,7 @@ const BatchAssessment: React.FC = () => {
                         {assessmentItems.map((item, itemIndex) => (
                           <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 bg-gray-50 rounded">
                             <div className="md:col-span-5">
-                              <Label className="text-sm font-medium">Question {item.item_number}</Label>
+                              <Label className="text-sm font-medium">Question {item.item_order || itemIndex + 1}</Label>
                               <p className="text-sm text-gray-600 mt-1">{item.question_text}</p>
                               <div className="flex gap-2 mt-2">
                                 <Badge variant="outline" className="text-xs">

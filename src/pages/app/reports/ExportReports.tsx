@@ -380,9 +380,6 @@ const ExportReports = () => {
                         </div>
                         <div className="text-sm text-gray-600">
                           {exportItem.export_format.toUpperCase()} • {new Date(exportItem.created_at).toLocaleDateString()}
-                          {exportItem.completed_at && (
-                            <span> • Completed {new Date(exportItem.completed_at).toLocaleDateString()}</span>
-                          )}
                         </div>
                       </div>
                     </div>

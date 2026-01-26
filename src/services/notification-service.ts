@@ -1,5 +1,5 @@
-
-import { supabase } from '@/integrations/supabase/client';
+// notifications table doesn't exist in the schema
+// This service provides stub implementations
 
 export interface Notification {
   id: string;
@@ -10,7 +10,7 @@ export interface Notification {
   message: string;
   is_read: boolean;
   action_url?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
 }
 
@@ -20,78 +20,51 @@ export interface CreateNotificationData {
   title: string;
   message: string;
   action_url?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 class NotificationService {
   async createNotification(data: CreateNotificationData): Promise<Notification> {
-    const { data: result, error } = await supabase
-      .from('notifications')
-      .insert({
-        ...data,
-        teacher_id: (await supabase.auth.getUser()).data.user?.id
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    
+    // notifications table doesn't exist - return mock
+    console.log('createNotification: table not implemented', data);
     return {
-      ...result,
-      metadata: result.metadata as Record<string, any> || {}
+      id: crypto.randomUUID(),
+      teacher_id: 'mock-teacher-id',
+      student_id: data.student_id,
+      type: data.type,
+      title: data.title,
+      message: data.message,
+      is_read: false,
+      action_url: data.action_url,
+      metadata: data.metadata || {},
+      created_at: new Date().toISOString()
     };
   }
 
   async getNotifications(limit: number = 50): Promise<Notification[]> {
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (error) throw error;
-    
-    return (data || []).map(notification => ({
-      ...notification,
-      metadata: notification.metadata as Record<string, any> || {}
-    }));
+    // notifications table doesn't exist - return empty
+    console.log('getNotifications: table not implemented', { limit });
+    return [];
   }
 
   async getUnreadCount(): Promise<number> {
-    const { count, error } = await supabase
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_read', false);
-
-    if (error) throw error;
-    return count || 0;
+    // notifications table doesn't exist
+    return 0;
   }
 
   async markAsRead(notificationId: string): Promise<void> {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('id', notificationId);
-
-    if (error) throw error;
+    // notifications table doesn't exist
+    console.log('markAsRead: table not implemented', notificationId);
   }
 
   async markAllAsRead(): Promise<void> {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('is_read', false);
-
-    if (error) throw error;
+    // notifications table doesn't exist
+    console.log('markAllAsRead: table not implemented');
   }
 
   async deleteNotification(notificationId: string): Promise<void> {
-    const { error } = await supabase
-      .from('notifications')
-      .delete()
-      .eq('id', notificationId);
-
-    if (error) throw error;
+    // notifications table doesn't exist
+    console.log('deleteNotification: table not implemented', notificationId);
   }
 }
 

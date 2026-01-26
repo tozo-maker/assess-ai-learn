@@ -43,34 +43,30 @@ export interface AssessmentItem {
   id: string;
   assessment_id: string;
   question_text: string;
-  item_number: number;
-  knowledge_type: KnowledgeType;
-  difficulty_level: DifficultyLevel;
-  standard_reference?: string;
-  max_score: number;
+  item_order: number | null;
+  knowledge_type: string | null;
+  difficulty_level: string | null;
+  max_score: number | null;
   created_at: string;
-  updated_at: string;
 }
 
 export interface AssessmentItemFormData {
   question_text: string;
-  item_number: number;
-  knowledge_type: KnowledgeType;
-  difficulty_level: DifficultyLevel;
-  standard_reference?: string;
-  max_score: number;
+  item_order?: number | null;
+  knowledge_type?: string | null;
+  difficulty_level?: string | null;
+  max_score?: number | null;
 }
 
 export interface StudentResponse {
   id: string;
   student_id: string;
   assessment_id: string;
-  assessment_item_id: string;
-  score: number;
-  error_type?: ErrorType;
-  teacher_notes?: string;
+  assessment_item_id: string | null;
+  score: number | null;
+  error_type?: string | null;
+  teacher_notes?: string | null;
   created_at: string;
-  updated_at: string;
 }
 
 export interface StudentResponseFormData {

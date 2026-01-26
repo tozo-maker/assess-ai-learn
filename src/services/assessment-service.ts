@@ -120,10 +120,9 @@ export const assessmentService = {
     if (originalItems.length > 0) {
       const duplicatedItems = originalItems.map(item => ({
         question_text: item.question_text,
-        item_number: item.item_number,
+        item_order: item.item_order,
         knowledge_type: item.knowledge_type,
         difficulty_level: item.difficulty_level,
-        standard_reference: item.standard_reference,
         max_score: item.max_score
       }));
 
@@ -154,7 +153,7 @@ export const assessmentService = {
       .from('assessment_items')
       .select('*')
       .eq('assessment_id', assessmentId)
-      .order('item_number', { ascending: true });
+      .order('item_order', { ascending: true });
 
     if (error) throw error;
     return data as AssessmentItem[];
@@ -204,7 +203,7 @@ export const assessmentService = {
         ),
         assessment_items:assessment_item_id (
           id,
-          item_number,
+          item_order,
           max_score,
           question_text
         )
@@ -223,7 +222,7 @@ export const assessmentService = {
     }
     
     console.log(`Fetched ${data?.length || 0} student responses for assessment ${assessmentId}`);
-    return data as StudentResponse[];
+    return (data || []) as unknown as StudentResponse[];
   },
 
   async getStudentResponsesByStudent(studentId: string) {

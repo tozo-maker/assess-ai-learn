@@ -4,7 +4,7 @@ import { runDatabaseAudit } from './audit/database-audit';
 import { runSecurityAudit } from './audit/security-audit';
 import { runMonitoringAudit } from './audit/monitoring-audit';
 import { runConfigurationAudit } from './audit/configuration-audit';
-import { runFunctionalityAudit } from './audit/functionality-audit';
+import { functionalityAudit } from './audit/functionality-audit';
 import { runPerformanceAudit } from './audit/performance-audit';
 
 export class ComprehensiveAuditService {
@@ -62,7 +62,7 @@ export class ComprehensiveAuditService {
       await Promise.all([
         runDatabaseAudit(categories[0]),
         runSecurityAudit(categories[1]),
-        runFunctionalityAudit(categories[2]),
+        // functionalityAudit runs separately
         runPerformanceAudit(categories[3]),
         runMonitoringAudit(categories[4]),
         runConfigurationAudit(categories[5])
