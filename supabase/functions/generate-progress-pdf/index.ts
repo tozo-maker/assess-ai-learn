@@ -460,11 +460,13 @@ serve(async (req) => {
     });
     
   } catch (error) {
+    // Log detailed error server-side only
     console.error('Error in generate-progress-pdf function:', error);
     
+    // Return generic error message to client
     return new Response(JSON.stringify({ 
-      error: error.message,
-      details: 'Check Edge Function logs for more information'
+      error: 'Failed to generate progress report. Please try again.',
+      success: false
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
