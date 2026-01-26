@@ -68,7 +68,7 @@ export const AppRoutes = () => {
       <Route path="/auth/signup" element={<PublicRoute><SignupPage /></PublicRoute>} />
       <Route path="/auth/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/auth/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
-      <Route path="/auth/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+      <Route path="/auth/onboarding" element={<Onboarding />} />
 
       {/* Protected App Routes - All wrapped with AppLayout */}
       <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
