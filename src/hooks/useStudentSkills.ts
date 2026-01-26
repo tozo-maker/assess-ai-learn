@@ -1,6 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Tables } from '@/integrations/supabase/types';
+
+// Define the skill data type since student_skills table doesn't exist yet
+export interface StudentSkillData {
+  id: string;
+  student_id: string;
+  skill_id: string;
+  current_mastery_level: 'Beginning' | 'Developing' | 'Proficient' | 'Advanced';
+  mastery_score: number | null;
+  last_assessed_at: string | null;
+  skill: {
+    name: string;
+    subject: string | null;
+    grade_level?: string[] | null;
+    description?: string | null;
+  } | null;
+}
 
 export const useStudentSkills = (studentId: string) => {
   const {
@@ -10,33 +24,17 @@ export const useStudentSkills = (studentId: string) => {
     refetch
   } = useQuery({
     queryKey: ['student-skills', studentId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('student_skills')
-        .select(`
-          *,
-          skill:skills(
-            name,
-            subject,
-            grade_level,
-            description,
-            difficulty_level
-          )
-        `)
-        .eq('student_id', studentId)
-        .order('last_assessed_at', { ascending: false, nullsFirst: false });
-
-      if (error) throw error;
-      return data as (Tables<'student_skills'> & {
-        skill: Tables<'skills'>;
-      })[];
+    queryFn: async (): Promise<StudentSkillData[]> => {
+      // student_skills table doesn't exist yet - return empty array
+      // This will be populated once the table is created
+      return [];
     },
     enabled: !!studentId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   return {
-    skills,
+    skills: skills || [],
     isLoading,
     error,
     refetch

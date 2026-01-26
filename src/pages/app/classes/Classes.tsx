@@ -22,11 +22,10 @@ import { useToast } from '@/hooks/use-toast';
 interface ClassData {
   id: string;
   name: string;
-  display_name: string;
-  subject: string;
-  grade_level: string;
+  subject: string | null;
+  grade_level: string | null;
   description: string | null;
-  is_active: boolean;
+  academic_year: string | null;
   created_at: string;
   student_count?: number;
 }
@@ -57,28 +56,25 @@ const Classes: React.FC = () => {
       return data.map(classItem => ({
         ...classItem,
         student_count: classItem.students?.[0]?.count || 0
-      }));
+      })) as ClassData[];
     },
   });
 
   // Calculate statistics
   const stats = {
     totalClasses: classes.length,
-    activeClasses: classes.filter(c => c.is_active).length,
+    activeClasses: classes.length, // All classes are active by default
     totalStudents: classes.reduce((sum, c) => sum + (c.student_count || 0), 0),
-    subjects: new Set(classes.map(c => c.subject)).size
+    subjects: new Set(classes.map(c => c.subject).filter(Boolean)).size
   };
 
   const columns: Column<ClassData>[] = [
     {
-      key: 'display_name',
+      key: 'name',
       title: 'Class Name',
       sortable: true,
-      render: (value, row) => (
-        <div className="space-y-1">
-          <div className="font-medium">{value}</div>
-          <div className="text-sm text-muted-foreground">{row.name}</div>
-        </div>
+      render: (value) => (
+        <div className="font-medium">{value}</div>
       )
     },
     {
@@ -87,7 +83,7 @@ const Classes: React.FC = () => {
       sortable: true,
       render: (value) => (
         <Badge variant="outline" className="capitalize">
-          {value}
+          {value || 'Not specified'}
         </Badge>
       )
     },
@@ -97,7 +93,7 @@ const Classes: React.FC = () => {
       sortable: true,
       render: (value) => (
         <Badge variant="secondary" className="capitalize">
-          {value}
+          {value || 'Not specified'}
         </Badge>
       )
     },
@@ -113,13 +109,13 @@ const Classes: React.FC = () => {
       )
     },
     {
-      key: 'is_active',
-      title: 'Status',
+      key: 'academic_year',
+      title: 'Academic Year',
       sortable: true,
       render: (value) => (
-        <Badge variant={value ? 'default' : 'secondary'}>
-          {value ? 'Active' : 'Inactive'}
-        </Badge>
+        <span className="text-sm text-muted-foreground">
+          {value || 'Not specified'}
+        </span>
       )
     },
     {
@@ -140,7 +136,7 @@ const Classes: React.FC = () => {
   const handleViewClass = (classItem: ClassData) => {
     toast({
       title: "View Class",
-      description: `Viewing ${classItem.display_name}`,
+      description: `Viewing ${classItem.name}`,
     });
   };
 

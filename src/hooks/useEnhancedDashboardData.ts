@@ -4,6 +4,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SimpleAuthContext';
 import { productionLogger } from '@/services/production-logger';
 
+// Interface matching the actual student_performance view columns
+interface StudentPerformanceView {
+  assessment_count: number | null;
+  average_score: number | null;
+  performance_level: string | null;
+  needs_attention: boolean | null;
+  first_name: string | null;
+  last_name: string | null;
+  student_id: string | null;
+  teacher_id: string | null;
+}
+
 export const useEnhancedDashboardData = () => {
   const { user } = useAuth();
 
@@ -19,14 +31,14 @@ export const useEnhancedDashboardData = () => {
         .from('teacher_profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (teacherError && teacherError.code !== 'PGRST116') {
+      if (teacherError) {
         productionLogger.error('Teacher profile fetch error', teacherError as Error, { userId: user.id });
         throw teacherError;
       }
 
-      // Fetch students with performance data
+      // Fetch students with performance data (only columns that exist in the view)
       const { data: students, error: studentsError } = await supabase
         .from('students')
         .select(`
@@ -35,8 +47,7 @@ export const useEnhancedDashboardData = () => {
             assessment_count,
             average_score,
             performance_level,
-            needs_attention,
-            last_assessment_date
+            needs_attention
           )
         `)
         .eq('teacher_id', user.id)
@@ -70,37 +81,48 @@ export const useEnhancedDashboardData = () => {
         a => new Date(a.created_at) > thirtyDaysAgo
       ).length || 0;
 
+      // Helper to get performance from student
+      const getPerformance = (student: typeof students[0]): StudentPerformanceView | null => {
+        const perf = student.student_performance;
+        if (Array.isArray(perf) && perf.length > 0) {
+          return perf[0] as StudentPerformanceView;
+        }
+        return null;
+      };
+
       // Students needing attention
-      const studentsNeedingAttention = students?.filter(
-        s => s.student_performance?.[0]?.needs_attention
-      ).length || 0;
+      const studentsNeedingAttention = students?.filter(s => {
+        const perf = getPerformance(s);
+        return perf?.needs_attention;
+      }).length || 0;
 
       // Average performance across all students
-      const studentsWithScores = students?.filter(
-        s => s.student_performance?.[0]?.average_score != null
-      ) || [];
+      const studentsWithScores = students?.filter(s => {
+        const perf = getPerformance(s);
+        return perf?.average_score != null;
+      }) || [];
       
       const averagePerformance = studentsWithScores.length > 0
-        ? studentsWithScores.reduce((sum, s) => 
-            sum + (s.student_performance?.[0]?.average_score || 0), 0
-          ) / studentsWithScores.length
+        ? studentsWithScores.reduce((sum, s) => {
+            const perf = getPerformance(s);
+            return sum + (perf?.average_score || 0);
+          }, 0) / studentsWithScores.length
         : 0;
 
       // High performing students
-      const highPerformers = students?.filter(
-        s => (s.student_performance?.[0]?.average_score || 0) >= 85
-      ).length || 0;
+      const highPerformers = students?.filter(s => {
+        const perf = getPerformance(s);
+        return (perf?.average_score || 0) >= 85;
+      }).length || 0;
 
-      // Students with recent activity
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const studentsWithRecentActivity = students?.filter(
-        s => s.student_performance?.[0]?.last_assessment_date && 
-             new Date(s.student_performance[0].last_assessment_date) > sevenDaysAgo
-      ).length || 0;
+      // Students with recent activity (based on assessment count since last_assessment_date doesn't exist)
+      const studentsWithRecentActivity = students?.filter(s => {
+        const perf = getPerformance(s);
+        return (perf?.assessment_count || 0) > 0;
+      }).length || 0;
 
-      // Draft assessments
-      const draftAssessments = assessments?.filter(a => a.is_draft).length || 0;
+      // Draft assessments - field doesn't exist, so default to 0
+      const draftAssessments = 0;
 
       const enhancedMetrics = {
         totalStudents,
@@ -112,16 +134,16 @@ export const useEnhancedDashboardData = () => {
         studentsWithRecentActivity,
         draftAssessments,
         performanceDistribution: {
-          excellent: students?.filter(s => (s.student_performance?.[0]?.average_score || 0) >= 90).length || 0,
+          excellent: students?.filter(s => (getPerformance(s)?.average_score || 0) >= 90).length || 0,
           good: students?.filter(s => {
-            const score = s.student_performance?.[0]?.average_score || 0;
+            const score = getPerformance(s)?.average_score || 0;
             return score >= 80 && score < 90;
           }).length || 0,
           satisfactory: students?.filter(s => {
-            const score = s.student_performance?.[0]?.average_score || 0;
+            const score = getPerformance(s)?.average_score || 0;
             return score >= 70 && score < 80;
           }).length || 0,
-          needsImprovement: students?.filter(s => (s.student_performance?.[0]?.average_score || 0) < 70).length || 0
+          needsImprovement: students?.filter(s => (getPerformance(s)?.average_score || 0) < 70).length || 0
         }
       };
 

@@ -11,6 +11,18 @@ interface CreateStudentData {
   email?: string;
 }
 
+// Define the student performance interface based on the actual view columns
+interface StudentPerformanceData {
+  assessment_count: number | null;
+  average_score: number | null;
+  performance_level: string | null;
+  needs_attention: boolean | null;
+  first_name: string | null;
+  last_name: string | null;
+  student_id: string | null;
+  teacher_id: string | null;
+}
+
 class StudentService {
   private static instance: StudentService;
 
@@ -41,8 +53,7 @@ class StudentService {
           assessment_count,
           average_score,
           performance_level,
-          needs_attention,
-          last_assessment_date
+          needs_attention
         )
       `)
       .eq('teacher_id', teacherId)
@@ -82,8 +93,7 @@ class StudentService {
           assessment_count,
           average_score,
           performance_level,
-          needs_attention,
-          last_assessment_date
+          needs_attention
         )
       `)
       .eq('id', studentId)
@@ -104,14 +114,14 @@ class StudentService {
     const averageScore = studentsWithPerformance.length > 0
       ? Math.round(
           studentsWithPerformance.reduce((sum, student) => {
-            const performance = student.student_performance[0];
+            const performance = student.student_performance[0] as StudentPerformanceData;
             return sum + (performance?.average_score || 0);
           }, 0) / studentsWithPerformance.length
         )
       : 0;
 
     const studentsNeedingAttention = studentsWithPerformance.filter(student => {
-      const performance = student.student_performance[0];
+      const performance = student.student_performance[0] as StudentPerformanceData;
       return performance?.needs_attention;
     }).length;
 
