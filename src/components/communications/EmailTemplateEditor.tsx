@@ -1,5 +1,5 @@
-
 import React, { useState, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,14 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Bold, 
-  Italic, 
-  Underline,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  List,
-  Link,
   Save,
   Eye,
   Code
@@ -175,7 +167,10 @@ const EmailTemplateEditor: React.FC<EmailTemplateEditorProps> = ({
                     <div 
                       className="border rounded p-4 bg-white min-h-[300px]"
                       dangerouslySetInnerHTML={{ 
-                        __html: formData.content.replace(/\n/g, '<br/>') 
+                        __html: DOMPurify.sanitize(formData.content.replace(/\n/g, '<br/>'), {
+                          ALLOWED_TAGS: ['b', 'i', 'u', 'strong', 'em', 'br', 'p', 'span', 'div', 'ul', 'ol', 'li', 'a'],
+                          ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
+                        })
                       }}
                     />
                   </div>
