@@ -1,6 +1,5 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { Resend } from 'npm:resend@2.0.0';
 
 const corsHeaders = {
@@ -18,33 +17,61 @@ interface EmailRequest {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     if (!resendApiKey) {
-      throw new Error('RESEND_API_KEY not configured');
+      console.error('RESEND_API_KEY not configured');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Email service not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const resend = new Resend(resendApiKey);
     const emailRequest: EmailRequest = await req.json();
     
-    console.log('Processing email request:', {
-      recipients: emailRequest.recipients?.length,
-      subject: emailRequest.subject,
-      template_type: emailRequest.template_type
-    });
-
     // Validate inputs
     if (!emailRequest.recipients || emailRequest.recipients.length === 0) {
-      throw new Error('No recipients specified');
+      return new Response(
+        JSON.stringify({ success: false, error: 'No recipients specified' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     if (!emailRequest.subject?.trim()) {
-      throw new Error('Subject is required');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Subject is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Filter valid email addresses
@@ -54,13 +81,16 @@ serve(async (req) => {
     );
 
     if (validRecipients.length === 0) {
-      throw new Error('No valid email addresses provided');
+      return new Response(
+        JSON.stringify({ success: false, error: 'No valid email addresses provided' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Generate email content based on template
+    // Generate email content
     const emailContent = generateEmailContent(emailRequest.template_type, emailRequest.template_data);
     
-    // Send email using Resend
+    // Send email
     const emailResponse = await resend.emails.send({
       from: `${emailRequest.sender_name || 'LearnSpark AI'} <noreply@learnspark.dev>`,
       to: validRecipients,
@@ -69,21 +99,20 @@ serve(async (req) => {
       text: emailContent.text
     });
 
-    console.log('Email sent successfully:', emailResponse);
+    console.log('Email sent successfully');
 
-    // Update communication record if provided
+    // Update communication record if provided - use service role with teacher_id filter
     if (emailRequest.communication_id) {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-      const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') as string;
-      const supabase = createClient(supabaseUrl, supabaseKey);
+      const supabaseService = createClient(supabaseUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
-      await supabase
+      await supabaseService
         .from('parent_communications')
         .update({ 
           sent_at: new Date().toISOString(),
           email_status: 'sent'
         })
-        .eq('id', emailRequest.communication_id);
+        .eq('id', emailRequest.communication_id)
+        .eq('teacher_id', user.id); // Ensure ownership
     }
 
     return new Response(JSON.stringify({ 
@@ -95,10 +124,9 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error in send-email function:', error);
-    
+    console.error('Unexpected error:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: 'An unexpected error occurred',
       success: false 
     }), {
       status: 500,
@@ -118,188 +146,78 @@ function generateEmailContent(templateType: string, templateData: any): { html: 
     case 'bulk_announcement':
       return generateBulkAnnouncementEmail(templateData);
     case 'custom':
-      return generateCustomEmail(templateData);
     default:
       return generateCustomEmail(templateData);
   }
 }
 
 function generateProgressReportEmail(data: any): { html: string; text: string } {
+  const studentName = `${data.student?.first_name || ''} ${data.student?.last_name || ''}`.trim() || 'Student';
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #2563eb;">Progress Report for ${data.student?.first_name} ${data.student?.last_name}</h2>
-      
+      <h2 style="color: #2563eb;">Progress Report for ${studentName}</h2>
       <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
         <h3>Performance Summary</h3>
         <p><strong>Average Score:</strong> ${data.performance?.average_score || 'N/A'}%</p>
         <p><strong>Assessments Completed:</strong> ${data.performance?.assessment_count || 0}</p>
-        <p><strong>Performance Level:</strong> ${data.performance?.performance_level || 'No data'}</p>
       </div>
-
-      ${data.recent_assessments?.length > 0 ? `
-        <div style="margin: 20px 0;">
-          <h3>Recent Assessments</h3>
-          <ul>
-            ${data.recent_assessments.map((assessment: any) => `
-              <li>${assessment.title}: ${assessment.score}% (${assessment.date})</li>
-            `).join('')}
-          </ul>
-        </div>
-      ` : ''}
-
-      ${data.ai_insights ? `
-        <div style="margin: 20px 0;">
-          <h3>Key Insights</h3>
-          ${data.ai_insights.strengths?.length > 0 ? `
-            <div style="margin: 10px 0;">
-              <strong style="color: #059669;">Strengths:</strong>
-              <ul>
-                ${data.ai_insights.strengths.map((strength: string) => `<li>${strength}</li>`).join('')}
-              </ul>
-            </div>
-          ` : ''}
-          
-          ${data.ai_insights.growth_areas?.length > 0 ? `
-            <div style="margin: 10px 0;">
-              <strong style="color: #dc2626;">Areas for Growth:</strong>
-              <ul>
-                ${data.ai_insights.growth_areas.map((area: string) => `<li>${area}</li>`).join('')}
-              </ul>
-            </div>
-          ` : ''}
-        </div>
-      ` : ''}
-
       <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
         Generated by LearnSpark AI on ${new Date().toLocaleDateString()}
       </div>
     </div>
   `;
-
-  const text = `Progress Report for ${data.student?.first_name} ${data.student?.last_name}
-
-Performance Summary:
-- Average Score: ${data.performance?.average_score || 'N/A'}%
-- Assessments Completed: ${data.performance?.assessment_count || 0}
-- Performance Level: ${data.performance?.performance_level || 'No data'}
-
-Generated by LearnSpark AI on ${new Date().toLocaleDateString()}
-  `;
-
+  const text = `Progress Report for ${studentName}\nAverage Score: ${data.performance?.average_score || 'N/A'}%`;
   return { html, text };
 }
 
 function generateAchievementEmail(data: any): { html: string; text: string } {
+  const studentName = `${data.student?.first_name || ''} ${data.student?.last_name || ''}`.trim() || 'Student';
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #059669;">🎉 Great Achievement!</h2>
-      
-      <p>We're excited to share that <strong>${data.student?.first_name} ${data.student?.last_name}</strong> has achieved something wonderful!</p>
-      
+      <p><strong>${studentName}</strong> has achieved something wonderful!</p>
       <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #059669;">
-        <h3>${data.achievement?.title}</h3>
-        <p>${data.achievement?.description}</p>
-        ${data.achievement?.score ? `<p><strong>Score:</strong> ${data.achievement.score}%</p>` : ''}
-      </div>
-
-      ${data.next_steps?.length > 0 ? `
-        <div style="margin: 20px 0;">
-          <h3>Next Steps:</h3>
-          <ul>
-            ${data.next_steps.map((step: string) => `<li>${step}</li>`).join('')}
-          </ul>
-        </div>
-      ` : ''}
-
-      <p style="margin-top: 30px;">Keep up the great work!</p>
-      
-      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
-        LearnSpark AI - Educational Analytics Platform
+        <h3>${data.achievement?.title || 'Achievement'}</h3>
+        <p>${data.achievement?.description || ''}</p>
       </div>
     </div>
   `;
-
-  const text = `Great Achievement!
-
-${data.student?.first_name} ${data.student?.last_name} has achieved: ${data.achievement?.title}
-
-${data.achievement?.description}
-
-Keep up the great work!
-  `;
-
+  const text = `Great Achievement! ${studentName} has achieved: ${data.achievement?.title || 'Achievement'}`;
   return { html, text };
 }
 
 function generateConcernAlertEmail(data: any): { html: string; text: string } {
+  const studentName = `${data.student?.first_name || ''} ${data.student?.last_name || ''}`.trim() || 'Student';
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #dc2626;">⚠️ Attention Needed</h2>
-      
-      <p>We wanted to reach out regarding <strong>${data.student?.first_name} ${data.student?.last_name}</strong>.</p>
-      
+      <p>We wanted to reach out regarding <strong>${studentName}</strong>.</p>
       <div style="background-color: #fef2f2; padding: 20px; border-radius: 8px; border-left: 4px solid #dc2626;">
-        <h3>${data.concern?.title}</h3>
-        <p>${data.concern?.description}</p>
-        <p><strong>Urgency Level:</strong> ${data.concern?.urgency}</p>
-      </div>
-
-      ${data.suggested_actions?.length > 0 ? `
-        <div style="margin: 20px 0;">
-          <h3>Suggested Actions:</h3>
-          <ul>
-            ${data.suggested_actions.map((action: string) => `<li>${action}</li>`).join('')}
-          </ul>
-        </div>
-      ` : ''}
-
-      <p style="margin-top: 30px;">Please don't hesitate to reach out if you'd like to discuss this further.</p>
-      
-      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
-        LearnSpark AI - Educational Analytics Platform
+        <h3>${data.concern?.title || 'Concern'}</h3>
+        <p>${data.concern?.description || ''}</p>
       </div>
     </div>
   `;
-
-  const text = `Attention Needed: ${data.student?.first_name} ${data.student?.last_name}
-
-${data.concern?.title}
-${data.concern?.description}
-
-Urgency Level: ${data.concern?.urgency}
-
-Please reach out if you'd like to discuss this further.
-  `;
-
+  const text = `Attention Needed: ${studentName} - ${data.concern?.title || 'Concern'}`;
   return { html, text };
 }
 
 function generateBulkAnnouncementEmail(data: any): { html: string; text: string } {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #2563eb;">${data.title}</h2>
-      
-      <div style="margin: 20px 0;">
-        ${data.content}
-      </div>
-      
+      <h2 style="color: #2563eb;">${data.title || 'Announcement'}</h2>
+      <div style="margin: 20px 0;">${data.content || ''}</div>
       <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
         LearnSpark AI - Educational Analytics Platform
       </div>
     </div>
   `;
-
-  const text = `${data.title}
-
-${data.content}
-  `;
-
+  const text = `${data.title || 'Announcement'}\n\n${data.content || ''}`;
   return { html, text };
 }
 
 function generateCustomEmail(data: any): { html: string; text: string } {
   const html = data.content || data.custom_content || 'No content provided';
   const text = data.custom_content || data.content || 'No content provided';
-  
   return { html, text };
 }
