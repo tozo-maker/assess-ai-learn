@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { DataExportRequest } from '../_shared/types.ts';
@@ -15,33 +14,77 @@ serve(async (req) => {
   }
 
   try {
+    // Require authentication header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') as string;
+
+    // Create client with user's auth context
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify authenticated user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     const { export_id }: DataExportRequest = await req.json();
     
     if (!export_id) {
       throw new Error('Export ID is required');
     }
+
+    console.log('Processing export request:', export_id, 'for user:', user.id);
     
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Use service role for database operations, but verify ownership first
+    const serviceSupabase = createClient(
+      supabaseUrl,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string
+    );
     
-    // Update export status to processing
-    await supabase
-      .from('data_exports')
-      .update({ status: 'processing' })
-      .eq('id', export_id);
-    
-    // Fetch the export request details
-    const { data: exportRequest, error: exportError } = await supabase
+    // Fetch the export request details and verify ownership
+    const { data: exportRequest, error: exportError } = await serviceSupabase
       .from('data_exports')
       .select('*')
       .eq('id', export_id)
+      .eq('teacher_id', user.id)  // Verify ownership
       .single();
     
     if (exportError || !exportRequest) {
-      throw new Error(`Export request not found: ${exportError?.message || 'Unknown error'}`);
+      console.error('Export request not found or access denied:', exportError);
+      return new Response(
+        JSON.stringify({ error: 'Export request not found or access denied' }),
+        { 
+          status: 404, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
+
+    // Update export status to processing
+    await serviceSupabase
+      .from('data_exports')
+      .update({ status: 'processing' })
+      .eq('id', export_id)
+      .eq('teacher_id', user.id);
     
     console.log('Processing export request:', exportRequest);
     
@@ -50,19 +93,19 @@ serve(async (req) => {
     
     switch (exportRequest.export_type) {
       case 'student_data':
-        csvData = await generateStudentDataCSV(supabase, exportRequest);
+        csvData = await generateStudentDataCSV(serviceSupabase, exportRequest, user.id);
         break;
       case 'assessment_results':
-        csvData = await generateAssessmentResultsCSV(supabase, exportRequest);
+        csvData = await generateAssessmentResultsCSV(serviceSupabase, exportRequest, user.id);
         break;
       case 'analytics_data':
-        csvData = await generateAnalyticsCSV(supabase, exportRequest);
+        csvData = await generateAnalyticsCSV(serviceSupabase, exportRequest, user.id);
         break;
       case 'progress_reports':
-        csvData = await generateProgressReportsCSV(supabase, exportRequest);
+        csvData = await generateProgressReportsCSV(serviceSupabase, exportRequest, user.id);
         break;
       case 'class_summary':
-        csvData = await generateClassSummaryCSV(supabase, exportRequest);
+        csvData = await generateClassSummaryCSV(serviceSupabase, exportRequest, user.id);
         break;
       default:
         throw new Error(`Unsupported export type: ${exportRequest.export_type}`);
@@ -79,14 +122,15 @@ serve(async (req) => {
     const dataUrl = `data:text/csv;base64,${base64Data}`;
     
     // Update export status to completed
-    await supabase
+    await serviceSupabase
       .from('data_exports')
       .update({ 
         status: 'completed',
         file_url: dataUrl,
         completed_at: new Date().toISOString()
       })
-      .eq('id', export_id);
+      .eq('id', export_id)
+      .eq('teacher_id', user.id);
     
     return new Response(JSON.stringify({ 
       success: true,
@@ -100,27 +144,6 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in process-data-export function:', error);
     
-    // Try to update the export status to failed
-    try {
-      const body = await req.json();
-      const { export_id } = body;
-      if (export_id) {
-        const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string;
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        
-        await supabase
-          .from('data_exports')
-          .update({ 
-            status: 'failed',
-            completed_at: new Date().toISOString()
-          })
-          .eq('id', export_id);
-      }
-    } catch (e) {
-      console.error('Failed to update export status:', e);
-    }
-    
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -128,10 +151,10 @@ serve(async (req) => {
   }
 });
 
-async function generateStudentDataCSV(supabase: any, exportRequest: any): Promise<string> {
-  console.log('Generating student data CSV');
+async function generateStudentDataCSV(supabase: any, exportRequest: any, userId: string): Promise<string> {
+  console.log('Generating student data CSV for user:', userId);
   
-  // Build query with filters
+  // Build query with filters - ensure teacher_id matches
   let query = supabase
     .from('students')
     .select(`
@@ -145,16 +168,9 @@ async function generateStudentDataCSV(supabase: any, exportRequest: any): Promis
       parent_phone,
       learning_goals,
       special_considerations,
-      created_at,
-      student_performance (
-        average_score,
-        performance_level,
-        assessment_count,
-        needs_attention,
-        last_assessment_date
-      )
+      created_at
     `)
-    .eq('teacher_id', exportRequest.teacher_id);
+    .eq('teacher_id', userId);
   
   // Apply filters
   if (exportRequest.filters?.grade_level) {
@@ -178,11 +194,6 @@ async function generateStudentDataCSV(supabase: any, exportRequest: any): Promis
     'Parent Name',
     'Parent Email',
     'Parent Phone',
-    'Average Score',
-    'Performance Level',
-    'Assessment Count',
-    'Needs Attention',
-    'Last Assessment Date',
     'Learning Goals',
     'Special Considerations',
     'Enrollment Date'
@@ -190,7 +201,6 @@ async function generateStudentDataCSV(supabase: any, exportRequest: any): Promis
   
   // Generate CSV rows
   const rows = students?.map((student: any) => {
-    const performance = student.student_performance?.[0] || {};
     return [
       student.student_id || '',
       student.first_name || '',
@@ -199,11 +209,6 @@ async function generateStudentDataCSV(supabase: any, exportRequest: any): Promis
       student.parent_name || '',
       student.parent_email || '',
       student.parent_phone || '',
-      performance.average_score || '0',
-      performance.performance_level || 'Not Assessed',
-      performance.assessment_count || '0',
-      performance.needs_attention ? 'Yes' : 'No',
-      performance.last_assessment_date ? new Date(performance.last_assessment_date).toLocaleDateString() : '',
       student.learning_goals || '',
       student.special_considerations || '',
       new Date(student.created_at).toLocaleDateString()
@@ -213,10 +218,22 @@ async function generateStudentDataCSV(supabase: any, exportRequest: any): Promis
   return formatAsCSV([headers, ...rows]);
 }
 
-async function generateAssessmentResultsCSV(supabase: any, exportRequest: any): Promise<string> {
-  console.log('Generating assessment results CSV');
+async function generateAssessmentResultsCSV(supabase: any, exportRequest: any, userId: string): Promise<string> {
+  console.log('Generating assessment results CSV for user:', userId);
   
-  // Build complex query for assessment results
+  // Get students for this teacher first
+  const { data: students } = await supabase
+    .from('students')
+    .select('id')
+    .eq('teacher_id', userId);
+  
+  const studentIds = students?.map((s: any) => s.id) || [];
+  
+  if (studentIds.length === 0) {
+    return formatAsCSV([['No data available']]);
+  }
+  
+  // Build query for assessment results
   let query = supabase
     .from('student_responses')
     .select(`
@@ -238,23 +255,19 @@ async function generateAssessmentResultsCSV(supabase: any, exportRequest: any): 
         max_score
       ),
       assessment_items (
-        item_number,
+        item_order,
         question_text,
         max_score,
         difficulty_level
       )
-    `);
+    `)
+    .in('student_id', studentIds);
   
   // Apply date range filter
   if (exportRequest.filters?.date_range) {
     query = query
       .gte('created_at', exportRequest.filters.date_range.start)
       .lte('created_at', exportRequest.filters.date_range.end);
-  }
-  
-  // Apply subject filter
-  if (exportRequest.filters?.subject) {
-    query = query.eq('assessments.subject', exportRequest.filters.subject);
   }
   
   const { data: responses, error } = await query;
@@ -268,7 +281,7 @@ async function generateAssessmentResultsCSV(supabase: any, exportRequest: any): 
     'Assessment Title',
     'Subject',
     'Assessment Type',
-    'Item Number',
+    'Item Order',
     'Question',
     'Score',
     'Max Score',
@@ -290,7 +303,7 @@ async function generateAssessmentResultsCSV(supabase: any, exportRequest: any): 
       response.assessments?.title || '',
       response.assessments?.subject || '',
       response.assessments?.assessment_type || '',
-      response.assessment_items?.item_number || '',
+      response.assessment_items?.item_order || '',
       response.assessment_items?.question_text || '',
       response.score || '0',
       response.assessment_items?.max_score || '0',
@@ -304,90 +317,43 @@ async function generateAssessmentResultsCSV(supabase: any, exportRequest: any): 
   return formatAsCSV([headers, ...rows]);
 }
 
-async function generateAnalyticsCSV(supabase: any, exportRequest: any): Promise<string> {
-  console.log('Generating analytics CSV');
+async function generateAnalyticsCSV(supabase: any, exportRequest: any, userId: string): Promise<string> {
+  console.log('Generating analytics CSV for user:', userId);
   
-  // Get comprehensive analytics data
-  const { data: studentPerformance, error: perfError } = await supabase
-    .from('student_performance')
+  // Get students for this teacher
+  const { data: students, error } = await supabase
+    .from('students')
     .select(`
-      *,
-      students (
-        first_name,
-        last_name,
-        grade_level
-      )
+      id,
+      first_name,
+      last_name,
+      grade_level
     `)
-    .eq('students.teacher_id', exportRequest.teacher_id);
+    .eq('teacher_id', userId);
   
-  if (perfError) throw perfError;
+  if (error) throw error;
   
-  // Get skill mastery data
-  const { data: skillMastery, error: skillError } = await supabase
-    .from('student_skills')
-    .select(`
-      *,
-      students (
-        first_name,
-        last_name
-      ),
-      skills (
-        name,
-        subject,
-        grade_level
-      )
-    `)
-    .eq('students.teacher_id', exportRequest.teacher_id);
-  
-  if (skillError) throw skillError;
-  
-  // Create comprehensive analytics CSV
   const headers = [
     'Student Name',
     'Grade Level',
-    'Average Score',
-    'Performance Level',
-    'Assessment Count',
-    'Needs Attention',
-    'Skills Mastered',
-    'Skills Developing',
-    'Skills Beginning',
-    'Last Assessment',
-    'Growth Trend'
+    'Student ID'
   ];
   
-  const rows = studentPerformance?.map((perf: any) => {
-    const studentSkills = skillMastery?.filter((skill: any) => 
-      skill.students?.first_name === perf.students?.first_name &&
-      skill.students?.last_name === perf.students?.last_name
-    ) || [];
-    
-    const masteredCount = studentSkills.filter(s => s.current_mastery_level === 'Advanced' || s.current_mastery_level === 'Proficient').length;
-    const developingCount = studentSkills.filter(s => s.current_mastery_level === 'Developing').length;
-    const beginningCount = studentSkills.filter(s => s.current_mastery_level === 'Beginning').length;
-    
+  const rows = students?.map((student: any) => {
     return [
-      `${perf.students?.first_name || ''} ${perf.students?.last_name || ''}`,
-      perf.students?.grade_level || '',
-      perf.average_score || '0',
-      perf.performance_level || 'Not Assessed',
-      perf.assessment_count || '0',
-      perf.needs_attention ? 'Yes' : 'No',
-      masteredCount.toString(),
-      developingCount.toString(),
-      beginningCount.toString(),
-      perf.last_assessment_date ? new Date(perf.last_assessment_date).toLocaleDateString() : '',
-      perf.average_score >= 80 ? 'Positive' : perf.average_score >= 60 ? 'Stable' : 'Needs Support'
+      `${student.first_name || ''} ${student.last_name || ''}`,
+      student.grade_level || '',
+      student.id || ''
     ];
   }) || [];
   
   return formatAsCSV([headers, ...rows]);
 }
 
-async function generateProgressReportsCSV(supabase: any, exportRequest: any): Promise<string> {
-  console.log('Generating progress reports CSV');
+async function generateProgressReportsCSV(supabase: any, exportRequest: any, userId: string): Promise<string> {
+  console.log('Generating progress reports CSV for user:', userId);
   
-  // Get goals and achievements data
+  // Get goals for this teacher
   const { data: goals, error: goalsError } = await supabase
     .from('goals')
     .select(`
@@ -398,7 +364,7 @@ async function generateProgressReportsCSV(supabase: any, exportRequest: any): Pr
         grade_level
       )
     `)
-    .eq('teacher_id', exportRequest.teacher_id);
+    .eq('teacher_id', userId);
   
   if (goalsError) throw goalsError;
   
@@ -408,7 +374,7 @@ async function generateProgressReportsCSV(supabase: any, exportRequest: any): Pr
     'Goal Title',
     'Goal Description',
     'Status',
-    'Progress Percentage',
+    'Progress',
     'Target Date',
     'Created Date',
     'Days Remaining'
@@ -425,7 +391,7 @@ async function generateProgressReportsCSV(supabase: any, exportRequest: any): Pr
       goal.title || '',
       goal.description || '',
       goal.status || '',
-      goal.progress_percentage + '%',
+      (goal.progress || 0) + '%',
       targetDate ? targetDate.toLocaleDateString() : '',
       new Date(goal.created_at).toLocaleDateString(),
       daysRemaining ? daysRemaining.toString() : ''
@@ -435,21 +401,17 @@ async function generateProgressReportsCSV(supabase: any, exportRequest: any): Pr
   return formatAsCSV([headers, ...rows]);
 }
 
-async function generateClassSummaryCSV(supabase: any, exportRequest: any): Promise<string> {
-  console.log('Generating class summary CSV');
+async function generateClassSummaryCSV(supabase: any, exportRequest: any, userId: string): Promise<string> {
+  console.log('Generating class summary CSV for user:', userId);
   
   // Get aggregated class data
   const { data: classData, error } = await supabase
     .from('students')
     .select(`
       grade_level,
-      student_performance (
-        average_score,
-        performance_level,
-        needs_attention
-      )
+      id
     `)
-    .eq('teacher_id', exportRequest.teacher_id);
+    .eq('teacher_id', userId);
   
   if (error) throw error;
   
@@ -457,83 +419,40 @@ async function generateClassSummaryCSV(supabase: any, exportRequest: any): Promi
   const gradeStats = new Map();
   
   classData?.forEach((student: any) => {
-    const grade = student.grade_level;
-    const perf = student.student_performance?.[0];
+    const grade = student.grade_level || 'Unassigned';
     
     if (!gradeStats.has(grade)) {
       gradeStats.set(grade, {
-        totalStudents: 0,
-        totalScore: 0,
-        aboveAverage: 0,
-        average: 0,
-        belowAverage: 0,
-        needsAttention: 0
+        totalStudents: 0
       });
     }
     
     const stats = gradeStats.get(grade);
     stats.totalStudents++;
-    
-    if (perf) {
-      stats.totalScore += perf.average_score || 0;
-      
-      switch (perf.performance_level) {
-        case 'Above Average':
-          stats.aboveAverage++;
-          break;
-        case 'Average':
-          stats.average++;
-          break;
-        case 'Below Average':
-          stats.belowAverage++;
-          break;
-      }
-      
-      if (perf.needs_attention) {
-        stats.needsAttention++;
-      }
-    }
   });
   
   const headers = [
     'Grade Level',
-    'Total Students',
-    'Class Average Score',
-    'Above Average Count',
-    'Average Count',
-    'Below Average Count',
-    'Students Needing Attention',
-    'Attention Percentage'
+    'Total Students'
   ];
   
-  const rows = Array.from(gradeStats.entries()).map(([grade, stats]: [string, any]) => {
-    const avgScore = stats.totalStudents > 0 ? (stats.totalScore / stats.totalStudents).toFixed(1) : '0';
-    const attentionPercentage = stats.totalStudents > 0 ? ((stats.needsAttention / stats.totalStudents) * 100).toFixed(1) : '0';
-    
-    return [
-      grade,
-      stats.totalStudents.toString(),
-      avgScore,
-      stats.aboveAverage.toString(),
-      stats.average.toString(),
-      stats.belowAverage.toString(),
-      stats.needsAttention.toString(),
-      attentionPercentage + '%'
-    ];
-  });
+  const rows = Array.from(gradeStats.entries()).map(([grade, stats]: [string, any]) => [
+    grade,
+    stats.totalStudents.toString()
+  ]);
   
   return formatAsCSV([headers, ...rows]);
 }
 
 function formatAsCSV(data: any[][]): string {
-  return data.map(row => {
-    return row.map(cell => {
-      const value = cell?.toString() || '';
-      // Escape quotes and wrap in quotes if contains comma, quote, or newline
-      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-        return `"${value.replace(/"/g, '""')}"`;
+  return data.map(row => 
+    row.map(cell => {
+      // Escape quotes and wrap in quotes if contains comma, newline or quote
+      const cellStr = String(cell);
+      if (cellStr.includes(',') || cellStr.includes('\n') || cellStr.includes('"')) {
+        return `"${cellStr.replace(/"/g, '""')}"`;
       }
-      return value;
-    }).join(',');
-  }).join('\n');
+      return cellStr;
+    }).join(',')
+  ).join('\n');
 }
