@@ -8,17 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
 import type { Skill, SkillCategory } from '@/services/skills-service';
 
 const skillSchema = z.object({
   name: z.string().min(1, 'Skill name is required'),
   description: z.string().optional(),
-  subject: z.string().min(1, 'Subject is required'),
-  grade_level: z.string().min(1, 'Grade level is required'),
-  difficulty_level: z.number().min(1).max(5),
-  category_id: z.string().optional(),
+  subject: z.string().optional(),
+  category: z.string().optional(),
 });
 
 type SkillFormData = z.infer<typeof skillSchema>;
@@ -33,7 +29,6 @@ interface SkillFormProps {
 }
 
 const subjects = ['Mathematics', 'English Language Arts', 'Science', 'Social Studies'];
-const gradeLevels = ['K', '1st', '2nd', '3rd', '4th', '5th', '6th'];
 
 export const SkillForm: React.FC<SkillFormProps> = ({
   open,
@@ -49,9 +44,7 @@ export const SkillForm: React.FC<SkillFormProps> = ({
       name: skill?.name || '',
       description: skill?.description || '',
       subject: skill?.subject || '',
-      grade_level: skill?.grade_level || '',
-      difficulty_level: skill?.difficulty_level || 1,
-      category_id: skill?.category_id || '',
+      category: skill?.category || '',
     },
   });
 
@@ -60,7 +53,6 @@ export const SkillForm: React.FC<SkillFormProps> = ({
     onClose();
     form.reset();
   };
-
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -114,82 +106,30 @@ export const SkillForm: React.FC<SkillFormProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="grade_level"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Grade Level</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select grade" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {gradeLevels.map(grade => (
-                          <SelectItem key={grade} value={grade}>
-                            Grade {grade}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="difficulty_level"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Difficulty (1-5)</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select difficulty" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {[1, 2, 3, 4, 5].map(level => (
-                          <SelectItem key={level} value={level.toString()}>
-                            Level {level}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="category_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map(category => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {categories.map(category => (
+                        <SelectItem key={category.id} value={category.name}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
@@ -208,7 +148,6 @@ export const SkillForm: React.FC<SkillFormProps> = ({
                 </FormItem>
               )}
             />
-
 
             <div className="flex justify-end space-x-2">
               <Button type="button" variant="outline" onClick={onClose}>

@@ -37,7 +37,7 @@ const SkillsFilters: React.FC<SkillsFiltersProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Subject</label>
             <Select value={filters.subject || "all"} onValueChange={(value) => updateFilter('subject', value === "all" ? "" : value)}>
@@ -68,23 +68,6 @@ const SkillsFilters: React.FC<SkillsFiltersProps> = ({
                 <SelectItem value="3">Grade 3</SelectItem>
                 <SelectItem value="4">Grade 4</SelectItem>
                 <SelectItem value="5">Grade 5</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Difficulty</label>
-            <Select value={filters.difficulty_level || "all-levels"} onValueChange={(value) => updateFilter('difficulty_level', value === "all-levels" ? "" : value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="All levels" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all-levels">All levels</SelectItem>
-                <SelectItem value="1">Beginning</SelectItem>
-                <SelectItem value="2">Basic</SelectItem>
-                <SelectItem value="3">Intermediate</SelectItem>
-                <SelectItem value="4">Advanced</SelectItem>
-                <SelectItem value="5">Expert</SelectItem>
               </SelectContent>
             </Select>
           </div>

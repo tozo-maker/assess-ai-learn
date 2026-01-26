@@ -27,8 +27,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
     name: template?.name || '',
     template_type: template?.template_type || 'custom',
     subject: template?.subject || '',
-    content: template?.content || '',
-    is_default: template?.is_default || false
+    content: template?.content || ''
   });
   const [availableVariables, setAvailableVariables] = useState<TemplateVariable[]>([]);
   const [previewVariables, setPreviewVariables] = useState<Record<string, any>>({});
@@ -79,10 +78,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
       if (template) {
         savedTemplate = await templateService.updateTemplate(template.id, formData);
       } else {
-        savedTemplate = await templateService.createTemplate({
-          ...formData,
-          variables: {}
-        });
+        savedTemplate = await templateService.createTemplate(formData);
       }
 
       toast({
@@ -114,10 +110,16 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const renderPreview = () => {
     if (!formData.subject || !formData.content) return null;
     
-    const rendered = templateService.renderTemplate(
-      { ...formData, variables: {} } as EmailTemplate,
-      previewVariables
-    );
+    // Create a minimal template object for rendering
+    const templateForPreview = {
+      ...formData,
+      id: template?.id || '',
+      teacher_id: template?.teacher_id || '',
+      created_at: template?.created_at || '',
+      updated_at: template?.updated_at || ''
+    } as EmailTemplate;
+    
+    const rendered = templateService.renderTemplate(templateForPreview, previewVariables);
 
     return (
       <div className="space-y-4">

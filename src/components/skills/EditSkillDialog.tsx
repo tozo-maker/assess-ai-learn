@@ -29,11 +29,9 @@ import { useToast } from '@/hooks/use-toast';
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   description: z.string().optional(),
-  category_id: z.string().min(1, 'Please select a category'),
-  grade_level: z.string().min(1, 'Please select a grade level'),
-  subject: z.string().min(1, 'Please select a subject'),
-  curriculum_standard: z.string().optional(),
-  difficulty_level: z.number().min(1).max(5),
+  category: z.string().optional(),
+  grade_levels: z.array(z.string()).optional(),
+  subject: z.string().optional(),
 });
 
 interface EditSkillDialogProps {
@@ -58,11 +56,9 @@ const EditSkillDialog: React.FC<EditSkillDialogProps> = ({
     defaultValues: {
       name: '',
       description: '',
-      category_id: '',
-      grade_level: '',
+      category: '',
+      grade_levels: [],
       subject: '',
-      curriculum_standard: '',
-      difficulty_level: 3,
     },
   });
 
@@ -72,17 +68,15 @@ const EditSkillDialog: React.FC<EditSkillDialogProps> = ({
       form.reset({
         name: skill.name,
         description: skill.description || '',
-        category_id: skill.category_id,
-        grade_level: skill.grade_level,
-        subject: skill.subject,
-        curriculum_standard: skill.curriculum_standard || '',
-        difficulty_level: skill.difficulty_level,
+        category: skill.category || '',
+        grade_levels: skill.grade_levels || [],
+        subject: skill.subject || '',
       });
     }
   }, [skill, form]);
 
   const subjects = ['Mathematics', 'English Language Arts', 'Science', 'Social Studies'];
-  const gradeLevels = ['K', '1st', '2nd', '3rd', '4th', '5th', '6th'];
+  const gradeLevels = ['K', '1', '2', '3', '4', '5', '6'];
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -114,49 +108,19 @@ const EditSkillDialog: React.FC<EditSkillDialogProps> = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Skill Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Addition Facts 0-10" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="difficulty_level"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Difficulty Level</FormLabel>
-                    <Select
-                      value={field.value.toString()}
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select difficulty" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="1">1 - Beginner</SelectItem>
-                        <SelectItem value="2">2 - Easy</SelectItem>
-                        <SelectItem value="3">3 - Medium</SelectItem>
-                        <SelectItem value="4">4 - Hard</SelectItem>
-                        <SelectItem value="5">5 - Advanced</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Skill Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., Addition Facts 0-10" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
@@ -175,7 +139,7 @@ const EditSkillDialog: React.FC<EditSkillDialogProps> = ({
               )}
             />
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="subject"
@@ -203,32 +167,7 @@ const EditSkillDialog: React.FC<EditSkillDialogProps> = ({
 
               <FormField
                 control={form.control}
-                name="grade_level"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Grade Level</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select grade" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {gradeLevels.map((grade) => (
-                          <SelectItem key={grade} value={grade}>
-                            Grade {grade}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="category_id"
+                name="category"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
@@ -240,7 +179,7 @@ const EditSkillDialog: React.FC<EditSkillDialogProps> = ({
                       </FormControl>
                       <SelectContent>
                         {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
+                          <SelectItem key={category.id} value={category.name}>
                             {category.name}
                           </SelectItem>
                         ))}
@@ -251,23 +190,6 @@ const EditSkillDialog: React.FC<EditSkillDialogProps> = ({
                 )}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="curriculum_standard"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Curriculum Standard (Optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., 1.OA.C.6" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Common Core or other curriculum alignment reference
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <div className="flex justify-end space-x-2">
               <Button

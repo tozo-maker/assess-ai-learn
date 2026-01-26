@@ -205,11 +205,6 @@ const TemplatesManagement: React.FC = () => {
                           <CardTitle className="text-lg line-clamp-1">
                             {template.name}
                           </CardTitle>
-                          {template.is_default && (
-                            <Badge variant="outline" className="mt-1 text-xs">
-                              Default
-                            </Badge>
-                          )}
                         </div>
                       </div>
                       {getTemplateTypeBadge(template.template_type)}

@@ -7,8 +7,6 @@ export interface EmailTemplate {
   template_type: 'progress_report' | 'parent_communication' | 'assessment_reminder' | 'custom';
   subject: string;
   content: string;
-  variables: Record<string, any>;
-  is_default: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -31,9 +29,8 @@ class TemplateService {
     if (error) throw error;
     return (data || []).map(item => ({
       ...item,
-      template_type: item.template_type as EmailTemplate['template_type'],
-      variables: (item.variables as Record<string, any>) || {},
-      is_default: item.is_default || false
+      template_type: (item.template_type || 'custom') as EmailTemplate['template_type'],
+      content: item.content || ''
     }));
   }
 
@@ -47,9 +44,8 @@ class TemplateService {
     if (error) throw error;
     return data ? {
       ...data,
-      template_type: data.template_type as EmailTemplate['template_type'],
-      variables: (data.variables as Record<string, any>) || {},
-      is_default: data.is_default || false
+      template_type: (data.template_type || 'custom') as EmailTemplate['template_type'],
+      content: data.content || ''
     } : null;
   }
 
@@ -60,7 +56,10 @@ class TemplateService {
     const { data, error } = await supabase
       .from('email_templates')
       .insert({
-        ...template,
+        name: template.name,
+        template_type: template.template_type,
+        subject: template.subject,
+        content: template.content,
         teacher_id: user.user.id
       })
       .select()
@@ -69,16 +68,20 @@ class TemplateService {
     if (error) throw error;
     return {
       ...data,
-      template_type: data.template_type as EmailTemplate['template_type'],
-      variables: (data.variables as Record<string, any>) || {},
-      is_default: data.is_default || false
+      template_type: (data.template_type || 'custom') as EmailTemplate['template_type'],
+      content: data.content || ''
     };
   }
 
   async updateTemplate(id: string, updates: Partial<EmailTemplate>): Promise<EmailTemplate> {
     const { data, error } = await supabase
       .from('email_templates')
-      .update(updates)
+      .update({
+        name: updates.name,
+        template_type: updates.template_type,
+        subject: updates.subject,
+        content: updates.content
+      })
       .eq('id', id)
       .select()
       .single();
@@ -86,9 +89,8 @@ class TemplateService {
     if (error) throw error;
     return {
       ...data,
-      template_type: data.template_type as EmailTemplate['template_type'],
-      variables: (data.variables as Record<string, any>) || {},
-      is_default: data.is_default || false
+      template_type: (data.template_type || 'custom') as EmailTemplate['template_type'],
+      content: data.content || ''
     };
   }
 
@@ -109,9 +111,7 @@ class TemplateService {
       name: newName,
       template_type: template.template_type,
       subject: template.subject,
-      content: template.content,
-      variables: template.variables,
-      is_default: false
+      content: template.content
     });
   }
 
