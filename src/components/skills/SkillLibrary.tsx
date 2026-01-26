@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, BookOpen, Target } from 'lucide-react';
+import { Plus, Edit, Trash2, BookOpen } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { skillsService } from '@/services/skills-service';
@@ -111,17 +111,6 @@ const SkillLibrary: React.FC<SkillLibraryProps> = ({ skills, categories, isLoadi
     setEditingSkill(undefined);
   };
 
-  const getDifficultyColor = (level: number) => {
-    switch (level) {
-      case 1: return 'bg-green-100 text-green-800';
-      case 2: return 'bg-blue-100 text-blue-800';
-      case 3: return 'bg-yellow-100 text-yellow-800';
-      case 4: return 'bg-orange-100 text-orange-800';
-      case 5: return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -189,24 +178,18 @@ const SkillLibrary: React.FC<SkillLibraryProps> = ({ skills, categories, isLoadi
             <CardContent className="pt-0">
               <div className="space-y-3">
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">{skill.subject}</Badge>
-                  <Badge variant="outline">Grade {skill.grade_level}</Badge>
-                  <Badge className={getDifficultyColor(skill.difficulty_level)}>
-                    Level {skill.difficulty_level}
-                  </Badge>
+                  {skill.subject && <Badge variant="outline">{skill.subject}</Badge>}
+                  {skill.grade_levels && skill.grade_levels.length > 0 && (
+                    <Badge variant="outline">
+                      Grades: {skill.grade_levels.join(', ')}
+                    </Badge>
+                  )}
                 </div>
-
-                {skill.curriculum_standard && (
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Target className="h-4 w-4 mr-1" />
-                    {skill.curriculum_standard}
-                  </div>
-                )}
 
                 {skill.category && (
                   <div className="flex items-center text-sm text-gray-600">
                     <BookOpen className="h-4 w-4 mr-1" />
-                    {skill.category.name}
+                    {skill.category}
                   </div>
                 )}
               </div>

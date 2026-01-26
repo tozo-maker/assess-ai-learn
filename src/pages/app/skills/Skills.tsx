@@ -28,35 +28,26 @@ const Skills: React.FC = () => {
 
   const isLoading = isInitializing || isLoadingSkills;
 
-  const handleForceSeed = async () => {
+  const handleSeedSkills = async () => {
     try {
       toast({
-        title: "Force Seeding Skills",
-        description: "Clearing existing skills and reseeding database...",
+        title: "Seeding Skills",
+        description: "Adding skills to database...",
       });
       
-      const result = await skillsSeedingService.forceSeedSkills();
+      await skillsSeedingService.seedBasicSkills();
       
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: `Successfully seeded ${result.skillsCount} skills!`,
-        });
-        // Refetch skills to update the display
-        await refetchSkills();
-        window.location.reload(); // Force a complete refresh to reset all queries
-      } else {
-        toast({
-          title: "Seeding Failed",
-          description: result.error || "Failed to seed skills. Please check console for details.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error in handleForceSeed:', error);
       toast({
-        title: "Error",
-        description: "An unexpected error occurred while seeding skills.",
+        title: "Success",
+        description: "Skills seeded successfully!",
+      });
+      // Refetch skills to update the display
+      await refetchSkills();
+    } catch (error) {
+      console.error('Error in handleSeedSkills:', error);
+      toast({
+        title: "Seeding Failed",
+        description: "Failed to seed skills. Please check console for details.",
         variant: "destructive",
       });
     }
@@ -126,9 +117,9 @@ const Skills: React.FC = () => {
                 'Loading skills...'
               }
             </p>
-            {seedingResult && (
+            {seedingResult && !seedingResult.success && (
               <p className="mt-2 text-sm text-gray-500">
-                {seedingResult.success === false ? 'Seeding failed - may need manual intervention' : 'Processing...'}
+                Seeding may need manual intervention
               </p>
             )}
           </div>
@@ -148,12 +139,7 @@ const Skills: React.FC = () => {
             <Clock className="h-4 w-4" />
             <AlertTitle>Skills Database Needs Setup</AlertTitle>
             <AlertDescription>
-              Current skills count: {skillsCount} (need 60+ for full functionality)
-              {seedingResult?.success === false && (
-                <div className="mt-2 text-sm text-destructive">
-                  Automatic seeding failed: {seedingResult.error}
-                </div>
-              )}
+              Current skills count: {skillsCount}
             </AlertDescription>
           </Alert>
           
@@ -163,7 +149,7 @@ const Skills: React.FC = () => {
             </p>
             
             <div className="flex gap-4 justify-center">
-              <Button onClick={handleForceSeed}>
+              <Button onClick={handleSeedSkills}>
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Seed Skills Database
               </Button>
@@ -214,8 +200,8 @@ const Skills: React.FC = () => {
               {JSON.stringify(debugInfo, null, 2)}
             </pre>
             <div className="mt-2 space-x-2">
-              <Button size="sm" onClick={handleForceSeed} variant="outline">
-                Force Reseed
+              <Button size="sm" onClick={handleSeedSkills} variant="outline">
+                Reseed
               </Button>
               <Button size="sm" onClick={handleManualRefresh} variant="outline">
                 Refresh

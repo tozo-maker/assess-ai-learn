@@ -37,35 +37,9 @@ const SkillsMainContent: React.FC<SkillsMainContentProps> = ({
     handleFilterChange('subject', subjectValue);
   };
 
-  const handleDifficultyChange = (value: string) => {
-    const difficultyValue = value === "all" ? "" : value;
-    handleFilterChange('difficulty_level', difficultyValue);
-  };
-
   // Ensure safe values for Select components
   const safeGradeLevel = filters.gradeLevel || "all";
   const safeSubject = filters.subject || "all";
-  const safeDifficulty = filters.difficulty_level || "all";
-
-  const getDifficultyColor = (level: number) => {
-    switch (level) {
-      case 1: return 'bg-green-100 text-green-800';
-      case 2: return 'bg-yellow-100 text-yellow-800';
-      case 3: return 'bg-orange-100 text-orange-800';
-      case 4: return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getDifficultyLabel = (level: number) => {
-    switch (level) {
-      case 1: return 'Beginner';
-      case 2: return 'Intermediate'; 
-      case 3: return 'Advanced';
-      case 4: return 'Expert';
-      default: return 'Unknown';
-    }
-  };
 
   return (
     <div className="p-6 space-y-6">
@@ -76,7 +50,7 @@ const SkillsMainContent: React.FC<SkillsMainContentProps> = ({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Total Skills</CardTitle>
@@ -91,30 +65,17 @@ const SkillsMainContent: React.FC<SkillsMainContentProps> = ({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {new Set(skills.map(s => s.subject)).size}
+              {new Set(skills.map(s => s.subject).filter(Boolean)).size}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Grade Levels</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Categories</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {new Set(skills.map(s => s.grade_level)).size}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Avg Difficulty</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {skills.length > 0 
-                ? (skills.reduce((acc, s) => acc + s.difficulty_level, 0) / skills.length).toFixed(1)
-                : '0'
-              }
+              {new Set(skills.map(s => s.category).filter(Boolean)).size}
             </div>
           </CardContent>
         </Card>
@@ -123,7 +84,7 @@ const SkillsMainContent: React.FC<SkillsMainContentProps> = ({
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -145,9 +106,6 @@ const SkillsMainContent: React.FC<SkillsMainContentProps> = ({
                 <SelectItem value="3">Grade 3</SelectItem>
                 <SelectItem value="4">Grade 4</SelectItem>
                 <SelectItem value="5">Grade 5</SelectItem>
-                <SelectItem value="6">Grade 6</SelectItem>
-                <SelectItem value="7">Grade 7</SelectItem>
-                <SelectItem value="8">Grade 8</SelectItem>
               </SelectContent>
             </Select>
             <Select value={safeSubject} onValueChange={handleSubjectChange}>
@@ -156,22 +114,10 @@ const SkillsMainContent: React.FC<SkillsMainContentProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Subjects</SelectItem>
-                <SelectItem value="math">Math</SelectItem>
-                <SelectItem value="english">English</SelectItem>
-                <SelectItem value="science">Science</SelectItem>
-                <SelectItem value="history">History</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={safeDifficulty} onValueChange={handleDifficultyChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Difficulty" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Levels</SelectItem>
-                <SelectItem value="1">Beginner</SelectItem>
-                <SelectItem value="2">Intermediate</SelectItem>
-                <SelectItem value="3">Advanced</SelectItem>
-                <SelectItem value="4">Expert</SelectItem>
+                <SelectItem value="Mathematics">Mathematics</SelectItem>
+                <SelectItem value="English Language Arts">English Language Arts</SelectItem>
+                <SelectItem value="Science">Science</SelectItem>
+                <SelectItem value="Social Studies">Social Studies</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -184,26 +130,23 @@ const SkillsMainContent: React.FC<SkillsMainContentProps> = ({
           {filteredSkills.map((skill) => (
             <Card key={skill.id}>
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-lg line-clamp-2">{skill.name}</CardTitle>
-                  <Badge className={getDifficultyColor(skill.difficulty_level)}>
-                    {getDifficultyLabel(skill.difficulty_level)}
-                  </Badge>
-                </div>
+                <CardTitle className="text-lg line-clamp-2">{skill.name}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {skill.description && (
                   <p className="text-sm text-gray-600 line-clamp-3">{skill.description}</p>
                 )}
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">{skill.subject}</Badge>
-                  <Badge variant="outline">Grade {skill.grade_level}</Badge>
+                  {skill.subject && <Badge variant="outline">{skill.subject}</Badge>}
+                  {skill.grade_levels && skill.grade_levels.length > 0 && (
+                    <Badge variant="outline">
+                      Grades: {skill.grade_levels.join(', ')}
+                    </Badge>
+                  )}
+                  {skill.category && (
+                    <Badge variant="secondary">{skill.category}</Badge>
+                  )}
                 </div>
-                {skill.curriculum_standard && (
-                  <p className="text-xs text-gray-500">
-                    Standard: {skill.curriculum_standard}
-                  </p>
-                )}
               </CardContent>
             </Card>
           ))}
