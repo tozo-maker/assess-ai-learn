@@ -141,12 +141,14 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    // Log detailed error server-side only
     console.error('Analysis generation error:', error);
     
+    // Return generic error message to client
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to generate analysis',
-        details: error.message 
+        error: 'Failed to generate analysis. Please try again.',
+        success: false
       }),
       { 
         status: 500,

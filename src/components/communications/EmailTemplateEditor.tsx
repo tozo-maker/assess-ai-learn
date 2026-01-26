@@ -169,7 +169,7 @@ const EmailTemplateEditor: React.FC<EmailTemplateEditorProps> = ({
                       dangerouslySetInnerHTML={{ 
                         __html: DOMPurify.sanitize(formData.content.replace(/\n/g, '<br/>'), {
                           ALLOWED_TAGS: ['b', 'i', 'u', 'strong', 'em', 'br', 'p', 'span', 'div', 'ul', 'ol', 'li', 'a'],
-                          ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
+                          ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
                         })
                       }}
                     />
