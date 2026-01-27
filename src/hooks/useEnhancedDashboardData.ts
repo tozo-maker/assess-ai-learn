@@ -38,25 +38,29 @@ export const useEnhancedDashboardData = () => {
         throw teacherError;
       }
 
-      // Fetch students with performance data (only columns that exist in the view)
-      const { data: students, error: studentsError } = await supabase
-        .from('students')
-        .select(`
-          *,
-          student_performance (
-            assessment_count,
-            average_score,
-            performance_level,
-            needs_attention
-          )
-        `)
-        .eq('teacher_id', user.id)
-        .order('last_name', { ascending: true });
+      // Fetch students and performance separately (view has no FK relationship)
+      const [studentsResult, performanceResult] = await Promise.all([
+        supabase
+          .from('students')
+          .select('*')
+          .eq('teacher_id', user.id)
+          .order('last_name', { ascending: true }),
+        supabase
+          .from('student_performance')
+          .select('*')
+          .eq('teacher_id', user.id)
+      ]);
 
-      if (studentsError) {
-        productionLogger.error('Students fetch error', studentsError as Error, { userId: user.id });
-        throw studentsError;
+      if (studentsResult.error) {
+        productionLogger.error('Students fetch error', studentsResult.error as Error, { userId: user.id });
+        throw studentsResult.error;
       }
+
+      // Merge performance into students
+      const students = (studentsResult.data || []).map(student => ({
+        ...student,
+        student_performance: (performanceResult.data || []).filter(p => p.student_id === student.id)
+      }));
 
       // Fetch assessments
       const { data: assessments, error: assessmentsError } = await supabase

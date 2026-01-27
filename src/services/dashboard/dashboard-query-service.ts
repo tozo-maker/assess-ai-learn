@@ -39,28 +39,27 @@ class DashboardQueryService {
       if (cached) return cached;
     }
 
-    const { data, error } = await supabase
-      .from('students')
-      .select(`
-        id,
-        first_name,
-        last_name,
-        grade_level,
-        parent_email,
-        created_at,
-        student_performance (
-          average_score,
-          performance_level,
-          needs_attention,
-          assessment_count
-        )
-      `)
-      .eq('teacher_id', teacherId)
-      .order('last_name');
+    // Fetch students and performance separately (view has no FK relationship)
+    const [studentsResult, performanceResult] = await Promise.all([
+      supabase
+        .from('students')
+        .select('id, first_name, last_name, grade_level, parent_email, created_at')
+        .eq('teacher_id', teacherId)
+        .order('last_name'),
+      supabase
+        .from('student_performance')
+        .select('student_id, average_score, performance_level, needs_attention, assessment_count')
+        .eq('teacher_id', teacherId)
+    ]);
 
-    if (error) throw error;
+    if (studentsResult.error) throw studentsResult.error;
 
-    const result = data || [];
+    // Merge performance into students
+    const result = (studentsResult.data || []).map(student => ({
+      ...student,
+      student_performance: (performanceResult.data || []).filter(p => p.student_id === student.id)
+    }));
+
     this.setCached(cacheKey, result, options.cacheTTL || 2 * 60 * 1000);
     return result;
   }
@@ -124,13 +123,11 @@ class DashboardQueryService {
       if (cached) return cached;
     }
 
+    // Query performance view directly (it already has teacher_id column)
     const { data, error } = await supabase
       .from('student_performance')
-      .select(`
-        *,
-        students!inner(teacher_id)
-      `)
-      .eq('students.teacher_id', teacherId);
+      .select('*')
+      .eq('teacher_id', teacherId);
 
     if (error) throw error;
 

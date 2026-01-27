@@ -7,26 +7,26 @@ export const dataService = {
       console.log('Fetching dashboard data for teacher:', teacherId);
 
       // Fetch all data in parallel (excluding notifications since table doesn't exist)
+      // Note: students and performance fetched separately (view has no FK relationship)
       const [
         studentsResult,
+        performanceResult,
         assessmentsResult,
         goalsResult,
         teacherProfileResult
       ] = await Promise.all([
-        // Students with performance data
+        // Students data
         supabase
           .from('students')
-          .select(`
-            *,
-            student_performance (
-              assessment_count,
-              average_score,
-              performance_level,
-              needs_attention
-            )
-          `)
+          .select('*')
           .eq('teacher_id', teacherId)
           .order('last_name', { ascending: true }),
+
+        // Performance data from view
+        supabase
+          .from('student_performance')
+          .select('*')
+          .eq('teacher_id', teacherId),
 
         // Recent assessments
         supabase
@@ -36,19 +36,11 @@ export const dataService = {
           .order('created_at', { ascending: false })
           .limit(10),
 
-        // Active goals
+        // Active goals (query directly, goals has teacher_id)
         supabase
           .from('goals')
-          .select(`
-            *,
-            students!inner (
-              id,
-              first_name,
-              last_name,
-              grade_level
-            )
-          `)
-          .eq('students.teacher_id', teacherId)
+          .select('*')
+          .eq('teacher_id', teacherId)
           .eq('status', 'active')
           .order('created_at', { ascending: false })
           .limit(5),
@@ -66,6 +58,10 @@ export const dataService = {
         console.error('Students query error:', studentsResult.error);
         throw studentsResult.error;
       }
+      if (performanceResult.error) {
+        console.error('Performance query error:', performanceResult.error);
+        throw performanceResult.error;
+      }
       if (assessmentsResult.error) {
         console.error('Assessments query error:', assessmentsResult.error);
         throw assessmentsResult.error;
@@ -75,7 +71,13 @@ export const dataService = {
         throw goalsResult.error;
       }
 
-      const students = studentsResult.data || [];
+      // Merge performance into students
+      const rawStudents = studentsResult.data || [];
+      const performanceData = performanceResult.data || [];
+      const students = rawStudents.map(student => ({
+        ...student,
+        student_performance: performanceData.filter(p => p.student_id === student.id)
+      }));
       const assessments = assessmentsResult.data || [];
       const goals = goalsResult.data || [];
       const teacherProfile = teacherProfileResult.data;

@@ -7,26 +7,27 @@ export const optimizedDashboardService = {
       productionLogger.info('Fetching optimized dashboard data', { teacherId });
 
       // Parallel fetch all dashboard data (excluding notifications since table doesn't exist)
+      // Note: students and student_performance are fetched separately because
+      // student_performance is a view without a foreign key relationship
       const [
         studentsResult,
+        performanceResult,
         assessmentsResult,
         goalsResult,
         teacherProfileResult
       ] = await Promise.all([
-        // Students with performance data
+        // Students data
         supabase
           .from('students')
-          .select(`
-            *,
-            student_performance (
-              assessment_count,
-              average_score,
-              performance_level,
-              needs_attention
-            )
-          `)
+          .select('*')
           .eq('teacher_id', teacherId)
           .order('last_name', { ascending: true }),
+
+        // Performance data from view (separate query)
+        supabase
+          .from('student_performance')
+          .select('*')
+          .eq('teacher_id', teacherId),
 
         // Recent assessments
         supabase
@@ -36,19 +37,11 @@ export const optimizedDashboardService = {
           .order('created_at', { ascending: false })
           .limit(10),
 
-        // Active goals
+        // Active goals (without embedded students join)
         supabase
           .from('goals')
-          .select(`
-            *,
-            students!inner (
-              id,
-              first_name,
-              last_name,
-              grade_level
-            )
-          `)
-          .eq('students.teacher_id', teacherId)
+          .select('*')
+          .eq('teacher_id', teacherId)
           .eq('status', 'active')
           .order('created_at', { ascending: false })
           .limit(5),
@@ -63,13 +56,21 @@ export const optimizedDashboardService = {
 
       // Handle errors
       if (studentsResult.error) throw studentsResult.error;
+      if (performanceResult.error) throw performanceResult.error;
       if (assessmentsResult.error) throw assessmentsResult.error;
       if (goalsResult.error) throw goalsResult.error;
 
-      const students = studentsResult.data || [];
+      const rawStudents = studentsResult.data || [];
+      const performanceData = performanceResult.data || [];
       const assessments = assessmentsResult.data || [];
       const goals = goalsResult.data || [];
       const teacherProfile = teacherProfileResult.data;
+
+      // Merge performance data into students
+      const students = rawStudents.map(student => ({
+        ...student,
+        student_performance: performanceData.filter(p => p.student_id === student.id)
+      }));
 
       // Calculate metrics
       const totalStudents = students.length;

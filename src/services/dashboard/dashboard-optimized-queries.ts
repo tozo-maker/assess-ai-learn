@@ -27,15 +27,16 @@ export const dashboardOptimizedQueries = {
 
   async getFallbackDashboardData(teacherId: string) {
     // Individual optimized queries as fallback
-    const [studentsData, assessmentsData, goalsData] = await Promise.all([
+    // Note: students and student_performance fetched separately (view has no FK relationship)
+    const [studentsData, performanceData, assessmentsData, goalsData] = await Promise.all([
       supabase
         .from('students')
-        .select(`
-          id, first_name, last_name, grade_level,
-          student_performance (
-            assessment_count, average_score, performance_level, needs_attention
-          )
-        `)
+        .select('id, first_name, last_name, grade_level')
+        .eq('teacher_id', teacherId),
+      
+      supabase
+        .from('student_performance')
+        .select('student_id, assessment_count, average_score, performance_level, needs_attention')
         .eq('teacher_id', teacherId),
       
       supabase
@@ -47,20 +48,23 @@ export const dashboardOptimizedQueries = {
       
       supabase
         .from('goals')
-        .select(`
-          id, title, status, progress_percentage,
-          students!inner(first_name, last_name)
-        `)
-        .eq('students.teacher_id', teacherId)
+        .select('id, title, status, progress')
+        .eq('teacher_id', teacherId)
         .eq('status', 'active')
         .limit(5)
     ]);
 
+    // Merge performance into students
+    const students = (studentsData.data || []).map(student => ({
+      ...student,
+      student_performance: (performanceData.data || []).filter(p => p.student_id === student.id)
+    }));
+
     return {
-      students: studentsData.data || [],
+      students,
       assessments: assessmentsData.data || [],
       goals: goalsData.data || [],
-      metrics: this.calculateMetrics(studentsData.data || [])
+      metrics: this.calculateMetrics(students)
     };
   },
 

@@ -45,22 +45,31 @@ class StudentService {
   }
 
   async getStudents(teacherId: string) {
-    const { data, error } = await supabase
-      .from('students')
-      .select(`
-        *,
-        student_performance (
-          assessment_count,
-          average_score,
-          performance_level,
-          needs_attention
-        )
-      `)
-      .eq('teacher_id', teacherId)
-      .order('last_name', { ascending: true });
+    // Fetch students and performance data separately to avoid embedded relation issues
+    // (student_performance is a view, not a table with foreign key relationship)
+    const [studentsResult, performanceResult] = await Promise.all([
+      supabase
+        .from('students')
+        .select('*')
+        .eq('teacher_id', teacherId)
+        .order('last_name', { ascending: true }),
+      supabase
+        .from('student_performance')
+        .select('*')
+        .eq('teacher_id', teacherId)
+    ]);
 
-    if (error) throw error;
-    return data || [];
+    if (studentsResult.error) throw studentsResult.error;
+    if (performanceResult.error) throw performanceResult.error;
+
+    const students = studentsResult.data || [];
+    const performanceData = performanceResult.data || [];
+
+    // Merge performance data into students
+    return students.map(student => ({
+      ...student,
+      student_performance: performanceData.filter(p => p.student_id === student.id)
+    }));
   }
 
   async updateStudent(studentId: string, updates: Partial<CreateStudentData>) {
@@ -85,22 +94,26 @@ class StudentService {
   }
 
   async getStudentById(studentId: string) {
-    const { data, error } = await supabase
-      .from('students')
-      .select(`
-        *,
-        student_performance (
-          assessment_count,
-          average_score,
-          performance_level,
-          needs_attention
-        )
-      `)
-      .eq('id', studentId)
-      .single();
+    // Fetch student and performance data separately
+    const [studentResult, performanceResult] = await Promise.all([
+      supabase
+        .from('students')
+        .select('*')
+        .eq('id', studentId)
+        .single(),
+      supabase
+        .from('student_performance')
+        .select('*')
+        .eq('student_id', studentId)
+    ]);
 
-    if (error) throw error;
-    return data;
+    if (studentResult.error) throw studentResult.error;
+    // Performance query errors are non-fatal (student may have no performance data)
+
+    return {
+      ...studentResult.data,
+      student_performance: performanceResult.data || []
+    };
   }
 
   async getStudentMetrics(teacherId: string) {

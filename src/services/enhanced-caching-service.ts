@@ -154,24 +154,27 @@ class EnhancedCachingService {
     }
 
     console.log('Cache miss: students, fetching...');
-    const { data, error } = await supabase
-      .from('students')
-      .select(`
-        id,
-        first_name,
-        last_name,
-        grade_level,
-        parent_email,
-        student_performance!inner(
-          average_score,
-          performance_level,
-          needs_attention
-        )
-      `)
-      .eq('teacher_id', teacherId)
-      .order('last_name', { ascending: true });
+    
+    // Fetch students and performance separately (view has no FK relationship)
+    const [studentsResult, performanceResult] = await Promise.all([
+      supabase
+        .from('students')
+        .select('id, first_name, last_name, grade_level, parent_email')
+        .eq('teacher_id', teacherId)
+        .order('last_name', { ascending: true }),
+      supabase
+        .from('student_performance')
+        .select('student_id, average_score, performance_level, needs_attention')
+        .eq('teacher_id', teacherId)
+    ]);
 
-    if (error) throw error;
+    if (studentsResult.error) throw studentsResult.error;
+
+    // Merge performance into students
+    const data = (studentsResult.data || []).map(student => ({
+      ...student,
+      student_performance: (performanceResult.data || []).filter(p => p.student_id === student.id)
+    }));
 
     this.set(cacheKey, data, {
       ttl: 2 * 60 * 1000, // 2 minutes
