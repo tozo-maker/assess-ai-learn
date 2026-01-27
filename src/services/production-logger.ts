@@ -157,6 +157,18 @@ class ProductionLogger {
       return;
     }
 
+    // Check if user is authenticated before sending logs
+    // Skip sending if no active session (prevents 401 errors for unauthenticated users)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      // Store logs locally in development, silently discard in production for unauthenticated users
+      if (this.isDevelopment) {
+        this.storeLogsLocally([...this.logQueue]);
+      }
+      this.logQueue = [];
+      return;
+    }
+
     this.isProcessing = true;
     const logsToFlush = [...this.logQueue];
     this.logQueue = [];
