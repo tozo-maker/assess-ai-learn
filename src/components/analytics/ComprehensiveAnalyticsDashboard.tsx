@@ -29,14 +29,23 @@ const ComprehensiveAnalyticsDashboard: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Fetch students count and performance
-      const { data: students } = await supabase
-        .from('students')
-        .select(`
-          *,
-          performance:student_performance(*)
-        `)
-        .eq('teacher_id', user.id);
+      // Fetch students and performance separately (view has no FK relationship)
+      const [studentsResult, performanceResult] = await Promise.all([
+        supabase
+          .from('students')
+          .select('*')
+          .eq('teacher_id', user.id),
+        supabase
+          .from('student_performance')
+          .select('*')
+          .eq('teacher_id', user.id)
+      ]);
+
+      // Merge performance into students
+      const students = (studentsResult.data || []).map(student => ({
+        ...student,
+        performance: (performanceResult.data || []).filter(p => p.student_id === student.id)
+      }));
 
       // Fetch assessments
       const { data: assessments } = await supabase

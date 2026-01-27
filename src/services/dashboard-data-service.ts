@@ -102,26 +102,26 @@ class DashboardDataService {
   }
 
   private async getStudents(teacherId: string) {
-    const { data, error } = await supabase
-      .from('students')
-      .select(`
-        id,
-        first_name,
-        last_name,
-        grade_level,
-        parent_email,
-        created_at,
-        student_performance!inner(
-          average_score,
-          performance_level,
-          needs_attention
-        )
-      `)
-      .eq('teacher_id', teacherId)
-      .order('last_name');
+    // Fetch students and performance separately (view has no FK relationship)
+    const [studentsResult, performanceResult] = await Promise.all([
+      supabase
+        .from('students')
+        .select('id, first_name, last_name, grade_level, parent_email, created_at')
+        .eq('teacher_id', teacherId)
+        .order('last_name'),
+      supabase
+        .from('student_performance')
+        .select('student_id, average_score, performance_level, needs_attention')
+        .eq('teacher_id', teacherId)
+    ]);
 
-    if (error) throw error;
-    return data || [];
+    if (studentsResult.error) throw studentsResult.error;
+
+    // Merge performance into students
+    return (studentsResult.data || []).map(student => ({
+      ...student,
+      student_performance: (performanceResult.data || []).filter(p => p.student_id === student.id)
+    }));
   }
 
   private async getAssessments(teacherId: string) {
@@ -137,13 +137,11 @@ class DashboardDataService {
   }
 
   private async getStudentPerformance(teacherId: string) {
+    // Query performance view directly (it already has teacher_id column)
     const { data, error } = await supabase
       .from('student_performance')
-      .select(`
-        *,
-        students!inner(teacher_id)
-      `)
-      .eq('students.teacher_id', teacherId);
+      .select('*')
+      .eq('teacher_id', teacherId);
 
     if (error) throw error;
     return data || [];

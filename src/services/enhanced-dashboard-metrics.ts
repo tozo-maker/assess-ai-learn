@@ -198,13 +198,11 @@ class EnhancedDashboardMetricsService {
   }
 
   private async fetchGoalsData(teacherId: string, filters: DashboardFilter) {
+    // Query goals directly using teacher_id (no need for embedded students join)
     const { data, error } = await supabase
       .from('goals')
-      .select(`
-        *,
-        students!inner(teacher_id, grade_level)
-      `)
-      .eq('students.teacher_id', teacherId);
+      .select('*')
+      .eq('teacher_id', teacherId);
 
     if (error) throw error;
     return data || [];

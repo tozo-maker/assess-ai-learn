@@ -80,25 +80,29 @@ export class EnhancedStudentService {
     try {
       console.log('Fetching student with performance:', id);
       
-      const { data, error } = await supabase
-        .from('students')
-        .select(`
-          *,
-          student_performance (
-            assessment_count,
-            average_score,
-            performance_level,
-            needs_attention,
-            last_assessment_date
-          )
-        `)
-        .eq('id', id)
-        .single();
+      // Fetch student and performance separately (view has no FK relationship)
+      const [studentResult, performanceResult] = await Promise.all([
+        supabase
+          .from('students')
+          .select('*')
+          .eq('id', id)
+          .single(),
+        supabase
+          .from('student_performance')
+          .select('*')
+          .eq('student_id', id)
+      ]);
 
-      if (error) {
-        console.error('Error fetching student with performance:', error);
-        throw new Error(`Failed to fetch student: ${error.message}`);
+      if (studentResult.error) {
+        console.error('Error fetching student:', studentResult.error);
+        throw new Error(`Failed to fetch student: ${studentResult.error.message}`);
       }
+
+      // Merge performance data
+      const data = {
+        ...studentResult.data,
+        student_performance: performanceResult.data || []
+      };
 
       console.log('Student with performance fetched:', data);
       return data;
@@ -134,29 +138,37 @@ export class EnhancedStudentService {
     try {
       console.log('Fetching students needing attention for teacher:', teacherId);
       
-      const { data, error } = await supabase
-        .from('students')
-        .select(`
-          *,
-          student_performance!inner (
-            assessment_count,
-            average_score,
-            performance_level,
-            needs_attention,
-            last_assessment_date
-          )
-        `)
-        .eq('teacher_id', teacherId)
-        .eq('student_performance.needs_attention', true)
-        .order('student_performance.average_score', { ascending: true });
+      // Fetch students and performance separately (view has no FK relationship)
+      const [studentsResult, performanceResult] = await Promise.all([
+        supabase
+          .from('students')
+          .select('*')
+          .eq('teacher_id', teacherId),
+        supabase
+          .from('student_performance')
+          .select('*')
+          .eq('teacher_id', teacherId)
+          .eq('needs_attention', true)
+      ]);
 
-      if (error) {
-        console.error('Error fetching students needing attention:', error);
-        throw new Error(`Failed to fetch students: ${error.message}`);
+      if (studentsResult.error) {
+        console.error('Error fetching students:', studentsResult.error);
+        throw new Error(`Failed to fetch students: ${studentsResult.error.message}`);
       }
 
-      console.log('Students needing attention fetched:', data?.length);
-      return data || [];
+      // Filter to only students needing attention and merge data
+      const studentsNeedingAttention = performanceResult.data || [];
+      const studentIds = new Set(studentsNeedingAttention.map(p => p.student_id));
+      
+      const data = (studentsResult.data || [])
+        .filter(student => studentIds.has(student.id))
+        .map(student => ({
+          ...student,
+          student_performance: studentsNeedingAttention.filter(p => p.student_id === student.id)
+        }));
+
+      console.log('Students needing attention fetched:', data.length);
+      return data;
     } catch (error) {
       console.error('Students needing attention fetch error:', error);
       throw error;

@@ -108,39 +108,50 @@ export const classOptimizationService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    let query = supabase
+    // Build base query for students with classes
+    let studentsQuery = supabase
       .from('students')
       .select(`
         *,
-        performance:student_performance(*),
         class:classes(*)
       `)
       .eq('teacher_id', user.id);
 
     // Apply filters
     if (options?.classId) {
-      query = query.eq('class_id', options.classId);
+      studentsQuery = studentsQuery.eq('class_id', options.classId);
     }
 
     if (options?.gradeLevel) {
-      query = query.eq('grade_level', options.gradeLevel);
+      studentsQuery = studentsQuery.eq('grade_level', options.gradeLevel);
     }
 
     if (options?.includeUnassigned === false) {
-      query = query.not('class_id', 'is', null);
+      studentsQuery = studentsQuery.not('class_id', 'is', null);
     }
 
     // Order for consistent results
-    query = query.order('last_name', { ascending: true });
+    studentsQuery = studentsQuery.order('last_name', { ascending: true });
 
-    const { data, error } = await query;
+    // Fetch students and performance separately (view has no FK relationship)
+    const [studentsResult, performanceResult] = await Promise.all([
+      studentsQuery,
+      supabase
+        .from('student_performance')
+        .select('*')
+        .eq('teacher_id', user.id)
+    ]);
 
-    if (error) {
-      console.error('Error fetching students with class info:', error);
-      throw error;
+    if (studentsResult.error) {
+      console.error('Error fetching students with class info:', studentsResult.error);
+      throw studentsResult.error;
     }
 
-    return data || [];
+    // Merge performance into students
+    return (studentsResult.data || []).map(student => ({
+      ...student,
+      performance: (performanceResult.data || []).filter(p => p.student_id === student.id)
+    })) as StudentWithPerformance[];
   },
 
   // Advanced class operations
